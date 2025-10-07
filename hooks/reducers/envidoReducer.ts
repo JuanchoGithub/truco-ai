@@ -47,8 +47,11 @@ export function handleCallFaltaEnvido(state: GameState, action: { type: ActionTy
       : state.playerEnvidoFoldHistory;
   const caller = state.currentTurn;
   const opponent = caller === 'player' ? 'ai' : 'player';
-  const opponentScore = opponent === 'player' ? state.playerScore : state.aiScore;
-  const faltaPoints = 15 - opponentScore;
+  
+  // Falta Envido is worth the points the leading player needs to win the game (to 15).
+  const leadingScore = Math.max(state.playerScore, state.aiScore);
+  const faltaPoints = 15 - leadingScore;
+
   return {
     ...state,
     gamePhase: 'envido_called',

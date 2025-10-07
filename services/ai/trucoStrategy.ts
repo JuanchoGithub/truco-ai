@@ -1,4 +1,5 @@
 import { GameState, AiMove, ActionType, Card, Rank } from '../../types';
+import { getCardHierarchy } from '../trucoLogic';
 
 const BRAVAS: Record<string, number> = {
     '1espadas': 4, '1bastos': 3, '7espadas': 2, '7oros': 1,
@@ -8,15 +9,16 @@ const LOW_RANKS: { [key: number]: number } = {
     3: 0.5, 2: 0.4, 1: 0.3, 12: 0.1, 11: 0.1, 10: 0.1, 7: 0.2, 6: 0.1, 5: 0.1, 4: 0.05,
 };
 
-const calculateTrucoStrength = (hand: Card[]): number => {
+const calculateTrucoStrength = (hand: Card[], position: 'lead' | 'follow' = 'lead'): number => {
     let strength = 0;
-    for (const card of hand) {
+    // Sort hand descending for play order sim
+    const sorted = hand.sort((a, b) => getCardHierarchy(b) - getCardHierarchy(a));
+    for (let i = 0; i < sorted.length; i++) {
+        const card = sorted[i];
         const key = `${card.rank}${card.suit}`;
-        if (BRAVAS[key]) {
-            strength += BRAVAS[key];
-        } else {
-            strength += (LOW_RANKS[card.rank] || 0) * 0.1;
-        }
+        let weight = BRAVAS[key] || (LOW_RANKS[card.rank] || 0) * 0.1;
+        if (position === 'follow' && i > 0) weight *= 1.2; // Boost for responses
+        strength += weight;
     }
     return Math.min(1.0, strength / 4.0);
 };
@@ -24,7 +26,7 @@ const calculateTrucoStrength = (hand: Card[]): number => {
 export const getTrucoResponse = (state: GameState, reasoning: string[]): AiMove | null => {
     const { aiHand, trucoLevel, aiScore, playerCalledHighEnvido } = state;
 
-    const myStrength = calculateTrucoStrength(aiHand);
+    const myStrength = calculateTrucoStrength(aiHand, 'follow');
     const envidoLeakFactor = playerCalledHighEnvido ? 0.2 : 0;
     const exploration = 0.15;
     const rand = Math.random();
@@ -62,7 +64,7 @@ export const getTrucoCall = (state: GameState): AiMove | null => {
     
     // Escalation logic
     if (trucoLevel > 0 && trucoLevel < 3 && !gamePhase.includes('envido')) {
-        const myStrength = calculateTrucoStrength(aiHand);
+        const myStrength = calculateTrucoStrength(aiHand, 'lead');
         if (myStrength > 0.85) { // Only escalate with very strong hands
             let reasoning = [`[Truco Escalation Logic]`, `My hand strength is ${myStrength.toFixed(2)}, which is very high.`];
             if (trucoLevel === 1) {
@@ -78,7 +80,7 @@ export const getTrucoCall = (state: GameState): AiMove | null => {
     
     // Initiation logic
     if (trucoLevel === 0 && !gamePhase.includes('envido')) {
-        const myStrength = calculateTrucoStrength(aiHand);
+        const myStrength = calculateTrucoStrength(aiHand, 'lead');
         const myNeed = 15 - aiScore;
         const rand = Math.random();
         const envidoLeakFactor = playerCalledHighEnvido ? 0.2 : 0;
