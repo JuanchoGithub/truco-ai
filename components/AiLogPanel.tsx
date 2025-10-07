@@ -1,14 +1,13 @@
-
 import React from 'react';
 import { AiReasoningEntry, Action, ActionType } from '../types';
 
 interface AiLogPanelProps {
   log: AiReasoningEntry[];
-  isExpanded: boolean;
   dispatch: React.Dispatch<Action>;
+  isModal: boolean;
 }
 
-const AiLogPanel: React.FC<AiLogPanelProps> = ({ log, isExpanded, dispatch }) => {
+const AiLogPanel: React.FC<AiLogPanelProps> = ({ log, dispatch, isModal }) => {
   const groupedLog: { [key: number]: string[] } = log.reduce((acc, entry) => {
     if (!acc[entry.round]) {
       acc[entry.round] = [];
@@ -17,23 +16,28 @@ const AiLogPanel: React.FC<AiLogPanelProps> = ({ log, isExpanded, dispatch }) =>
     return acc;
   }, {} as { [key: number]: string[] });
 
-  if (!isExpanded) {
-    return null;
-  }
+  const wrapperClasses = isModal
+    ? "fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+    : "h-full w-full";
+
+  const containerClasses = "bg-blue-900/95 border-4 border-cyan-400/50 rounded-xl shadow-2xl w-full h-full flex flex-col" +
+    (isModal ? " max-w-2xl max-h-[90vh]" : "");
 
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-      <div className="bg-blue-900/95 border-4 border-cyan-400/50 rounded-xl shadow-2xl w-full max-w-2xl h-full max-h-[90vh] flex flex-col">
-        <div className="p-4 border-b-2 border-cyan-400/30 flex justify-between items-center">
+    <div className={wrapperClasses}>
+      <div className={containerClasses}>
+        <div className="p-4 border-b-2 border-cyan-400/30 flex justify-between items-center flex-shrink-0">
           <h2 className="text-xl md:text-2xl font-bold text-cyan-300 font-cinzel tracking-widest" style={{ textShadow: '2px 2px 3px rgba(0,0,0,0.7)' }}>
             Lógica de la IA
           </h2>
-          <button
-            onClick={() => dispatch({ type: ActionType.TOGGLE_AI_LOG_EXPAND })}
-            className="text-cyan-200 text-2xl md:text-3xl font-bold hover:text-white transition-colors"
-          >
-            &times;
-          </button>
+          {isModal && (
+            <button
+              onClick={() => dispatch({ type: ActionType.TOGGLE_AI_LOG_EXPAND })}
+              className="text-cyan-200 text-2xl md:text-3xl font-bold hover:text-white transition-colors"
+            >
+              &times;
+            </button>
+          )}
         </div>
         <div className="p-4 flex-grow overflow-y-auto">
           {Object.keys(groupedLog).reverse().map(roundKey => {

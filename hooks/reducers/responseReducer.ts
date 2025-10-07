@@ -1,6 +1,8 @@
 import { GameState, ActionType, Player, GamePhase, Case } from '../../types';
 import { getEnvidoValue } from '../../services/trucoLogic';
 import { updateProbsOnEnvido } from '../../services/ai/inferenceService';
+import { getRandomPhrase, ENVIDO_LOSE_PHRASES, ENVIDO_WIN_PHRASES } from '../../services/ai/phrases';
+import { handleStartNewRound } from './gameplayReducer';
 
 function handleEnvidoAccept(state: GameState, messageLog: string[]): GameState {
     const isPlayerRespondingToAI = state.lastCaller === 'ai';
@@ -27,6 +29,13 @@ function handleEnvidoAccept(state: GameState, messageLog: string[]): GameState {
     let newPlayerScore = state.playerScore;
     let newAiScore = state.aiScore;
     let playerCalledHighEnvido = state.playerCalledHighEnvido;
+    
+    let finalBlurb;
+    if (winner === 'ai') {
+      finalBlurb = { text: getRandomPhrase(ENVIDO_WIN_PHRASES), isVisible: true };
+    } else {
+      finalBlurb = { text: getRandomPhrase(ENVIDO_LOSE_PHRASES), isVisible: true };
+    }
 
     if (winner === 'player') {
         newPlayerScore += state.envidoPointsOnOffer;
@@ -61,7 +70,7 @@ function handleEnvidoAccept(state: GameState, messageLog: string[]): GameState {
         opponentHandProbabilities: updatedProbs,
         playerEnvidoValue: playerEnvido,
         ...postEnvidoState,
-        aiBlurb: null,
+        aiBlurb: finalBlurb,
     };
 }
 
@@ -75,22 +84,28 @@ function handleTrucoAccept(state: GameState, messageLog: string[]): GameState {
         pendingTrucoCaller: null,
         messageLog,
         playerActionHistory: [...state.playerActionHistory, ActionType.ACCEPT],
-        aiBlurb: null,
     };
 }
 
-export function handleAccept(state: GameState, action: { type: ActionType.ACCEPT }): GameState {
+export function handleAccept(state: GameState, action: { type: ActionType.ACCEPT; payload?: { blurbText: string } }): GameState {
     const acceptorName = state.currentTurn === 'player' ? 'Jugador' : 'IA';
     const messageLog = [...state.messageLog, `¡${acceptorName} quiere!`];
 
+    const newState = {
+      ...state,
+      aiBlurb: state.currentTurn === 'ai' && action.payload?.blurbText 
+        ? { text: action.payload.blurbText, isVisible: true } 
+        : state.aiBlurb, // Preserve blurb if player is acting
+    };
+
     if (state.gamePhase.includes('envido')) {
-        return handleEnvidoAccept(state, messageLog);
+        return handleEnvidoAccept(newState, messageLog);
     }
     
     if (state.gamePhase.includes('truco') || state.gamePhase.includes('vale_cuatro')) {
-        return handleTrucoAccept(state, messageLog);
+        return handleTrucoAccept(newState, messageLog);
     }
-    return state;
+    return newState;
 }
 
 function handleEnvidoDecline(state: GameState, caller: Player, messageLog: string[]): GameState {
@@ -122,7 +137,6 @@ function handleEnvidoDecline(state: GameState, caller: Player, messageLog: strin
         playerEnvidoFoldHistory: newFoldHistory,
         playerActionHistory: [...state.playerActionHistory, ActionType.DECLINE],
         ...postEnvidoState,
-        aiBlurb: null,
     };
 }
 
@@ -130,24 +144,19 @@ function handleTrucoDecline(state: GameState, caller: Player, messageLog: string
     let newOpponentModel = state.opponentModel;
     let newAiCases = state.aiCases;
 
-    // If AI was the caller, the player just folded to AI's call. Update learning model.
     if (caller === 'ai' && state.aiTrucoContext) {
-        // Player folded. This is a "win" for the AI's call.
         const newCase: Case = {
             ...state.aiTrucoContext,
             outcome: 'win',
-            // Fix: Corrected typo from `trucoFoldrate` to `trucoFoldRate`.
             opponentFoldRateAtTimeOfCall: state.opponentModel.trucoFoldRate,
         };
         newAiCases = [...state.aiCases, newCase];
 
         const decay = 0.9;
-        // Update opponent's fold rate: increase it as they just folded.
         const newFoldRate = state.opponentModel.trucoFoldRate * decay + (1 - decay) * 1;
         
         let newBluffSuccessRate = state.opponentModel.bluffSuccessRate;
         if (state.aiTrucoContext.isBluff) {
-            // Opponent folded, so they failed to catch the bluff.
             const outcome = 0; 
             newBluffSuccessRate = state.opponentModel.bluffSuccessRate * decay + (1 - decay) * outcome;
         }
@@ -161,34 +170,40 @@ function handleTrucoDecline(state: GameState, caller: Player, messageLog: string
     const points = state.trucoLevel > 1 ? state.trucoLevel - 1 : 1;
     const winnerName = caller === 'player' ? 'Jugador' : 'IA';
 
-    return {
+    const stateBeforeNewRound = {
         ...state,
         playerScore: caller === 'player' ? state.playerScore + points : state.playerScore,
         aiScore: caller === 'ai' ? state.aiScore + points : state.aiScore,
         messageLog: [...messageLog, `${winnerName} gana ${points} punto(s).`],
-        gamePhase: 'round_end',
-        currentTurn: 'player',
         pendingTrucoCaller: null,
         playerActionHistory: [...state.playerActionHistory, ActionType.DECLINE],
-        // Update learning state
         opponentModel: newOpponentModel,
         aiCases: newAiCases,
-        aiTrucoContext: null, // Reset context after it's been handled
-        aiBlurb: null,
-    }
+        aiTrucoContext: null,
+        lastRoundWinner: caller,
+    };
+
+    return handleStartNewRound(stateBeforeNewRound, { type: ActionType.START_NEW_ROUND });
 }
 
-export function handleDecline(state: GameState, action: { type: ActionType.DECLINE }): GameState {
+export function handleDecline(state: GameState, action: { type: ActionType.DECLINE; payload?: { blurbText: string } }): GameState {
     const caller = state.lastCaller!;
     const declinerName = state.currentTurn === 'player' ? 'Jugador' : 'IA';
     const messageLog = [...state.messageLog, `${declinerName} no quiere.`];
 
+    const newState = {
+      ...state,
+      aiBlurb: state.currentTurn === 'ai' && action.payload?.blurbText 
+        ? { text: action.payload.blurbText, isVisible: true } 
+        : state.aiBlurb,
+    };
+
     if (state.gamePhase.includes('envido')) {
-        return handleEnvidoDecline(state, caller, messageLog);
+        return handleEnvidoDecline(newState, caller, messageLog);
     }
 
     if (state.gamePhase.includes('truco') || state.gamePhase.includes('vale_cuatro')) {
-        return handleTrucoDecline(state, caller, messageLog);
+        return handleTrucoDecline(newState, caller, messageLog);
     }
-    return state;
+    return newState;
 }

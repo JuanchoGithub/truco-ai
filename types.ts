@@ -100,6 +100,9 @@ export interface GameState {
   
   // AI Blurb for phrases
   aiBlurb: { text: string; isVisible: boolean; } | null;
+
+  // Round Winner Announcement
+  lastRoundWinner: Player | 'tie' | null;
 }
 
 export interface AiMove {
@@ -149,8 +152,8 @@ export type Action =
   | { type: ActionType.CALL_RETRUCO; payload?: { blurbText: string } }
   | { type: ActionType.CALL_VALE_CUATRO; payload?: { blurbText: string } }
   | { type: ActionType.CALL_FALTA_TRUCO }
-  | { type: ActionType.ACCEPT }
-  | { type: ActionType.DECLINE }
+  | { type: ActionType.ACCEPT; payload?: { blurbText: string } }
+  | { type: ActionType.DECLINE; payload?: { blurbText: string } }
   | { type: ActionType.AI_THINKING; payload: boolean }
   | { type: ActionType.ADD_MESSAGE; payload: string }
   | { type: ActionType.SET_AI_TRUCO_CONTEXT; payload: AiTrucoContext }

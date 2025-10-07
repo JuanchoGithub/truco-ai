@@ -1,6 +1,6 @@
 import { GameState, AiMove, ActionType, Card, Rank, Player } from '../../types';
 import { getCardHierarchy, getCardName } from '../trucoLogic';
-import { getRandomPhrase, TRUCO_PHRASES, RETRUCO_PHRASES, VALE_CUATRO_PHRASES } from './phrases';
+import { getRandomPhrase, TRUCO_PHRASES, RETRUCO_PHRASES, VALE_CUATRO_PHRASES, QUIERO_PHRASES, NO_QUIERO_PHRASES } from './phrases';
 
 // New: Weighted sampling to generate a plausible opponent hand from probabilities
 const generateOpponentHand = (state: GameState): Card[] => {
@@ -194,7 +194,9 @@ export const getTrucoResponse = (state: GameState, reasoning: string[] = []): Ai
       const blurbText = getRandomPhrase(phrases);
       return { action: { type: escalateType, payload: { blurbText } }, reasoning: [...reasoning, 'Resultado: Subiendo la apuesta como farol.'].join('\n') };
     }
-    return { action: { type: aggressive ? ActionType.ACCEPT : ActionType.DECLINE }, 
+    const actionType = aggressive ? ActionType.ACCEPT : ActionType.DECLINE;
+    const blurbText = getRandomPhrase(aggressive ? QUIERO_PHRASES : NO_QUIERO_PHRASES);
+    return { action: { type: actionType, payload: { blurbText } }, 
              reasoning: [...reasoning, `Resultado: ${aggressive ? 'Aceptando.' : 'Rechazando.'}`].join('\n') };
   }
 
@@ -206,10 +208,10 @@ export const getTrucoResponse = (state: GameState, reasoning: string[] = []): Ai
     return { action: { type: escalateType, payload: { blurbText } }, reasoning: [...reasoning, decisionReason].join('\n') };
   } else if (equity > -0.15) {
      const decisionReason = `\nDecisión: La equidad es aceptable (${equity.toFixed(2)} > -0.15). La recompensa potencial supera el riesgo. Aceptando.`;
-    return { action: { type: ActionType.ACCEPT }, reasoning: [...reasoning, decisionReason].join('\n') };
+    return { action: { type: ActionType.ACCEPT, payload: { blurbText: getRandomPhrase(QUIERO_PHRASES) } }, reasoning: [...reasoning, decisionReason].join('\n') };
   } else {
     const decisionReason = `\nDecisión: La equidad es muy baja (${equity.toFixed(2)}). El oponente probablemente tiene una mano más fuerte. Rechazando.`;
-    return { action: { type: ActionType.DECLINE }, reasoning: [...reasoning, decisionReason].join('\n') };
+    return { action: { type: ActionType.DECLINE, payload: { blurbText: getRandomPhrase(NO_QUIERO_PHRASES) } }, reasoning: [...reasoning, decisionReason].join('\n') };
   }
 };
 

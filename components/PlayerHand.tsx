@@ -18,7 +18,7 @@ const PlayerHand: React.FC<PlayerHandProps> = ({ cards, playerType, onCardPlay, 
 
   if (isPlayer) {
     return (
-      <div className={`flex justify-center items-center relative h-[200px] md:h-[240px] ${className}`}>
+      <div className={`flex justify-center items-center relative h-[280px] md:h-[360px] ${className}`}>
         {cards.map((card, index) => {
           const middleIndex = (cards.length - 1) / 2;
           const offset = index - middleIndex;
@@ -65,9 +65,9 @@ const PlayerHand: React.FC<PlayerHandProps> = ({ cards, playerType, onCardPlay, 
     : 'space-x-[-50px]'; // Tightly packed in normal mode
 
   return (
-    <div className="flex flex-col items-center justify-center relative h-[100px] md:h-[120px] w-full">
+    <div className="flex flex-col items-center justify-center relative w-full py-2 md:py-4">
       {isThinking && (
-        <div className="absolute -top-5 text-base animate-pulse z-30" style={{ textShadow: '2px 2px 3px rgba(0,0,0,0.7)' }}>IA está pensando...</div>
+        <div className="absolute -top-1 md:-top-2 text-base animate-pulse z-30" style={{ textShadow: '2px 2px 3px rgba(0,0,0,0.7)' }}>IA está pensando...</div>
       )}
       <div className={`flex justify-center ${handSpacingClasses}`}>
         {cards.map((card, index) => (

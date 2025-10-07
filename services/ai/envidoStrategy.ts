@@ -1,6 +1,6 @@
 import { GameState, AiMove, ActionType } from '../../types';
 import { getEnvidoDetails } from '../trucoLogic';
-import { ENVIDO_PHRASES, REAL_ENVIDO_PHRASES, FALTA_ENVIDO_PHRASES, getRandomPhrase } from './phrases';
+import { ENVIDO_PHRASES, REAL_ENVIDO_PHRASES, FALTA_ENVIDO_PHRASES, getRandomPhrase, QUIERO_PHRASES, NO_QUIERO_PHRASES } from './phrases';
 
 // Helper for getEnvidoResponse: Estimates opponent's strength based on their call.
 const estimateOpponentStrengthOnCall = (state: GameState): number => {
@@ -48,18 +48,18 @@ export const getEnvidoResponse = (state: GameState, reasoning: string[]): AiMove
     // Positive or slightly negative advantage -> Accept
     if (advantage > -0.15) { // My hand is close to or better than my estimate of theirs
         reasoning.push(`\nDecisión: Las probabilidades están a mi favor, o son muy parejas. Voy a ACEPTAR.`);
-        return { action: { type: ActionType.ACCEPT }, reasoning: reasoning.join('\n') };
+        return { action: { type: ActionType.ACCEPT, payload: { blurbText: getRandomPhrase(QUIERO_PHRASES) } }, reasoning: reasoning.join('\n') };
     }
 
     // Low advantage -> Mostly Decline
     reasoning.push(`Mi mano parece más débil de lo que el jugador representa.`);
     if (randomFactor < 0.15) { // 15% chance to "hero call"
          reasoning.push(`\nDecisión: Podría ser un farol. Tomaré el riesgo y voy a ACEPTAR.`);
-         return { action: { type: ActionType.ACCEPT }, reasoning: reasoning.join('\n') };
+         return { action: { type: ActionType.ACCEPT, payload: { blurbText: getRandomPhrase(QUIERO_PHRASES) } }, reasoning: reasoning.join('\n') };
     }
     
     reasoning.push(`\nDecisión: El riesgo es muy alto. Voy a RECHAZAR.`);
-    return { action: { type: ActionType.DECLINE }, reasoning: reasoning.join('\n') };
+    return { action: { type: ActionType.DECLINE, payload: { blurbText: getRandomPhrase(NO_QUIERO_PHRASES) } }, reasoning: reasoning.join('\n') };
 }
 
 export const getEnvidoCall = (state: GameState): AiMove | null => {

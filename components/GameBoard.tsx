@@ -5,123 +5,97 @@ import Card from './Card';
 interface GameBoardProps {
   playerTricks: (CardType | null)[];
   aiTricks: (CardType | null)[];
-  currentTrick: number;
   trickWinners: (Player | 'tie' | null)[];
-  mano: Player;
+  lastRoundWinner: Player | 'tie' | null;
 }
 
-interface TrickSlotProps {
-  playerCard: CardType | null;
-  aiCard: CardType | null;
-  trickNumber: number;
-  isCurrent: boolean;
-  winner: Player | 'tie' | null;
-  starter: Player | null;
-}
-
-const TrickSlot: React.FC<TrickSlotProps> = ({ playerCard, aiCard, trickNumber, isCurrent, winner, starter }) => {
-  const currentTrickClasses = isCurrent ? 'border-yellow-400/80 bg-black/30 shadow-[0_0_15px_rgba(250,204,21,0.5)]' : 'border-black/20 bg-black/20';
-  
-  const Crown = () => (
-      <div className="absolute -top-2 -right-2 text-3xl md:-top-3 md:-right-3 md:text-4xl text-yellow-400 z-20" style={{ textShadow: '0 0 6px rgba(250, 204, 21, 0.9)' }}>
-          👑
-      </div>
-  );
-
-  let firstCardPlayer: Player | null = null;
-  // If one card is played, it's the first card
-  if (playerCard && !aiCard) {
-      firstCardPlayer = 'player';
-  } else if (aiCard && !playerCard) {
-      firstCardPlayer = 'ai';
-  } else if (playerCard && aiCard) {
-      firstCardPlayer = starter; // If both cards are played, the starter played first
-  }
-
-  let playerZ = 'z-0';
-  let aiZ = 'z-0';
-  
-  // Only set stacking order when both cards are present. The second card played gets a higher z-index.
-  if (playerCard && aiCard) {
-    if (firstCardPlayer === 'player') {
-      playerZ = 'z-0';
-      aiZ = 'z-10';
-    } else {
-      playerZ = 'z-10';
-      aiZ = 'z-0';
-    }
-  }
-
-  return (
-    <div className={`p-2 md:p-3 rounded-lg border-2 transition-all duration-300 ${currentTrickClasses} flex flex-col items-center`}>
-        <p className="text-center text-xs md:text-sm text-gray-300 mb-1 md:mb-2 font-bold tracking-wider">MANO {trickNumber}</p>
-        <div className="relative w-24 md:w-32 h-56 md:h-64"> {/* Container for stacking */}
-            
-            {/* Render a placeholder if no cards are played */}
-            {!playerCard && !aiCard && <Card card={null} className="!w-24 !h-36 md:!w-32 !h-44" />}
-
-            {/* AI's Card - Always on top of the slot */}
-            {aiCard && (
-                <div className={`absolute left-0 top-0 transition-all duration-300 ${aiZ}`}>
-                    <div className="relative">
-                        <Card card={aiCard} className="!w-24 !h-36 md:!w-32 !h-44" />
-                        {winner === 'ai' && <Crown />}
-                    </div>
-                </div>
-            )}
-
-            {/* Player's Card - Always on bottom of the slot */}
-            {playerCard && (
-                <div className={`absolute left-0 top-16 md:top-20 transition-all duration-300 ${playerZ}`}>
-                    <div className="relative">
-                        <Card card={playerCard} className="!w-24 !h-36 md:!w-32 !h-44" />
-                        {winner === 'player' && <Crown />}
-                    </div>
-                </div>
-            )}
-        </div>
+const Crown = () => (
+    <div className="absolute -top-2 -right-2 text-3xl md:-top-3 md:-right-3 md:text-4xl text-yellow-400 z-20" style={{ textShadow: '0 0 6px rgba(250, 204, 21, 0.9)' }}>
+        👑
     </div>
-  )
+);
+
+interface CardPileProps {
+    cards: (CardType | null)[];
+    trickWinners: (Player | 'tie' | null)[];
+    owner: Player;
+    label: string;
 }
 
-const GameBoard: React.FC<GameBoardProps> = ({ playerTricks, aiTricks, currentTrick, trickWinners, mano }) => {
-  const getTrickStarter = (trickIndex: number): Player | null => {
-    if (trickIndex === 0) {
-      return mano;
-    }
-    const previousTrickWinner = trickWinners[trickIndex - 1];
-    if (previousTrickWinner === 'tie') {
-      return mano;
-    }
-    return previousTrickWinner;
-  };
+const CardPile: React.FC<CardPileProps> = ({ cards, trickWinners, owner, label }) => {
+    const playedCards = cards.map((card, index) => ({ card, index })).filter(item => item.card !== null);
+    const renderPlaceholder = playedCards.length === 0;
+    const cardSizeClasses = "!w-28 !h-[174px] md:!w-32 md:!h-[198px]";
 
+    return (
+        <div className="relative w-full h-56 flex items-center justify-center">
+            <p className="absolute -top-2 text-center text-sm md:text-base text-gray-300 font-bold tracking-wider">{label}</p>
+            {renderPlaceholder && (
+                 <div className={`rounded-lg border-2 border-dashed border-gray-400/30 bg-black/20 ${cardSizeClasses} flex items-center justify-center`}>
+                    <span className="text-gray-400/50 text-xs">Pila Vacía</span>
+                 </div>
+            )}
+            {playedCards.map(({ card, index }) => {
+                if (!card) return null;
+                const isWinner = trickWinners[index] === owner;
+                
+                // Deterministic "messy" transform based on card index to create a fanned pile
+                const rotation = (index * 25) - 25; // -25deg, 0deg, 25deg
+                const translateX = (index * 15) - 15; // -15px, 0px, 15px
+                const translateY = Math.abs(index - 1) * -5; // creates a slight arc
+                
+                return (
+                    <div 
+                        key={`${owner}-card-${index}`} 
+                        className="absolute transition-all duration-500"
+                        style={{ 
+                            transform: `translateX(${translateX}px) translateY(${translateY}px) rotate(${rotation}deg)`,
+                            zIndex: index 
+                        }}
+                    >
+                        <div className="relative">
+                            <Card card={card} className={cardSizeClasses} />
+                            {isWinner && <Crown />}
+                        </div>
+                    </div>
+                );
+            })}
+        </div>
+    );
+};
+
+
+const GameBoard: React.FC<GameBoardProps> = ({ playerTricks, aiTricks, trickWinners, lastRoundWinner }) => {
+  const winnerText = lastRoundWinner === 'player' ? 'Ganaste la Ronda' : lastRoundWinner === 'ai' ? 'IA Gana la Ronda' : 'Ronda Empatada';
   return (
-    <div className="w-full flex flex-row justify-center items-center space-x-2 md:space-x-4 p-2 md:p-4 bg-black/20 rounded-2xl shadow-inner shadow-black/50">
-      <TrickSlot 
-        playerCard={playerTricks[0]} 
-        aiCard={aiTricks[0]} 
-        trickNumber={1} 
-        isCurrent={currentTrick === 0} 
-        winner={trickWinners[0]} 
-        starter={getTrickStarter(0)}
-      />
-      <TrickSlot 
-        playerCard={playerTricks[1]} 
-        aiCard={aiTricks[1]} 
-        trickNumber={2} 
-        isCurrent={currentTrick === 1} 
-        winner={trickWinners[1]}
-        starter={getTrickStarter(1)}
-      />
-      <TrickSlot 
-        playerCard={playerTricks[2]} 
-        aiCard={aiTricks[2]} 
-        trickNumber={3} 
-        isCurrent={currentTrick === 2} 
-        winner={trickWinners[2]}
-        starter={getTrickStarter(2)}
-      />
+    <div className="relative w-full flex flex-row justify-around items-center space-x-2 md:space-x-4 p-4 bg-black/20 rounded-2xl shadow-inner shadow-black/50 min-h-[300px]">
+      <div className="w-1/2">
+        <CardPile 
+          cards={aiTricks}
+          trickWinners={trickWinners}
+          owner="ai"
+          label="Cartas de la IA"
+        />
+      </div>
+      <div className="self-stretch border-l-2 border-yellow-700/30"></div>
+      <div className="w-1/2">
+        <CardPile 
+          cards={playerTricks}
+          trickWinners={trickWinners}
+          owner="player"
+          label="Tus Cartas Jugadas"
+        />
+      </div>
+
+      {lastRoundWinner && (
+        <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-30 animate-fade-in-scale rounded-2xl">
+          <div className="text-center p-4 rounded-lg bg-yellow-400/20 border-2 border-yellow-300 shadow-2xl shadow-black">
+            <h3 className="text-xl md:text-3xl font-cinzel text-white font-bold tracking-wider" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.8)' }}>
+              {winnerText}
+            </h3>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

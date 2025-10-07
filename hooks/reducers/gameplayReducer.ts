@@ -1,8 +1,8 @@
-
 import { GameState, Action, ActionType, GamePhase, Case, OpponentModel } from '../../types';
 import { createDeck, shuffleDeck, determineTrickWinner, determineRoundWinner, getCardName, hasFlor } from '../../services/trucoLogic';
 import { initialState as baseInitialState } from '../useGameReducer';
 import { initializeProbabilities, updateProbsOnPlay } from '../../services/ai/inferenceService';
+import { getRandomPhrase, TRICK_LOSE_PHRASES, TRICK_WIN_PHRASES } from '../../services/ai/phrases';
 
 export function handleRestartGame(state: GameState, action: { type: ActionType.RESTART_GAME }): GameState {
   return {
@@ -71,6 +71,7 @@ export function handleStartNewRound(state: GameState, action: { type: ActionType
     playerEnvidoValue: null,
     playerActionHistory: [],
     aiBlurb: null,
+    // Note: lastRoundWinner is intentionally NOT cleared here, so it can be displayed.
   };
 }
 
@@ -131,6 +132,7 @@ export function handlePlayCard(state: GameState, action: { type: ActionType.PLAY
         playedCards: newPlayedCards,
         opponentHandProbabilities: updatedProbs,
         aiBlurb: null,
+        lastRoundWinner: null, // Clear winner on new card play
       };
     }
 
@@ -140,6 +142,16 @@ export function handlePlayCard(state: GameState, action: { type: ActionType.PLAY
     
     const winnerNameTrick = trickWinner === 'player' ? 'JUGADOR' : trickWinner === 'ai' ? 'IA' : 'EMPATE';
     const trickMessageLog = [...messageLog, `Ganador de la mano ${state.currentTrick + 1}: ${winnerNameTrick}`];
+    
+    let trickOutcomeBlurb = null;
+    if (Math.random() < 0.4) { // 40% chance to say something
+        if (trickWinner === 'ai') {
+            trickOutcomeBlurb = { text: getRandomPhrase(TRICK_WIN_PHRASES), isVisible: true };
+        } else if (trickWinner === 'player') {
+            trickOutcomeBlurb = { text: getRandomPhrase(TRICK_LOSE_PHRASES), isVisible: true };
+        }
+    }
+    
     const roundWinner = determineRoundWinner(newTrickWinners, state.mano);
       
     if (roundWinner) {
@@ -155,7 +167,6 @@ export function handlePlayCard(state: GameState, action: { type: ActionType.PLAY
       let newOpponentModel = state.opponentModel;
       let newAiCases = state.aiCases;
       
-      // Check if a Truco showdown just concluded. If so, log the case for learning.
       if (state.aiTrucoContext) {
         const outcome = roundWinner === 'ai' ? 'win' : 'loss';
         const newCase: Case = {
@@ -166,12 +177,10 @@ export function handlePlayCard(state: GameState, action: { type: ActionType.PLAY
         newAiCases = [...state.aiCases, newCase];
 
         const decay = 0.9;
-        // Player did NOT fold, so decrease their fold rate.
         const newFoldRate = state.opponentModel.trucoFoldRate * decay;
         
         let newBluffSuccessRate = state.opponentModel.bluffSuccessRate;
         if (state.aiTrucoContext.isBluff) {
-            // 1 if opponent caught the bluff, 0 otherwise
             const bluffOutcome = roundWinner === 'ai' ? 0 : 1; 
             newBluffSuccessRate = state.opponentModel.bluffSuccessRate * decay + (1 - decay) * bluffOutcome;
         }
@@ -185,7 +194,7 @@ export function handlePlayCard(state: GameState, action: { type: ActionType.PLAY
       const winnerNameRound = roundWinner === 'player' ? 'JUGADOR' : roundWinner === 'ai' ? 'IA' : 'EMPATE';
       const roundMessageLog = [...trickMessageLog, `Ganador de la ronda: ${winnerNameRound}. Gana ${points} punto(s).`];
         
-      return {
+      const stateBeforeNewRound = {
         ...state,
         playerHand: newPlayerHand,
         aiHand: newAiHand,
@@ -194,17 +203,18 @@ export function handlePlayCard(state: GameState, action: { type: ActionType.PLAY
         trickWinners: newTrickWinners,
         playerScore: newPlayerScore,
         aiScore: newAiScore,
-        gamePhase: 'round_end',
-        currentTurn: 'player',
         messageLog: roundMessageLog,
         playedCards: newPlayedCards,
         opponentHandProbabilities: updatedProbs,
-        // Update learning state
         opponentModel: newOpponentModel,
         aiCases: newAiCases,
-        aiTrucoContext: null, // Reset context
-        aiBlurb: null,
+        aiTrucoContext: null,
+        lastRoundWinner: roundWinner,
+        aiBlurb: trickOutcomeBlurb,
       };
+
+      return handleStartNewRound(stateBeforeNewRound, { type: ActionType.START_NEW_ROUND });
+
     } else {
       const nextTurn = trickWinner === 'tie' ? state.mano : trickWinner;
       return {
@@ -220,7 +230,8 @@ export function handlePlayCard(state: GameState, action: { type: ActionType.PLAY
         messageLog: trickMessageLog,
         playedCards: newPlayedCards,
         opponentHandProbabilities: updatedProbs,
-        aiBlurb: null,
+        aiBlurb: trickOutcomeBlurb,
+        lastRoundWinner: null, // Clear winner on new card play
       };
     }
 }

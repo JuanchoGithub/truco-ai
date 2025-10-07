@@ -1,14 +1,13 @@
-
 import React from 'react';
 import { Action, ActionType } from '../types';
 
 interface MessageLogProps {
   messages: string[];
-  isExpanded: boolean;
   dispatch: React.Dispatch<Action>;
+  isModal: boolean;
 }
 
-const MessageLog: React.FC<MessageLogProps> = ({ messages, isExpanded, dispatch }) => {
+const MessageLog: React.FC<MessageLogProps> = ({ messages, dispatch, isModal }) => {
   const groupedLog: { [key: string]: string[] } = {};
   let currentRound = 'Inicio del Juego';
   messages.forEach(msg => {
@@ -23,23 +22,28 @@ const MessageLog: React.FC<MessageLogProps> = ({ messages, isExpanded, dispatch 
     }
   });
 
-  if (!isExpanded) {
-    return null;
-  }
+  const wrapperClasses = isModal
+    ? "fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+    : "h-full w-full";
+    
+  const containerClasses = "bg-green-900/95 border-4 border-yellow-400/50 rounded-xl shadow-2xl w-full h-full flex flex-col" +
+    (isModal ? " max-w-2xl max-h-[90vh]" : "");
 
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-      <div className="bg-green-900/95 border-4 border-yellow-400/50 rounded-xl shadow-2xl w-full max-w-2xl h-full max-h-[90vh] flex flex-col" style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/felt.png')"}}>
-        <div className="p-4 border-b-2 border-yellow-400/30 flex justify-between items-center">
+    <div className={wrapperClasses}>
+      <div className={containerClasses} style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/felt.png')"}}>
+        <div className="p-4 border-b-2 border-yellow-400/30 flex justify-between items-center flex-shrink-0">
           <h2 className="text-xl md:text-2xl font-bold text-yellow-300 font-cinzel tracking-widest" style={{ textShadow: '2px 2px 3px rgba(0,0,0,0.7)' }}>
             Registro de Juego
           </h2>
-          <button
-            onClick={() => dispatch({ type: ActionType.TOGGLE_GAME_LOG_EXPAND })}
-            className="text-yellow-200 text-2xl md:text-3xl font-bold hover:text-white transition-colors"
-          >
-            &times;
-          </button>
+          {isModal && (
+            <button
+              onClick={() => dispatch({ type: ActionType.TOGGLE_GAME_LOG_EXPAND })}
+              className="text-yellow-200 text-2xl md:text-3xl font-bold hover:text-white transition-colors"
+            >
+              &times;
+            </button>
+          )}
         </div>
         <div className="p-4 flex-grow overflow-y-auto">
           {Object.keys(groupedLog).reverse().map(roundKey => (

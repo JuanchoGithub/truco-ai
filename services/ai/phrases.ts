@@ -1,5 +1,63 @@
 export const getRandomPhrase = (phrases: string[]): string => phrases[Math.floor(Math.random() * phrases.length)];
 
+export const QUIERO_PHRASES = [
+  "¡Quiero! A ver esas cartas.",
+  "¡Dale, quiero! No te achiques ahora.",
+  "Acepto. ¡Quiero!",
+  "¡Quiero, y que sea lo que el mazo quiera!",
+  "¡Claro que quiero! Venga.",
+  "Me la juego. ¡Quiero!",
+  "Veamos... ¡Sí, quiero!",
+  "Sí, quiero. Sin miedo.",
+  "Va pa' delante. ¡Quiero!",
+  "Aceptado... ¡Quiero!",
+];
+
+export const NO_QUIERO_PHRASES = [
+  "No quiero. Paso.",
+  "Mmm, no. Me voy al mazo, no quiero.",
+  "Paso. Esta vez no quiero.",
+  "No, gracias. No quiero.",
+  "No quiero, esta vez ganas vos.",
+  "Demasiado riesgo. No quiero.",
+  "Mejor me guardo. Así que no quiero.",
+  "No, esta no la veo. No quiero.",
+  "No me convence... no quiero.",
+  "Te la dejo pasar. No quiero.",
+];
+
+export const ENVIDO_WIN_PHRASES = [
+  "Mis puntos son ley.",
+  "Te gané el tanto.",
+  "¡Gané el envido! Sumando...",
+  "Estos puntos son míos.",
+  "Mejor suerte para la próxima con el envido.",
+];
+
+export const ENVIDO_LOSE_PHRASES = [
+  "Son buenas. Bien jugado.",
+  "Tus puntos son mejores. Te felicito.",
+  "Son buenas. Me ganaste el tanto.",
+  "Reconozco, son buenas.",
+  "Me ganaste bien. Son buenas.",
+];
+
+export const TRICK_WIN_PHRASES = [
+  "¡Esta mano es mía!",
+  "¡Así se juega!",
+  "Un paso más cerca de la victoria.",
+  "Gano esta mano.",
+  "¡Tomá! Para que aprendas.",
+];
+
+export const TRICK_LOSE_PHRASES = [
+  "Bien jugado.",
+  "Me la ganaste.",
+  "Buena carta.",
+  "Esta es tuya, pero la ronda no terminó.",
+  "Mmm, no esperaba esa.",
+];
+
 // Phrases for a standard "Envido" call
 export const ENVIDO_PHRASES = [
   "Amalaya con las penas cuando flaquea el corazón, yo le canto envido apenas pues no tengo pa'l rabón.",
