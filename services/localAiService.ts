@@ -1,3 +1,4 @@
+
 import { GameState, ActionType, AiMove } from '../types';
 import { findBestCardToPlay } from './ai/playCardStrategy';
 import { getEnvidoResponse, getEnvidoCall } from './ai/envidoStrategy';
@@ -17,10 +18,10 @@ export const getLocalAIMove = (state: GameState): AiMove => {
         const winner = trickWinners[lastTrickIndex];
 
         if (playerCard && aiCard && winner) {
-            reasoning.push(`[Recap of Trick ${lastTrickIndex + 1}]`);
-            reasoning.push(`Player played: ${getCardName(playerCard)}`);
-            reasoning.push(`I played: ${getCardName(aiCard)}`);
-            reasoning.push(`Result: ${winner === 'tie' ? 'Tie' : `${winner.toUpperCase()} won`}`);
+            reasoning.push(`[Resumen Mano ${lastTrickIndex + 1}]`);
+            reasoning.push(`Jugador jugó: ${getCardName(playerCard)}`);
+            reasoning.push(`Yo jugué: ${getCardName(aiCard)}`);
+            reasoning.push(`Resultado: ${winner === 'tie' ? 'Empate' : `${winner.toUpperCase()} ganó`}`);
             reasoning.push(`--------------------`);
         }
     }
@@ -29,20 +30,20 @@ export const getLocalAIMove = (state: GameState): AiMove => {
     if (canDeclareFlor) {
         return {
             action: { type: ActionType.DECLARE_FLOR },
-            reasoning: "[Flor Logic]\nI have Flor! I must declare it to win 3 points."
+            reasoning: "[Lógica de Flor]\n¡Tengo Flor! Debo cantarla para ganar 3 puntos."
         };
     }
 
     // 1. MUST RESPOND to a player's call
     if (gamePhase.includes('_called') && currentTurn === 'ai' && lastCaller === 'player') {
-        reasoning.push(`[Response Logic]`);
-        reasoning.push(`Player called ${gamePhase.replace('_called', '').toUpperCase()}. I must respond.`);
+        reasoning.push(`[Lógica de Respuesta]`);
+        reasoning.push(`El jugador cantó ${gamePhase.replace('_called', '').toUpperCase()}. Debo responder.`);
 
         const canCallEnvidoPrimero = gamePhase === 'truco_called' && currentTrick === 0 && state.playerTricks[0] === null && state.aiTricks[0] === null && !playerHasFlor && !aiHasFlor;
         if (canCallEnvidoPrimero) {
             const envidoCallDecision = getEnvidoCall(state);
             if (envidoCallDecision) {
-                 const updatedReasoning = `[Envido Primero Logic]\nPlayer called TRUCO, but I will invoke priority for Envido.\n` + envidoCallDecision.reasoning;
+                 const updatedReasoning = `[Lógica de Envido Primero]\nEl jugador cantó TRUCO, pero invocaré la prioridad del Envido.\n` + envidoCallDecision.reasoning;
                  return { ...envidoCallDecision, reasoning: updatedReasoning, action: { type: ActionType.CALL_ENVIDO } };
             }
         }

@@ -1,3 +1,4 @@
+
 import { GameState, Action, ActionType, GamePhase, Case, OpponentModel } from '../../types';
 import { createDeck, shuffleDeck, determineTrickWinner, determineRoundWinner, getCardName, hasFlor } from '../../services/trucoLogic';
 import { initialState as baseInitialState } from '../useGameReducer';
@@ -9,10 +10,11 @@ export function handleRestartGame(state: GameState, action: { type: ActionType.R
     mano: 'ai', // First game player is mano, next is AI
     currentTurn: 'ai',
     round: 0,
-    messageLog: ['New Game Started! AI is mano.'],
+    messageLog: ['¡Nuevo juego comenzado! La IA es mano.'],
     isDebugMode: state.isDebugMode, // Persist debug mode setting
-    aiReasoningLog: [{ round: 0, reasoning: 'AI is waiting for the new round to start.' }],
+    aiReasoningLog: [{ round: 0, reasoning: 'La IA está esperando que comience la nueva ronda.' }],
     playerEnvidoFoldHistory: [], // Reset history on new game
+    aiBlurb: null,
   };
 }
 
@@ -54,7 +56,7 @@ export function handleStartNewRound(state: GameState, action: { type: ActionType
     currentTurn: newMano,
     gamePhase: 'trick_1',
     round: state.round + 1,
-    messageLog: [...state.messageLog, `--- Round ${state.round + 1} ---`, `${newMano.toUpperCase()} is mano.`],
+    messageLog: [...state.messageLog, `--- Ronda ${state.round + 1} ---`, `${newMano === 'player' ? 'Eres' : 'La IA es'} mano.`],
     turnBeforeInterrupt: null,
     pendingTrucoCaller: null,
     hasEnvidoBeenCalledThisRound: false,
@@ -68,6 +70,7 @@ export function handleStartNewRound(state: GameState, action: { type: ActionType
     opponentHandProbabilities: initialProbs,
     playerEnvidoValue: null,
     playerActionHistory: [],
+    aiBlurb: null,
   };
 }
 
@@ -112,7 +115,7 @@ export function handlePlayCard(state: GameState, action: { type: ActionType.PLAY
       updatedProbs = updateProbsOnPlay(updatedProbs, cardPlayed);
     }
       
-    const messageLog = [...state.messageLog, `${player.toUpperCase()} plays ${getCardName(cardPlayed)}`];
+    const messageLog = [...state.messageLog, `${player === 'player' ? 'Jugador' : 'IA'} juega ${getCardName(cardPlayed)}`];
     const isTrickComplete = newPlayerTricks[state.currentTrick] !== null && newAiTricks[state.currentTrick] !== null;
 
     if (!isTrickComplete) {
@@ -127,14 +130,16 @@ export function handlePlayCard(state: GameState, action: { type: ActionType.PLAY
         messageLog: messageLog,
         playedCards: newPlayedCards,
         opponentHandProbabilities: updatedProbs,
+        aiBlurb: null,
       };
     }
 
     const trickWinner = determineTrickWinner(newPlayerTricks[state.currentTrick]!, newAiTricks[state.currentTrick]!);
     const newTrickWinners = [...state.trickWinners];
     newTrickWinners[state.currentTrick] = trickWinner;
-      
-    const trickMessageLog = [...messageLog, `Trick ${state.currentTrick + 1} winner: ${trickWinner.toUpperCase()}`];
+    
+    const winnerNameTrick = trickWinner === 'player' ? 'JUGADOR' : trickWinner === 'ai' ? 'IA' : 'EMPATE';
+    const trickMessageLog = [...messageLog, `Ganador de la mano ${state.currentTrick + 1}: ${winnerNameTrick}`];
     const roundWinner = determineRoundWinner(newTrickWinners, state.mano);
       
     if (roundWinner) {
@@ -176,8 +181,9 @@ export function handlePlayCard(state: GameState, action: { type: ActionType.PLAY
             bluffSuccessRate: newBluffSuccessRate,
         };
       }
-
-      const roundMessageLog = [...trickMessageLog, `Round winner: ${roundWinner.toUpperCase()}. Wins ${points} point(s).`];
+      
+      const winnerNameRound = roundWinner === 'player' ? 'JUGADOR' : roundWinner === 'ai' ? 'IA' : 'EMPATE';
+      const roundMessageLog = [...trickMessageLog, `Ganador de la ronda: ${winnerNameRound}. Gana ${points} punto(s).`];
         
       return {
         ...state,
@@ -197,6 +203,7 @@ export function handlePlayCard(state: GameState, action: { type: ActionType.PLAY
         opponentModel: newOpponentModel,
         aiCases: newAiCases,
         aiTrucoContext: null, // Reset context
+        aiBlurb: null,
       };
     } else {
       const nextTurn = trickWinner === 'tie' ? state.mano : trickWinner;
@@ -213,6 +220,7 @@ export function handlePlayCard(state: GameState, action: { type: ActionType.PLAY
         messageLog: trickMessageLog,
         playedCards: newPlayedCards,
         opponentHandProbabilities: updatedProbs,
+        aiBlurb: null,
       };
     }
 }

@@ -10,6 +10,7 @@ import ActionBar from './components/ActionBar';
 import MessageLog from './components/MessageLog';
 import GameOverModal from './components/GameOverModal';
 import AiLogPanel from './components/AiLogPanel';
+import AiBlurb from './components/AiBlurb';
 
 const App: React.FC = () => {
   const [state, dispatch] = useReducer(useGameReducer, initialState);
@@ -24,7 +25,7 @@ const App: React.FC = () => {
       const handleAiTurn = () => {
         dispatch({ type: ActionType.AI_THINKING, payload: true });
         
-        const initialReasoning = `It is my turn to act. Phase: ${state.gamePhase}. My hand: ${state.aiHand.length} cards. Consulting local AI...`;
+        const initialReasoning = `Es mi turno. Fase: ${state.gamePhase}. Mi mano: ${state.aiHand.length} cartas. Consultando IA...`;
         dispatch({ type: ActionType.ADD_AI_REASONING_LOG, payload: { round: state.round, reasoning: initialReasoning } });
 
         try {
@@ -42,9 +43,9 @@ const App: React.FC = () => {
             }, 700);
         } catch(error) {
             console.error("Error getting AI move from local AI:", error);
-            const errorMsg = "An error occurred with the AI. The AI forfeits its turn.";
+            const errorMsg = "Ocurrió un error con la IA. La IA pierde su turno.";
             dispatch({ type: ActionType.ADD_MESSAGE, payload: errorMsg });
-            dispatch({ type: ActionType.ADD_AI_REASONING_LOG, payload: { round: state.round, reasoning: `Local AI Error: ${error}` } });
+            dispatch({ type: ActionType.ADD_AI_REASONING_LOG, payload: { round: state.round, reasoning: `Error IA Local: ${error}` } });
             dispatch({ type: ActionType.AI_THINKING, payload: false });
         }
       };
@@ -69,7 +70,7 @@ const App: React.FC = () => {
         onClick={() => dispatch({ type: ActionType.TOGGLE_DEBUG_MODE })}
         className={`absolute top-2 right-2 md:top-4 md:right-4 z-50 px-2 py-0.5 text-[10px] md:px-3 md:py-1 md:text-xs rounded-md border-2 transition-colors ${state.isDebugMode ? 'bg-yellow-500 border-yellow-300 text-black font-bold' : 'bg-gray-700/50 border-gray-500 text-white'}`}
        >
-        DEBUG CARDS
+        VER CARTAS
        </button>
       
       {/* Main Centered Content */}
@@ -79,7 +80,7 @@ const App: React.FC = () => {
         <div className="flex-shrink-0 h-[180px] md:h-[220px] flex flex-col items-center justify-start pt-0 md:pt-2">
             <div className="text-center">
                 <h1 className="text-3xl md:text-4xl font-cinzel font-bold tracking-wider text-yellow-300" style={{ textShadow: '3px 3px 5px rgba(0,0,0,0.8)' }}>TRUCO</h1>
-                <p className="text-xs md:text-sm text-gray-200 tracking-widest">Round {state.round} | Mano: {state.mano === 'player' ? 'You' : 'AI'}</p>
+                <p className="text-xs md:text-sm text-gray-200 tracking-widest">Ronda {state.round} | Mano: {state.mano === 'player' ? 'Tú' : 'IA'}</p>
             </div>
             <div className="mt-2 md:mt-4 flex-grow flex items-center">
                  <PlayerHand 
@@ -90,6 +91,9 @@ const App: React.FC = () => {
                 />
             </div>
         </div>
+
+        {/* AI Speech Blurb */}
+        <AiBlurb text={state.aiBlurb?.text ?? ''} isVisible={!!state.aiBlurb?.isVisible} />
 
         {/* MIDDLE: Board */}
         <div className="flex-grow flex items-center justify-center py-2 md:py-4">

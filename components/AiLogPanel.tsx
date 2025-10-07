@@ -26,7 +26,7 @@ const AiLogPanel: React.FC<AiLogPanelProps> = ({ log, isExpanded, dispatch, clas
         <div className="bg-blue-900/95 border-4 border-cyan-400/50 rounded-xl shadow-2xl w-full max-w-2xl h-full max-h-[90vh] flex flex-col">
           <div className="p-4 border-b-2 border-cyan-400/30 flex justify-between items-center">
             <h2 className="text-xl md:text-2xl font-bold text-cyan-300 font-cinzel tracking-widest" style={{ textShadow: '2px 2px 3px rgba(0,0,0,0.7)' }}>
-              AI Reasoning Log
+              Lógica de la IA
             </h2>
             <button
               onClick={() => dispatch({ type: ActionType.TOGGLE_AI_LOG_EXPAND })}
@@ -43,7 +43,7 @@ const AiLogPanel: React.FC<AiLogPanelProps> = ({ log, isExpanded, dispatch, clas
               return (
               <div key={`round-${roundNumber}`} className="mb-4">
                 <h3 className="text-base md:text-lg font-bold text-yellow-300 border-b border-yellow-300/30 mb-2 pb-1">
-                  Round {roundNumber}
+                  Ronda {roundNumber}
                 </h3>
                 <div className="space-y-2">
                     {groupedLog[roundNumber].map((reasoning, index) => (
@@ -68,10 +68,10 @@ const AiLogPanel: React.FC<AiLogPanelProps> = ({ log, isExpanded, dispatch, clas
       className={`bg-black/30 p-2 md:p-3 rounded-lg shadow-xl border-2 border-yellow-700/30 w-52 md:w-64 shadow-inner shadow-black/30 cursor-pointer hover:border-yellow-500 transition-colors flex flex-col ${className}`}
     >
       <h3 className="text-base md:text-md font-bold text-center mb-2 text-yellow-300 font-cinzel tracking-widest flex-shrink-0" style={{ textShadow: '2px 2px 3px rgba(0,0,0,0.7)' }}>
-        AI Log
+        Lógica IA
       </h3>
       <div className="flex-grow overflow-y-hidden text-[10px] md:text-xs pr-1 md:pr-2 text-amber-100 whitespace-pre-wrap font-mono">
-        <p className="text-gray-300 text-center text-[10px] md:text-xs mb-1 italic">Click to expand</p>
+        <p className="text-gray-300 text-center text-[10px] md:text-xs mb-1 italic">Clic para expandir</p>
         <p className="opacity-80">{latestEntry?.reasoning}</p>
       </div>
     </div>

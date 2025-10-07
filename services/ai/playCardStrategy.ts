@@ -1,3 +1,4 @@
+
 import { GameState, Card, Suit } from '../../types';
 import { getCardHierarchy, getCardName, getEnvidoValue } from '../trucoLogic';
 
@@ -31,14 +32,14 @@ const getEnvidoSuit = (hand: Card[]): Suit | null => {
 
 export const findBestCardToPlay = (state: GameState): PlayCardResult => {
     const { aiHand, playerTricks, currentTrick, trickWinners, mano, hasEnvidoBeenCalledThisRound, initialAiHand, playerEnvidoValue } = state;
-    if (aiHand.length === 0) return { index: 0, reasoning: ["No cards left to play."]};
+    if (aiHand.length === 0) return { index: 0, reasoning: ["No quedan cartas para jugar."]};
 
-    let reasoning: string[] = [`[Play Card Logic]`, `My hand: ${aiHand.map(getCardName).join(', ')}`];
+    let reasoning: string[] = [`[Lógica: Jugar Carta]`, `Mi mano: ${aiHand.map(getCardName).join(', ')}`];
     const playerCardOnBoard = playerTricks[currentTrick];
 
     // --- AI is leading the trick ---
     if (!playerCardOnBoard) {
-        reasoning.push(`I am leading Trick ${currentTrick + 1}.`);
+        reasoning.push(`Lidero la Mano ${currentTrick + 1}.`);
 
         // Advanced Deceptive Play
         // Condition: AI won a high-value envido showdown, so player knows AI has good envido cards.
@@ -46,8 +47,8 @@ export const findBestCardToPlay = (state: GameState): PlayCardResult => {
             const myEnvido = getEnvidoValue(initialAiHand);
             if (myEnvido > playerEnvidoValue && myEnvido >= 28 && Math.random() < 0.6) { // 60% chance for deception
                 const cardIndex = findCardIndexByValue(aiHand, 'min');
-                reasoning.push(`[Deceptive Play]: I won the Envido showdown, so the player knows I have high cards. I will play my *lowest* card to feign weakness for tricks and bait them into a Truco call.`);
-                reasoning.push(`\nDecision: Playing ${getCardName(aiHand[cardIndex])}.`);
+                reasoning.push(`[Jugada Engañosa]: Gané el Envido, por lo que el jugador sabe que tengo cartas altas. Jugaré mi carta *más baja* para fingir debilidad y provocar un Truco.`);
+                reasoning.push(`\nDecisión: Jugando ${getCardName(aiHand[cardIndex])}.`);
                 return { index: cardIndex, reasoning };
             }
         }
@@ -58,10 +59,10 @@ export const findBestCardToPlay = (state: GameState): PlayCardResult => {
             case 0: // First trick
                 if (mano === 'ai') {
                     cardIndex = findCardIndexByValue(aiHand, 'max');
-                    reasoning.push(`\nDecision: I am mano, so I'll play my highest card to secure the lead: ${getCardName(aiHand[cardIndex])}.`);
+                    reasoning.push(`\nDecisión: Soy mano, así que jugaré mi carta más alta para asegurar la ventaja: ${getCardName(aiHand[cardIndex])}.`);
                 } else {
                     cardIndex = findCardIndexByValue(aiHand, 'min');
-                    reasoning.push(`\nDecision: Player is mano, so I'll play my lowest card to see what they have: ${getCardName(aiHand[cardIndex])}.`);
+                    reasoning.push(`\nDecisión: El jugador es mano, así que jugaré mi carta más baja para ver qué tiene: ${getCardName(aiHand[cardIndex])}.`);
                 }
                 return { index: cardIndex, reasoning };
             case 1: // Second trick
@@ -77,30 +78,30 @@ export const findBestCardToPlay = (state: GameState): PlayCardResult => {
                         if (matchingSuitCardIndex !== -1) {
                             // High probability to make this smart, deceptive play.
                             if (Math.random() < 0.75) {
-                                reasoning.push(`[Deceptive Play]: My Envido call likely revealed my '${envidoSuit}' pair. Instead of my strongest overall card, I will lead my remaining '${envidoSuit}' card.`);
-                                reasoning.push(`This creates uncertainty, making the opponent question if I have another high card of the same suit. It camouflages my hand's true remaining strength.`);
+                                reasoning.push(`[Jugada Engañosa]: Mi canto de Envido probablemente reveló mi par de '${envidoSuit}'. En lugar de mi carta más fuerte, lideraré con mi carta restante de '${envidoSuit}'.`);
+                                reasoning.push(`Esto crea incertidumbre, haciendo que el oponente dude si tengo otra carta alta del mismo palo. Camufla la verdadera fuerza restante de mi mano.`);
                                 const cardToPlay = aiHand[matchingSuitCardIndex];
-                                reasoning.push(`\nDecision: Playing the deceptive ${getCardName(cardToPlay)}.`);
+                                reasoning.push(`\nDecisión: Jugando la engañosa ${getCardName(cardToPlay)}.`);
                                 return { index: matchingSuitCardIndex, reasoning };
                             } else {
-                                reasoning.push(`[Deceptive Play Skipped]: I considered a deceptive suit-matched lead, but randomization led me to a standard play to remain unpredictable.`);
+                                reasoning.push(`[Jugada Engañosa Omitida]: Consideré una jugada engañosa, pero el azar me llevó a una jugada estándar para mantenerme impredecible.`);
                             }
                         }
                     }
 
                     // Fallback to original logic if deceptive play isn't triggered.
                     cardIndex = findCardIndexByValue(aiHand, 'max');
-                    reasoning.push(`\nDecision: I won the first trick. Playing my highest card to win the round: ${getCardName(aiHand[cardIndex])}.`);
+                    reasoning.push(`\nDecisión: Gané la primera mano. Jugando mi carta más alta para ganar la ronda: ${getCardName(aiHand[cardIndex])}.`);
                 } else if (trickWinners[0] === 'player') {
                     cardIndex = findCardIndexByValue(aiHand, 'max');
-                    reasoning.push(`\nDecision: I lost the first trick. I must win this one. Playing my highest card: ${getCardName(aiHand[cardIndex])}.`);
+                    reasoning.push(`\nDecisión: Perdí la primera mano. Debo ganar esta. Jugando mi carta más alta: ${getCardName(aiHand[cardIndex])}.`);
                 } else { // Tied first trick
                     cardIndex = findCardIndexByValue(aiHand, 'max');
-                    reasoning.push(`\nDecision: The first trick was a parda (tie). This makes the second trick the decisive one for the round. I must shift to an aggressive strategy and lead my strongest card to secure the win outright: ${getCardName(aiHand[cardIndex])}.`);
+                    reasoning.push(`\nDecisión: La primera mano fue parda. Esto hace que la segunda sea decisiva. Debo cambiar a una estrategia agresiva y jugar mi carta más fuerte para asegurar la victoria: ${getCardName(aiHand[cardIndex])}.`);
                 }
                 return { index: cardIndex, reasoning };
             case 2: // Third trick
-                reasoning.push(`\nDecision: Only one card left. Playing ${getCardName(aiHand[0])}.`);
+                reasoning.push(`\nDecisión: Solo queda una carta. Jugando ${getCardName(aiHand[0])}.`);
                 return { index: 0, reasoning };
         }
     }
@@ -108,18 +109,18 @@ export const findBestCardToPlay = (state: GameState): PlayCardResult => {
     // --- AI is responding to a card ---
     const playerCard = playerTricks[currentTrick]!;
     const playerCardValue = getCardHierarchy(playerCard);
-    reasoning.push(`I am responding to Player's ${getCardName(playerCard)} (Value: ${playerCardValue}).`);
+    reasoning.push(`Respondo a la carta del jugador ${getCardName(playerCard)} (Valor: ${playerCardValue}).`);
     
     const winningCards = aiHand.filter(card => getCardHierarchy(card) > playerCardValue);
     if (winningCards.length > 0) {
         winningCards.sort((a, b) => getCardHierarchy(a) - getCardHierarchy(b));
         const cardToPlay = winningCards[0];
         const cardIndex = aiHand.findIndex(c => c.rank === cardToPlay.rank && c.suit === cardToPlay.suit);
-        reasoning.push(`\nDecision: I can win this trick. I'll use my lowest winning card to save better ones: ${getCardName(cardToPlay)} (Value: ${getCardHierarchy(cardToPlay)}).`);
+        reasoning.push(`\nDecisión: Puedo ganar esta mano. Usaré mi carta ganadora más baja para guardar las mejores: ${getCardName(cardToPlay)} (Valor: ${getCardHierarchy(cardToPlay)}).`);
         return { index: cardIndex, reasoning };
     } 
     
     const cardIndex = findCardIndexByValue(aiHand, 'min');
-    reasoning.push(`\nDecision: I can't win this trick. I will throw away my lowest card: ${getCardName(aiHand[cardIndex])}.`);
+    reasoning.push(`\nDecisión: No puedo ganar esta mano. Descartaré mi carta más baja: ${getCardName(aiHand[cardIndex])}.`);
     return { index: cardIndex, reasoning };
 }

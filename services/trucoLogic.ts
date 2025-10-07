@@ -1,3 +1,4 @@
+
 import { Card, Suit, Rank, Player } from '../types';
 
 const SUITS: Suit[] = ['espadas', 'bastos', 'oros', 'copas'];
@@ -13,7 +14,7 @@ export const getCardName = (card: Card): string => {
     default: rankName = String(card.rank);
   }
   const suitName = card.suit.charAt(0).toUpperCase() + card.suit.slice(1);
-  return `${rankName} of ${suitName}`;
+  return `${rankName} de ${suitName}`;
 };
 
 export const createDeck = (): Card[] => {
@@ -130,7 +131,7 @@ export const getEnvidoDetails = (hand: Card[]): EnvidoDetails => {
     const card1 = sortedCards[0];
     const card2 = sortedCards[1];
     
-    const reasoning = `[Envido Calculation]\nI have multiple '${bestSuit}' cards. Using ${getCardName(card1)} and ${getCardName(card2)}.\nMy points are 20 + ${card1.value} + ${card2.value} = ${maxEnvido}.`;
+    const reasoning = `[Cálculo de Envido]\n- Tengo múltiples cartas de '${bestSuit}'. Usando ${getCardName(card1)} y ${getCardName(card2)}.\n- Mis puntos son 20 + ${card1.value} + ${card2.value} = ${maxEnvido}.`;
     return { value: maxEnvido, reasoning };
   }
   
@@ -138,7 +139,7 @@ export const getEnvidoDetails = (hand: Card[]): EnvidoDetails => {
   const sortedHand = valueCards.sort((a,b) => b.value - a.value);
   const highestCard = sortedHand[0];
 
-  const reasoning = `[Envido Calculation]\nMy cards are all different suits. My highest card is ${getCardName(highestCard)}, giving me ${highestCard.value} points.`;
+  const reasoning = `[Cálculo de Envido]\n- Mis cartas son de diferentes palos. Mi carta más alta es ${getCardName(highestCard)}, dándome ${highestCard.value} puntos.`;
   return { value: highestCard.value, reasoning };
 };
 

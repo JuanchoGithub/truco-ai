@@ -1,5 +1,6 @@
 import { GameState, AiMove, ActionType, Card, Rank, Player } from '../../types';
 import { getCardHierarchy, getCardName } from '../trucoLogic';
+import { getRandomPhrase, TRUCO_PHRASES, RETRUCO_PHRASES, VALE_CUATRO_PHRASES } from './phrases';
 
 // New: Weighted sampling to generate a plausible opponent hand from probabilities
 const generateOpponentHand = (state: GameState): Card[] => {
@@ -118,7 +119,7 @@ const calculateTrucoStrength = (state: GameState): TrucoStrengthResult => {
   const reasoning: string[] = [];
 
   if (aiHand.length === 0) {
-    return { strength: 0, reasoning: ["No cards left to play."] };
+    return { strength: 0, reasoning: ["No quedan cartas para jugar."] };
   }
 
   let heuristic = 0;
@@ -129,7 +130,7 @@ const calculateTrucoStrength = (state: GameState): TrucoStrengthResult => {
     heuristic += BRAVAS[key] || (LOW_RANKS[card.rank] || 0) * 0.1;
   }
   const heuristicNormalized = heuristic / 4.0;
-  reasoning.push(`- Heuristic Strength: ${heuristicNormalized.toFixed(2)} (based on high-value 'bravas').`);
+  reasoning.push(`- Fuerza Heurística: ${heuristicNormalized.toFixed(2)} (basada en cartas 'bravas').`);
   
   const simOptions = {
     iterations: 150,
@@ -142,17 +143,17 @@ const calculateTrucoStrength = (state: GameState): TrucoStrengthResult => {
 
   const oppSample = generateOpponentHand(state);
   const simWinProb = simulateRoundWin([...aiHand], oppSample, simOptions);
-  reasoning.push(`- Simulation Win %: ${(simWinProb * 100).toFixed(0)}% (from 150 simulated rounds against a probable opponent hand).`);
+  reasoning.push(`- % Victoria Simulación: ${(simWinProb * 100).toFixed(0)}% (de 150 rondas simuladas contra una mano probable del oponente).`);
   
   const hasStrongInferredCards = state.opponentHandProbabilities?.rankProbs[7]! < 0.1;
   const bravaBoost = hasStrongInferredCards ? 0.1 : 0;
    if (bravaBoost > 0) {
-      reasoning.push(`- Inference Boost: +${bravaBoost.toFixed(2)} (player is unlikely to hold key cards like 7s).`);
+      reasoning.push(`- Bono por Inferencia: +${bravaBoost.toFixed(2)} (es poco probable que el jugador tenga cartas clave como los 7).`);
   }
 
   const blended = heuristicNormalized * 0.6 + simWinProb * 0.4 + bravaBoost;
   const finalStrength = Math.min(1.0, blended);
-  reasoning.push(`-> Sim-Adjusted Strength: ${finalStrength.toFixed(2)} (a blend of heuristic and simulation).`);
+  reasoning.push(`-> Fuerza Ajustada por Sim: ${finalStrength.toFixed(2)} (mezcla de heurística y simulación).`);
 
   return { strength: finalStrength, reasoning };
 };
@@ -163,7 +164,7 @@ export const getTrucoResponse = (state: GameState, reasoning: string[] = []): Ai
 
   const strengthResult = calculateTrucoStrength(state);
   const myStrength = strengthResult.strength;
-  reasoning.push(`[Strength Assessment]`);
+  reasoning.push(`[Evaluación de Fuerza]`);
   reasoning.push(...strengthResult.reasoning);
 
   const envidoLeak = playerCalledHighEnvido ? 0.2 : 0;
@@ -177,33 +178,37 @@ export const getTrucoResponse = (state: GameState, reasoning: string[] = []): Ai
   
   const equity = myStrength - 0.5 - envidoLeak + positionalBonus;
   
-  reasoning.push(`\n[Decision Factors]`);
-  reasoning.push(`- Score: AI ${aiScore} - Player ${playerScore} (Diff: ${scoreDiff}).`);
-  if (envidoLeak > 0) reasoning.push(`- Envido Leak Penalty: -${envidoLeak.toFixed(2)} (opponent revealed a strong envido hand).`);
-  if (positionalBonus > 0) reasoning.push(`- Positional Bonus: +${positionalBonus.toFixed(2)} (for winning a previous trick).`);
-  reasoning.push(`-> Final Equity: ${equity.toFixed(2)} (My Strength - 0.5 + bonuses). Positive equity suggests accepting/escalating is profitable.`);
+  reasoning.push(`\n[Factores de Decisión]`);
+  reasoning.push(`- Tantos: IA ${aiScore} - Jugador ${playerScore} (Dif: ${scoreDiff}).`);
+  if (envidoLeak > 0) reasoning.push(`- Penalización por Envido: -${envidoLeak.toFixed(2)} (el oponente reveló una mano fuerte de envido).`);
+  if (positionalBonus > 0) reasoning.push(`- Bono Posicional: +${positionalBonus.toFixed(2)} (por ganar una mano anterior).`);
+  reasoning.push(`-> Equidad Final: ${equity.toFixed(2)} (Mi Fuerza - 0.5 + bonos). Una equidad positiva sugiere que aceptar/escalar es rentable.`);
 
 
   if (rand < 0.1) {
-    reasoning.push('\nDecision: Applying mixed strategy (random deviation) for unpredictability.');
+    reasoning.push('\nDecisión: Aplicando estrategia mixta (desviación aleatoria) para ser impredecible.');
     const aggressive = rand < 0.05;
     if (aggressive && trucoLevel < 3) {
       const escalateType = trucoLevel === 1 ? ActionType.CALL_RETRUCO : ActionType.CALL_VALE_CUATRO;
-      return { action: { type: escalateType }, reasoning: [...reasoning, 'Result: Escalating as a bluff.'].join('\n') };
+      const phrases = trucoLevel === 1 ? RETRUCO_PHRASES : VALE_CUATRO_PHRASES;
+      const blurbText = getRandomPhrase(phrases);
+      return { action: { type: escalateType, payload: { blurbText } }, reasoning: [...reasoning, 'Resultado: Subiendo la apuesta como farol.'].join('\n') };
     }
     return { action: { type: aggressive ? ActionType.ACCEPT : ActionType.DECLINE }, 
-             reasoning: [...reasoning, `Result: ${aggressive ? 'Accepting.' : 'Declining.'}`].join('\n') };
+             reasoning: [...reasoning, `Resultado: ${aggressive ? 'Aceptando.' : 'Rechazando.'}`].join('\n') };
   }
 
   if (equity > 0.25 && trucoLevel < 3) {
     const escalateType = trucoLevel === 1 ? ActionType.CALL_RETRUCO : ActionType.CALL_VALE_CUATRO;
-    const decisionReason = `\nDecision: Equity is very high (${equity.toFixed(2)} > 0.25), indicating a strong advantage. Escalating to ${escalateType.replace('CALL_', '')}.`;
-    return { action: { type: escalateType }, reasoning: [...reasoning, decisionReason].join('\n') };
+    const phrases = trucoLevel === 1 ? RETRUCO_PHRASES : VALE_CUATRO_PHRASES;
+    const blurbText = getRandomPhrase(phrases);
+    const decisionReason = `\nDecisión: La equidad es muy alta (${equity.toFixed(2)} > 0.25), indicando una fuerte ventaja. Escalando a ${escalateType.replace('CALL_', '')}.`;
+    return { action: { type: escalateType, payload: { blurbText } }, reasoning: [...reasoning, decisionReason].join('\n') };
   } else if (equity > -0.15) {
-     const decisionReason = `\nDecision: Equity is acceptable (${equity.toFixed(2)} > -0.15). The potential reward outweighs the risk. Accepting.`;
+     const decisionReason = `\nDecisión: La equidad es aceptable (${equity.toFixed(2)} > -0.15). La recompensa potencial supera el riesgo. Aceptando.`;
     return { action: { type: ActionType.ACCEPT }, reasoning: [...reasoning, decisionReason].join('\n') };
   } else {
-    const decisionReason = `\nDecision: Equity is too low (${equity.toFixed(2)}). The opponent likely has a stronger hand. Declining.`;
+    const decisionReason = `\nDecisión: La equidad es muy baja (${equity.toFixed(2)}). El oponente probablemente tiene una mano más fuerte. Rechazando.`;
     return { action: { type: ActionType.DECLINE }, reasoning: [...reasoning, decisionReason].join('\n') };
   }
 };
@@ -226,20 +231,21 @@ export const getTrucoCall = (state: GameState): AiMove | null => {
   const myStrength = strengthResult.strength;
 
   let reasonPrefix = [
-    `[Truco Call Logic]`, 
-    `My adjusted bluff chance is ${(adjustedBluffChance*100).toFixed(0)}% (based on opponent's fold rate).`,
-    `\n[Strength Assessment]`,
+    `[Lógica: Cantar Truco]`, 
+    `Mi probabilidad de farol ajustada es ${(adjustedBluffChance*100).toFixed(0)}% (basada en la tasa de abandono del oponente).`,
+    `\n[Evaluación de Fuerza]`,
     ...strengthResult.reasoning
   ];
-  if (envidoLeak > 0) reasonPrefix.push(`- Envido Leak Penalty: Playing more cautiously (-${envidoLeak}).`);
+  if (envidoLeak > 0) reasonPrefix.push(`- Penalización por Envido: Jugando con más cautela (-${envidoLeak}).`);
 
   if (trucoLevel > 0) return null; // Only for initiation
 
   if (currentTrick === 1 && trickWinners[0] === 'ai') {
     if (myStrength >= 0.6) {
+      const blurbText = getRandomPhrase(TRUCO_PHRASES);
       return {
-        action: { type: ActionType.CALL_TRUCO },
-        reasoning: [...reasonPrefix, `\nDecision: I won trick 1 and my hand strength is high. Calling TRUCO.`].join('\n'),
+        action: { type: ActionType.CALL_TRUCO, payload: { blurbText } },
+        reasoning: [...reasonPrefix, `\nDecisión: Gané la mano 1 y la fuerza de mi mano es alta. Cantando TRUCO.`].join('\n'),
         trucoContext: { strength: myStrength, isBluff: false }
       };
     }
@@ -249,9 +255,10 @@ export const getTrucoCall = (state: GameState): AiMove | null => {
   if (currentTrick === 1 && trickWinners[0] === 'tie' && myStrength < 0.5 && rand < 0.2) {
       const ev = (foldRate * 1) + (1 - foldRate) * (myStrength * 2 - (1 - myStrength) * 2);
       if (ev > 0) {
+        const blurbText = getRandomPhrase(TRUCO_PHRASES);
         return {
-            action: { type: ActionType.CALL_TRUCO },
-            reasoning: [...reasonPrefix, `\nDecision: Parda in trick 1 and a weak hand. The EV of a bluff (${ev.toFixed(2)}) is positive. I will bluff TRUCO.`].join('\n'),
+            action: { type: ActionType.CALL_TRUCO, payload: { blurbText } },
+            reasoning: [...reasonPrefix, `\nDecisión: Parda en la mano 1 y mano débil. El EV de un farol (${ev.toFixed(2)}) es positivo. Farolearé con TRUCO.`].join('\n'),
             trucoContext: { strength: myStrength, isBluff: true }
         };
       }
@@ -260,15 +267,16 @@ export const getTrucoCall = (state: GameState): AiMove | null => {
   let decision = '';
   let trucoContext = null;
   if (rand < adjustedBluffChance && myStrength < 0.45 - envidoLeak) {
-    decision = 'Decision: Hand is weak, but opponent may fold. Bluffing TRUCO.';
+    decision = 'Decisión: La mano es débil, pero el oponente puede retirarse. Faroleando con TRUCO.';
     trucoContext = { strength: myStrength, isBluff: true };
   } else if (myStrength >= 0.65 - envidoLeak) {
-    decision = 'Decision: My hand is strong. Value calling TRUCO.';
+    decision = 'Decisión: Mi mano es fuerte. Canto TRUCO por valor.';
     trucoContext = { strength: myStrength, isBluff: false };
   }
 
   if (decision) {
-    return { action: { type: ActionType.CALL_TRUCO }, 
+    const blurbText = getRandomPhrase(TRUCO_PHRASES);
+    return { action: { type: ActionType.CALL_TRUCO, payload: { blurbText } }, 
              reasoning: [...reasonPrefix, `\n${decision}`].join('\n'),
              trucoContext };
   }

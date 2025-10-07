@@ -55,7 +55,7 @@ const TrickSlot: React.FC<TrickSlotProps> = ({ playerCard, aiCard, trickNumber, 
 
   return (
     <div className={`p-2 md:p-3 rounded-lg border-2 transition-all duration-300 ${currentTrickClasses} flex flex-col items-center`}>
-        <p className="text-center text-xs md:text-sm text-gray-300 mb-1 md:mb-2 font-bold tracking-wider">TRICK {trickNumber}</p>
+        <p className="text-center text-xs md:text-sm text-gray-300 mb-1 md:mb-2 font-bold tracking-wider">MANO {trickNumber}</p>
         <div className="relative w-20 md:w-24 h-44 md:h-56"> {/* Container for stacking */}
             
             {/* Render a placeholder if no cards are played */}

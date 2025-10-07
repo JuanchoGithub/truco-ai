@@ -1,3 +1,4 @@
+
 // Fix: Moved the game reducer logic from the misnamed types.ts to its correct location here.
 // This file now contains the full, correct reducer implementation for the game.
 import { GameState, Action, ActionType, AiTrucoContext } from '../types';
@@ -25,9 +26,9 @@ export const initialState: GameState = {
   gamePhase: 'initial',
   isThinking: false,
   winner: null,
-  messageLog: ['Welcome to Truco AI!'],
+  messageLog: ['¡Bienvenido a Truco AI!'],
   isDebugMode: false,
-  aiReasoningLog: [{ round: 0, reasoning: 'AI is waiting for the game to start.' }],
+  aiReasoningLog: [{ round: 0, reasoning: 'La IA está esperando que comience el juego.' }],
   isLogExpanded: false,
   isGameLogExpanded: false,
   lastCaller: null,
@@ -50,6 +51,7 @@ export const initialState: GameState = {
   opponentHandProbabilities: null,
   playerEnvidoValue: null,
   playerActionHistory: [],
+  aiBlurb: null,
 };
 
 export function useGameReducer(state: GameState, action: Action): GameState {

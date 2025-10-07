@@ -97,6 +97,9 @@ export interface GameState {
   opponentHandProbabilities: OpponentHandProbabilities | null;
   playerEnvidoValue: number | null;
   playerActionHistory: ActionType[];
+  
+  // AI Blurb for phrases
+  aiBlurb: { text: string; isVisible: boolean; } | null;
 }
 
 export interface AiMove {
@@ -138,13 +141,13 @@ export type Action =
   | { type: ActionType.RESTART_GAME }
   | { type: ActionType.START_NEW_ROUND }
   | { type: ActionType.PLAY_CARD; payload: { player: Player; cardIndex: number } }
-  | { type: ActionType.CALL_ENVIDO }
-  | { type: ActionType.CALL_REAL_ENVIDO }
-  | { type: ActionType.CALL_FALTA_ENVIDO }
+  | { type: ActionType.CALL_ENVIDO; payload?: { blurbText: string } }
+  | { type: ActionType.CALL_REAL_ENVIDO; payload?: { blurbText: string } }
+  | { type: ActionType.CALL_FALTA_ENVIDO; payload?: { blurbText: string } }
   | { type: ActionType.DECLARE_FLOR }
-  | { type: ActionType.CALL_TRUCO }
-  | { type: ActionType.CALL_RETRUCO }
-  | { type: ActionType.CALL_VALE_CUATRO }
+  | { type: ActionType.CALL_TRUCO; payload?: { blurbText: string } }
+  | { type: ActionType.CALL_RETRUCO; payload?: { blurbText: string } }
+  | { type: ActionType.CALL_VALE_CUATRO; payload?: { blurbText: string } }
   | { type: ActionType.CALL_FALTA_TRUCO }
   | { type: ActionType.ACCEPT }
   | { type: ActionType.DECLINE }

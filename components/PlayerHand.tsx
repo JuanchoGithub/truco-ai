@@ -69,7 +69,7 @@ const PlayerHand: React.FC<PlayerHandProps> = ({ cards, playerType, onCardPlay, 
   return (
     <div className="flex flex-col items-center justify-center relative h-[100px] md:h-[140px] w-full">
       {isThinking && (
-        <div className="absolute -top-5 md:-top-6 text-base md:text-lg animate-pulse z-30" style={{ textShadow: '2px 2px 3px rgba(0,0,0,0.7)' }}>AI is thinking...</div>
+        <div className="absolute -top-5 md:-top-6 text-base md:text-lg animate-pulse z-30" style={{ textShadow: '2px 2px 3px rgba(0,0,0,0.7)' }}>IA está pensando...</div>
       )}
       <div className={`flex justify-center ${handSpacingClasses}`}>
         {cards.map((card, index) => (

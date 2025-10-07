@@ -10,7 +10,7 @@ function handleEnvidoAccept(state: GameState, messageLog: string[]): GameState {
 
     const playerEnvido = getEnvidoValue(state.initialPlayerHand);
     const aiEnvido = getEnvidoValue(state.initialAiHand);
-    let envidoMessage = `Player has ${playerEnvido}. AI has ${aiEnvido}.`;
+    let envidoMessage = `Jugador tiene ${playerEnvido}. La IA tiene ${aiEnvido}.`;
 
     let updatedProbs = state.opponentHandProbabilities;
     // If AI called and player accepted, we now know the player's envido value.
@@ -30,13 +30,13 @@ function handleEnvidoAccept(state: GameState, messageLog: string[]): GameState {
 
     if (winner === 'player') {
         newPlayerScore += state.envidoPointsOnOffer;
-        envidoMessage += ` Player wins ${state.envidoPointsOnOffer} points.`;
+        envidoMessage += ` Jugador gana ${state.envidoPointsOnOffer} puntos.`;
         if (state.lastCaller === 'player' && playerEnvido >= 27) {
             playerCalledHighEnvido = true;
         }
     } else {
         newAiScore += state.envidoPointsOnOffer;
-        envidoMessage += ` AI wins ${state.envidoPointsOnOffer} points.`;
+        envidoMessage += ` La IA gana ${state.envidoPointsOnOffer} puntos.`;
     }
 
     const postEnvidoState = state.pendingTrucoCaller ? {
@@ -61,6 +61,7 @@ function handleEnvidoAccept(state: GameState, messageLog: string[]): GameState {
         opponentHandProbabilities: updatedProbs,
         playerEnvidoValue: playerEnvido,
         ...postEnvidoState,
+        aiBlurb: null,
     };
 }
 
@@ -74,17 +75,19 @@ function handleTrucoAccept(state: GameState, messageLog: string[]): GameState {
         pendingTrucoCaller: null,
         messageLog,
         playerActionHistory: [...state.playerActionHistory, ActionType.ACCEPT],
+        aiBlurb: null,
     };
 }
 
 export function handleAccept(state: GameState, action: { type: ActionType.ACCEPT }): GameState {
-    const messageLog = [...state.messageLog, `${state.currentTurn.toUpperCase()} accepts!`];
+    const acceptorName = state.currentTurn === 'player' ? 'Jugador' : 'IA';
+    const messageLog = [...state.messageLog, `¡${acceptorName} quiere!`];
 
     if (state.gamePhase.includes('envido')) {
         return handleEnvidoAccept(state, messageLog);
     }
     
-    if (state.gamePhase.includes('truco')) {
+    if (state.gamePhase.includes('truco') || state.gamePhase.includes('vale_cuatro')) {
         return handleTrucoAccept(state, messageLog);
     }
     return state;
@@ -110,14 +113,16 @@ function handleEnvidoDecline(state: GameState, caller: Player, messageLog: strin
         turnBeforeInterrupt: null,
     };
     
+    const winnerName = caller === 'player' ? 'Jugador' : 'IA';
     return {
         ...state,
         playerScore: caller === 'player' ? state.playerScore + points : state.playerScore,
         aiScore: caller === 'ai' ? state.aiScore + points : state.aiScore,
-        messageLog: [...messageLog, `${caller.toUpperCase()} wins ${points} point(s).`],
+        messageLog: [...messageLog, `${winnerName} gana ${points} punto(s).`],
         playerEnvidoFoldHistory: newFoldHistory,
         playerActionHistory: [...state.playerActionHistory, ActionType.DECLINE],
         ...postEnvidoState,
+        aiBlurb: null,
     };
 }
 
@@ -154,12 +159,13 @@ function handleTrucoDecline(state: GameState, caller: Player, messageLog: string
     }
     
     const points = state.trucoLevel > 1 ? state.trucoLevel - 1 : 1;
+    const winnerName = caller === 'player' ? 'Jugador' : 'IA';
 
     return {
         ...state,
         playerScore: caller === 'player' ? state.playerScore + points : state.playerScore,
         aiScore: caller === 'ai' ? state.aiScore + points : state.aiScore,
-        messageLog: [...messageLog, `${caller.toUpperCase()} wins ${points} point(s).`],
+        messageLog: [...messageLog, `${winnerName} gana ${points} punto(s).`],
         gamePhase: 'round_end',
         currentTurn: 'player',
         pendingTrucoCaller: null,
@@ -168,18 +174,20 @@ function handleTrucoDecline(state: GameState, caller: Player, messageLog: string
         opponentModel: newOpponentModel,
         aiCases: newAiCases,
         aiTrucoContext: null, // Reset context after it's been handled
+        aiBlurb: null,
     }
 }
 
 export function handleDecline(state: GameState, action: { type: ActionType.DECLINE }): GameState {
     const caller = state.lastCaller!;
-    const messageLog = [...state.messageLog, `${state.currentTurn.toUpperCase()} declines!`];
+    const declinerName = state.currentTurn === 'player' ? 'Jugador' : 'IA';
+    const messageLog = [...state.messageLog, `${declinerName} no quiere.`];
 
     if (state.gamePhase.includes('envido')) {
         return handleEnvidoDecline(state, caller, messageLog);
     }
 
-    if (state.gamePhase.includes('truco')) {
+    if (state.gamePhase.includes('truco') || state.gamePhase.includes('vale_cuatro')) {
         return handleTrucoDecline(state, caller, messageLog);
     }
     return state;

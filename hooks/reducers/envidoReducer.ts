@@ -1,13 +1,14 @@
+
 // Fix: Imported `GamePhase` to make the type available for casting.
 import { GameState, ActionType, Player, GamePhase } from '../../types';
 
-export function handleCallEnvido(state: GameState, action: { type: ActionType.CALL_ENVIDO }): GameState {
+export function handleCallEnvido(state: GameState, action: { type: ActionType.CALL_ENVIDO; payload?: { blurbText: string } }): GameState {
   const caller = state.currentTurn;
   const opponent = caller === 'player' ? 'ai' : 'player';
 
   const message = state.pendingTrucoCaller !== null
-    ? `${caller.toUpperCase()}: "El envido está primero!"`
-    : `${caller.toUpperCase()} calls ENVIDO!`;
+    ? `${caller === 'player' ? 'Jugador' : 'IA'}: "¡El envido está primero!"`
+    : `${caller === 'player' ? 'Jugador' : 'IA'} canta ¡ENVIDO!`;
 
   return { 
     ...state, 
@@ -18,10 +19,11 @@ export function handleCallEnvido(state: GameState, action: { type: ActionType.CA
     hasEnvidoBeenCalledThisRound: true,
     envidoPointsOnOffer: 2,
     messageLog: [...state.messageLog, message],
+    aiBlurb: action.payload?.blurbText ? { text: action.payload.blurbText, isVisible: true } : null,
   };
 }
 
-export function handleCallRealEnvido(state: GameState, action: { type: ActionType.CALL_REAL_ENVIDO }): GameState {
+export function handleCallRealEnvido(state: GameState, action: { type: ActionType.CALL_REAL_ENVIDO, payload?: { blurbText: string } }): GameState {
   const isPlayerRespondingToAI = state.lastCaller === 'ai';
   const newFoldHistory = isPlayerRespondingToAI
       ? [...state.playerEnvidoFoldHistory, false]
@@ -35,13 +37,14 @@ export function handleCallRealEnvido(state: GameState, action: { type: ActionTyp
     currentTurn: opponent,
     turnBeforeInterrupt: state.turnBeforeInterrupt || caller,
     envidoPointsOnOffer: state.envidoPointsOnOffer + 3,
-    messageLog: [...state.messageLog, `${caller.toUpperCase()} escalates to REAL ENVIDO!`],
+    messageLog: [...state.messageLog, `${caller === 'player' ? 'Jugador' : 'IA'} sube a ¡REAL ENVIDO!`],
     playerEnvidoFoldHistory: newFoldHistory,
     hasEnvidoBeenCalledThisRound: true,
+    aiBlurb: action.payload?.blurbText ? { text: action.payload.blurbText, isVisible: true } : null,
   };
 }
 
-export function handleCallFaltaEnvido(state: GameState, action: { type: ActionType.CALL_FALTA_ENVIDO }): GameState {
+export function handleCallFaltaEnvido(state: GameState, action: { type: ActionType.CALL_FALTA_ENVIDO, payload?: { blurbText: string } }): GameState {
   const isPlayerRespondingToAI = state.lastCaller === 'ai';
   const newFoldHistory = isPlayerRespondingToAI
       ? [...state.playerEnvidoFoldHistory, false]
@@ -60,9 +63,10 @@ export function handleCallFaltaEnvido(state: GameState, action: { type: ActionTy
     currentTurn: opponent,
     turnBeforeInterrupt: state.turnBeforeInterrupt || caller,
     envidoPointsOnOffer: faltaPoints,
-    messageLog: [...state.messageLog, `${caller.toUpperCase()} calls FALTA ENVIDO!`],
+    messageLog: [...state.messageLog, `${caller === 'player' ? 'Jugador' : 'IA'} canta ¡FALTA ENVIDO!`],
     playerEnvidoFoldHistory: newFoldHistory,
     hasEnvidoBeenCalledThisRound: true,
+    aiBlurb: action.payload?.blurbText ? { text: action.payload.blurbText, isVisible: true } : null,
   };
 }
 
@@ -79,10 +83,11 @@ export function handleDeclareFlor(state: GameState, action: { type: ActionType.D
     newAiScore += points;
   }
   
+  const callerName = caller === 'player' ? 'Jugador' : 'IA';
   const messageLog = [
     ...state.messageLog, 
-    `${caller.toUpperCase()} declares FLOR!`,
-    `${caller.toUpperCase()} wins ${points} points.`
+    `${callerName} canta ¡FLOR!`,
+    `${callerName} gana ${points} puntos.`
   ];
 
   // Since Flor doesn't require a response, the game state continues.
