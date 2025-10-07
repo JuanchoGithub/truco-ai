@@ -27,6 +27,24 @@ export interface AiReasoningEntry {
   reasoning: string;
 }
 
+// New types for AI learning
+export interface OpponentModel {
+  trucoFoldRate: number;
+}
+
+export interface Case {
+  strength: number;
+  isBluff: boolean;
+  outcome: 'win' | 'loss';
+  opponentFoldRateAtTimeOfCall: number;
+}
+
+export interface AiTrucoContext {
+  strength: number;
+  isBluff: boolean;
+}
+
+
 export interface GameState {
   deck: Card[];
   playerHand: Card[];
@@ -59,14 +77,19 @@ export interface GameState {
   aiHasFlor: boolean;
   envidoPointsOnOffer: number;
   trucoLevel: 0 | 1 | 2 | 3;
-  playerEnvidoFoldHistory: boolean[]; // true for fold, false for accept/escalate
-  playerTrucoFoldHistory: boolean[]; // For Truco opponent modeling
-  playerCalledHighEnvido: boolean; // To link Envido strength to Truco phase
+  playerEnvidoFoldHistory: boolean[];
+  playerCalledHighEnvido: boolean;
+
+  // AI Learning & Modeling
+  opponentModel: OpponentModel;
+  aiCases: Case[];
+  aiTrucoContext: AiTrucoContext | null;
 }
 
 export interface AiMove {
   action: Action;
   reasoning: string;
+  trucoContext?: AiTrucoContext;
 }
 
 export enum ActionType {
@@ -88,6 +111,7 @@ export enum ActionType {
   DECLINE = 'DECLINE',
   AI_THINKING = 'AI_THINKING',
   ADD_MESSAGE = 'ADD_MESSAGE',
+  SET_AI_TRUCO_CONTEXT = 'SET_AI_TRUCO_CONTEXT',
 }
 
 export type Action =
@@ -108,4 +132,5 @@ export type Action =
   | { type: ActionType.ACCEPT }
   | { type: ActionType.DECLINE }
   | { type: ActionType.AI_THINKING; payload: boolean }
-  | { type: ActionType.ADD_MESSAGE; payload: string };
+  | { type: ActionType.ADD_MESSAGE; payload: string }
+  | { type: ActionType.SET_AI_TRUCO_CONTEXT; payload: AiTrucoContext };

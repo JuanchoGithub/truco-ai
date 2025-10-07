@@ -1,4 +1,4 @@
-import { GameState, ActionType, Player, GamePhase } from '../../types';
+import { GameState, ActionType, Player, GamePhase, Case } from '../../types';
 import { getEnvidoValue } from '../../services/trucoLogic';
 
 function handleEnvidoAccept(state: GameState, messageLog: string[]): GameState {
@@ -55,10 +55,6 @@ function handleEnvidoAccept(state: GameState, messageLog: string[]): GameState {
 }
 
 function handleTrucoAccept(state: GameState, messageLog: string[]): GameState {
-    const isPlayerRespondingToAI = state.lastCaller === 'ai';
-    const newTrucoFoldHistory = isPlayerRespondingToAI
-      ? [...state.playerTrucoFoldHistory, false]
-      : state.playerTrucoFoldHistory;
     // Game continues. The turn should be restored to whoever was about to play.
     return {
         ...state,
@@ -67,7 +63,6 @@ function handleTrucoAccept(state: GameState, messageLog: string[]): GameState {
         turnBeforeInterrupt: null, // Reset the interrupt state
         pendingTrucoCaller: null,
         messageLog,
-        playerTrucoFoldHistory: newTrucoFoldHistory,
     };
 }
 
@@ -115,17 +110,27 @@ function handleEnvidoDecline(state: GameState, caller: Player, messageLog: strin
 }
 
 function handleTrucoDecline(state: GameState, caller: Player, messageLog: string[]): GameState {
-    const isPlayerRespondingToAI = state.lastCaller === 'ai';
-    const newTrucoFoldHistory = isPlayerRespondingToAI
-        ? [...state.playerTrucoFoldHistory, true]
-        : state.playerTrucoFoldHistory;
+    let newOpponentModel = state.opponentModel;
+    let newAiCases = state.aiCases;
+
+    // If AI was the caller, the player just folded to AI's call. Update learning model.
+    if (caller === 'ai' && state.aiTrucoContext) {
+        // Player folded. This is a "win" for the AI's call.
+        const newCase: Case = {
+            ...state.aiTrucoContext,
+            outcome: 'win',
+            opponentFoldRateAtTimeOfCall: state.opponentModel.trucoFoldRate,
+        };
+        newAiCases = [...state.aiCases, newCase];
+
+        // Update opponent's fold rate: increase it as they just folded.
+        // new_rate = old_rate * decay + (1 - decay) * new_observation
+        const decay = 0.9;
+        const newFoldRate = state.opponentModel.trucoFoldRate * decay + (1 - decay) * 1;
+        newOpponentModel = { ...state.opponentModel, trucoFoldRate: Math.min(0.95, newFoldRate) };
+    }
     
-    // Declining a truco call ends the round immediately.
-    // The winner (the caller) gets the points for the PREVIOUS accepted level.
-    // trucoLevel 1 (Truco) was called -> 1 point awarded.
-    // trucoLevel 2 (Retruco) was called -> 2 points awarded (value of Truco).
-    // trucoLevel 3 (Vale Cuatro) was called -> 3 points awarded (value of Retruco).
-    const points = state.trucoLevel > 1 ? state.trucoLevel - 1 : 1; // Correct points on decline
+    const points = state.trucoLevel > 1 ? state.trucoLevel - 1 : 1;
 
     return {
         ...state,
@@ -133,9 +138,12 @@ function handleTrucoDecline(state: GameState, caller: Player, messageLog: string
         aiScore: caller === 'ai' ? state.aiScore + points : state.aiScore,
         messageLog: [...messageLog, `${caller.toUpperCase()} wins ${points} point(s).`],
         gamePhase: 'round_end',
-        currentTurn: 'player', // Hand control to player for next round button
+        currentTurn: 'player',
         pendingTrucoCaller: null,
-        playerTrucoFoldHistory: newTrucoFoldHistory,
+        // Update learning state
+        opponentModel: newOpponentModel,
+        aiCases: newAiCases,
+        aiTrucoContext: null, // Reset context after it's been handled
     }
 }
 

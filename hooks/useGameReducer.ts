@@ -1,6 +1,6 @@
 // Fix: Moved the game reducer logic from the misnamed types.ts to its correct location here.
 // This file now contains the full, correct reducer implementation for the game.
-import { GameState, Action, ActionType } from '../types';
+import { GameState, Action, ActionType, AiTrucoContext } from '../types';
 import { handleRestartGame, handleStartNewRound, handlePlayCard } from './reducers/gameplayReducer';
 import { handleCallEnvido, handleCallRealEnvido, handleCallFaltaEnvido, handleDeclareFlor } from './reducers/envidoReducer';
 import { handleCallTruco, handleCallRetruco, handleCallValeCuatro } from './reducers/trucoReducer';
@@ -40,8 +40,11 @@ export const initialState: GameState = {
   envidoPointsOnOffer: 0,
   trucoLevel: 0,
   playerEnvidoFoldHistory: [],
-  playerTrucoFoldHistory: [],
   playerCalledHighEnvido: false,
+  // AI Learning & Modeling
+  opponentModel: { trucoFoldRate: 0.3 }, // Start with a default assumption
+  aiCases: [],
+  aiTrucoContext: null,
 };
 
 export function useGameReducer(state: GameState, action: Action): GameState {
@@ -77,6 +80,10 @@ export function useGameReducer(state: GameState, action: Action): GameState {
       return handleAccept(state, action);
     case ActionType.DECLINE:
       return handleDecline(state, action);
+
+    // AI Learning Action
+    case ActionType.SET_AI_TRUCO_CONTEXT:
+      return { ...state, aiTrucoContext: action.payload };
 
     // Simple state changes & UI actions
     case ActionType.TOGGLE_DEBUG_MODE:

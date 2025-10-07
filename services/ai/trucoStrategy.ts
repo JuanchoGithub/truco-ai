@@ -1,5 +1,5 @@
 import { GameState, AiMove, ActionType, Card, Rank } from '../../types';
-import { getCardHierarchy } from '../trucoLogic';
+import { getCardHierarchy, getCardName } from '../trucoLogic';
 
 const BRAVAS: Record<string, number> = {
     '1espadas': 4, '1bastos': 3, '7espadas': 2, '7oros': 1,
@@ -60,8 +60,13 @@ export const getTrucoResponse = (state: GameState, reasoning: string[]): AiMove 
 }
 
 export const getTrucoCall = (state: GameState): AiMove | null => {
-    const { aiHand, trucoLevel, gamePhase, aiScore, playerCalledHighEnvido, playerTrucoFoldHistory } = state;
+    const { aiHand, trucoLevel, gamePhase, aiScore, playerCalledHighEnvido, opponentModel, trickWinners, currentTrick, aiTricks } = state;
     
+    // Do not make a call if AI has already played in the current trick.
+    if (aiTricks[currentTrick] !== null) {
+        return null;
+    }
+
     // Escalation logic
     if (trucoLevel > 0 && trucoLevel < 3 && !gamePhase.includes('envido')) {
         const myStrength = calculateTrucoStrength(aiHand, 'lead');
@@ -80,17 +85,39 @@ export const getTrucoCall = (state: GameState): AiMove | null => {
     
     // Initiation logic
     if (trucoLevel === 0 && !gamePhase.includes('envido')) {
+        // --- NEW STRATEGY: Secure Victory Call ---
+        // If I won the first trick and I have a strong card for the second trick, call truco before playing.
+        if (currentTrick === 1 && trickWinners[0] === 'ai') {
+            const highestCard = [...aiHand].sort((a, b) => getCardHierarchy(b) - getCardHierarchy(a))[0];
+            // Threshold for a "strong" card is a 3 or better (hierarchy >= 10)
+            if (highestCard && getCardHierarchy(highestCard) >= 10) { 
+                const reasoning = [
+                    `[Truco Call Logic]`,
+                    `I have already won the first trick.`,
+                    `My remaining hand is ${aiHand.map(getCardName).join(' and ')}.`,
+                    `My ${getCardName(highestCard)} virtually guarantees winning this trick and the round.`,
+                    `\nDecision: Instead of just playing to win 1 point, I will call TRUCO to secure 2 points.`
+                ].join('\n');
+
+                return {
+                    action: { type: ActionType.CALL_TRUCO },
+                    reasoning: reasoning,
+                    trucoContext: { strength: 0.95, isBluff: false } // Assign very high confidence
+                };
+            }
+        }
+        // --- END NEW STRATEGY ---
+
         const myStrength = calculateTrucoStrength(aiHand, 'lead');
         const myNeed = 15 - aiScore;
         const rand = Math.random();
         const envidoLeakFactor = playerCalledHighEnvido ? 0.2 : 0;
         
-        const recentTrucoHistory = playerTrucoFoldHistory.slice(-5);
-        const trucoFoldCount = recentTrucoHistory.filter(f => f).length;
-        const playerTrucoFoldRate = recentTrucoHistory.length > 0 ? trucoFoldCount / recentTrucoHistory.length : 0.3;
+        const playerTrucoFoldRate = opponentModel.trucoFoldRate;
         const baseTrucoBluffChance = 0.10;
-        const adjustedTrucoBluffChance = Math.min(0.35, baseTrucoBluffChance + (playerTrucoFoldRate * 0.2));
+        const adjustedTrucoBluffChance = Math.min(0.40, baseTrucoBluffChance + (playerTrucoFoldRate * 0.35));
 
+        const isBluffCondition = myStrength < 0.4 - envidoLeakFactor;
         let trucoAction: AiMove | null = null;
         let reasonPrefix = [`[Truco Call Logic]`, `My hand strength is ${myStrength.toFixed(2)}.`];
 
@@ -98,21 +125,37 @@ export const getTrucoCall = (state: GameState): AiMove | null => {
             reasonPrefix.push(`[Envido Leak]: Player showed a high Envido. I will be more cautious.`);
         }
 
-        if (rand < adjustedTrucoBluffChance && myStrength < 0.4 - envidoLeakFactor) {
-            reasonPrefix.push(`[Opponent Model]: Player's Truco fold rate is ${(playerTrucoFoldRate * 100).toFixed(0)}%. My adjusted bluff chance is ${(adjustedTrucoBluffChance * 100).toFixed(0)}%.`);
-            trucoAction = { action: { type: ActionType.CALL_TRUCO }, reasoning: `\nDecision: My hand is weak, but the player folds often. I am bluffing TRUCO.` };
+        reasonPrefix.push(`[Opponent Model]: Player's Truco fold rate is ${(playerTrucoFoldRate * 100).toFixed(0)}%. My adjusted bluff chance is ${(adjustedTrucoBluffChance * 100).toFixed(0)}%.`);
+        let decisionReasoning = '';
+        
+        if (rand < adjustedTrucoBluffChance && isBluffCondition) {
+            decisionReasoning = `\nDecision: My hand is weak, but the player folds often. I am bluffing TRUCO.`;
+            trucoAction = { 
+                action: { type: ActionType.CALL_TRUCO }, 
+                reasoning: '', // will be composed later
+                trucoContext: { strength: myStrength, isBluff: true }
+            };
         } 
         else if (myStrength >= 0.7 - envidoLeakFactor || myNeed <= 4) {
-            reasonPrefix.push(`My hand is very strong, or it's the endgame.`);
-            trucoAction = { action: { type: ActionType.CALL_TRUCO }, reasoning: `\nDecision: Calling TRUCO.` };
+            decisionReasoning = `\nDecision: My hand is very strong (or it's the endgame). Calling TRUCO.`;
+            trucoAction = {
+                action: { type: ActionType.CALL_TRUCO },
+                reasoning: '',
+                trucoContext: { strength: myStrength, isBluff: false }
+            };
         }
         else if (myStrength >= 0.5 - envidoLeakFactor) {
-            reasonPrefix.push(`My hand is reasonably strong.`);
-            trucoAction = { action: { type: ActionType.CALL_TRUCO }, reasoning: `\nDecision: Calling TRUCO.` };
+            decisionReasoning = `\nDecision: My hand is reasonably strong. Calling TRUCO.`;
+            trucoAction = {
+                action: { type: ActionType.CALL_TRUCO },
+                reasoning: '',
+                trucoContext: { strength: myStrength, isBluff: false }
+            };
         }
 
         if (trucoAction) {
-            return { ...trucoAction, reasoning: [...reasonPrefix, trucoAction.reasoning].join('\n') };
+            trucoAction.reasoning = [...reasonPrefix, decisionReasoning].join('\n');
+            return trucoAction;
         }
     }
     

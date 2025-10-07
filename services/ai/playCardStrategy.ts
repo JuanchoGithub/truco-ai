@@ -55,8 +55,8 @@ export const findBestCardToPlay = (state: GameState): PlayCardResult => {
                     cardIndex = findCardIndexByValue(aiHand, 'max');
                     reasoning.push(`\nDecision: I lost the first trick. I must win this one. Playing my highest card: ${getCardName(aiHand[cardIndex])}.`);
                 } else { // Tied first trick
-                    cardIndex = findCardIndexByValue(aiHand, 'min');
-                    reasoning.push(`\nDecision: We tied the first trick. I'll play conservatively with my lowest card: ${getCardName(aiHand[cardIndex])}.`);
+                    cardIndex = findCardIndexByValue(aiHand, 'max');
+                    reasoning.push(`\nDecision: The first trick was a parda (tie). This makes the second trick the decisive one for the round. I must shift to an aggressive strategy and lead my strongest card to secure the win outright: ${getCardName(aiHand[cardIndex])}.`);
                 }
                 return { index: cardIndex, reasoning };
             case 2: // Third trick

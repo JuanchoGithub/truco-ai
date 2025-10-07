@@ -15,10 +15,6 @@ export function handleCallTruco(state: GameState, action: { type: ActionType.CAL
 }
 
 export function handleCallRetruco(state: GameState, action: { type: ActionType.CALL_RETRUCO }): GameState {
-   const isPlayerRespondingToAI = state.lastCaller === 'ai';
-    const newFoldHistory = isPlayerRespondingToAI
-      ? [...state.playerTrucoFoldHistory, false]
-      : state.playerTrucoFoldHistory;
    return { 
       ...state, 
       gamePhase: 'retruco_called', 
@@ -28,15 +24,10 @@ export function handleCallRetruco(state: GameState, action: { type: ActionType.C
       trucoLevel: 2,
       pendingTrucoCaller: null,
       messageLog: [...state.messageLog, `${state.currentTurn.toUpperCase()} calls RETRUCO!`],
-      playerTrucoFoldHistory: newFoldHistory,
     };
 }
 
 export function handleCallValeCuatro(state: GameState, action: { type: ActionType.CALL_VALE_CUATRO }): GameState {
-   const isPlayerRespondingToAI = state.lastCaller === 'ai';
-    const newFoldHistory = isPlayerRespondingToAI
-      ? [...state.playerTrucoFoldHistory, false]
-      : state.playerTrucoFoldHistory;
    return { 
       ...state, 
       gamePhase: 'vale_cuatro_called', 
@@ -46,6 +37,5 @@ export function handleCallValeCuatro(state: GameState, action: { type: ActionTyp
       trucoLevel: 3,
       pendingTrucoCaller: null,
       messageLog: [...state.messageLog, `${state.currentTurn.toUpperCase()} calls VALE CUATRO!`],
-      playerTrucoFoldHistory: newFoldHistory,
     };
 }

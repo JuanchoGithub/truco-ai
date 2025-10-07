@@ -1,4 +1,4 @@
-import { GameState, Action, ActionType, GamePhase } from '../../types';
+import { GameState, Action, ActionType, GamePhase, Case, OpponentModel } from '../../types';
 import { createDeck, shuffleDeck, determineTrickWinner, determineRoundWinner, getCardName, hasFlor } from '../../services/trucoLogic';
 import { initialState as baseInitialState } from '../useGameReducer';
 
@@ -12,7 +12,6 @@ export function handleRestartGame(state: GameState, action: { type: ActionType.R
     isDebugMode: state.isDebugMode, // Persist debug mode setting
     aiReasoningLog: [{ round: 0, reasoning: 'AI is waiting for the new round to start.' }],
     playerEnvidoFoldHistory: [], // Reset history on new game
-    playerTrucoFoldHistory: [],
   };
 }
 
@@ -119,11 +118,6 @@ export function handlePlayCard(state: GameState, action: { type: ActionType.PLAY
     const roundWinner = determineRoundWinner(newTrickWinners, state.mano);
       
     if (roundWinner) {
-      // Points awarded depend on the final truco level at the end of the round.
-      // Level 0: 1 point (no truco)
-      // Level 1: 2 points (truco)
-      // Level 2: 3 points (retruco)
-      // Level 3: 4 points (vale cuatro)
       const trucoPointMapping = [1, 2, 3, 4];
       const points = trucoPointMapping[state.trucoLevel];
         
@@ -132,7 +126,26 @@ export function handlePlayCard(state: GameState, action: { type: ActionType.PLAY
         
       if (roundWinner === 'player') newPlayerScore += points;
       else if (roundWinner === 'ai') newAiScore += points;
-        
+      
+      let newOpponentModel = state.opponentModel;
+      let newAiCases = state.aiCases;
+      
+      // Check if a Truco showdown just concluded. If so, log the case for learning.
+      if (state.aiTrucoContext) {
+        const outcome = roundWinner === 'ai' ? 'win' : 'loss';
+        const newCase: Case = {
+            ...state.aiTrucoContext,
+            outcome,
+            opponentFoldRateAtTimeOfCall: state.opponentModel.trucoFoldRate,
+        };
+        newAiCases = [...state.aiCases, newCase];
+
+        // Player did NOT fold, so decrease their fold rate.
+        const decay = 0.9;
+        const newFoldRate = state.opponentModel.trucoFoldRate * decay + (1 - decay) * 0;
+        newOpponentModel = { ...state.opponentModel, trucoFoldRate: Math.max(0.05, newFoldRate) };
+      }
+
       const roundMessageLog = [...trickMessageLog, `Round winner: ${roundWinner.toUpperCase()}. Wins ${points} point(s).`];
         
       return {
@@ -147,6 +160,10 @@ export function handlePlayCard(state: GameState, action: { type: ActionType.PLAY
         gamePhase: 'round_end',
         currentTurn: 'player',
         messageLog: roundMessageLog,
+        // Update learning state
+        opponentModel: newOpponentModel,
+        aiCases: newAiCases,
+        aiTrucoContext: null, // Reset context
       };
     } else {
       const nextTurn = trickWinner === 'tie' ? state.mano : trickWinner;

@@ -32,6 +32,10 @@ const App: React.FC = () => {
         
             dispatch({ type: ActionType.ADD_AI_REASONING_LOG, payload: { round: state.round, reasoning: aiMove.reasoning } });
             
+            if (aiMove.trucoContext) {
+              dispatch({ type: ActionType.SET_AI_TRUCO_CONTEXT, payload: aiMove.trucoContext });
+            }
+            
             setTimeout(() => {
               dispatch(aiMove.action);
               dispatch({ type: ActionType.AI_THINKING, payload: false });

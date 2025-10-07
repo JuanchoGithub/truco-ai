@@ -62,12 +62,16 @@ const PlayerHand: React.FC<PlayerHandProps> = ({ cards, playerType, onCardPlay, 
   }
 
   // AI Hand
+  const handSpacingClasses = isDebugMode 
+    ? 'space-x-[-20px] md:space-x-[-30px]' // Spread out in debug mode
+    : 'space-x-[-50px] md:space-x-[-60px]'; // Tightly packed in normal mode
+
   return (
     <div className="flex flex-col items-center justify-center relative h-[100px] md:h-[140px] w-full">
       {isThinking && (
         <div className="absolute -top-5 md:-top-6 text-base md:text-lg animate-pulse z-30" style={{ textShadow: '2px 2px 3px rgba(0,0,0,0.7)' }}>AI is thinking...</div>
       )}
-      <div className="flex justify-center space-x-[-50px] md:space-x-[-60px]">
+      <div className={`flex justify-center ${handSpacingClasses}`}>
         {cards.map((card, index) => (
             <Card
               key={`${card.rank}-${card.suit}-${index}`}
