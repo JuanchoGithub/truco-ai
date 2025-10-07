@@ -20,7 +20,12 @@ export type GamePhase =
   | 'retruco_called'
   | 'vale_cuatro_called'
   | 'round_end'
-  | 'game_over';
+  | 'game_over'
+  // New intermediate phases for delayed resolution
+  | 'ENVIDO_ACCEPTED'
+  | 'ENVIDO_DECLINED'
+  | 'TRUCO_DECLINED';
+
 
 export interface AiReasoningEntry {
   round: number;
@@ -134,6 +139,10 @@ export enum ActionType {
   SET_AI_TRUCO_CONTEXT = 'SET_AI_TRUCO_CONTEXT',
   // New internal action for model updates
   UPDATE_OPPONENT_PROBS = 'UPDATE_OPPONENT_PROBS',
+  // New actions for delayed resolution
+  RESOLVE_ENVIDO_ACCEPT = 'RESOLVE_ENVIDO_ACCEPT',
+  RESOLVE_ENVIDO_DECLINE = 'RESOLVE_ENVIDO_DECLINE',
+  RESOLVE_TRUCO_DECLINE = 'RESOLVE_TRUCO_DECLINE',
 }
 
 export type Action =
@@ -157,4 +166,7 @@ export type Action =
   | { type: ActionType.AI_THINKING; payload: boolean }
   | { type: ActionType.ADD_MESSAGE; payload: string }
   | { type: ActionType.SET_AI_TRUCO_CONTEXT; payload: AiTrucoContext }
-  | { type: ActionType.UPDATE_OPPONENT_PROBS; payload: OpponentHandProbabilities };
+  | { type: ActionType.UPDATE_OPPONENT_PROBS; payload: OpponentHandProbabilities }
+  | { type: ActionType.RESOLVE_ENVIDO_ACCEPT }
+  | { type: ActionType.RESOLVE_ENVIDO_DECLINE }
+  | { type: ActionType.RESOLVE_TRUCO_DECLINE };

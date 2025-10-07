@@ -1,4 +1,3 @@
-
 // Fix: Imported `GamePhase` to make the type available for casting.
 import { GameState, ActionType, Player, GamePhase } from '../../types';
 
@@ -90,9 +89,13 @@ export function handleDeclareFlor(state: GameState, action: { type: ActionType.D
     `${callerName} gana ${points} puntos.`
   ];
 
-  // Since Flor doesn't require a response, the game state continues.
-  // The turn to play a card remains with whoever's turn it was.
-  // The envido phase is now over.
+  // If flor was declared while another call (like truco) was pending,
+  // we resolve flor but keep the game in that pending state.
+  // Otherwise, we proceed with the trick.
+  const nextGamePhase = state.gamePhase.includes('_called')
+    ? state.gamePhase
+    : `trick_${state.currentTrick + 1}`;
+  
   return {
     ...state,
     playerScore: newPlayerScore,
@@ -100,8 +103,7 @@ export function handleDeclareFlor(state: GameState, action: { type: ActionType.D
     hasFlorBeenCalledThisRound: true,
     hasEnvidoBeenCalledThisRound: true, // Flor overrides envido
     messageLog,
-    // FIX: Changed `as const` to `as GamePhase` to correctly cast the template literal string to the GamePhase union type.
-    gamePhase: `trick_${state.currentTrick + 1}` as GamePhase,
-    // currentTurn does not change, it's still this player's turn to act (play a card or call truco)
+    gamePhase: nextGamePhase as GamePhase,
+    // currentTurn does not change, it's still this player's turn to act
   };
 }

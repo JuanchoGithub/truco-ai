@@ -1,7 +1,7 @@
 import React, { useReducer, useEffect } from 'react';
 import { useGameReducer, initialState } from './hooks/useGameReducer';
 import { getLocalAIMove } from './services/localAiService';
-import { ActionType } from './types';
+import { ActionType, Action } from './types';
 import Scoreboard from './components/Scoreboard';
 import GameBoard from './components/GameBoard';
 import PlayerHand from './components/PlayerHand';
@@ -38,7 +38,9 @@ const App: React.FC = () => {
             
             setTimeout(() => {
               dispatch(aiMove.action);
-              dispatch({ type: ActionType.AI_THINKING, payload: false });
+              // The AI_THINKING payload is now set to false inside the response reducers
+              // for a better user experience, so it stops when the response is shown.
+              // dispatch({ type: ActionType.AI_THINKING, payload: false });
             }, 700);
         } catch(error) {
             console.error("Error getting AI move from local AI:", error);
@@ -53,6 +55,31 @@ const App: React.FC = () => {
       return () => clearTimeout(timeoutId);
     }
   }, [state.currentTurn, state.isThinking, state.winner, state.round, state]);
+
+  // New useEffect to handle delayed resolutions after an AI response
+  useEffect(() => {
+    let resolutionAction: Action | null = null;
+    switch (state.gamePhase) {
+        case 'ENVIDO_ACCEPTED':
+            resolutionAction = { type: ActionType.RESOLVE_ENVIDO_ACCEPT };
+            break;
+        case 'ENVIDO_DECLINED':
+            resolutionAction = { type: ActionType.RESOLVE_ENVIDO_DECLINE };
+            break;
+        case 'TRUCO_DECLINED':
+            resolutionAction = { type: ActionType.RESOLVE_TRUCO_DECLINE };
+            break;
+        default:
+            break;
+    }
+
+    if (resolutionAction) {
+        const timeoutId = setTimeout(() => {
+            dispatch(resolutionAction!);
+        }, 1200); // 1.2 second delay for a natural pause
+        return () => clearTimeout(timeoutId);
+    }
+  }, [state.gamePhase, dispatch]);
 
 
   const handlePlayCard = (cardIndex: number) => {

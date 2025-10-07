@@ -5,7 +5,7 @@ import { handleRestartGame, handleStartNewRound, handlePlayCard } from './reduce
 // Fix: Corrected typo in function name from 'handleCallFalfaEnvido' to 'handleCallFaltaEnvido'.
 import { handleCallEnvido, handleCallRealEnvido, handleCallFaltaEnvido, handleDeclareFlor } from './reducers/envidoReducer';
 import { handleCallTruco, handleCallRetruco, handleCallValeCuatro, handleCallFaltaTruco } from './reducers/trucoReducer';
-import { handleAccept, handleDecline } from './reducers/responseReducer';
+import { handleAccept, handleDecline, handleResolveEnvidoAccept, handleResolveEnvidoDecline, handleResolveTrucoDecline } from './reducers/responseReducer';
 
 
 export const initialState: GameState = {
@@ -91,6 +91,14 @@ export function useGameReducer(state: GameState, action: Action): GameState {
       return handleAccept(state, action);
     case ActionType.DECLINE:
       return handleDecline(state, action);
+
+    // New Resolution Actions for delayed flow
+    case ActionType.RESOLVE_ENVIDO_ACCEPT:
+        return handleResolveEnvidoAccept(state);
+    case ActionType.RESOLVE_ENVIDO_DECLINE:
+        return handleResolveEnvidoDecline(state);
+    case ActionType.RESOLVE_TRUCO_DECLINE:
+        return handleResolveTrucoDecline(state);
 
     // AI Learning Action
     case ActionType.SET_AI_TRUCO_CONTEXT:

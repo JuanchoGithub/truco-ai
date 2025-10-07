@@ -4,7 +4,7 @@ import { updateProbsOnEnvido } from '../../services/ai/inferenceService';
 import { getRandomPhrase, ENVIDO_LOSE_PHRASES, ENVIDO_WIN_PHRASES } from '../../services/ai/phrases';
 import { handleStartNewRound } from './gameplayReducer';
 
-function handleEnvidoAccept(state: GameState, messageLog: string[]): GameState {
+export function handleResolveEnvidoAccept(state: GameState): GameState {
     const isPlayerRespondingToAI = state.lastCaller === 'ai';
     const newEnvidoFoldHistory = isPlayerRespondingToAI
         ? [...state.playerEnvidoFoldHistory, false]
@@ -64,7 +64,7 @@ function handleEnvidoAccept(state: GameState, messageLog: string[]): GameState {
         ...state,
         playerScore: newPlayerScore,
         aiScore: newAiScore,
-        messageLog: [...messageLog, envidoMessage],
+        messageLog: [...state.messageLog, envidoMessage],
         playerEnvidoFoldHistory: newEnvidoFoldHistory,
         playerCalledHighEnvido,
         opponentHandProbabilities: updatedProbs,
@@ -99,7 +99,12 @@ export function handleAccept(state: GameState, action: { type: ActionType.ACCEPT
     };
 
     if (state.gamePhase.includes('envido')) {
-        return handleEnvidoAccept(newState, messageLog);
+        return {
+            ...newState,
+            gamePhase: 'ENVIDO_ACCEPTED',
+            messageLog,
+            isThinking: false, // Stop thinking indicator after response
+        };
     }
     
     if (state.gamePhase.includes('truco') || state.gamePhase.includes('vale_cuatro')) {
@@ -108,7 +113,8 @@ export function handleAccept(state: GameState, action: { type: ActionType.ACCEPT
     return newState;
 }
 
-function handleEnvidoDecline(state: GameState, caller: Player, messageLog: string[]): GameState {
+export function handleResolveEnvidoDecline(state: GameState): GameState {
+    const caller = state.lastCaller!;
     const isPlayerRespondingToAI = state.lastCaller === 'ai';
     const newFoldHistory = isPlayerRespondingToAI
         ? [...state.playerEnvidoFoldHistory, true]
@@ -133,14 +139,15 @@ function handleEnvidoDecline(state: GameState, caller: Player, messageLog: strin
         ...state,
         playerScore: caller === 'player' ? state.playerScore + points : state.playerScore,
         aiScore: caller === 'ai' ? state.aiScore + points : state.aiScore,
-        messageLog: [...messageLog, `${winnerName} gana ${points} punto(s).`],
+        messageLog: [...state.messageLog, `${winnerName} gana ${points} punto(s).`],
         playerEnvidoFoldHistory: newFoldHistory,
         playerActionHistory: [...state.playerActionHistory, ActionType.DECLINE],
         ...postEnvidoState,
     };
 }
 
-function handleTrucoDecline(state: GameState, caller: Player, messageLog: string[]): GameState {
+export function handleResolveTrucoDecline(state: GameState): GameState {
+    const caller = state.lastCaller!;
     let newOpponentModel = state.opponentModel;
     let newAiCases = state.aiCases;
 
@@ -174,7 +181,7 @@ function handleTrucoDecline(state: GameState, caller: Player, messageLog: string
         ...state,
         playerScore: caller === 'player' ? state.playerScore + points : state.playerScore,
         aiScore: caller === 'ai' ? state.aiScore + points : state.aiScore,
-        messageLog: [...messageLog, `${winnerName} gana ${points} punto(s).`],
+        messageLog: [...state.messageLog, `${winnerName} gana ${points} punto(s).`],
         pendingTrucoCaller: null,
         playerActionHistory: [...state.playerActionHistory, ActionType.DECLINE],
         opponentModel: newOpponentModel,
@@ -187,7 +194,6 @@ function handleTrucoDecline(state: GameState, caller: Player, messageLog: string
 }
 
 export function handleDecline(state: GameState, action: { type: ActionType.DECLINE; payload?: { blurbText: string } }): GameState {
-    const caller = state.lastCaller!;
     const declinerName = state.currentTurn === 'player' ? 'Jugador' : 'IA';
     const messageLog = [...state.messageLog, `${declinerName} no quiere.`];
 
@@ -199,11 +205,21 @@ export function handleDecline(state: GameState, action: { type: ActionType.DECLI
     };
 
     if (state.gamePhase.includes('envido')) {
-        return handleEnvidoDecline(newState, caller, messageLog);
+        return {
+            ...newState,
+            gamePhase: 'ENVIDO_DECLINED',
+            messageLog,
+            isThinking: false, // Stop thinking indicator
+        };
     }
 
     if (state.gamePhase.includes('truco') || state.gamePhase.includes('vale_cuatro')) {
-        return handleTrucoDecline(newState, caller, messageLog);
+        return {
+            ...newState,
+            gamePhase: 'TRUCO_DECLINED',
+            messageLog,
+            isThinking: false, // Stop thinking indicator
+        };
     }
     return newState;
 }

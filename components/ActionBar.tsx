@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { GameState, Action, ActionType } from '../types';
 
@@ -49,8 +48,14 @@ const ActionBar: React.FC<ActionBarProps> = ({ dispatch, gameState }) => {
 
     const renderResponseButtons = () => {
         const canCallEnvidoPrimero = gamePhase === 'truco_called' && currentTrick === 0 && !playerTricks[0] && !aiTricks[0] && !playerHasFlor && !aiHasFlor && !hasEnvidoBeenCalledThisRound;
+        const canDeclareFlorOnTruco = gamePhase === 'truco_called' && currentTrick === 0 && !playerTricks[0] && !aiTricks[0] && playerHasFlor && !hasFlorBeenCalledThisRound;
         return (
           <>
+            {canDeclareFlorOnTruco && (
+                <ActionButton onClick={() => dispatch({ type: ActionType.DECLARE_FLOR })} className="!from-purple-600 !to-purple-700 !border-purple-900 hover:!from-purple-500 hover:!to-purple-600">
+                    ¡FLOR!
+                </ActionButton>
+            )}
             <ActionButton onClick={() => dispatch({ type: ActionType.ACCEPT })} className="!from-green-600 !to-green-700 !border-green-900 hover:!from-green-500 hover:!to-green-600">
                 ¡Quiero!
             </ActionButton>
