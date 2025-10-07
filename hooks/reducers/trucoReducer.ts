@@ -39,3 +39,17 @@ export function handleCallValeCuatro(state: GameState, action: { type: ActionTyp
       messageLog: [...state.messageLog, `${state.currentTurn.toUpperCase()} calls VALE CUATRO!`],
     };
 }
+
+export function handleCallFaltaTruco(state: GameState, action: { type: ActionType.CALL_FALTA_TRUCO }): GameState {
+   // Falta Truco escalates the game to the highest stakes, functionally similar to Vale Cuatro in this point system.
+   return { 
+      ...state, 
+      gamePhase: 'vale_cuatro_called', 
+      lastCaller: state.currentTurn, 
+      currentTurn: state.currentTurn === 'player' ? 'ai' : 'player',
+      turnBeforeInterrupt: state.turnBeforeInterrupt || state.currentTurn,
+      trucoLevel: 3,
+      pendingTrucoCaller: null,
+      messageLog: [...state.messageLog, `${state.currentTurn.toUpperCase()} calls FALTA TRUCO!`],
+    };
+}

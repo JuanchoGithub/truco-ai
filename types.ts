@@ -30,6 +30,7 @@ export interface AiReasoningEntry {
 // New types for AI learning
 export interface OpponentModel {
   trucoFoldRate: number;
+  bluffSuccessRate: number;
 }
 
 export interface Case {
@@ -42,6 +43,12 @@ export interface Case {
 export interface AiTrucoContext {
   strength: number;
   isBluff: boolean;
+}
+
+export interface OpponentHandProbabilities {
+  suitDist: Partial<Record<Suit, number>>;
+  rankProbs: Partial<Record<Rank, number>>;
+  unseenCards: Card[];
 }
 
 
@@ -79,11 +86,17 @@ export interface GameState {
   trucoLevel: 0 | 1 | 2 | 3;
   playerEnvidoFoldHistory: boolean[];
   playerCalledHighEnvido: boolean;
+  playedCards: Card[];
 
   // AI Learning & Modeling
   opponentModel: OpponentModel;
   aiCases: Case[];
   aiTrucoContext: AiTrucoContext | null;
+  
+  // New: Probabilistic Opponent Modeling
+  opponentHandProbabilities: OpponentHandProbabilities | null;
+  playerEnvidoValue: number | null;
+  playerActionHistory: ActionType[];
 }
 
 export interface AiMove {
@@ -107,11 +120,14 @@ export enum ActionType {
   CALL_TRUCO = 'CALL_TRUCO',
   CALL_RETRUCO = 'CALL_RETRUCO',
   CALL_VALE_CUATRO = 'CALL_VALE_CUATRO',
+  CALL_FALTA_TRUCO = 'CALL_FALTA_TRUCO',
   ACCEPT = 'ACCEPT',
   DECLINE = 'DECLINE',
   AI_THINKING = 'AI_THINKING',
   ADD_MESSAGE = 'ADD_MESSAGE',
   SET_AI_TRUCO_CONTEXT = 'SET_AI_TRUCO_CONTEXT',
+  // New internal action for model updates
+  UPDATE_OPPONENT_PROBS = 'UPDATE_OPPONENT_PROBS',
 }
 
 export type Action =
@@ -129,8 +145,10 @@ export type Action =
   | { type: ActionType.CALL_TRUCO }
   | { type: ActionType.CALL_RETRUCO }
   | { type: ActionType.CALL_VALE_CUATRO }
+  | { type: ActionType.CALL_FALTA_TRUCO }
   | { type: ActionType.ACCEPT }
   | { type: ActionType.DECLINE }
   | { type: ActionType.AI_THINKING; payload: boolean }
   | { type: ActionType.ADD_MESSAGE; payload: string }
-  | { type: ActionType.SET_AI_TRUCO_CONTEXT; payload: AiTrucoContext };
+  | { type: ActionType.SET_AI_TRUCO_CONTEXT; payload: AiTrucoContext }
+  | { type: ActionType.UPDATE_OPPONENT_PROBS; payload: OpponentHandProbabilities };

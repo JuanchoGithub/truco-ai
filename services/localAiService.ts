@@ -2,11 +2,28 @@ import { GameState, ActionType, AiMove } from '../types';
 import { findBestCardToPlay } from './ai/playCardStrategy';
 import { getEnvidoResponse, getEnvidoCall } from './ai/envidoStrategy';
 import { getTrucoResponse, getTrucoCall } from './ai/trucoStrategy';
+import { getCardName } from './trucoLogic';
 
 export const getLocalAIMove = (state: GameState): AiMove => {
-    const { gamePhase, currentTurn, lastCaller, currentTrick, hasEnvidoBeenCalledThisRound, aiHasFlor, playerHasFlor, hasFlorBeenCalledThisRound } = state;
+    const { gamePhase, currentTurn, lastCaller, currentTrick, hasEnvidoBeenCalledThisRound, aiHasFlor, playerHasFlor, hasFlorBeenCalledThisRound, playerTricks, aiTricks, trickWinners } = state;
     let reasoning: string[] = [];
     let move: AiMove | null = null;
+
+    // Recap the previous trick if it's not the first trick
+    if (currentTrick > 0) {
+        const lastTrickIndex = currentTrick - 1;
+        const playerCard = playerTricks[lastTrickIndex];
+        const aiCard = aiTricks[lastTrickIndex];
+        const winner = trickWinners[lastTrickIndex];
+
+        if (playerCard && aiCard && winner) {
+            reasoning.push(`[Recap of Trick ${lastTrickIndex + 1}]`);
+            reasoning.push(`Player played: ${getCardName(playerCard)}`);
+            reasoning.push(`I played: ${getCardName(aiCard)}`);
+            reasoning.push(`Result: ${winner === 'tie' ? 'Tie' : `${winner.toUpperCase()} won`}`);
+            reasoning.push(`--------------------`);
+        }
+    }
 
     const canDeclareFlor = aiHasFlor && !hasFlorBeenCalledThisRound && currentTrick === 0 && state.aiTricks[0] === null;
     if (canDeclareFlor) {
@@ -33,7 +50,8 @@ export const getLocalAIMove = (state: GameState): AiMove => {
         if (gamePhase.includes('envido')) {
             move = getEnvidoResponse(state, reasoning);
         }
-        if (gamePhase.includes('truco')) {
+        // FIX: Broadened the condition to include 'vale_cuatro' to correctly handle all truco-related responses.
+        if (gamePhase.includes('truco') || gamePhase.includes('vale_cuatro')) {
             move = getTrucoResponse(state, reasoning);
         }
         if (move) return move;

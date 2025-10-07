@@ -1,6 +1,7 @@
 import { GameState, Action, ActionType, GamePhase, Case, OpponentModel } from '../../types';
 import { createDeck, shuffleDeck, determineTrickWinner, determineRoundWinner, getCardName, hasFlor } from '../../services/trucoLogic';
 import { initialState as baseInitialState } from '../useGameReducer';
+import { initializeProbabilities, updateProbsOnPlay } from '../../services/ai/inferenceService';
 
 export function handleRestartGame(state: GameState, action: { type: ActionType.RESTART_GAME }): GameState {
   return {
@@ -31,6 +32,11 @@ export function handleStartNewRound(state: GameState, action: { type: ActionType
   const playerHasFlor = hasFlor(newPlayerHand);
   const aiHasFlor = hasFlor(newAiHand);
 
+  // Initialize opponent hand probabilities
+  const opponentUnseenCards = [...newDeck.slice(6), ...newPlayerHand];
+  const initialProbs = initializeProbabilities(opponentUnseenCards, [...newAiHand]);
+
+
   return {
     ...state,
     deck: newDeck.slice(6),
@@ -57,6 +63,11 @@ export function handleStartNewRound(state: GameState, action: { type: ActionType
     trucoLevel: 0,
     lastCaller: null,
     playerCalledHighEnvido: false,
+    playedCards: [],
+    // Reset modeling state
+    opponentHandProbabilities: initialProbs,
+    playerEnvidoValue: null,
+    playerActionHistory: [],
   };
 }
 
@@ -82,6 +93,7 @@ export function handlePlayCard(state: GameState, action: { type: ActionType.PLAY
     }
       
     const cardPlayed = hand[cardIndex];
+    const newPlayedCards = [...state.playedCards, cardPlayed];
       
     const newPlayerHand = player === 'player' ? state.playerHand.filter((_, i) => i !== cardIndex) : state.playerHand;
     const newAiHand = player === 'ai' ? state.aiHand.filter((_, i) => i !== cardIndex) : state.aiHand;
@@ -92,6 +104,12 @@ export function handlePlayCard(state: GameState, action: { type: ActionType.PLAY
       newPlayerTricks[state.currentTrick] = cardPlayed;
     } else {
       newAiTricks[state.currentTrick] = cardPlayed;
+    }
+
+    // Update opponent model if player played a card
+    let updatedProbs = state.opponentHandProbabilities;
+    if (player === 'player' && updatedProbs) {
+      updatedProbs = updateProbsOnPlay(updatedProbs, cardPlayed);
     }
       
     const messageLog = [...state.messageLog, `${player.toUpperCase()} plays ${getCardName(cardPlayed)}`];
@@ -107,6 +125,8 @@ export function handlePlayCard(state: GameState, action: { type: ActionType.PLAY
         aiTricks: newAiTricks,
         currentTurn: nextTurn,
         messageLog: messageLog,
+        playedCards: newPlayedCards,
+        opponentHandProbabilities: updatedProbs,
       };
     }
 
@@ -140,10 +160,21 @@ export function handlePlayCard(state: GameState, action: { type: ActionType.PLAY
         };
         newAiCases = [...state.aiCases, newCase];
 
-        // Player did NOT fold, so decrease their fold rate.
         const decay = 0.9;
-        const newFoldRate = state.opponentModel.trucoFoldRate * decay + (1 - decay) * 0;
-        newOpponentModel = { ...state.opponentModel, trucoFoldRate: Math.max(0.05, newFoldRate) };
+        // Player did NOT fold, so decrease their fold rate.
+        const newFoldRate = state.opponentModel.trucoFoldRate * decay;
+        
+        let newBluffSuccessRate = state.opponentModel.bluffSuccessRate;
+        if (state.aiTrucoContext.isBluff) {
+            // 1 if opponent caught the bluff, 0 otherwise
+            const bluffOutcome = roundWinner === 'ai' ? 0 : 1; 
+            newBluffSuccessRate = state.opponentModel.bluffSuccessRate * decay + (1 - decay) * bluffOutcome;
+        }
+
+        newOpponentModel = {
+            trucoFoldRate: Math.max(0.05, newFoldRate),
+            bluffSuccessRate: newBluffSuccessRate,
+        };
       }
 
       const roundMessageLog = [...trickMessageLog, `Round winner: ${roundWinner.toUpperCase()}. Wins ${points} point(s).`];
@@ -160,6 +191,8 @@ export function handlePlayCard(state: GameState, action: { type: ActionType.PLAY
         gamePhase: 'round_end',
         currentTurn: 'player',
         messageLog: roundMessageLog,
+        playedCards: newPlayedCards,
+        opponentHandProbabilities: updatedProbs,
         // Update learning state
         opponentModel: newOpponentModel,
         aiCases: newAiCases,
@@ -178,6 +211,8 @@ export function handlePlayCard(state: GameState, action: { type: ActionType.PLAY
         currentTrick: state.currentTrick + 1,
         gamePhase: `trick_${state.currentTrick + 2}` as GamePhase,
         messageLog: trickMessageLog,
+        playedCards: newPlayedCards,
+        opponentHandProbabilities: updatedProbs,
       };
     }
 }

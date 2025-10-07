@@ -1,4 +1,4 @@
-import { GameState, Card } from '../../types';
+import { GameState, Card, Suit } from '../../types';
 import { getCardHierarchy, getCardName, getEnvidoValue } from '../trucoLogic';
 
 export interface PlayCardResult {
@@ -13,8 +13,24 @@ const findCardIndexByValue = (hand: Card[], type: 'min' | 'max'): number => {
     return hand.findIndex(c => c.rank === cardToFind.rank && c.suit === cardToFind.suit);
 }
 
+// Helper to find the suit that forms the basis of the Envido points.
+const getEnvidoSuit = (hand: Card[]): Suit | null => {
+  if (hand.length < 2) return null;
+  const suitCounts: Partial<Record<Suit, number>> = {};
+  hand.forEach(card => {
+    suitCounts[card.suit] = (suitCounts[card.suit] || 0) + 1;
+  });
+  // Explicitly check in order of suits to be deterministic if there are multiple pairs (not possible with 3 cards)
+  for (const suit of (['espadas', 'bastos', 'oros', 'copas'] as Suit[])) {
+    if (suitCounts[suit]! >= 2) {
+      return suit;
+    }
+  }
+  return null;
+};
+
 export const findBestCardToPlay = (state: GameState): PlayCardResult => {
-    const { aiHand, playerTricks, currentTrick, trickWinners, mano, hasEnvidoBeenCalledThisRound, initialAiHand } = state;
+    const { aiHand, playerTricks, currentTrick, trickWinners, mano, hasEnvidoBeenCalledThisRound, initialAiHand, playerEnvidoValue } = state;
     if (aiHand.length === 0) return { index: 0, reasoning: ["No cards left to play."]};
 
     let reasoning: string[] = [`[Play Card Logic]`, `My hand: ${aiHand.map(getCardName).join(', ')}`];
@@ -25,11 +41,12 @@ export const findBestCardToPlay = (state: GameState): PlayCardResult => {
         reasoning.push(`I am leading Trick ${currentTrick + 1}.`);
 
         // Advanced Deceptive Play
-        if (currentTrick === 0 && mano === 'ai' && hasEnvidoBeenCalledThisRound) {
+        // Condition: AI won a high-value envido showdown, so player knows AI has good envido cards.
+        if (currentTrick === 0 && mano === 'ai' && playerEnvidoValue !== null) {
             const myEnvido = getEnvidoValue(initialAiHand);
-            if (myEnvido >= 28 && Math.random() < 0.5) { // 50% chance for deception
+            if (myEnvido > playerEnvidoValue && myEnvido >= 28 && Math.random() < 0.6) { // 60% chance for deception
                 const cardIndex = findCardIndexByValue(aiHand, 'min');
-                reasoning.push(`[Deceptive Play]: I won the Envido showdown, so the player knows I have high cards. I will play my *lowest* card to feign weakness and bait them into a Truco call.`);
+                reasoning.push(`[Deceptive Play]: I won the Envido showdown, so the player knows I have high cards. I will play my *lowest* card to feign weakness for tricks and bait them into a Truco call.`);
                 reasoning.push(`\nDecision: Playing ${getCardName(aiHand[cardIndex])}.`);
                 return { index: cardIndex, reasoning };
             }
@@ -49,6 +66,29 @@ export const findBestCardToPlay = (state: GameState): PlayCardResult => {
                 return { index: cardIndex, reasoning };
             case 1: // Second trick
                 if (trickWinners[0] === 'ai') {
+                    // NEW: Deceptive "Suit-Led Misdirection" play.
+                    const envidoSuit = getEnvidoSuit(initialAiHand);
+                    const myEnvido = getEnvidoValue(initialAiHand);
+                    
+                    // Condition: AI won trick 1, has a strong envido pair that was likely revealed, and still has a card of that suit.
+                    if (envidoSuit && myEnvido >= 27 && hasEnvidoBeenCalledThisRound) {
+                        const matchingSuitCardIndex = aiHand.findIndex(c => c.suit === envidoSuit);
+                        
+                        if (matchingSuitCardIndex !== -1) {
+                            // High probability to make this smart, deceptive play.
+                            if (Math.random() < 0.75) {
+                                reasoning.push(`[Deceptive Play]: My Envido call likely revealed my '${envidoSuit}' pair. Instead of my strongest overall card, I will lead my remaining '${envidoSuit}' card.`);
+                                reasoning.push(`This creates uncertainty, making the opponent question if I have another high card of the same suit. It camouflages my hand's true remaining strength.`);
+                                const cardToPlay = aiHand[matchingSuitCardIndex];
+                                reasoning.push(`\nDecision: Playing the deceptive ${getCardName(cardToPlay)}.`);
+                                return { index: matchingSuitCardIndex, reasoning };
+                            } else {
+                                reasoning.push(`[Deceptive Play Skipped]: I considered a deceptive suit-matched lead, but randomization led me to a standard play to remain unpredictable.`);
+                            }
+                        }
+                    }
+
+                    // Fallback to original logic if deceptive play isn't triggered.
                     cardIndex = findCardIndexByValue(aiHand, 'max');
                     reasoning.push(`\nDecision: I won the first trick. Playing my highest card to win the round: ${getCardName(aiHand[cardIndex])}.`);
                 } else if (trickWinners[0] === 'player') {

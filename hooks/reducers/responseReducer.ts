@@ -1,5 +1,6 @@
 import { GameState, ActionType, Player, GamePhase, Case } from '../../types';
 import { getEnvidoValue } from '../../services/trucoLogic';
+import { updateProbsOnEnvido } from '../../services/ai/inferenceService';
 
 function handleEnvidoAccept(state: GameState, messageLog: string[]): GameState {
     const isPlayerRespondingToAI = state.lastCaller === 'ai';
@@ -10,6 +11,13 @@ function handleEnvidoAccept(state: GameState, messageLog: string[]): GameState {
     const playerEnvido = getEnvidoValue(state.initialPlayerHand);
     const aiEnvido = getEnvidoValue(state.initialAiHand);
     let envidoMessage = `Player has ${playerEnvido}. AI has ${aiEnvido}.`;
+
+    let updatedProbs = state.opponentHandProbabilities;
+    // If AI called and player accepted, we now know the player's envido value.
+    // This is a huge information leak we can use.
+    if (state.lastCaller === 'ai' && updatedProbs) {
+      updatedProbs = updateProbsOnEnvido(updatedProbs, playerEnvido, state.mano === 'player');
+    }
 
     let winner: Player | 'tie' = 'tie';
     if (playerEnvido > aiEnvido) winner = 'player';
@@ -50,6 +58,8 @@ function handleEnvidoAccept(state: GameState, messageLog: string[]): GameState {
         messageLog: [...messageLog, envidoMessage],
         playerEnvidoFoldHistory: newEnvidoFoldHistory,
         playerCalledHighEnvido,
+        opponentHandProbabilities: updatedProbs,
+        playerEnvidoValue: playerEnvido,
         ...postEnvidoState,
     };
 }
@@ -63,6 +73,7 @@ function handleTrucoAccept(state: GameState, messageLog: string[]): GameState {
         turnBeforeInterrupt: null, // Reset the interrupt state
         pendingTrucoCaller: null,
         messageLog,
+        playerActionHistory: [...state.playerActionHistory, ActionType.ACCEPT],
     };
 }
 
@@ -105,6 +116,7 @@ function handleEnvidoDecline(state: GameState, caller: Player, messageLog: strin
         aiScore: caller === 'ai' ? state.aiScore + points : state.aiScore,
         messageLog: [...messageLog, `${caller.toUpperCase()} wins ${points} point(s).`],
         playerEnvidoFoldHistory: newFoldHistory,
+        playerActionHistory: [...state.playerActionHistory, ActionType.DECLINE],
         ...postEnvidoState,
     };
 }
@@ -119,15 +131,26 @@ function handleTrucoDecline(state: GameState, caller: Player, messageLog: string
         const newCase: Case = {
             ...state.aiTrucoContext,
             outcome: 'win',
+            // Fix: Corrected typo from `trucoFoldrate` to `trucoFoldRate`.
             opponentFoldRateAtTimeOfCall: state.opponentModel.trucoFoldRate,
         };
         newAiCases = [...state.aiCases, newCase];
 
-        // Update opponent's fold rate: increase it as they just folded.
-        // new_rate = old_rate * decay + (1 - decay) * new_observation
         const decay = 0.9;
+        // Update opponent's fold rate: increase it as they just folded.
         const newFoldRate = state.opponentModel.trucoFoldRate * decay + (1 - decay) * 1;
-        newOpponentModel = { ...state.opponentModel, trucoFoldRate: Math.min(0.95, newFoldRate) };
+        
+        let newBluffSuccessRate = state.opponentModel.bluffSuccessRate;
+        if (state.aiTrucoContext.isBluff) {
+            // Opponent folded, so they failed to catch the bluff.
+            const outcome = 0; 
+            newBluffSuccessRate = state.opponentModel.bluffSuccessRate * decay + (1 - decay) * outcome;
+        }
+
+        newOpponentModel = {
+            trucoFoldRate: Math.min(0.95, newFoldRate),
+            bluffSuccessRate: newBluffSuccessRate
+        };
     }
     
     const points = state.trucoLevel > 1 ? state.trucoLevel - 1 : 1;
@@ -140,6 +163,7 @@ function handleTrucoDecline(state: GameState, caller: Player, messageLog: string
         gamePhase: 'round_end',
         currentTurn: 'player',
         pendingTrucoCaller: null,
+        playerActionHistory: [...state.playerActionHistory, ActionType.DECLINE],
         // Update learning state
         opponentModel: newOpponentModel,
         aiCases: newAiCases,

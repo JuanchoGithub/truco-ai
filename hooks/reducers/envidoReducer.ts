@@ -37,6 +37,7 @@ export function handleCallRealEnvido(state: GameState, action: { type: ActionTyp
     envidoPointsOnOffer: state.envidoPointsOnOffer + 3,
     messageLog: [...state.messageLog, `${caller.toUpperCase()} escalates to REAL ENVIDO!`],
     playerEnvidoFoldHistory: newFoldHistory,
+    hasEnvidoBeenCalledThisRound: true,
   };
 }
 
@@ -61,6 +62,7 @@ export function handleCallFaltaEnvido(state: GameState, action: { type: ActionTy
     envidoPointsOnOffer: faltaPoints,
     messageLog: [...state.messageLog, `${caller.toUpperCase()} calls FALTA ENVIDO!`],
     playerEnvidoFoldHistory: newFoldHistory,
+    hasEnvidoBeenCalledThisRound: true,
   };
 }
 

@@ -3,7 +3,7 @@
 import { GameState, Action, ActionType, AiTrucoContext } from '../types';
 import { handleRestartGame, handleStartNewRound, handlePlayCard } from './reducers/gameplayReducer';
 import { handleCallEnvido, handleCallRealEnvido, handleCallFaltaEnvido, handleDeclareFlor } from './reducers/envidoReducer';
-import { handleCallTruco, handleCallRetruco, handleCallValeCuatro } from './reducers/trucoReducer';
+import { handleCallTruco, handleCallRetruco, handleCallValeCuatro, handleCallFaltaTruco } from './reducers/trucoReducer';
 import { handleAccept, handleDecline } from './reducers/responseReducer';
 
 
@@ -41,10 +41,15 @@ export const initialState: GameState = {
   trucoLevel: 0,
   playerEnvidoFoldHistory: [],
   playerCalledHighEnvido: false,
+  playedCards: [],
   // AI Learning & Modeling
-  opponentModel: { trucoFoldRate: 0.3 }, // Start with a default assumption
+  opponentModel: { trucoFoldRate: 0.3, bluffSuccessRate: 0.5 }, // Start with default assumptions
   aiCases: [],
   aiTrucoContext: null,
+  // Probabilistic Opponent Modeling
+  opponentHandProbabilities: null,
+  playerEnvidoValue: null,
+  playerActionHistory: [],
 };
 
 export function useGameReducer(state: GameState, action: Action): GameState {
@@ -74,6 +79,8 @@ export function useGameReducer(state: GameState, action: Action): GameState {
       return handleCallRetruco(state, action);
     case ActionType.CALL_VALE_CUATRO:
       return handleCallValeCuatro(state, action);
+    case ActionType.CALL_FALTA_TRUCO:
+      return handleCallFaltaTruco(state, action);
 
     // Response Actions
     case ActionType.ACCEPT:
@@ -84,6 +91,10 @@ export function useGameReducer(state: GameState, action: Action): GameState {
     // AI Learning Action
     case ActionType.SET_AI_TRUCO_CONTEXT:
       return { ...state, aiTrucoContext: action.payload };
+    
+    // Opponent Modeling Action
+    case ActionType.UPDATE_OPPONENT_PROBS:
+      return { ...state, opponentHandProbabilities: action.payload };
 
     // Simple state changes & UI actions
     case ActionType.TOGGLE_DEBUG_MODE:
