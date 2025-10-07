@@ -54,6 +54,9 @@ export interface GameState {
   turnBeforeInterrupt: Player | null;
   pendingTrucoCaller: Player | null;
   hasEnvidoBeenCalledThisRound: boolean;
+  hasFlorBeenCalledThisRound: boolean;
+  playerHasFlor: boolean;
+  aiHasFlor: boolean;
   envidoPointsOnOffer: number;
   trucoLevel: 0 | 1 | 2 | 3;
   playerEnvidoFoldHistory: boolean[]; // true for fold, false for accept/escalate
@@ -77,6 +80,7 @@ export enum ActionType {
   CALL_ENVIDO = 'CALL_ENVIDO',
   CALL_REAL_ENVIDO = 'CALL_REAL_ENVIDO',
   CALL_FALTA_ENVIDO = 'CALL_FALTA_ENVIDO',
+  DECLARE_FLOR = 'DECLARE_FLOR',
   CALL_TRUCO = 'CALL_TRUCO',
   CALL_RETRUCO = 'CALL_RETRUCO',
   CALL_VALE_CUATRO = 'CALL_VALE_CUATRO',
@@ -97,6 +101,7 @@ export type Action =
   | { type: ActionType.CALL_ENVIDO }
   | { type: ActionType.CALL_REAL_ENVIDO }
   | { type: ActionType.CALL_FALTA_ENVIDO }
+  | { type: ActionType.DECLARE_FLOR }
   | { type: ActionType.CALL_TRUCO }
   | { type: ActionType.CALL_RETRUCO }
   | { type: ActionType.CALL_VALE_CUATRO }

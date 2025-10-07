@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { GameState, Action, ActionType } from '../types';
 
@@ -19,12 +20,16 @@ const ActionButton: React.FC<{ onClick: () => void; disabled?: boolean; children
 };
 
 const ActionBar: React.FC<ActionBarProps> = ({ dispatch, gameState }) => {
-    const { gamePhase, currentTurn, lastCaller, trucoLevel, hasEnvidoBeenCalledThisRound, playerTricks, aiTricks, currentTrick } = gameState;
+    const { gamePhase, currentTurn, lastCaller, trucoLevel, hasEnvidoBeenCalledThisRound, playerTricks, aiTricks, currentTrick, playerHasFlor, aiHasFlor, hasFlorBeenCalledThisRound } = gameState;
     const isPlayerTurn = currentTurn === 'player';
 
     // --- Button Visibility Logic ---
-    // Player can call envido if it's their turn in the first trick, it hasn't been called yet, and they haven't played their card.
-    const canCallEnvido = isPlayerTurn && !hasEnvidoBeenCalledThisRound && currentTrick === 0 && !playerTricks[0];
+    const canMakeCall = isPlayerTurn && currentTrick === 0 && !playerTricks[0];
+    const envidoPhaseAvailable = !hasEnvidoBeenCalledThisRound && !hasFlorBeenCalledThisRound;
+
+    const canCallFlor = canMakeCall && envidoPhaseAvailable && playerHasFlor;
+    // Player can call envido if it's their turn in the first trick, it hasn't been called yet, AND NEITHER PLAYER HAS FLOR.
+    const canCallEnvido = canMakeCall && envidoPhaseAvailable && !playerHasFlor && !aiHasFlor;
     const canCallTruco = isPlayerTurn && trucoLevel === 0 && !gamePhase.includes('envido');
     const canEscalateToRetruco = isPlayerTurn && trucoLevel === 1 && !gamePhase.includes('envido');
     const canEscalateToValeCuatro = isPlayerTurn && trucoLevel === 2 && !gamePhase.includes('envido');
@@ -43,7 +48,7 @@ const ActionBar: React.FC<ActionBarProps> = ({ dispatch, gameState }) => {
     }
 
     const renderResponseButtons = () => {
-        const canCallEnvidoPrimero = gamePhase === 'truco_called' && currentTrick === 0 && !playerTricks[0] && !aiTricks[0];
+        const canCallEnvidoPrimero = gamePhase === 'truco_called' && currentTrick === 0 && !playerTricks[0] && !aiTricks[0] && !playerHasFlor && !aiHasFlor && !hasEnvidoBeenCalledThisRound;
         return (
           <>
             <ActionButton onClick={() => dispatch({ type: ActionType.ACCEPT })} className="!from-green-600 !to-green-700 !border-green-900 hover:!from-green-500 hover:!to-green-600">
@@ -62,6 +67,13 @@ const ActionBar: React.FC<ActionBarProps> = ({ dispatch, gameState }) => {
     }
 
     const renderActionButtons = () => {
+        if (canCallFlor) {
+            return (
+                 <ActionButton onClick={() => dispatch({ type: ActionType.DECLARE_FLOR })} className="!from-purple-600 !to-purple-700 !border-purple-900 hover:!from-purple-500 hover:!to-purple-600">
+                    FLOR!
+                </ActionButton>
+            )
+        }
         return (
             <>
                 <ActionButton onClick={() => dispatch({ type: ActionType.CALL_ENVIDO })} disabled={!canCallEnvido}>

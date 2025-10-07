@@ -26,6 +26,12 @@ export const createDeck = (): Card[] => {
   return deck;
 };
 
+export const hasFlor = (hand: Card[]): boolean => {
+  if (hand.length < 3) return false;
+  const firstSuit = hand[0].suit;
+  return hand.every(card => card.suit === firstSuit);
+};
+
 export const shuffleDeck = <T,>(array: T[]): T[] => {
   let currentIndex = array.length;
   let randomIndex: number;

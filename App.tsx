@@ -111,7 +111,7 @@ const App: React.FC = () => {
                     cards={state.playerHand} 
                     onCardPlay={handlePlayCard} 
                     playerType="player" 
-                    isMyTurn={state.currentTurn === 'player' && state.playerTricks[state.currentTrick] === null && state.gamePhase !== 'round_end'}
+                    isMyTurn={state.currentTurn === 'player' && state.playerTricks[state.currentTrick] === null && !state.gamePhase.includes('_called')}
                 />
                 <AiLogPanel log={state.aiReasoningLog} isExpanded={state.isLogExpanded} dispatch={dispatch} className="h-[180px] md:h-[200px]" />
              </div>

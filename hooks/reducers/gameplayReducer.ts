@@ -1,6 +1,5 @@
-
 import { GameState, Action, ActionType, GamePhase } from '../../types';
-import { createDeck, shuffleDeck, determineTrickWinner, determineRoundWinner, getCardName } from '../../services/trucoLogic';
+import { createDeck, shuffleDeck, determineTrickWinner, determineRoundWinner, getCardName, hasFlor } from '../../services/trucoLogic';
 import { initialState as baseInitialState } from '../useGameReducer';
 
 export function handleRestartGame(state: GameState, action: { type: ActionType.RESTART_GAME }): GameState {
@@ -30,6 +29,8 @@ export function handleStartNewRound(state: GameState, action: { type: ActionType
   const newDeck = shuffleDeck(createDeck());
   const newPlayerHand = newDeck.slice(0, 3);
   const newAiHand = newDeck.slice(3, 6);
+  const playerHasFlor = hasFlor(newPlayerHand);
+  const aiHasFlor = hasFlor(newAiHand);
 
   return {
     ...state,
@@ -38,6 +39,8 @@ export function handleStartNewRound(state: GameState, action: { type: ActionType
     aiHand: newAiHand,
     initialPlayerHand: [...newPlayerHand],
     initialAiHand: [...newAiHand],
+    playerHasFlor,
+    aiHasFlor,
     playerTricks: [null, null, null],
     aiTricks: [null, null, null],
     trickWinners: [null, null, null],
@@ -46,10 +49,11 @@ export function handleStartNewRound(state: GameState, action: { type: ActionType
     currentTurn: newMano,
     gamePhase: 'trick_1',
     round: state.round + 1,
-    messageLog: [`--- Round ${state.round + 1} ---`, `${newMano.toUpperCase()} is mano.`],
+    messageLog: [...state.messageLog, `--- Round ${state.round + 1} ---`, `${newMano.toUpperCase()} is mano.`],
     turnBeforeInterrupt: null,
     pendingTrucoCaller: null,
     hasEnvidoBeenCalledThisRound: false,
+    hasFlorBeenCalledThisRound: false,
     envidoPointsOnOffer: 0,
     trucoLevel: 0,
     lastCaller: null,

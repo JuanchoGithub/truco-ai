@@ -2,7 +2,7 @@
 // This file now contains the full, correct reducer implementation for the game.
 import { GameState, Action, ActionType } from '../types';
 import { handleRestartGame, handleStartNewRound, handlePlayCard } from './reducers/gameplayReducer';
-import { handleCallEnvido, handleCallRealEnvido, handleCallFaltaEnvido } from './reducers/envidoReducer';
+import { handleCallEnvido, handleCallRealEnvido, handleCallFaltaEnvido, handleDeclareFlor } from './reducers/envidoReducer';
 import { handleCallTruco, handleCallRetruco, handleCallValeCuatro } from './reducers/trucoReducer';
 import { handleAccept, handleDecline } from './reducers/responseReducer';
 
@@ -34,6 +34,9 @@ export const initialState: GameState = {
   turnBeforeInterrupt: null,
   pendingTrucoCaller: null,
   hasEnvidoBeenCalledThisRound: false,
+  hasFlorBeenCalledThisRound: false,
+  playerHasFlor: false,
+  aiHasFlor: false,
   envidoPointsOnOffer: 0,
   trucoLevel: 0,
   playerEnvidoFoldHistory: [],
@@ -58,6 +61,8 @@ export function useGameReducer(state: GameState, action: Action): GameState {
       return handleCallRealEnvido(state, action);
     case ActionType.CALL_FALTA_ENVIDO:
       return handleCallFaltaEnvido(state, action);
+    case ActionType.DECLARE_FLOR:
+      return handleDeclareFlor(state, action);
 
     // Truco Calling Actions
     case ActionType.CALL_TRUCO:

@@ -1,4 +1,5 @@
-import { GameState, ActionType } from '../../types';
+// Fix: Imported `GamePhase` to make the type available for casting.
+import { GameState, ActionType, Player, GamePhase } from '../../types';
 
 export function handleCallEnvido(state: GameState, action: { type: ActionType.CALL_ENVIDO }): GameState {
   const caller = state.currentTurn;
@@ -57,5 +58,40 @@ export function handleCallFaltaEnvido(state: GameState, action: { type: ActionTy
     envidoPointsOnOffer: faltaPoints,
     messageLog: [...state.messageLog, `${caller.toUpperCase()} calls FALTA ENVIDO!`],
     playerEnvidoFoldHistory: newFoldHistory,
+  };
+}
+
+export function handleDeclareFlor(state: GameState, action: { type: ActionType.DECLARE_FLOR }): GameState {
+  const caller = state.currentTurn;
+  const points = 3;
+
+  let newPlayerScore = state.playerScore;
+  let newAiScore = state.aiScore;
+
+  if (caller === 'player') {
+    newPlayerScore += points;
+  } else {
+    newAiScore += points;
+  }
+  
+  const messageLog = [
+    ...state.messageLog, 
+    `${caller.toUpperCase()} declares FLOR!`,
+    `${caller.toUpperCase()} wins ${points} points.`
+  ];
+
+  // Since Flor doesn't require a response, the game state continues.
+  // The turn to play a card remains with whoever's turn it was.
+  // The envido phase is now over.
+  return {
+    ...state,
+    playerScore: newPlayerScore,
+    aiScore: newAiScore,
+    hasFlorBeenCalledThisRound: true,
+    hasEnvidoBeenCalledThisRound: true, // Flor overrides envido
+    messageLog,
+    // FIX: Changed `as const` to `as GamePhase` to correctly cast the template literal string to the GamePhase union type.
+    gamePhase: `trick_${state.currentTrick + 1}` as GamePhase,
+    // currentTurn does not change, it's still this player's turn to act (play a card or call truco)
   };
 }
