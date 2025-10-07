@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { GameState, Action, ActionType } from '../types';
 
@@ -44,6 +43,7 @@ const ActionBar: React.FC<ActionBarProps> = ({ dispatch, gameState }) => {
     }
 
     const renderResponseButtons = () => {
+        const canCallEnvidoPrimero = gamePhase === 'truco_called' && currentTrick === 0 && !playerTricks[0] && !aiTricks[0];
         return (
           <>
             <ActionButton onClick={() => dispatch({ type: ActionType.ACCEPT })} className="!from-green-600 !to-green-700 !border-green-900 hover:!from-green-500 hover:!to-green-600">
@@ -52,6 +52,7 @@ const ActionBar: React.FC<ActionBarProps> = ({ dispatch, gameState }) => {
             <ActionButton onClick={() => dispatch({ type: ActionType.DECLINE })} className="!from-red-700 !to-red-800 !border-red-900 hover:!from-red-600 hover:!to-red-700">
                 No Quiero
             </ActionButton>
+            {canCallEnvidoPrimero && <ActionButton onClick={() => dispatch({ type: ActionType.CALL_ENVIDO })} className="!from-blue-600 !to-blue-700 !border-blue-900 hover:!from-blue-500 hover:!to-blue-600">Envido Primero</ActionButton>}
             {gamePhase === 'truco_called' && <ActionButton onClick={() => dispatch({ type: ActionType.CALL_RETRUCO })}>Retruco</ActionButton>}
             {gamePhase === 'retruco_called' && <ActionButton onClick={() => dispatch({ type: ActionType.CALL_VALE_CUATRO })}>Vale 4</ActionButton>}
             {gamePhase === 'envido_called' && <ActionButton onClick={() => dispatch({ type: ActionType.CALL_REAL_ENVIDO })}>Real Envido</ActionButton>}

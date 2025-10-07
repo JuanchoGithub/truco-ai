@@ -24,30 +24,31 @@ const App: React.FC = () => {
       const handleAiTurn = () => {
         dispatch({ type: ActionType.AI_THINKING, payload: true });
         
-        const initialReasoning = `It is my turn to act. Phase: ${state.gamePhase}. My hand: ${state.aiHand.length} cards.`;
+        const initialReasoning = `It is my turn to act. Phase: ${state.gamePhase}. My hand: ${state.aiHand.length} cards. Consulting local AI...`;
         dispatch({ type: ActionType.ADD_AI_REASONING_LOG, payload: { round: state.round, reasoning: initialReasoning } });
 
-        const aiMove = getLocalAIMove(state);
+        try {
+            const aiMove = getLocalAIMove(state);
         
-        if (aiMove) {
-          dispatch({ type: ActionType.ADD_AI_REASONING_LOG, payload: { round: state.round, reasoning: aiMove.reasoning } });
-          
-          setTimeout(() => {
-            dispatch(aiMove.action);
+            dispatch({ type: ActionType.ADD_AI_REASONING_LOG, payload: { round: state.round, reasoning: aiMove.reasoning } });
+            
+            setTimeout(() => {
+              dispatch(aiMove.action);
+              dispatch({ type: ActionType.AI_THINKING, payload: false });
+            }, 700);
+        } catch(error) {
+            console.error("Error getting AI move from local AI:", error);
+            const errorMsg = "An error occurred with the AI. The AI forfeits its turn.";
+            dispatch({ type: ActionType.ADD_MESSAGE, payload: errorMsg });
+            dispatch({ type: ActionType.ADD_AI_REASONING_LOG, payload: { round: state.round, reasoning: `Local AI Error: ${error}` } });
             dispatch({ type: ActionType.AI_THINKING, payload: false });
-          }, 700);
-        } else {
-           const confusionMsg = "AI is confused and cannot determine a move.";
-           dispatch({ type: ActionType.ADD_MESSAGE, payload: confusionMsg });
-           dispatch({ type: ActionType.ADD_AI_REASONING_LOG, payload: { round: state.round, reasoning: confusionMsg } });
-           dispatch({ type: ActionType.AI_THINKING, payload: false });
         }
       };
       
       const timeoutId = setTimeout(handleAiTurn, 1200);
       return () => clearTimeout(timeoutId);
     }
-  }, [state.currentTurn, state.isThinking, state.winner, state.round, dispatch, state.gamePhase, state.aiHand]);
+  }, [state.currentTurn, state.isThinking, state.winner, state.round, state]);
 
 
   const handlePlayCard = (cardIndex: number) => {
@@ -93,18 +94,24 @@ const App: React.FC = () => {
               aiTricks={state.aiTricks}
               currentTrick={state.currentTrick}
               trickWinners={state.trickWinners}
+              mano={state.mano}
             />
         </div>
 
         {/* BOTTOM: Player Hand & Actions */}
-        <div className="flex-shrink-0 h-[240px] md:h-[280px] flex flex-col items-center justify-end pb-2">
+        <div className="flex-shrink-0 h-[220px] md:h-[260px] flex flex-col items-center justify-end pb-2">
              <div className="mb-2 md:mb-4 flex-grow flex flex-row items-end justify-center gap-2 md:gap-4 w-full">
-                <MessageLog messages={state.messageLog} className="h-[180px] md:h-[200px]" />
+                <MessageLog 
+                    messages={state.messageLog} 
+                    isExpanded={state.isGameLogExpanded}
+                    dispatch={dispatch}
+                    className="h-[180px] md:h-[200px]" 
+                />
                 <PlayerHand 
                     cards={state.playerHand} 
                     onCardPlay={handlePlayCard} 
                     playerType="player" 
-                    isMyTurn={state.currentTurn === 'player'}
+                    isMyTurn={state.currentTurn === 'player' && state.playerTricks[state.currentTrick] === null && state.gamePhase !== 'round_end'}
                 />
                 <AiLogPanel log={state.aiReasoningLog} isExpanded={state.isLogExpanded} dispatch={dispatch} className="h-[180px] md:h-[200px]" />
              </div>

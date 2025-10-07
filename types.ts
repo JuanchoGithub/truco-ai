@@ -49,12 +49,16 @@ export interface GameState {
   isDebugMode: boolean;
   aiReasoningLog: AiReasoningEntry[];
   isLogExpanded: boolean;
+  isGameLogExpanded: boolean;
   lastCaller: Player | null;
-  turnBeforeEnvido: Player | null;
+  turnBeforeInterrupt: Player | null;
+  pendingTrucoCaller: Player | null;
   hasEnvidoBeenCalledThisRound: boolean;
   envidoPointsOnOffer: number;
   trucoLevel: 0 | 1 | 2 | 3;
   playerEnvidoFoldHistory: boolean[]; // true for fold, false for accept/escalate
+  playerTrucoFoldHistory: boolean[]; // For Truco opponent modeling
+  playerCalledHighEnvido: boolean; // To link Envido strength to Truco phase
 }
 
 export interface AiMove {
@@ -66,6 +70,7 @@ export enum ActionType {
   TOGGLE_DEBUG_MODE = 'TOGGLE_DEBUG_MODE',
   ADD_AI_REASONING_LOG = 'ADD_AI_REASONING_LOG',
   TOGGLE_AI_LOG_EXPAND = 'TOGGLE_AI_LOG_EXPAND',
+  TOGGLE_GAME_LOG_EXPAND = 'TOGGLE_GAME_LOG_EXPAND',
   RESTART_GAME = 'RESTART_GAME',
   START_NEW_ROUND = 'START_NEW_ROUND',
   PLAY_CARD = 'PLAY_CARD',
@@ -85,6 +90,7 @@ export type Action =
   | { type: ActionType.TOGGLE_DEBUG_MODE }
   | { type: ActionType.ADD_AI_REASONING_LOG; payload: AiReasoningEntry }
   | { type: ActionType.TOGGLE_AI_LOG_EXPAND }
+  | { type: ActionType.TOGGLE_GAME_LOG_EXPAND }
   | { type: ActionType.RESTART_GAME }
   | { type: ActionType.START_NEW_ROUND }
   | { type: ActionType.PLAY_CARD; payload: { player: Player; cardIndex: number } }

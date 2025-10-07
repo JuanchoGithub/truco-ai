@@ -65,7 +65,7 @@ const AiLogPanel: React.FC<AiLogPanelProps> = ({ log, isExpanded, dispatch, clas
   return (
     <div 
       onClick={() => dispatch({ type: ActionType.TOGGLE_AI_LOG_EXPAND })}
-      className={`bg-black/30 p-2 md:p-3 rounded-lg shadow-xl border-2 border-yellow-700/30 w-44 md:w-56 shadow-inner shadow-black/30 cursor-pointer hover:border-yellow-500 transition-colors flex flex-col ${className}`}
+      className={`bg-black/30 p-2 md:p-3 rounded-lg shadow-xl border-2 border-yellow-700/30 w-52 md:w-64 shadow-inner shadow-black/30 cursor-pointer hover:border-yellow-500 transition-colors flex flex-col ${className}`}
     >
       <h3 className="text-base md:text-md font-bold text-center mb-2 text-yellow-300 font-cinzel tracking-widest flex-shrink-0" style={{ textShadow: '2px 2px 3px rgba(0,0,0,0.7)' }}>
         AI Log

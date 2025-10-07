@@ -1,0 +1,51 @@
+import { GameState, ActionType } from '../../types';
+
+export function handleCallTruco(state: GameState, action: { type: ActionType.CALL_TRUCO }): GameState {
+  const isEnvidoPossible = state.currentTrick === 0 && state.playerTricks[0] === null && state.aiTricks[0] === null;
+  return { 
+    ...state, 
+    gamePhase: 'truco_called', 
+    lastCaller: state.currentTurn, 
+    currentTurn: state.currentTurn === 'player' ? 'ai' : 'player',
+    turnBeforeInterrupt: state.currentTurn,
+    trucoLevel: 1,
+    pendingTrucoCaller: isEnvidoPossible ? state.currentTurn : null,
+    messageLog: [...state.messageLog, `${state.currentTurn.toUpperCase()} calls TRUCO!`],
+  };
+}
+
+export function handleCallRetruco(state: GameState, action: { type: ActionType.CALL_RETRUCO }): GameState {
+   const isPlayerRespondingToAI = state.lastCaller === 'ai';
+    const newFoldHistory = isPlayerRespondingToAI
+      ? [...state.playerTrucoFoldHistory, false]
+      : state.playerTrucoFoldHistory;
+   return { 
+      ...state, 
+      gamePhase: 'retruco_called', 
+      lastCaller: state.currentTurn, 
+      currentTurn: state.currentTurn === 'player' ? 'ai' : 'player',
+      turnBeforeInterrupt: state.turnBeforeInterrupt || state.currentTurn,
+      trucoLevel: 2,
+      pendingTrucoCaller: null,
+      messageLog: [...state.messageLog, `${state.currentTurn.toUpperCase()} calls RETRUCO!`],
+      playerTrucoFoldHistory: newFoldHistory,
+    };
+}
+
+export function handleCallValeCuatro(state: GameState, action: { type: ActionType.CALL_VALE_CUATRO }): GameState {
+   const isPlayerRespondingToAI = state.lastCaller === 'ai';
+    const newFoldHistory = isPlayerRespondingToAI
+      ? [...state.playerTrucoFoldHistory, false]
+      : state.playerTrucoFoldHistory;
+   return { 
+      ...state, 
+      gamePhase: 'vale_cuatro_called', 
+      lastCaller: state.currentTurn, 
+      currentTurn: state.currentTurn === 'player' ? 'ai' : 'player',
+      turnBeforeInterrupt: state.turnBeforeInterrupt || state.currentTurn,
+      trucoLevel: 3,
+      pendingTrucoCaller: null,
+      messageLog: [...state.messageLog, `${state.currentTurn.toUpperCase()} calls VALE CUATRO!`],
+      playerTrucoFoldHistory: newFoldHistory,
+    };
+}
