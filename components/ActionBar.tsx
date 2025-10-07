@@ -39,7 +39,7 @@ const ActionBar: React.FC<ActionBarProps> = ({ dispatch, gameState }) => {
     // --- Render Logic ---
     if (gamePhase === 'round_end') {
       return (
-        <div className="w-full flex justify-center p-4 h-16 md:h-20 items-center">
+        <div className="flex justify-center items-center">
             <ActionButton onClick={() => dispatch({ type: ActionType.START_NEW_ROUND })} className="font-cinzel tracking-wider text-base md:text-lg !px-5 md:!px-6">
                 Siguiente Ronda
             </ActionButton>
@@ -87,7 +87,7 @@ const ActionBar: React.FC<ActionBarProps> = ({ dispatch, gameState }) => {
     }
 
     return (
-        <div className="w-full flex flex-wrap justify-center items-center gap-2 p-2 h-16 md:h-20">
+        <div className="flex flex-wrap justify-center items-center gap-2">
             {isPlayerRespondingToCall ? renderResponseButtons() : renderActionButtons()}
         </div>
     );

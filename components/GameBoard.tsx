@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card as CardType, Player } from '../types';
 import Card from './Card';
@@ -56,16 +55,16 @@ const TrickSlot: React.FC<TrickSlotProps> = ({ playerCard, aiCard, trickNumber, 
   return (
     <div className={`p-2 md:p-3 rounded-lg border-2 transition-all duration-300 ${currentTrickClasses} flex flex-col items-center`}>
         <p className="text-center text-xs md:text-sm text-gray-300 mb-1 md:mb-2 font-bold tracking-wider">MANO {trickNumber}</p>
-        <div className="relative w-20 md:w-24 h-44 md:h-56"> {/* Container for stacking */}
+        <div className="relative w-24 md:w-32 h-56 md:h-64"> {/* Container for stacking */}
             
             {/* Render a placeholder if no cards are played */}
-            {!playerCard && !aiCard && <Card card={null} className="!w-20 !h-28 md:!w-24 md:!h-36" />}
+            {!playerCard && !aiCard && <Card card={null} className="!w-24 !h-36 md:!w-32 !h-44" />}
 
             {/* AI's Card - Always on top of the slot */}
             {aiCard && (
                 <div className={`absolute left-0 top-0 transition-all duration-300 ${aiZ}`}>
                     <div className="relative">
-                        <Card card={aiCard} className="!w-20 !h-28 md:!w-24 md:!h-36" />
+                        <Card card={aiCard} className="!w-24 !h-36 md:!w-32 !h-44" />
                         {winner === 'ai' && <Crown />}
                     </div>
                 </div>
@@ -73,9 +72,9 @@ const TrickSlot: React.FC<TrickSlotProps> = ({ playerCard, aiCard, trickNumber, 
 
             {/* Player's Card - Always on bottom of the slot */}
             {playerCard && (
-                <div className={`absolute left-0 top-14 md:top-18 transition-all duration-300 ${playerZ}`}>
+                <div className={`absolute left-0 top-16 md:top-20 transition-all duration-300 ${playerZ}`}>
                     <div className="relative">
-                        <Card card={playerCard} className="!w-20 !h-28 md:!w-24 md:!h-36" />
+                        <Card card={playerCard} className="!w-24 !h-36 md:!w-32 !h-44" />
                         {winner === 'player' && <Crown />}
                     </div>
                 </div>
@@ -98,7 +97,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ playerTricks, aiTricks, currentTr
   };
 
   return (
-    <div className="w-full h-full flex flex-row justify-center items-center space-x-2 md:space-x-4 p-2 md:p-4 bg-black/20 rounded-2xl shadow-inner shadow-black/50">
+    <div className="w-full flex flex-row justify-center items-center space-x-2 md:space-x-4 p-2 md:p-4 bg-black/20 rounded-2xl shadow-inner shadow-black/50">
       <TrickSlot 
         playerCard={playerTricks[0]} 
         aiCard={aiTricks[0]} 
