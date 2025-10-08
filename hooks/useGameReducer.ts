@@ -180,7 +180,11 @@ export function useGameReducer(state: GameState, action: Action): GameState {
           },
           // Ensure arrays are not undefined if they don't exist in the loaded data
           roundHistory: loadedState.roundHistory || [],
-          playerCardPlayStats: loadedState.playerCardPlayStats || createInitialCardPlayStats(),
+          // Merge card stats to prevent data loss if new card categories are added in updates.
+          playerCardPlayStats: {
+            ...state.playerCardPlayStats,
+            ...(loadedState.playerCardPlayStats || {}),
+          },
           playerEnvidoHistory: loadedState.playerEnvidoHistory || [],
           playerPlayOrderHistory: loadedState.playerPlayOrderHistory || [],
       };
