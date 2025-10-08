@@ -1,4 +1,5 @@
 
+
 import { GameState, ActionType, Player, GamePhase, Case, PlayerEnvidoActionEntry } from '../../types';
 import { getEnvidoValue, getCardCode } from '../../services/trucoLogic';
 import { updateProbsOnEnvido } from '../../services/ai/inferenceService';
@@ -74,6 +75,29 @@ export function handleResolveEnvidoAccept(state: GameState): GameState {
         envidoMessage += ` La IA gana ${state.envidoPointsOnOffer} ${state.envidoPointsOnOffer === 1 ? 'punto' : 'puntos'}.`;
     }
 
+    const newRoundHistory = [...state.roundHistory];
+    const currentRoundSummary = newRoundHistory.find(r => r.round === state.round);
+    if (currentRoundSummary) {
+        if (winner === 'player') currentRoundSummary.pointsAwarded.player += state.envidoPointsOnOffer;
+        if (winner === 'ai') currentRoundSummary.pointsAwarded.ai += state.envidoPointsOnOffer;
+    }
+
+    // Check for a game winner immediately after awarding points
+    if (newPlayerScore >= 15 || newAiScore >= 15) {
+        const finalWinner = newPlayerScore >= 15 ? 'player' : 'ai';
+        return {
+            ...state,
+            playerScore: newPlayerScore,
+            aiScore: newAiScore,
+            messageLog: [...state.messageLog, envidoMessage],
+            winner: finalWinner,
+            gamePhase: 'game_over',
+            centralMessage: centralMessageText,
+            isCentralMessagePersistent: true,
+            roundHistory: newRoundHistory
+        };
+    }
+
     const postEnvidoState = state.pendingTrucoCaller ? {
         gamePhase: 'truco_called' as GamePhase,
         currentTurn: state.pendingTrucoCaller === 'player' ? 'ai' : 'player' as Player,
@@ -86,14 +110,6 @@ export function handleResolveEnvidoAccept(state: GameState): GameState {
         turnBeforeInterrupt: null,
     };
     
-    // Finalize the round history points
-    const newRoundHistory = [...state.roundHistory];
-    const currentRoundSummary = newRoundHistory.find(r => r.round === state.round);
-    if (currentRoundSummary) {
-        if (winner === 'player') currentRoundSummary.pointsAwarded.player += state.envidoPointsOnOffer;
-        if (winner === 'ai') currentRoundSummary.pointsAwarded.ai += state.envidoPointsOnOffer;
-    }
-
     return {
         ...state,
         playerScore: newPlayerScore,
@@ -106,6 +122,7 @@ export function handleResolveEnvidoAccept(state: GameState): GameState {
         ...postEnvidoState,
         aiBlurb: finalBlurb,
         centralMessage: centralMessageText,
+        isCentralMessagePersistent: true,
         roundHistory: newRoundHistory,
     };
 }
@@ -185,6 +202,33 @@ export function handleResolveEnvidoDecline(state: GameState): GameState {
         const reminderPhrase = getRandomPhrase(POST_ENVIDO_TRUCO_REMINDER_PHRASES);
         finalBlurb = { text: reminderPhrase, isVisible: true };
     }
+    
+    const winnerName = caller === 'player' ? 'Jugador' : 'IA';
+    const finalMessage = `${winnerName} gana ${points} ${points === 1 ? 'punto' : 'puntos'}.`;
+    const newPlayerScore = caller === 'player' ? state.playerScore + points : state.playerScore;
+    const newAiScore = caller === 'ai' ? state.aiScore + points : state.aiScore;
+
+    // Finalize the round history points
+    const newRoundHistory = [...state.roundHistory];
+    const currentRoundSummary = newRoundHistory.find(r => r.round === state.round);
+    if (currentRoundSummary) {
+        if (caller === 'player') currentRoundSummary.pointsAwarded.player += points;
+        if (caller === 'ai') currentRoundSummary.pointsAwarded.ai += points;
+    }
+
+    // Check for a game winner immediately after awarding points
+    if (newPlayerScore >= 15 || newAiScore >= 15) {
+        const finalWinner = newPlayerScore >= 15 ? 'player' : 'ai';
+        return {
+            ...state,
+            playerScore: newPlayerScore,
+            aiScore: newAiScore,
+            messageLog: [...state.messageLog, finalMessage],
+            winner: finalWinner,
+            gamePhase: 'game_over',
+            roundHistory: newRoundHistory,
+        };
+    }
 
     const postEnvidoState = state.pendingTrucoCaller ? {
         gamePhase: 'truco_called' as GamePhase,
@@ -198,21 +242,11 @@ export function handleResolveEnvidoDecline(state: GameState): GameState {
         turnBeforeInterrupt: null,
     };
     
-    const winnerName = caller === 'player' ? 'Jugador' : 'IA';
-    
-    // Finalize the round history points
-    const newRoundHistory = [...state.roundHistory];
-    const currentRoundSummary = newRoundHistory.find(r => r.round === state.round);
-    if (currentRoundSummary) {
-        if (caller === 'player') currentRoundSummary.pointsAwarded.player += points;
-        if (caller === 'ai') currentRoundSummary.pointsAwarded.ai += points;
-    }
-
     return {
         ...state,
-        playerScore: caller === 'player' ? state.playerScore + points : state.playerScore,
-        aiScore: caller === 'ai' ? state.aiScore + points : state.aiScore,
-        messageLog: [...state.messageLog, `${winnerName} gana ${points} ${points === 1 ? 'punto' : 'puntos'}.`],
+        playerScore: newPlayerScore,
+        aiScore: newAiScore,
+        messageLog: [...state.messageLog, finalMessage],
         playerEnvidoFoldHistory: newFoldHistory,
         playerActionHistory: [...state.playerActionHistory, ActionType.DECLINE],
         ...postEnvidoState,

@@ -1,3 +1,4 @@
+
 // Fix: Moved the game reducer logic from the misnamed types.ts to its correct location here.
 // This file now contains the full, correct reducer implementation for the game.
 import { GameState, Action, ActionType, AiTrucoContext } from '../types';
@@ -73,6 +74,7 @@ export const initialState: GameState = {
   aiBlurb: null,
   lastRoundWinner: null,
   centralMessage: null,
+  isCentralMessagePersistent: false,
   isDataModalVisible: false,
   // Granular Behavior Tracking
   playerEnvidoHistory: [],
@@ -150,7 +152,7 @@ export function useGameReducer(state: GameState, action: Action): GameState {
 
     // Central Message
     case ActionType.CLEAR_CENTRAL_MESSAGE:
-      return { ...state, centralMessage: null };
+      return { ...state, centralMessage: null, isCentralMessagePersistent: false };
 
     // Local Storage & Import/Export Actions
     case ActionType.LOAD_IMPORTED_DATA:

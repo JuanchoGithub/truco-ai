@@ -131,18 +131,22 @@ const App: React.FC = () => {
         setLocalMessage(state.centralMessage);
         setIsMessageVisible(true);
 
-        messageTimers.current.fadeOutTimerId = window.setTimeout(() => {
-            setIsMessageVisible(false);
-        }, 1500);
+        // If the message is NOT persistent, set timers to hide it automatically.
+        if (!state.isCentralMessagePersistent) {
+            messageTimers.current.fadeOutTimerId = window.setTimeout(() => {
+                setIsMessageVisible(false);
+            }, 1500);
 
-        messageTimers.current.clearTimerId = window.setTimeout(clearMessageState, 2000); // 1500ms visible + 500ms fadeout
+            messageTimers.current.clearTimerId = window.setTimeout(clearMessageState, 2000); // 1500ms visible + 500ms fadeout
+        }
 
+        // Always clear timers on cleanup to prevent stale timeouts
         return () => {
             clearTimeout(messageTimers.current.fadeOutTimerId);
             clearTimeout(messageTimers.current.clearTimerId);
         };
     }
-  }, [state.centralMessage, dispatch]);
+  }, [state.centralMessage, state.isCentralMessagePersistent, dispatch]);
 
 
   const handlePlayCard = (cardIndex: number) => {

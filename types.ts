@@ -196,6 +196,7 @@ export interface GameState {
 
   // Central message for key events
   centralMessage: string | null;
+  isCentralMessagePersistent: boolean;
 
   // Data Modal for user behavior
   isDataModalVisible: boolean;

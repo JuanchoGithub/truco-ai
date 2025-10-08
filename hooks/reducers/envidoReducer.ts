@@ -159,6 +159,32 @@ export function handleDeclareFlor(state: GameState, action: { type: ActionType.D
     `${callerName} canta ¡FLOR!`,
     `${callerName} gana ${points} puntos.`
   ];
+  
+  const updatedState = updateRoundHistoryWithCall(state, `${caller}: Flor`);
+  
+  // Finalize the round history points
+  const newRoundHistory = [...updatedState.roundHistory];
+  const currentRoundSummary = newRoundHistory.find(r => r.round === updatedState.round);
+  if (currentRoundSummary) {
+      if (caller === 'player') currentRoundSummary.pointsAwarded.player += points;
+      if (caller === 'ai') currentRoundSummary.pointsAwarded.ai += points;
+  }
+  
+  // Check for a game winner immediately after awarding points
+  if (newPlayerScore >= 15 || newAiScore >= 15) {
+      const finalWinner = newPlayerScore >= 15 ? 'player' : 'ai';
+      return {
+          ...updatedState,
+          playerScore: newPlayerScore,
+          aiScore: newAiScore,
+          winner: finalWinner,
+          gamePhase: 'game_over',
+          messageLog,
+          roundHistory: newRoundHistory,
+          hasFlorBeenCalledThisRound: true,
+          hasEnvidoBeenCalledThisRound: true,
+      };
+  }
 
   // If flor was declared while another call (like truco) was pending,
   // we resolve flor but keep the game in that pending state.
@@ -166,16 +192,6 @@ export function handleDeclareFlor(state: GameState, action: { type: ActionType.D
   const nextGamePhase = state.gamePhase.includes('_called')
     ? state.gamePhase
     : `trick_${state.currentTrick + 1}`;
-  
-  const updatedState = updateRoundHistoryWithCall(state, `${caller}: Flor`);
-  
-  // Finalize the round history points if this call ends the game
-  const newRoundHistory = [...updatedState.roundHistory];
-  const currentRoundSummary = newRoundHistory.find(r => r.round === updatedState.round);
-  if (currentRoundSummary) {
-      if (caller === 'player') currentRoundSummary.pointsAwarded.player += points;
-      if (caller === 'ai') currentRoundSummary.pointsAwarded.ai += points;
-  }
 
   return {
     ...updatedState,
