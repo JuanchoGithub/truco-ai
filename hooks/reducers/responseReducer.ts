@@ -1,7 +1,7 @@
 
 
 import { GameState, ActionType, Player, GamePhase, Case, PlayerEnvidoActionEntry } from '../../types';
-import { getEnvidoValue } from '../../services/trucoLogic';
+import { getEnvidoValue, getCardCode } from '../../services/trucoLogic';
 import { updateProbsOnEnvido } from '../../services/ai/inferenceService';
 import { getRandomPhrase, ENVIDO_LOSE_PHRASES, ENVIDO_WIN_PHRASES, POST_ENVIDO_TRUCO_REMINDER_PHRASES } from '../../services/ai/phrases';
 import { handleStartNewRound } from './gameplayReducer';
@@ -261,6 +261,8 @@ export function handleResolveTrucoDecline(state: GameState): GameState {
         currentRoundSummary.roundWinner = caller;
         if (caller === 'player') currentRoundSummary.pointsAwarded.player += points;
         if (caller === 'ai') currentRoundSummary.pointsAwarded.ai += points;
+        currentRoundSummary.playerTricks = state.playerTricks.map(c => c ? getCardCode(c) : null);
+        currentRoundSummary.aiTricks = state.aiTricks.map(c => c ? getCardCode(c) : null);
     }
 
     // FIX: Instead of starting a new round immediately, set the phase to 'round_end'

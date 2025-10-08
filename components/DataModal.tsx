@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { Action, ActionType, OpponentModel, Case, PlayerTrucoCallEntry, GameState, Card, Player, RoundSummary, PlayerCardPlayStatistics, CardCategory } from '../types';
-import { getCardName } from '../services/trucoLogic';
+import { getCardName, decodeCardFromCode } from '../services/trucoLogic';
 
 interface DataModalProps {
   // Pass the whole state for exporting
@@ -25,19 +25,91 @@ const categoryDisplayNames: Record<CardCategory, string> = {
     'cuatros': 'Los Cuatros',
 };
 
+// New helper function to generate the AI's analysis of the player's style
+const generateProfileAnalysis = (state: GameState): React.ReactNode[] => {
+    const insights: React.ReactNode[] = [];
+    const { opponentModel, roundHistory, playerTrucoCallHistory, playerCardPlayStats, playerEnvidoHistory } = state;
+
+    if (roundHistory.length < 3) {
+        insights.push(<li key="nodata">Juega algunas rondas más para que la IA pueda generar un perfil detallado de tu estilo de juego.</li>);
+        return insights;
+    }
+
+    // Envido Analysis
+    const { callThreshold, foldRate } = opponentModel.envidoBehavior;
+    let envidoInsight = "Analizando tu estilo de Envido... ";
+    if (callThreshold > 28) {
+        envidoInsight += "Eres un jugador de Envido 'Puntual', tiendes a cantar solo cuando tienes 29 o más, lo que te hace muy creíble. ";
+    } else if (callThreshold < 26) {
+        envidoInsight += "Muestras agresividad en el Envido, a menudo cantando con 26 o más para presionar. ";
+    } else {
+        envidoInsight += "Tu umbral de Envido es equilibrado y difícil de predecir. ";
+    }
+    if (foldRate > 0.5) {
+        envidoInsight += "Además, eres cauteloso, prefiriendo no aceptar si no tienes un buen presentimiento.";
+    } else if (foldRate < 0.3) {
+        envidoInsight += "Rara vez te retiras del Envido, demostrando que estás dispuesto a ver las cartas de la IA.";
+    }
+    insights.push(<li key="envido">{envidoInsight}</li>);
+    
+    // Truco Analysis
+    const avgTrucoStrength = playerTrucoCallHistory.length > 0
+        ? playerTrucoCallHistory.reduce((sum, entry) => sum + entry.strength, 0) / playerTrucoCallHistory.length
+        : 0;
+    
+    let trucoInsight = "En el Truco, ";
+    if (playerTrucoCallHistory.length < 3) {
+        trucoInsight += "aún estoy recopilando datos sobre tu estilo de apuesta.";
+    } else if (avgTrucoStrength > 28) {
+        trucoInsight += "eres extremadamente conservador, solo apostando con manos de élite. He aprendido a respetar mucho tus llamadas.";
+    } else if (avgTrucoStrength < 22) {
+        trucoInsight += "eres un jugador agresivo, no dudas en cantar Truco para meter presión, incluso con manos modestas. Esto te hace peligroso pero vulnerable a un contraataque.";
+    } else {
+        trucoInsight += "mantienes un estilo balanceado, haciendo que tus intenciones sean difíciles de leer.";
+    }
+    insights.push(<li key="truco">{trucoInsight}</li>);
+    
+    // Bluff Analysis
+    const bluffs = roundHistory.reduce((acc, r) => {
+        if (r.playerTrucoCall?.isBluff) {
+            acc.attempts++;
+            if (r.roundWinner === 'player') acc.successes++;
+        }
+        return acc;
+    }, { attempts: 0, successes: 0 });
+
+    if (bluffs.attempts > 2) {
+        const rate = bluffs.successes / bluffs.attempts;
+        let bluffInsight = "Tu juego de farol (bluff) ";
+        if (rate > 0.6) {
+            bluffInsight += "es muy efectivo. He notado que tus apuestas sin cartas fuertes a menudo me hacen dudar y retirarme.";
+        } else if (rate < 0.3) {
+            bluffInsight += "está siendo leído por mí. Parece que he detectado un patrón y no me estoy retirando ante tus apuestas arriesgadas.";
+        } else {
+            bluffInsight += "es moderado, manteniéndome en un estado de incertidumbre.";
+        }
+        insights.push(<li key="bluff">{bluffInsight}</li>);
+    }
+    
+    // Card Play Analysis
+    const tresStats = playerCardPlayStats.tres;
+    if (tresStats.plays > 2 && tresStats.asResponse > tresStats.asLead) {
+         insights.push(<li key="cards">Muestras una tendencia a usar tus 'Tres' como cartas de respuesta, sugiriendo un estilo de contraataque en lugar de liderar con tu máxima fuerza.</li>);
+    }
+
+    return insights;
+};
+
+
 const DataModal: React.FC<DataModalProps> = ({ gameState, dispatch }) => {
-  const { opponentModel, aiCases, playerTrucoCallHistory, playerCardPlayStats, roundHistory } = gameState;
+  const { opponentModel, aiCases, playerTrucoCallHistory, playerCardPlayStats, roundHistory, playerEnvidoHistory } = gameState;
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // NEW: Calculate live stats from round history for immediate user feedback.
-  // This is better than relying on opponentModel, which only updates between rounds.
+  // Calculate live stats from round history for immediate user feedback.
   const liveBluffStats = roundHistory.reduce(
     (acc, round) => {
-        // A bluff attempt is logged as soon as Truco is called.
         if (round.playerTrucoCall?.isBluff) {
             acc.attempts++;
-            // A bluff is successful if the player wins the round.
-            // A round can end with a winner even if all tricks aren't played (e.g., opponent folds to Truco).
             if (round.roundWinner === 'player') {
                 acc.successes++;
             }
@@ -46,6 +118,15 @@ const DataModal: React.FC<DataModalProps> = ({ gameState, dispatch }) => {
     },
     { attempts: 0, successes: 0 }
   );
+
+  const envidoCalls = playerEnvidoHistory.filter(
+    e => e.action === 'called' || e.action.startsWith('escalated')
+  );
+  const callsAsMano = envidoCalls.filter(e => e.wasMano).length;
+  const totalCalls = envidoCalls.length;
+  const manoCallRate = totalCalls > 0 ? (callsAsMano / totalCalls) * 100 : 0;
+  
+  const profileAnalysis = generateProfileAnalysis(gameState);
 
   const handleExport = () => {
     const dataToExport: Partial<GameState> = {
@@ -79,7 +160,6 @@ const DataModal: React.FC<DataModalProps> = ({ gameState, dispatch }) => {
         const text = e.target?.result;
         if (typeof text === 'string') {
           const importedData = JSON.parse(text);
-          // Basic validation
           if (importedData.opponentModel && importedData.aiCases) {
             dispatch({ type: ActionType.LOAD_IMPORTED_DATA, payload: importedData });
             alert("¡Perfil importado con éxito!");
@@ -93,24 +173,7 @@ const DataModal: React.FC<DataModalProps> = ({ gameState, dispatch }) => {
       }
     };
     reader.readAsText(file);
-    // Reset file input value to allow re-importing the same file
     event.target.value = '';
-  };
-
-  const getTrucoStyleInference = (strength: number) => {
-    if (playerTrucoCallHistory.length < 3) return "No hay suficientes datos para un análisis de estilo de Truco.";
-    if (strength > 28) return "Eres muy conservador, solo cantas Truco con manos muy fuertes. La IA puede respetarte más cuando lo haces.";
-    if (strength < 22) return "Eres muy agresivo, cantas Truco con una amplia variedad de manos. La IA podría dudar de tus llamadas y aceptar más a menudo.";
-    return "Tu estilo para cantar Truco es equilibrado, lo que te hace impredecible. La IA debe basarse más en las cartas que en tu comportamiento.";
-  };
-
-  const getBluffInference = (bluffs: { attempts: number; successes: number; }) => {
-    if (bluffs.attempts < 3) return "No hay suficientes datos para un análisis de faroles.";
-    if (bluffs.attempts === 0) return "No has intentado ningún farol de Truco todavía.";
-    const rate = bluffs.successes / bluffs.attempts;
-    if (rate >= 0.6) return "Tus faroles suelen tener éxito. La IA puede empezar a desconfiar y aceptar más a menudo.";
-    if (rate <= 0.3) return "Tus faroles no suelen funcionar. La IA ha aprendido a no retirarse contra tus apuestas de Truco.";
-    return "Tu frecuencia y éxito de farol son equilibrados, lo que te hace difícil de leer.";
   };
 
   const avgTrucoStrength = playerTrucoCallHistory.length > 0
@@ -128,26 +191,33 @@ const DataModal: React.FC<DataModalProps> = ({ gameState, dispatch }) => {
         </div>
         <div className="p-4 md:p-6 flex-grow overflow-y-auto text-amber-50 space-y-6">
           
-          {/* Section 1: Behavioral Profile */}
+          {/* Section: AI Style Analysis */}
+          <div>
+            <h3 className="text-lg md:text-xl font-bold text-amber-200 mb-2 border-b border-amber-200/20 pb-1">Análisis de Estilo por la IA</h3>
+            <div className="bg-black/30 p-3 rounded-md space-y-2 text-sm">
+                <ul className="list-disc list-inside text-gray-300 italic space-y-1">
+                    {profileAnalysis}
+                </ul>
+            </div>
+          </div>
+          
+          {/* Section: Behavioral Profile */}
           <div>
             <h3 className="text-lg md:text-xl font-bold text-amber-200 mb-2 border-b border-amber-200/20 pb-1">Perfil de Comportamiento</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div className="bg-black/30 p-3 rounded-md space-y-1">
                     <p><span className="font-semibold text-white">Umbral de Truco (promedio):</span> {avgTrucoStrength > 0 ? avgTrucoStrength.toFixed(1) : 'N/A'}</p>
-                    <p className="text-xs text-gray-300 italic"><span className="font-bold text-amber-300">Inferencia:</span> {getTrucoStyleInference(avgTrucoStrength)}</p>
+                    <p><span className="font-semibold text-white">Éxito de Farol en Truco:</span> {liveBluffStats.attempts > 0 ? `${((liveBluffStats.successes / liveBluffStats.attempts) * 100).toFixed(0)}%` : 'N/A'} <span className="text-gray-400">({liveBluffStats.successes}/{liveBluffStats.attempts})</span></p>
                 </div>
                 <div className="bg-black/30 p-3 rounded-md space-y-1">
-                    <p><span className="font-semibold text-white">Umbral de Envido (promedio):</span> ~{opponentModel.envidoBehavior.callThreshold.toFixed(1)}</p>
+                     <p><span className="font-semibold text-white">Umbral de Envido (promedio):</span> ~{opponentModel.envidoBehavior.callThreshold.toFixed(1)}</p>
                      <p><span className="font-semibold text-white">Tasa de Abandono Envido (vs IA):</span> {(opponentModel.envidoBehavior.foldRate * 100).toFixed(1)}%</p>
-                </div>
-                 <div className="bg-black/30 p-3 rounded-md space-y-1 md:col-span-2">
-                    <p><span className="font-semibold text-white">Éxito de Farol en Truco:</span> {liveBluffStats.attempts > 0 ? `${((liveBluffStats.successes / liveBluffStats.attempts) * 100).toFixed(0)}%` : 'N/A'} <span className="text-gray-400">({liveBluffStats.successes}/{liveBluffStats.attempts})</span></p>
-                    <p className="text-xs text-gray-300 italic"><span className="font-bold text-amber-300">Inferencia:</span> {getBluffInference(liveBluffStats)}</p>
+                     <p><span className="font-semibold text-white">Preferencia Envido (Mano/Respuesta):</span> {totalCalls > 0 ? `${manoCallRate.toFixed(0)}% / ${(100 - manoCallRate).toFixed(0)}%` : 'N/A'}</p>
                 </div>
             </div>
           </div>
 
-          {/* Section 2: Card Play Patterns */}
+          {/* Section: Card Play Patterns */}
           <div>
             <h3 className="text-lg md:text-xl font-bold text-amber-200 mb-2 border-b border-amber-200/20 pb-1">Patrones de Juego de Cartas</h3>
             <div className="overflow-x-auto">
@@ -185,7 +255,7 @@ const DataModal: React.FC<DataModalProps> = ({ gameState, dispatch }) => {
             </div>
           </div>
 
-          {/* Section 3: Round History */}
+          {/* Section: Round History */}
           <div>
             <h3 className="text-lg md:text-xl font-bold text-amber-200 mb-2 border-b border-amber-200/20 pb-1">Historial de Rondas</h3>
             <div className="space-y-2 max-h-64 overflow-y-auto pr-2">
@@ -198,6 +268,20 @@ const DataModal: React.FC<DataModalProps> = ({ gameState, dispatch }) => {
                     <p><span className="font-semibold">Fuerza / Envido:</span> Tú {summary.playerHandStrength} / {summary.playerEnvidoPoints} vs IA {summary.aiHandStrength} / {summary.aiEnvidoPoints}</p>
                     <p><span className="font-semibold">Llamadas:</span> {summary.calls.join(', ') || 'Ninguna'}</p>
                     <p><span className="font-semibold">Ganadores de Manos:</span> {summary.trickWinners.map((w, i) => `M${i+1}: ${w ? w.toUpperCase() : 'N/A'}`).join(' | ')}</p>
+                    {summary.playerTricks && summary.aiTricks && (
+                      <div>
+                        <span className="font-semibold">Cartas Jugadas:</span>
+                        <ul className="list-disc list-inside text-gray-300">
+                          {summary.playerTricks.map((pCardCode, i) => {
+                            const aCardCode = summary.aiTricks[i];
+                            if (!pCardCode && !aCardCode) return null;
+                            const playerCardName = pCardCode ? getCardName(decodeCardFromCode(pCardCode)) : '---';
+                            const aiCardName = aCardCode ? getCardName(decodeCardFromCode(aCardCode)) : '---';
+                            return <li key={i}>Mano {i+1}: Tú ({playerCardName}) vs IA ({aiCardName})</li>
+                          }).filter(Boolean)}
+                        </ul>
+                      </div>
+                    )}
                   </div>
                 </details>
               ))}

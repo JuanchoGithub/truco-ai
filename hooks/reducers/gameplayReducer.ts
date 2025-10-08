@@ -130,6 +130,8 @@ export function handleStartNewRound(state: GameState, action: { type: ActionType
       playerEnvidoPoints,
       aiEnvidoPoints,
       calls: [],
+      playerTricks: [null, null, null],
+      aiTricks: [null, null, null],
       trickWinners: [null, null, null],
       roundWinner: null,
       pointsAwarded: { player: 0, ai: 0 },
@@ -367,6 +369,8 @@ export function handlePlayCard(state: GameState, action: { type: ActionType.PLAY
           currentRoundSummary.roundWinner = roundWinner;
           if (roundWinner === 'player') currentRoundSummary.pointsAwarded.player += points;
           if (roundWinner === 'ai') currentRoundSummary.pointsAwarded.ai += points;
+          currentRoundSummary.playerTricks = newPlayerTricks.map(c => c ? getCardCode(c) : null);
+          currentRoundSummary.aiTricks = newAiTricks.map(c => c ? getCardCode(c) : null);
       }
         
       return {

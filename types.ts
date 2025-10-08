@@ -129,6 +129,8 @@ export interface RoundSummary {
     playerEnvidoPoints: number;
     aiEnvidoPoints: number;
     calls: string[]; // e.g., "Player: ENVIDO", "AI: REAL ENVIDO", "Player: QUIERO"
+    playerTricks: (string | null)[];
+    aiTricks: (string | null)[];
     trickWinners: (Player | 'tie' | null)[];
     roundWinner: Player | 'tie' | null;
     pointsAwarded: { player: number; ai: number; };
