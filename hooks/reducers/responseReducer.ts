@@ -1,5 +1,4 @@
 
-
 import { GameState, ActionType, Player, GamePhase, Case, PlayerEnvidoActionEntry } from '../../types';
 import { getEnvidoValue, getCardCode } from '../../services/trucoLogic';
 import { updateProbsOnEnvido } from '../../services/ai/inferenceService';
@@ -251,7 +250,12 @@ export function handleResolveTrucoDecline(state: GameState): GameState {
         };
     }
     
-    const points = state.trucoLevel > 1 ? state.trucoLevel - 1 : 1;
+    // If a truco call of level L is declined, the caller gets the points for winning the previous level (L-1).
+    // - Decline Truco (level 1): 1 point.
+    // - Decline Retruco (level 2): 2 points (for winning Truco).
+    // - Decline Vale Cuatro (level 3): 3 points (for winning Retruco).
+    // This simplifies to the caller getting `state.trucoLevel` points if the `trucoLevel` is the level *being declined*.
+    const points = state.trucoLevel === 1 ? 1 : state.trucoLevel -1 > 1 ? state.trucoLevel - 1 : 2;
     const winnerName = caller === 'player' ? 'Jugador' : 'IA';
 
     // Finalize the round history
