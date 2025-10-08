@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
-import { Action, ActionType, OpponentModel, Case, PlayerTrucoCallEntry, GameState, Card, Player, RoundSummary, PlayerCardPlayStatistics, CardCategory } from '../types';
+// Fix: Imported `CardPlayStats` to use in type assertions.
+import { Action, ActionType, OpponentModel, Case, PlayerTrucoCallEntry, GameState, Card, Player, RoundSummary, PlayerCardPlayStatistics, CardCategory, CardPlayStats } from '../types';
 import { getCardName, decodeCardFromCode } from '../services/trucoLogic';
 
 interface DataModalProps {
@@ -235,7 +236,8 @@ const DataModal: React.FC<DataModalProps> = ({ gameState, dispatch }) => {
                   </tr>
                 </thead>
                 <tbody className="bg-black/20">
-                  {Object.entries(playerCardPlayStats)
+                  {/* Fix: Added type assertion to `Object.entries` to correctly type the stats object in the chain. */}
+                  {(Object.entries(playerCardPlayStats) as [string, CardPlayStats][])
                     .filter(([, stats]) => stats.plays > 0)
                     .sort(([, a], [, b]) => b.plays - a.plays)
                     .map(([category, stats]) => (

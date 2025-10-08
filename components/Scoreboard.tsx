@@ -9,16 +9,19 @@ const TallyMarks: React.FC<{ score: number }> = ({ score }) => {
 
   for (let i = 0; i < fullGroups; i++) {
     groups.push(
-      <div key={`group-${i}`} className="relative w-7 h-7 mr-1 md:w-8 md:h-8 md:mr-2 text-xl md:text-2xl font-mono text-amber-50 not-italic" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.5)'}}>
-        <span className="absolute left-0 -top-1 tracking-tighter" style={{ letterSpacing: '-0.15em' }}>||||</span>
-        <div className="absolute top-1/2 left-1/2 w-[142%] h-[3px] bg-red-500 transform -translate-x-1/2 -translate-y-1/2 rotate-45 rounded-full" style={{ top: '35%' }} />
+      // Use flex to center the vertical bars, which will also center the absolute positioned slash
+      <div key={`group-${i}`} className="relative w-8 h-8 mr-2 flex items-center justify-center text-xl md:text-2xl font-mono text-amber-50 not-italic" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.5)'}}>
+        <span className="tracking-tighter" style={{ letterSpacing: '-0.15em' }}>||||</span>
+        {/* This slash is now perfectly centered relative to the centered bars */}
+        <div className="absolute top-1/2 left-1/2 w-[155%] h-[3px] bg-red-500 transform -translate-x-1/2 -translate-y-1/2 -rotate-45 rounded-full" />
       </div>
     );
   }
 
   if (remainder > 0) {
     groups.push(
-      <div key="remainder" className="relative h-8 text-xl md:text-2xl font-mono text-amber-50 not-italic" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.5)'}}>
+      // Use flex here as well for consistent vertical alignment with the full groups
+      <div key="remainder" className="relative h-8 flex items-center justify-center text-xl md:text-2xl font-mono text-amber-50 not-italic" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.5)'}}>
         <span className="tracking-tighter" style={{ letterSpacing: '-0.15em' }}>{'|'.repeat(remainder)}</span>
       </div>
     );
