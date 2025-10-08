@@ -17,12 +17,12 @@ const PlayerHand: React.FC<PlayerHandProps> = ({ cards, playerType, onCardPlay, 
   const [hoveredCardIndex, setHoveredCardIndex] = useState<number | null>(null);
   
   // Responsive spacing for player cards to look better on mobile
-  const [translateXMultiplier, setTranslateXMultiplier] = useState(() => window.innerWidth < 768 ? 85 : 110);
+  const [translateXMultiplier, setTranslateXMultiplier] = useState(() => window.innerWidth < 768 ? 65 : 80);
 
   useEffect(() => {
     const handleResize = () => {
       // Corresponds to Tailwind's 'md' breakpoint
-      setTranslateXMultiplier(window.innerWidth < 768 ? 85 : 110);
+      setTranslateXMultiplier(window.innerWidth < 768 ? 65 : 80);
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -32,13 +32,13 @@ const PlayerHand: React.FC<PlayerHandProps> = ({ cards, playerType, onCardPlay, 
 
   if (isPlayer) {
     return (
-      <div className={`flex justify-center items-center relative h-[280px] md:h-[360px] ${className}`}>
+      <div className={`flex justify-center items-center relative h-[200px] md:h-[240px] ${className}`}>
         {cards.map((card, index) => {
           const middleIndex = (cards.length - 1) / 2;
           const offset = index - middleIndex;
 
           const rotation = offset * 12;
-          const initialTranslateY = Math.abs(offset) * 30;
+          const initialTranslateY = Math.abs(offset) * 20;
           const translateX = offset * translateXMultiplier;
           
           const isHovered = hoveredCardIndex === index;
@@ -46,7 +46,7 @@ const PlayerHand: React.FC<PlayerHandProps> = ({ cards, playerType, onCardPlay, 
           const transform = `
             translateX(${translateX}px) 
             rotate(${isHovered && isMyTurn ? 0 : rotation}deg) 
-            translateY(${isHovered && isMyTurn ? -60 : initialTranslateY}px)
+            translateY(${isHovered && isMyTurn ? -40 : initialTranslateY}px)
           `;
 
           return (

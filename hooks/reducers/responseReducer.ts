@@ -65,13 +65,13 @@ export function handleResolveEnvidoAccept(state: GameState): GameState {
 
     if (winner === 'player') {
         newPlayerScore += state.envidoPointsOnOffer;
-        envidoMessage += ` Jugador gana ${state.envidoPointsOnOffer} puntos.`;
+        envidoMessage += ` Jugador gana ${state.envidoPointsOnOffer} ${state.envidoPointsOnOffer === 1 ? 'punto' : 'puntos'}.`;
         if (state.lastCaller === 'player' && playerEnvido >= 27) {
             playerCalledHighEnvido = true;
         }
     } else {
         newAiScore += state.envidoPointsOnOffer;
-        envidoMessage += ` La IA gana ${state.envidoPointsOnOffer} puntos.`;
+        envidoMessage += ` La IA gana ${state.envidoPointsOnOffer} ${state.envidoPointsOnOffer === 1 ? 'punto' : 'puntos'}.`;
     }
 
     const postEnvidoState = state.pendingTrucoCaller ? {
@@ -212,7 +212,7 @@ export function handleResolveEnvidoDecline(state: GameState): GameState {
         ...state,
         playerScore: caller === 'player' ? state.playerScore + points : state.playerScore,
         aiScore: caller === 'ai' ? state.aiScore + points : state.aiScore,
-        messageLog: [...state.messageLog, `${winnerName} gana ${points} punto(s).`],
+        messageLog: [...state.messageLog, `${winnerName} gana ${points} ${points === 1 ? 'punto' : 'puntos'}.`],
         playerEnvidoFoldHistory: newFoldHistory,
         playerActionHistory: [...state.playerActionHistory, ActionType.DECLINE],
         ...postEnvidoState,
@@ -275,7 +275,7 @@ export function handleResolveTrucoDecline(state: GameState): GameState {
         ...state,
         playerScore: caller === 'player' ? state.playerScore + points : state.playerScore,
         aiScore: caller === 'ai' ? state.aiScore + points : state.aiScore,
-        messageLog: [...state.messageLog, `${winnerName} gana ${points} punto(s).`],
+        messageLog: [...state.messageLog, `${winnerName} gana ${points} ${points === 1 ? 'punto' : 'puntos'}.`],
         pendingTrucoCaller: null,
         playerActionHistory: [...state.playerActionHistory, ActionType.DECLINE],
         opponentModel: newOpponentModel,

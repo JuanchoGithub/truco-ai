@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card as CardType, Player, GamePhase, Action, ActionType } from '../types';
 import Card from './Card';
@@ -27,7 +28,7 @@ interface CardPileProps {
 const CardPile: React.FC<CardPileProps> = ({ cards, trickWinners, owner, label }) => {
     const playedCards = cards.map((card, index) => ({ card, index })).filter(item => item.card !== null);
     const renderPlaceholder = playedCards.length === 0;
-    const cardSizeClasses = "!w-28 !h-[174px] md:!w-32 md:!h-[198px]";
+    const cardSizeClasses = "!w-24 !h-[150px] md:!w-28 md:!h-[174px]";
 
     return (
         <div className="relative w-full h-56 flex items-center justify-center">
@@ -77,7 +78,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ playerTricks, aiTricks, trickWinn
   const winnerText = lastRoundWinner === 'player' ? 'Ganaste la Ronda' : lastRoundWinner === 'ai' ? 'Perdiste la Ronda' : 'Ronda Empatada';
   
   return (
-    <div className="relative w-full flex flex-row justify-around items-center space-x-2 md:space-x-4 p-4 bg-black/20 rounded-2xl shadow-inner shadow-black/50 min-h-[300px]">
+    <div className="relative w-full flex flex-row justify-around items-center space-x-2 md:space-x-4 p-4 bg-black/20 rounded-2xl shadow-inner shadow-black/50 min-h-[280px]">
       <div className="w-1/2">
         <CardPile 
           cards={aiTricks}

@@ -64,7 +64,7 @@ const Card: React.FC<CardProps> = ({ card, isFaceDown = false, isPlayable = fals
   const isSmall = size === 'small';
 
   // Adjusted sizes for new aspect ratio (approx 1:1.54)
-  const cardBaseClasses = `rounded-lg shadow-lg border-2 flex items-center justify-center transition-all duration-300 transform relative select-none ${isSmall ? 'w-20 h-[124px]' : 'w-32 h-[198px] md:w-52 md:h-[322px]'}`;
+  const cardBaseClasses = `rounded-lg shadow-lg border-2 flex items-center justify-center transition-all duration-300 transform relative select-none ${isSmall ? 'w-20 h-[124px]' : 'w-28 h-[174px] md:w-36 md:h-[222px]'}`;
   const playableClasses = isPlayable ? "cursor-pointer hover:shadow-2xl hover:border-yellow-400" : "";
   
   if (isFaceDown) {
@@ -120,8 +120,8 @@ const Card: React.FC<CardProps> = ({ card, isFaceDown = false, isPlayable = fals
   const cardBgColor = 'bg-amber-50';
 
   const renderCenterArt = () => {
-    const baseFigureClass = isSmall ? 'text-5xl' : 'text-8xl md:text-9xl';
-    const heldSuitClass = `absolute ${isSmall ? 'text-2xl' : 'text-5xl md:text-6xl'}`;
+    const baseFigureClass = isSmall ? 'text-5xl' : 'text-7xl md:text-8xl';
+    const heldSuitClass = `absolute ${isSmall ? 'text-2xl' : 'text-4xl md:text-5xl'}`;
     const shadowStyle = { textShadow: '1px 1px 2px rgba(0,0,0,0.3)' };
 
     switch (card.rank) {
@@ -129,7 +129,7 @@ const Card: React.FC<CardProps> = ({ card, isFaceDown = false, isPlayable = fals
         return (
           <div className="relative flex items-center justify-center">
             <span className={baseFigureClass} style={shadowStyle}>🧑</span>
-            <SuitIcon suit={card.suit} className={`${heldSuitClass} ${isSmall ? 'top-2 -right-1' : 'top-6 -right-2 md:top-9 md:-right-3'}`} style={shadowStyle} />
+            <SuitIcon suit={card.suit} className={`${heldSuitClass} ${isSmall ? 'top-2 -right-1' : 'top-5 -right-2 md:top-7 md:-right-3'}`} style={shadowStyle} />
           </div>
         );
       case 11: // Caballo (Knight/Horse)
@@ -157,18 +157,18 @@ const Card: React.FC<CardProps> = ({ card, isFaceDown = false, isPlayable = fals
       className={`${cardBaseClasses} ${cardBgColor} border-gray-400 shadow-inner shadow-black/20 ${playableClasses} ${className}`}
       aria-label={getCardName(card)}
     >
-        <div className={`absolute text-center leading-none ${isSmall ? 'top-1 left-1.5' : 'top-2 left-3 md:top-3 md:left-4'}`}>
-            <div className={`font-bold text-gray-800 ${isSmall ? 'text-lg' : 'text-3xl md:text-4xl'}`}>{rankDisplay}</div>
-            <SuitIcon suit={card.suit} className={`${isSmall ? 'text-lg' : 'text-3xl md:text-4xl'} mx-auto`}/>
+        <div className={`absolute text-center leading-none ${isSmall ? 'top-1 left-1.5' : 'top-2 left-2.5 md:top-3 md:left-3'}`}>
+            <div className={`font-bold text-gray-800 ${isSmall ? 'text-lg' : 'text-2xl md:text-3xl'}`}>{rankDisplay}</div>
+            <SuitIcon suit={card.suit} className={`${isSmall ? 'text-lg' : 'text-2xl md:text-3xl'} mx-auto`}/>
         </div>
 
         <div className="flex items-center justify-center">
             {renderCenterArt()}
         </div>
         
-        <div className={`absolute text-center leading-none transform rotate-180 ${isSmall ? 'bottom-1 right-1.5' : 'bottom-2 right-3 md:bottom-3 md:right-4'}`}>
-            <div className={`font-bold text-gray-800 ${isSmall ? 'text-lg' : 'text-3xl md:text-4xl'}`}>{rankDisplay}</div>
-            <SuitIcon suit={card.suit} className={`${isSmall ? 'text-lg' : 'text-3xl md:text-4xl'} mx-auto`}/>
+        <div className={`absolute text-center leading-none transform rotate-180 ${isSmall ? 'bottom-1 right-1.5' : 'bottom-2 right-2.5 md:bottom-3 md:right-3'}`}>
+            <div className={`font-bold text-gray-800 ${isSmall ? 'text-lg' : 'text-2xl md:text-3xl'}`}>{rankDisplay}</div>
+            <SuitIcon suit={card.suit} className={`${isSmall ? 'text-lg' : 'text-2xl md:text-3xl'} mx-auto`}/>
         </div>
     </div>
   );

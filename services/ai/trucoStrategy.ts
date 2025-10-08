@@ -6,10 +6,9 @@ import { generateConstrainedOpponentHand } from './inferenceService';
 
 /**
  * FIX: Rewritten round simulation to be accurate.
- * Instead of flawed trick counting, this version simulates each trick,
- * determines a winner ('player', 'ai', or 'tie'), and then uses the
- * game's canonical `determineRoundWinner` function to get the correct result.
- * This correctly handles all complex tie-breaking scenarios.
+ * The previous version had a critical flaw where simulated players used their highest winning card instead of their lowest,
+ * leading to inaccurate strength assessments. This version simulates optimal card play (using the lowest card necessary to win a trick),
+ * providing a much more realistic evaluation of the AI's chances and preventing illogical folds from positions of strength.
  */
 const simulateRoundWin = (
   myHand: Card[], 
@@ -33,31 +32,36 @@ const simulateRoundWin = (
 
       if (leading) { // I lead
         myCard = remainingMy.shift()!; // Lead highest card
-        const oppWinningCard = remainingOpp.find(c => getCardHierarchy(c) > getCardHierarchy(myCard));
-        oppCard = oppWinningCard ? remainingOpp.splice(remainingOpp.findIndex(c => c === oppWinningCard), 1)[0] : remainingOpp.pop()!;
+        
+        // Opponent responds optimally: play lowest winning card, else throw lowest card
+        const oppWinningCards = remainingOpp.filter(c => getCardHierarchy(c) > getCardHierarchy(myCard));
+        if (oppWinningCards.length > 0) {
+            oppCard = oppWinningCards[oppWinningCards.length - 1]; // Lowest winning card
+            remainingOpp.splice(remainingOpp.findIndex(c => c === oppCard), 1);
+        } else {
+            oppCard = remainingOpp.pop()!; // Throw lowest card
+        }
       } else { // Opponent leads
-          // Use opponent model to simulate their lead
+          // Use opponent model to simulate their lead. Simple model: 75% lead high, 25% lead low.
           const leadRoll = Math.random();
           if (trick === 0 && mano === 'player' && leadRoll > opponentModel.playStyle.leadWithHighestRate) {
-              oppCard = remainingOpp.pop()!; // They lead low (bait)
+              oppCard = remainingOpp.pop()!; // They lead low
           } else {
               oppCard = remainingOpp.shift()!; // They lead high
           }
 
-          const myWinningCard = remainingMy.find(c => getCardHierarchy(c) > getCardHierarchy(oppCard));
-          if (myWinningCard) {
-              myCard = myWinningCard;
-              remainingMy.splice(remainingMy.findIndex(c => c === myWinningCard), 1);
+          // I respond optimally: play lowest winning card, else throw lowest card
+          const myWinningCards = remainingMy.filter(c => getCardHierarchy(c) > getCardHierarchy(oppCard));
+          if (myWinningCards.length > 0) {
+              myCard = myWinningCards[myWinningCards.length - 1]; // Lowest winning card
+              remainingMy.splice(remainingMy.findIndex(c => c === myCard), 1);
           } else {
               myCard = remainingMy.pop()!; // throw lowest card
           }
       }
 
       // DEFENSIVE CHECK: Ensure cards are defined before determining winner.
-      // This guards against subtle bugs in hand-emptying logic during simulation.
       if (!myCard || !oppCard) {
-          // This should not happen due to the guards, but if it does,
-          // break the simulation for this iteration to prevent a crash.
           break;
       }
 

@@ -379,7 +379,7 @@ export function handlePlayCard(state: GameState, action: { type: ActionType.PLAY
       }
       
       const winnerNameRound = roundWinner === 'player' ? 'JUGADOR' : roundWinner === 'ai' ? 'IA' : 'EMPATE';
-      const roundMessageLog = [...trickMessageLog, `Ganador de la ronda: ${winnerNameRound}. Gana ${points} punto(s).`];
+      const roundMessageLog = [...trickMessageLog, `Ganador de la ronda: ${winnerNameRound}. Gana ${points} ${points === 1 ? 'punto' : 'puntos'}.`];
       
       // Finalize the round history
       const newRoundHistory = [...newState.roundHistory];
