@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { GameState, Action, ActionType } from '../types';
 
@@ -65,8 +66,8 @@ const ActionBar: React.FC<ActionBarProps> = ({ dispatch, gameState }) => {
             {canCallEnvidoPrimero && <ActionButton onClick={() => dispatch({ type: ActionType.CALL_ENVIDO })} className="!from-blue-600 !to-blue-700 !border-blue-900 hover:!from-blue-500 hover:!to-blue-600">Envido Primero</ActionButton>}
             {gamePhase === 'truco_called' && <ActionButton onClick={() => dispatch({ type: ActionType.CALL_RETRUCO })}>Retruco</ActionButton>}
             {gamePhase === 'retruco_called' && <ActionButton onClick={() => dispatch({ type: ActionType.CALL_VALE_CUATRO })}>Vale Cuatro</ActionButton>}
-            {gamePhase === 'envido_called' && <ActionButton onClick={() => dispatch({ type: ActionType.CALL_REAL_ENVIDO })}>Real Envido</ActionButton>}
-            {gamePhase === 'envido_called' && <ActionButton onClick={() => dispatch({ type: ActionType.CALL_FALTA_ENVIDO })}>Falta Envido</ActionButton>}
+            {gamePhase === 'envido_called' && <ActionButton onClick={() => dispatch({ type: ActionType.CALL_REAL_ENVIDO })} className="!from-sky-600 !to-sky-700 !border-sky-900 hover:!from-sky-500 hover:!to-sky-600">Real Envido</ActionButton>}
+            {gamePhase === 'envido_called' && <ActionButton onClick={() => dispatch({ type: ActionType.CALL_FALTA_ENVIDO })} className="!from-indigo-600 !to-indigo-700 !border-indigo-900 hover:!from-indigo-500 hover:!to-indigo-600">Falta Envido</ActionButton>}
           </>
         )
     }
@@ -81,8 +82,14 @@ const ActionBar: React.FC<ActionBarProps> = ({ dispatch, gameState }) => {
         }
         return (
             <>
-                <ActionButton onClick={() => dispatch({ type: ActionType.CALL_ENVIDO })} disabled={!canCallEnvido}>
+                <ActionButton onClick={() => dispatch({ type: ActionType.CALL_ENVIDO })} disabled={!canCallEnvido} className="!from-blue-600 !to-blue-700 !border-blue-900 hover:!from-blue-500 hover:!to-blue-600">
                     Envido
+                </ActionButton>
+                <ActionButton onClick={() => dispatch({ type: ActionType.CALL_REAL_ENVIDO })} disabled={!canCallEnvido} className="!from-sky-600 !to-sky-700 !border-sky-900 hover:!from-sky-500 hover:!to-sky-600">
+                    Real Envido
+                </ActionButton>
+                <ActionButton onClick={() => dispatch({ type: ActionType.CALL_FALTA_ENVIDO })} disabled={!canCallEnvido} className="!from-indigo-600 !to-indigo-700 !border-indigo-900 hover:!from-indigo-500 hover:!to-indigo-600">
+                    Falta Envido
                 </ActionButton>
                 { trucoLevel === 0 && <ActionButton onClick={() => dispatch({ type: ActionType.CALL_TRUCO })} disabled={!canCallTruco}>Truco</ActionButton> }
                 { lastCaller === 'ai' && canEscalateToRetruco && <ActionButton onClick={() => dispatch({ type: ActionType.CALL_RETRUCO })}>Retruco</ActionButton> }

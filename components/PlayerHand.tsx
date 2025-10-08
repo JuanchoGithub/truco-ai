@@ -56,7 +56,7 @@ const PlayerHand: React.FC<PlayerHandProps> = ({ cards, playerType, onCardPlay, 
               style={{
                 transform,
                 transformOrigin: 'bottom center',
-                zIndex: isHovered ? 100 : index,
+                zIndex: isHovered ? 100 : (cards.length - Math.abs(offset)),
               }}
               onMouseEnter={() => isMyTurn && setHoveredCardIndex(index)}
               onMouseLeave={() => isMyTurn && setHoveredCardIndex(null)}
