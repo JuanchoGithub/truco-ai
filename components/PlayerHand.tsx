@@ -25,7 +25,7 @@ const PlayerHand: React.FC<PlayerHandProps> = ({ cards, playerType, onCardPlay, 
 
           const rotation = offset * 12;
           const initialTranslateY = Math.abs(offset) * 30;
-          const translateX = offset * 80;
+          const translateX = offset * 110;
           
           const isHovered = hoveredCardIndex === index;
 
