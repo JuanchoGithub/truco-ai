@@ -264,7 +264,7 @@ export type Action =
   | { type: ActionType.CALL_ENVIDO; payload?: { blurbText: string } }
   | { type: ActionType.CALL_REAL_ENVIDO; payload?: { blurbText: string } }
   | { type: ActionType.CALL_FALTA_ENVIDO; payload?: { blurbText: string } }
-  | { type: ActionType.DECLARE_FLOR; payload?: { blurbText: string } }
+  | { type: ActionType.DECLARE_FLOR; payload?: { blurbText?: string; player?: Player } }
   | { type: ActionType.CALL_TRUCO; payload?: { blurbText: string; trucoContext?: AiTrucoContext } }
   | { type: ActionType.CALL_RETRUCO; payload?: { blurbText: string; trucoContext?: AiTrucoContext } }
   | { type: ActionType.CALL_VALE_CUATRO; payload?: { blurbText: string; trucoContext?: AiTrucoContext } }

@@ -32,7 +32,7 @@ export const getLocalAIMove = (state: GameState): AiMove => {
     if (canDeclareFlor) {
         const blurbText = getRandomPhrase(FLOR_PHRASES);
         return {
-            action: { type: ActionType.DECLARE_FLOR, payload: { blurbText } },
+            action: { type: ActionType.DECLARE_FLOR, payload: { blurbText, player: 'ai' } },
             reasoning: "[Lógica de Flor]\n¡Tengo Flor! Debo cantarla para ganar 3 puntos."
         };
     }
@@ -47,7 +47,7 @@ export const getLocalAIMove = (state: GameState): AiMove => {
         if (aiHasFlor && !hasFlorBeenCalledThisRound && currentTrick === 0) {
             const blurbText = getRandomPhrase(FLOR_PHRASES);
             return {
-                action: { type: ActionType.DECLARE_FLOR, payload: { blurbText } },
+                action: { type: ActionType.DECLARE_FLOR, payload: { blurbText, player: 'ai' } },
                 reasoning: "[Lógica de Prioridad: Flor]\nEl jugador hizo un llamado, pero mi Flor tiene la máxima prioridad. Debo declararla antes de continuar."
             };
         }

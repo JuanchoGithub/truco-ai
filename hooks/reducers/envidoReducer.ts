@@ -140,8 +140,8 @@ export function handleCallFaltaEnvido(state: GameState, action: { type: ActionTy
   };
 }
 
-export function handleDeclareFlor(state: GameState, action: { type: ActionType.DECLARE_FLOR; payload?: { blurbText: string } }): GameState {
-  const caller = state.currentTurn!;
+export function handleDeclareFlor(state: GameState, action: { type: ActionType.DECLARE_FLOR; payload?: { blurbText?: string; player?: Player } }): GameState {
+  const caller = action.payload?.player || state.currentTurn!;
   const points = 3;
 
   let newPlayerScore = state.playerScore;

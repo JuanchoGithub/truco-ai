@@ -15,6 +15,7 @@ import CentralMessage from './components/CentralMessage';
 import { saveStateToStorage, loadStateFromStorage } from './services/storageService';
 import DataModal from './components/DataModal';
 import { getCardName } from './services/trucoLogic';
+import { getRandomPhrase, FLOR_PHRASES } from './services/ai/phrases';
 
 const App: React.FC = () => {
   const [state, dispatch] = useReducer(useGameReducer, initialState);
@@ -113,6 +114,29 @@ const App: React.FC = () => {
     }
     return () => clearTimeout(timerId);
   }, [state.gamePhase, dispatch]);
+
+  // New useEffect to allow AI to interrupt with Flor
+  useEffect(() => {
+    const { aiHasFlor, gamePhase, hasFlorBeenCalledThisRound, round, currentTurn } = state;
+    // Condition: AI has flor, it's the start of trick 1, flor hasn't been called yet,
+    // and it's the player's turn to act. This effect makes the AI interrupt the player
+    // to declare its mandatory Flor.
+    if (aiHasFlor && gamePhase === 'trick_1' && !hasFlorBeenCalledThisRound && round > 0 && currentTurn === 'player') {
+        const timerId = setTimeout(() => {
+            // Re-check state to avoid race conditions if player acted fast
+            if (state.gamePhase === 'trick_1' && !state.hasFlorBeenCalledThisRound) {
+                dispatch({ type: ActionType.AI_THINKING, payload: true });
+                const blurbText = getRandomPhrase(FLOR_PHRASES);
+                dispatch({ 
+                    type: ActionType.DECLARE_FLOR, 
+                    payload: { blurbText, player: 'ai' } 
+                });
+            }
+        }, 800); // 800ms delay for dramatic effect
+
+        return () => clearTimeout(timerId);
+    }
+  }, [state, dispatch]); // Depend on whole state to re-check inside timeout
 
   const clearMessageState = () => {
     dispatch({ type: ActionType.CLEAR_CENTRAL_MESSAGE });
