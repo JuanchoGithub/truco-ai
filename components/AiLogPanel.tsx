@@ -30,14 +30,19 @@ const AiLogPanel: React.FC<AiLogPanelProps> = ({ log, dispatch, isModal }) => {
           <h2 className="text-xl md:text-2xl font-bold text-cyan-300 font-cinzel tracking-widest" style={{ textShadow: '2px 2px 3px rgba(0,0,0,0.7)' }}>
             Lógica de la IA
           </h2>
-          {isModal && (
-            <button
-              onClick={() => dispatch({ type: ActionType.TOGGLE_AI_LOG_EXPAND })}
-              className="text-cyan-200 text-2xl md:text-3xl font-bold hover:text-white transition-colors"
-            >
-              &times;
-            </button>
-          )}
+          <button
+            onClick={() => dispatch({ type: ActionType.TOGGLE_AI_LOG_EXPAND })}
+            className="text-cyan-200 font-bold hover:text-white transition-colors p-1 rounded-md hover:bg-white/10"
+            aria-label={isModal ? "Cerrar" : "Ocultar Lógica de la IA"}
+          >
+            {isModal ? (
+              <span className="text-2xl md:text-3xl">&times;</span>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+              </svg>
+            )}
+          </button>
         </div>
         <div className="p-4 flex-grow overflow-y-auto">
           {Object.keys(groupedLog).reverse().map(roundKey => {

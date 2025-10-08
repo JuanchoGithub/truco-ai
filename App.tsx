@@ -249,8 +249,25 @@ const App: React.FC = () => {
         </div>
         
         {/* Right Panel */}
-        <div className="hidden lg:flex w-full max-w-xs flex-shrink-0">
-          <AiLogPanel log={state.aiReasoningLog} dispatch={dispatch} isModal={false} />
+        <div className="hidden lg:flex w-full max-w-xs flex-shrink-0 items-start justify-center">
+          {state.isLogExpanded ? (
+              <div className="w-full h-full animate-fade-in-scale">
+                <AiLogPanel log={state.aiReasoningLog} dispatch={dispatch} isModal={false} />
+              </div>
+          ) : (
+            <div className="pt-4">
+              <button 
+                onClick={() => dispatch({ type: ActionType.TOGGLE_AI_LOG_EXPAND })}
+                className="px-3 py-1.5 text-xs md:px-4 md:py-2 md:text-sm rounded-lg font-semibold text-cyan-200 bg-black/40 border-2 border-cyan-800/80 shadow-md hover:bg-black/60 hover:border-cyan-600 transition-colors flex items-center gap-2"
+                aria-label="Mostrar Lógica de la IA"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                </svg>
+                <span>Lógica IA</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
