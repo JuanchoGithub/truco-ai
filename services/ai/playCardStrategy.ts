@@ -1,6 +1,6 @@
 
 import { GameState, Card, Suit } from '../../types';
-import { getCardHierarchy, getCardName, getEnvidoValue } from '../trucoLogic';
+import { getCardHierarchy, getCardName, getEnvidoValue, determineTrickWinner, determineRoundWinner } from '../trucoLogic';
 
 export interface PlayCardResult {
     index: number;
@@ -111,6 +111,32 @@ export const findBestCardToPlay = (state: GameState): PlayCardResult => {
     const playerCardValue = getCardHierarchy(playerCard);
     reasoning.push(`Respondo a la carta del jugador ${getCardName(playerCard)} (Valor: ${playerCardValue}).`);
     
+    // --- NEW: Full outcome analysis ---
+    const outcomes = aiHand.map((card, index) => {
+        const simTrickWinner = determineTrickWinner(playerCard, card);
+        const hypotheticalTrickWinners = [...trickWinners];
+        hypotheticalTrickWinners[currentTrick] = simTrickWinner;
+        const simRoundWinner = determineRoundWinner(hypotheticalTrickWinners, mano);
+        return {
+            card,
+            index,
+            cardValue: getCardHierarchy(card),
+            trickOutcome: simTrickWinner,
+            roundOutcome: simRoundWinner
+        };
+    });
+
+    const roundWinningPlays = outcomes.filter(o => o.roundOutcome === 'ai');
+    if (roundWinningPlays.length > 0) {
+        // If there are multiple ways to win the round, choose the one using the weakest card.
+        roundWinningPlays.sort((a, b) => a.cardValue - b.cardValue);
+        const bestPlay = roundWinningPlays[0];
+        reasoning.push(`[Análisis de Ronda]: Jugar ${getCardName(bestPlay.card)} (empata o gana la mano) me asegura la victoria de la ronda.`);
+        reasoning.push(`\nDecisión: Jugando mi carta ganadora de ronda más débil para asegurar la victoria: ${getCardName(bestPlay.card)}.`);
+        return { index: bestPlay.index, reasoning };
+    }
+    // --- END NEW ---
+
     // --- "Parda y Canto" (Tie and Call) Strategy ---
     // If it's the first trick, we have a monster card for later, and we can tie the current trick,
     // it's often a good strategy to tie, hide our strength, and then call Truco.

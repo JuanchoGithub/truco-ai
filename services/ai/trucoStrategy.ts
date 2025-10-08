@@ -1,3 +1,4 @@
+
 import { GameState, AiMove, ActionType, Card, Rank, Player, Action, AiTrucoContext } from '../../types';
 import { getCardHierarchy, getCardName, determineTrickWinner, determineRoundWinner, calculateHandStrength, getHandPercentile } from '../trucoLogic';
 import { getRandomPhrase, TRUCO_PHRASES, RETRUCO_PHRASES, VALE_CUATRO_PHRASES, QUIERO_PHRASES, NO_QUIERO_PHRASES } from './phrases';
@@ -316,9 +317,62 @@ export const getTrucoResponse = (state: GameState, reasoning: string[] = []): Ai
 
 export const getTrucoCall = (state: GameState): AiMove | null => {
   const { trucoLevel, gamePhase, aiScore, playerScore, playerCalledHighEnvido, opponentModel, 
-          trickWinners, currentTrick, aiTricks } = state;
+          trickWinners, currentTrick, aiTricks, aiHand, playerHand, lastCaller } = state;
   
   if (aiTricks?.[currentTrick] !== null || gamePhase.includes('envido')) return null;
+
+  // --- NEW LOGIC: "Certainty" Escalation Call ---
+  if (aiHand.length === 1 && playerHand.length === 1 && trucoLevel < 3 && lastCaller !== 'ai') {
+      const myCard = aiHand[0];
+      const reasoningForCertainty: string[] = [];
+      const opponentSamples = generateConstrainedOpponentHand(state, reasoningForCertainty);
+      // Let's check against all plausible opponent hands, not just the strongest.
+      const possibleOpponentCards = [opponentSamples.strong[0], opponentSamples.medium[0], opponentSamples.weak[0]].filter(Boolean);
+
+      if (possibleOpponentCards.length > 0) {
+          let wins = 0;
+          for (const oppCard of possibleOpponentCards) {
+              const simTrickWinner = determineTrickWinner(oppCard, myCard);
+              const hypotheticalTrickWinners = [...trickWinners];
+              hypotheticalTrickWinners[currentTrick] = simTrickWinner;
+              const simRoundWinner = determineRoundWinner(hypotheticalTrickWinners, state.mano);
+              if (simRoundWinner === 'ai') {
+                  wins++;
+              }
+          }
+          const winProbability = wins / possibleOpponentCards.length;
+          
+          if (winProbability > 0.95) { // If we win against >95% of plausible hands, it's certain enough.
+              if (Math.random() < 0.8) { // 80% chance to act.
+                  let actionType: ActionType;
+                  let phrases: string[];
+                  if (trucoLevel === 0) {
+                      actionType = ActionType.CALL_TRUCO;
+                      phrases = TRUCO_PHRASES;
+                  } else if (trucoLevel === 1) {
+                      actionType = ActionType.CALL_RETRUCO;
+                      phrases = RETRUCO_PHRASES;
+                  } else {
+                      actionType = ActionType.CALL_VALE_CUATRO;
+                      phrases = VALE_CUATRO_PHRASES;
+                  }
+
+                  const blurbText = getRandomPhrase(phrases);
+                  const trucoContext: AiTrucoContext = { strength: 1.0, isBluff: false };
+                  return {
+                      action: { type: actionType, payload: { blurbText, trucoContext } },
+                      reasoning: [
+                          `[Lógica: Escalada por Certeza]`,
+                          `Mano final. Mi carta: ${getCardName(myCard)}.`,
+                          `Mi probabilidad de ganar la ronda es de ${(winProbability * 100).toFixed(0)}% basado en la inferencia de la mano del oponente.`,
+                          `\nDecisión: Con la victoria casi asegurada, escalo a ${actionType.replace('CALL_', '')}.`
+                      ].join('\n'),
+                  };
+              }
+          }
+      }
+  }
+  // --- END NEW LOGIC ---
 
   const scoreDiff = aiScore - playerScore;
   const myNeed = 15 - aiScore;
