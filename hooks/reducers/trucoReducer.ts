@@ -1,5 +1,6 @@
+
 import { GameState, ActionType, AiTrucoContext, PlayerTrucoCallEntry } from '../../types';
-import { calculateHandStrength } from '../../services/trucoLogic';
+import { calculateHandStrength, getHandPercentile } from '../../services/trucoLogic';
 
 function updateRoundHistoryWithCall(state: GameState, callText: string): GameState {
     const newRoundHistory = [...state.roundHistory];
@@ -16,14 +17,30 @@ export function handleCallTruco(state: GameState, action: { type: ActionType.CAL
   const caller = state.currentTurn!;
   
   const newState: Partial<GameState> = {};
+  let updatedState = { ...state };
 
-  if (caller === 'player' && state.currentTrick === 0) {
-    const strength = calculateHandStrength(state.initialPlayerHand);
-    const newEntry: PlayerTrucoCallEntry = { strength, mano: state.mano === 'player' };
+  if (caller === 'player') {
+    const handStrength = calculateHandStrength(state.initialPlayerHand);
+    const handPercentile = getHandPercentile(state.initialPlayerHand);
+    const isBluff = handPercentile < 40; // Bluff is defined as a hand in the bottom 40%
+
+    const newEntry: PlayerTrucoCallEntry = { strength: handStrength, mano: state.mano === 'player' };
     newState.playerTrucoCallHistory = [...state.playerTrucoCallHistory, newEntry];
+    
+    // Update round history with bluff info
+    const currentRoundIndex = updatedState.roundHistory.findIndex(r => r.round === state.round);
+    if (currentRoundIndex !== -1) {
+        const newRoundHistory = [...updatedState.roundHistory];
+        const updatedSummary = { 
+            ...newRoundHistory[currentRoundIndex],
+            playerTrucoCall: { handStrength, isBluff }
+        };
+        newRoundHistory[currentRoundIndex] = updatedSummary;
+        updatedState = { ...updatedState, roundHistory: newRoundHistory };
+    }
   }
 
-  const updatedState = updateRoundHistoryWithCall(state, `${caller}: Truco`);
+  updatedState = updateRoundHistoryWithCall(updatedState, `${caller}: Truco`);
 
   return { 
     ...updatedState, 

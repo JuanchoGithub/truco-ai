@@ -111,6 +111,32 @@ export const findBestCardToPlay = (state: GameState): PlayCardResult => {
     const playerCardValue = getCardHierarchy(playerCard);
     reasoning.push(`Respondo a la carta del jugador ${getCardName(playerCard)} (Valor: ${playerCardValue}).`);
     
+    // --- "Parda y Canto" (Tie and Call) Strategy ---
+    // If it's the first trick, we have a monster card for later, and we can tie the current trick,
+    // it's often a good strategy to tie, hide our strength, and then call Truco.
+    if (currentTrick === 0 && aiHand.length > 1) {
+        const aceInTheHole = aiHand.find(c => getCardHierarchy(c) >= 12); // 7 de espadas or better
+        const tyingCards = aiHand.filter(c => getCardHierarchy(c) === playerCardValue);
+
+        if (aceInTheHole && tyingCards.length > 0) {
+            // Make sure our best card isn't the one we'd use to tie
+            const isAceTheTyingCard = tyingCards.some(c => c.rank === aceInTheHole.rank && c.suit === aceInTheHole.suit);
+            
+            // 80% chance to execute this advanced strategy
+            if (!isAceTheTyingCard && Math.random() < 0.80) {
+                const tyingCard = tyingCards[0]; // Pick the first available tying card
+                const cardIndex = aiHand.findIndex(c => c.rank === tyingCard.rank && c.suit === tyingCard.suit);
+
+                reasoning.push(`[Jugada Estratégica: Parda y Canto]`);
+                reasoning.push(`Tengo una carta muy fuerte (${getCardName(aceInTheHole)}) para la siguiente mano.`);
+                reasoning.push(`En lugar de ganar ahora, empataré con ${getCardName(tyingCard)}.`);
+                reasoning.push(`Esto oculta mi verdadera fuerza y me da la oportunidad de cantar Truco con ventaja.`);
+                reasoning.push(`\nDecisión: Jugando ${getCardName(tyingCard)} para empatar.`);
+                return { index: cardIndex, reasoning };
+            }
+        }
+    }
+
     const winningCards = aiHand.filter(card => getCardHierarchy(card) > playerCardValue);
     if (winningCards.length > 0) {
         winningCards.sort((a, b) => getCardHierarchy(a) - getCardHierarchy(b));

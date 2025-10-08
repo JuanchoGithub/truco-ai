@@ -1,4 +1,3 @@
-
 import { GameState, AiMove, ActionType, Card, Rank, Player, Action, AiTrucoContext } from '../../types';
 import { getCardHierarchy, getCardName, determineTrickWinner, determineRoundWinner, calculateHandStrength, getHandPercentile } from '../trucoLogic';
 import { getRandomPhrase, TRUCO_PHRASES, RETRUCO_PHRASES, VALE_CUATRO_PHRASES, QUIERO_PHRASES, NO_QUIERO_PHRASES } from './phrases';
@@ -51,6 +50,14 @@ const simulateRoundWin = (
           } else {
               myCard = remainingMy.pop()!; // throw lowest card
           }
+      }
+
+      // DEFENSIVE CHECK: Ensure cards are defined before determining winner.
+      // This guards against subtle bugs in hand-emptying logic during simulation.
+      if (!myCard || !oppCard) {
+          // This should not happen due to the guards, but if it does,
+          // break the simulation for this iteration to prevent a crash.
+          break;
       }
 
       // The determineTrickWinner function expects (playerCard, aiCard)
@@ -154,7 +161,7 @@ export const getTrucoResponse = (state: GameState, reasoning: string[] = []): Ai
 
       // 1. Elite Hands (>= 90th percentile) -> High chance to escalate
       if (myPercentile >= 90) {
-          if (Math.random() < 0.85) { // 85% chance to escalate
+          if (Math.random() < 0.85 && trucoLevel < 3) { // 85% chance to escalate
             const escalateType = trucoLevel === 1 ? ActionType.CALL_RETRUCO : ActionType.CALL_VALE_CUATRO;
             const phrases = trucoLevel === 1 ? RETRUCO_PHRASES : VALE_CUATRO_PHRASES;
             const blurbText = getRandomPhrase(phrases);
@@ -166,7 +173,7 @@ export const getTrucoResponse = (state: GameState, reasoning: string[] = []): Ai
 
       // 2. Strong Hands (>= 50th percentile) -> Accept, with a chance to escalate
       if (myPercentile >= 50) {
-          if (myPercentile >= 75 && Math.random() < 0.3) { // 30% escalate chance for 75th+
+          if (myPercentile >= 75 && Math.random() < 0.3 && trucoLevel < 3) { // 30% escalate chance for 75th+
              const escalateType = trucoLevel === 1 ? ActionType.CALL_RETRUCO : ActionType.CALL_VALE_CUATRO;
              const phrases = trucoLevel === 1 ? RETRUCO_PHRASES : VALE_CUATRO_PHRASES;
              const blurbText = getRandomPhrase(phrases);
@@ -250,18 +257,23 @@ export const getTrucoResponse = (state: GameState, reasoning: string[] = []): Ai
   const scoreDiff = aiScore - playerScore;
   const rand = Math.random();
 
+  const bluffStats = opponentModel.trucoBluffs;
+  const bluffRate = bluffStats.attempts > 2 ? bluffStats.successes / bluffStats.attempts : 0; // Only consider rate after a few attempts
+  const bluffAdjust = (bluffRate - 0.4) * 0.4; // If player bluff success is > 40%, AI is more willing to call. Factor is how much it affects equity.
+
   let positionalBonus = 0;
   if (currentTrick > 0 && trickWinners.filter(w => w === 'ai').length > trickWinners.filter(w => w === 'player').length) {
       positionalBonus = 0.20;
   }
   
-  const equity = myStrength - 0.5 - envidoLeak + positionalBonus;
+  const equity = myStrength - 0.5 - envidoLeak + positionalBonus + bluffAdjust;
   
   reasoning.push(`\n[Factores de Decisión]`);
   reasoning.push(`- Tantos: IA ${aiScore} - Jugador ${playerScore} (Dif: ${scoreDiff}).`);
   if (envidoLeak > 0) reasoning.push(`- Penalización por Envido: -${envidoLeak.toFixed(2)} (el oponente reveló una mano fuerte de envido).`);
   if (positionalBonus > 0) reasoning.push(`- Bono Posicional: +${positionalBonus.toFixed(2)} (por ganar una mano anterior).`);
-  reasoning.push(`-> Equidad Final: ${equity.toFixed(2)} (Mi Fuerza - 0.5 + bonos).`);
+  if (bluffStats.attempts > 2) reasoning.push(`- Inferencia de Farol: El jugador tiene una tasa de éxito de farol de ${(bluffRate * 100).toFixed(0)}%. Ajuste: ${bluffAdjust > 0 ? '+' : ''}${bluffAdjust.toFixed(2)}.`);
+  reasoning.push(`-> Equidad Final: ${equity.toFixed(2)} (Mi Fuerza - 0.5 + bonos/ajustes).`);
   reasoning.push(`Una equidad positiva sugiere que aceptar/escalar es rentable; una negativa, que es más arriesgado.`);
 
   // The chance of a random move is highest when equity is near 0 (uncertainty)

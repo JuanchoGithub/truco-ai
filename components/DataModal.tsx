@@ -29,10 +29,23 @@ const DataModal: React.FC<DataModalProps> = ({ gameState, dispatch }) => {
   const { opponentModel, aiCases, playerTrucoCallHistory, playerCardPlayStats, roundHistory } = gameState;
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const trucoCalls = aiCases.length;
-  const trucoBluffs = aiCases.filter(c => c.isBluff).length;
-  const bluffWins = aiCases.filter(c => c.isBluff && c.outcome === 'win').length;
-  const bluffSuccessRate = trucoBluffs > 0 ? (bluffWins / trucoBluffs) * 100 : 0;
+  // NEW: Calculate live stats from round history for immediate user feedback.
+  // This is better than relying on opponentModel, which only updates between rounds.
+  const liveBluffStats = roundHistory.reduce(
+    (acc, round) => {
+        // A bluff attempt is logged as soon as Truco is called.
+        if (round.playerTrucoCall?.isBluff) {
+            acc.attempts++;
+            // A bluff is successful if the player wins the round.
+            // A round can end with a winner even if all tricks aren't played (e.g., opponent folds to Truco).
+            if (round.roundWinner === 'player') {
+                acc.successes++;
+            }
+        }
+        return acc;
+    },
+    { attempts: 0, successes: 0 }
+  );
 
   const handleExport = () => {
     const dataToExport: Partial<GameState> = {
@@ -91,6 +104,15 @@ const DataModal: React.FC<DataModalProps> = ({ gameState, dispatch }) => {
     return "Tu estilo para cantar Truco es equilibrado, lo que te hace impredecible. La IA debe basarse más en las cartas que en tu comportamiento.";
   };
 
+  const getBluffInference = (bluffs: { attempts: number; successes: number; }) => {
+    if (bluffs.attempts < 3) return "No hay suficientes datos para un análisis de faroles.";
+    if (bluffs.attempts === 0) return "No has intentado ningún farol de Truco todavía.";
+    const rate = bluffs.successes / bluffs.attempts;
+    if (rate >= 0.6) return "Tus faroles suelen tener éxito. La IA puede empezar a desconfiar y aceptar más a menudo.";
+    if (rate <= 0.3) return "Tus faroles no suelen funcionar. La IA ha aprendido a no retirarse contra tus apuestas de Truco.";
+    return "Tu frecuencia y éxito de farol son equilibrados, lo que te hace difícil de leer.";
+  };
+
   const avgTrucoStrength = playerTrucoCallHistory.length > 0
     ? playerTrucoCallHistory.reduce((sum, entry) => sum + entry.strength, 0) / playerTrucoCallHistory.length
     : 0;
@@ -117,6 +139,10 @@ const DataModal: React.FC<DataModalProps> = ({ gameState, dispatch }) => {
                 <div className="bg-black/30 p-3 rounded-md space-y-1">
                     <p><span className="font-semibold text-white">Umbral de Envido (promedio):</span> ~{opponentModel.envidoBehavior.callThreshold.toFixed(1)}</p>
                      <p><span className="font-semibold text-white">Tasa de Abandono Envido (vs IA):</span> {(opponentModel.envidoBehavior.foldRate * 100).toFixed(1)}%</p>
+                </div>
+                 <div className="bg-black/30 p-3 rounded-md space-y-1 md:col-span-2">
+                    <p><span className="font-semibold text-white">Éxito de Farol en Truco:</span> {liveBluffStats.attempts > 0 ? `${((liveBluffStats.successes / liveBluffStats.attempts) * 100).toFixed(0)}%` : 'N/A'} <span className="text-gray-400">({liveBluffStats.successes}/{liveBluffStats.attempts})</span></p>
+                    <p className="text-xs text-gray-300 italic"><span className="font-bold text-amber-300">Inferencia:</span> {getBluffInference(liveBluffStats)}</p>
                 </div>
             </div>
           </div>

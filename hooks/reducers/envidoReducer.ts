@@ -1,3 +1,5 @@
+
+
 // Fix: Imported `GamePhase` to make the type available for casting.
 import { GameState, ActionType, Player, GamePhase, PlayerEnvidoActionEntry } from '../../types';
 import { getEnvidoValue } from '../../services/trucoLogic';
@@ -42,6 +44,7 @@ export function handleCallEnvido(state: GameState, action: { type: ActionType.CA
     turnBeforeInterrupt: state.pendingTrucoCaller !== null ? state.turnBeforeInterrupt : caller,
     hasEnvidoBeenCalledThisRound: true,
     envidoPointsOnOffer: 2,
+    previousEnvidoPoints: 0,
     playerEnvidoHistory: newEnvidoHistory,
     messageLog: [...state.messageLog, message],
     aiBlurb: action.payload?.blurbText ? { text: action.payload.blurbText, isVisible: true } : null,
@@ -71,13 +74,17 @@ export function handleCallRealEnvido(state: GameState, action: { type: ActionTyp
   
   const updatedState = updateRoundHistoryWithCall(state, `${caller}: Real Envido`);
 
+  const isEscalation = state.gamePhase === 'envido_called';
+  const previousPoints = isEscalation ? state.envidoPointsOnOffer : 0;
+
   return {
     ...updatedState,
     gamePhase: 'envido_called',
     lastCaller: caller,
     currentTurn: opponent,
     turnBeforeInterrupt: state.turnBeforeInterrupt || caller,
-    envidoPointsOnOffer: state.envidoPointsOnOffer + 3,
+    envidoPointsOnOffer: 3,
+    previousEnvidoPoints: previousPoints,
     playerEnvidoHistory: newEnvidoHistory,
     messageLog: [...state.messageLog, `${caller === 'player' ? 'Jugador' : 'IA'} sube a ¡REAL ENVIDO!`],
     playerEnvidoFoldHistory: newFoldHistory,
@@ -113,6 +120,9 @@ export function handleCallFaltaEnvido(state: GameState, action: { type: ActionTy
 
   const updatedState = updateRoundHistoryWithCall(state, `${caller}: Falta Envido`);
 
+  const isEscalation = state.gamePhase === 'envido_called';
+  const previousPoints = isEscalation ? state.envidoPointsOnOffer : 0;
+
   return {
     ...updatedState,
     gamePhase: 'envido_called',
@@ -120,6 +130,7 @@ export function handleCallFaltaEnvido(state: GameState, action: { type: ActionTy
     currentTurn: opponent,
     turnBeforeInterrupt: state.turnBeforeInterrupt || caller,
     envidoPointsOnOffer: faltaPoints,
+    previousEnvidoPoints: previousPoints,
     playerEnvidoHistory: newEnvidoHistory,
     messageLog: [...state.messageLog, `${caller === 'player' ? 'Jugador' : 'IA'} canta ¡FALTA ENVIDO!`],
     playerEnvidoFoldHistory: newFoldHistory,

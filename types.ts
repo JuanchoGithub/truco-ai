@@ -1,3 +1,5 @@
+
+
 // Fix: Created a dedicated types file to resolve circular dependencies and export all necessary types.
 
 export type Suit = 'espadas' | 'bastos' | 'oros' | 'copas';
@@ -46,6 +48,10 @@ export interface OpponentModel {
     leadWithHighestRate: number; // When mano, trick 1
     baitRate: number;
   };
+  trucoBluffs: {
+      attempts: number;
+      successes: number;
+  };
 }
 
 export interface PlayerEnvidoActionEntry {
@@ -58,8 +64,8 @@ export interface PlayerEnvidoActionEntry {
 export interface PlayerPlayOrderEntry {
     round: number;
     trick: number;
-    handBeforePlay: Card[];
-    playedCard: Card;
+    handBeforePlay: string[];
+    playedCard: string;
     wasLeadingTrick: boolean;
 }
 
@@ -116,8 +122,8 @@ export type PlayerCardPlayStatistics = Record<CardCategory, CardPlayStats>;
 
 export interface RoundSummary {
     round: number;
-    playerInitialHand: Card[];
-    aiInitialHand: Card[];
+    playerInitialHand: string[];
+    aiInitialHand: string[];
     playerHandStrength: number;
     aiHandStrength: number;
     playerEnvidoPoints: number;
@@ -126,6 +132,10 @@ export interface RoundSummary {
     trickWinners: (Player | 'tie' | null)[];
     roundWinner: Player | 'tie' | null;
     pointsAwarded: { player: number; ai: number; };
+    playerTrucoCall: {
+        handStrength: number;
+        isBluff: boolean;
+    } | null;
 }
 
 export interface GameState {
@@ -159,6 +169,7 @@ export interface GameState {
   playerHasFlor: boolean;
   aiHasFlor: boolean;
   envidoPointsOnOffer: number;
+  previousEnvidoPoints: number;
   trucoLevel: 0 | 1 | 2 | 3;
   playerEnvidoFoldHistory: boolean[];
   playerTrucoCallHistory: PlayerTrucoCallEntry[];

@@ -1,3 +1,5 @@
+
+
 import { GameState, ActionType, Player, GamePhase, Case, PlayerEnvidoActionEntry } from '../../types';
 import { getEnvidoValue } from '../../services/trucoLogic';
 import { updateProbsOnEnvido } from '../../services/ai/inferenceService';
@@ -173,7 +175,11 @@ export function handleResolveEnvidoDecline(state: GameState): GameState {
         ? [...state.playerEnvidoFoldHistory, true]
         : state.playerEnvidoFoldHistory;
 
-    const points = state.envidoPointsOnOffer > 2 ? state.envidoPointsOnOffer - 2 : 1; 
+    let points = 1; // Default for declining a simple Envido.
+    // If previousEnvidoPoints > 0, it was an escalation. Points are from the previous bet.
+    if (state.previousEnvidoPoints > 0) {
+        points = state.previousEnvidoPoints;
+    }
 
     let finalBlurb = null;
     if (state.pendingTrucoCaller === 'ai') {

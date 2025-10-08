@@ -4,6 +4,37 @@ import { Card, Suit, Rank, Player } from '../types';
 const SUITS: Suit[] = ['espadas', 'bastos', 'oros', 'copas'];
 const RANKS: Rank[] = [1, 2, 3, 4, 5, 6, 7, 10, 11, 12];
 
+const suitToCode: Record<Suit, string> = {
+  espadas: 'E',
+  bastos: 'B',
+  oros: 'O',
+  copas: 'C',
+};
+
+const codeToSuit: Record<string, Suit> = {
+  E: 'espadas',
+  B: 'bastos',
+  O: 'oros',
+  C: 'copas',
+};
+
+export const getCardCode = (card: Card): string => {
+  const suitCode = suitToCode[card.suit];
+  return `${suitCode}${card.rank}`;
+};
+
+export const decodeCardFromCode = (code: string): Card => {
+  const suitCode = code.charAt(0);
+  const rank = parseInt(code.substring(1), 10) as Rank;
+  const suit = codeToSuit[suitCode];
+  if (!suit || isNaN(rank)) {
+    console.error(`Invalid card code provided: ${code}`);
+    // Return a "safe" card to prevent crashes on corrupted data.
+    return { rank: 4, suit: 'copas' };
+  }
+  return { rank, suit };
+};
+
 export const getCardName = (card: Card): string => {
   let rankName: string;
   switch (card.rank) {

@@ -1,3 +1,5 @@
+
+
 // Fix: Moved the game reducer logic from the misnamed types.ts to its correct location here.
 // This file now contains the full, correct reducer implementation for the game.
 import { GameState, Action, ActionType, AiTrucoContext } from '../types';
@@ -40,6 +42,7 @@ export const initialState: GameState = {
   playerHasFlor: false,
   aiHasFlor: false,
   envidoPointsOnOffer: 0,
+  previousEnvidoPoints: 0,
   trucoLevel: 0,
   playerEnvidoFoldHistory: [],
   playerTrucoCallHistory: [],
@@ -57,7 +60,11 @@ export const initialState: GameState = {
     playStyle: {
       leadWithHighestRate: 0.75,
       baitRate: 0.1,
-    }
+    },
+    trucoBluffs: {
+        attempts: 0,
+        successes: 0,
+    },
   },
   aiCases: [],
   aiTrucoContext: null,
@@ -165,6 +172,10 @@ export function useGameReducer(state: GameState, action: Action): GameState {
               playStyle: {
                  ...state.opponentModel.playStyle,
                  ...(loadedState.opponentModel?.playStyle || {}),
+              },
+              trucoBluffs: {
+                  ...state.opponentModel.trucoBluffs,
+                  ...(loadedState.opponentModel?.trucoBluffs || { attempts: 0, successes: 0 }),
               }
           },
           // Ensure arrays are not undefined if they don't exist in the loaded data

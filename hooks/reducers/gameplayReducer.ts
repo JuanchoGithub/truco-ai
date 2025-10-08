@@ -1,5 +1,7 @@
-import { GameState, Action, ActionType, GamePhase, Case, OpponentModel, PlayerEnvidoActionEntry, PlayerPlayOrderEntry, RoundSummary } from '../../types';
-import { createDeck, shuffleDeck, determineTrickWinner, determineRoundWinner, getCardName, hasFlor, getEnvidoValue, getCardHierarchy, calculateHandStrength } from '../../services/trucoLogic';
+
+
+import { GameState, Action, ActionType, GamePhase, Case, OpponentModel, PlayerEnvidoActionEntry, PlayerPlayOrderEntry, RoundSummary, Card } from '../../types';
+import { createDeck, shuffleDeck, determineTrickWinner, determineRoundWinner, getCardName, hasFlor, getEnvidoValue, getCardHierarchy, calculateHandStrength, getCardCode, decodeCardFromCode } from '../../services/trucoLogic';
 import { initializeProbabilities, updateProbsOnPlay } from '../../services/ai/inferenceService';
 import { getRandomPhrase, TRICK_LOSE_PHRASES, TRICK_WIN_PHRASES } from '../../services/ai/phrases';
 import { getCardCategory } from '../../services/cardAnalysis';
@@ -30,15 +32,18 @@ function updateOpponentModelFromHistory(state: GameState): OpponentModel {
         let ledWithHighestCount = 0;
         let baitAttempts = 0;
         for (const play of manoTrick1Leads) {
-            const sortedHand = [...play.handBeforePlay].sort((a,b) => getCardHierarchy(b) - getCardHierarchy(a));
+            const handBeforePlay_decoded = play.handBeforePlay.map(decodeCardFromCode);
+            const playedCard_decoded = decodeCardFromCode(play.playedCard);
+            
+            const sortedHand = [...handBeforePlay_decoded].sort((a,b) => getCardHierarchy(b) - getCardHierarchy(a));
             const highestCard = sortedHand[0];
             const lowestCard = sortedHand[sortedHand.length - 1];
             
-            if (highestCard.rank === play.playedCard.rank && highestCard.suit === play.playedCard.suit) {
+            if (highestCard.rank === playedCard_decoded.rank && highestCard.suit === playedCard_decoded.suit) {
                 ledWithHighestCount++;
             }
             // Define baiting as: having a strong hand overall but leading with the weakest card
-            if (calculateHandStrength(play.handBeforePlay) > 20 && lowestCard.rank === play.playedCard.rank && lowestCard.suit === play.playedCard.suit) {
+            if (calculateHandStrength(handBeforePlay_decoded) > 20 && lowestCard.rank === playedCard_decoded.rank && lowestCard.suit === playedCard_decoded.suit) {
                 baitAttempts++;
             }
         }
@@ -48,6 +53,21 @@ function updateOpponentModelFromHistory(state: GameState): OpponentModel {
         newModel.playStyle.baitRate = newModel.playStyle.baitRate * DECAY + (1 - DECAY) * newBaitRate;
     }
     
+    // 3. Analyze Truco Bluffing History
+    let successfulBluffs = 0;
+    let attemptedBluffs = 0;
+    state.roundHistory.forEach(round => {
+        // A round must be complete to judge success
+        if (round.playerTrucoCall?.isBluff && round.roundWinner !== null) {
+            attemptedBluffs++;
+            // Player wins the round (via points or opponent folding)
+            if (round.roundWinner === 'player') {
+                successfulBluffs++;
+            }
+        }
+    });
+    newModel.trucoBluffs = { attempts: attemptedBluffs, successes: successfulBluffs };
+
     return newModel;
 }
 
@@ -103,8 +123,8 @@ export function handleStartNewRound(state: GameState, action: { type: ActionType
   // Initialize the summary for the new round
   const newRoundSummary: RoundSummary = {
       round: state.round + 1,
-      playerInitialHand: [...newPlayerHand],
-      aiInitialHand: [...newAiHand],
+      playerInitialHand: newPlayerHand.map(getCardCode),
+      aiInitialHand: newAiHand.map(getCardCode),
       playerHandStrength: calculateHandStrength(newPlayerHand),
       aiHandStrength: calculateHandStrength(newAiHand),
       playerEnvidoPoints,
@@ -113,6 +133,7 @@ export function handleStartNewRound(state: GameState, action: { type: ActionType
       trickWinners: [null, null, null],
       roundWinner: null,
       pointsAwarded: { player: 0, ai: 0 },
+      playerTrucoCall: null,
   };
 
   return {
@@ -139,6 +160,7 @@ export function handleStartNewRound(state: GameState, action: { type: ActionType
     hasEnvidoBeenCalledThisRound: false,
     hasFlorBeenCalledThisRound: false,
     envidoPointsOnOffer: 0,
+    previousEnvidoPoints: 0,
     trucoLevel: 0,
     lastCaller: null,
     playerCalledHighEnvido: false,
@@ -183,8 +205,8 @@ export function handlePlayCard(state: GameState, action: { type: ActionType.PLAY
         const playOrderEntry: PlayerPlayOrderEntry = {
             round: state.round,
             trick: state.currentTrick,
-            handBeforePlay: [...state.playerHand],
-            playedCard: cardPlayed,
+            handBeforePlay: state.playerHand.map(getCardCode),
+            playedCard: getCardCode(cardPlayed),
             wasLeadingTrick: wasLeadingTrick,
         };
         const newPlayOrderHistory = [...state.playerPlayOrderHistory, playOrderEntry];
