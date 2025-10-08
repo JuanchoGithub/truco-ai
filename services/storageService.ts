@@ -1,30 +1,21 @@
-import { GameState, OpponentModel, Case, PlayerTrucoCallEntry, PlayerEnvidoActionEntry, PlayerPlayOrderEntry, PlayerCardPlayStatistics, RoundSummary } from '../types';
+import { GameState } from '../types';
 
 const STORAGE_KEY = 'trucoAiGameState';
 
-interface PersistedState {
-    opponentModel: OpponentModel;
-    aiCases: Case[];
-    playerEnvidoFoldHistory: boolean[];
-    playerTrucoCallHistory: PlayerTrucoCallEntry[];
-    playerEnvidoHistory: PlayerEnvidoActionEntry[];
-    playerPlayOrderHistory: PlayerPlayOrderEntry[];
-    playerCardPlayStats: PlayerCardPlayStatistics;
-    roundHistory: RoundSummary[];
-}
-
 export const saveStateToStorage = (state: GameState): void => {
     try {
-        const stateToPersist: PersistedState = {
-            opponentModel: state.opponentModel,
-            aiCases: state.aiCases,
-            playerEnvidoFoldHistory: state.playerEnvidoFoldHistory,
-            playerTrucoCallHistory: state.playerTrucoCallHistory,
-            playerEnvidoHistory: state.playerEnvidoHistory,
-            playerPlayOrderHistory: state.playerPlayOrderHistory,
-            playerCardPlayStats: state.playerCardPlayStats,
-            roundHistory: state.roundHistory,
-        };
+        // Omit transient UI state that shouldn't be persisted.
+        // This prevents loading the app into a weird UI state (e.g., a modal open).
+        const { 
+            isLogExpanded, 
+            isGameLogExpanded, 
+            isDataModalVisible, 
+            isThinking, 
+            centralMessage,
+            aiBlurb,
+            ...stateToPersist 
+        } = state;
+
         localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToPersist));
     } catch (error) {
         console.error("Failed to save state to localStorage:", error);
@@ -37,18 +28,16 @@ export const loadStateFromStorage = (): Partial<GameState> | null => {
         if (serializedState === null) {
             return null;
         }
-        const parsedState: PersistedState = JSON.parse(serializedState);
-        // Basic validation
-        if (parsedState && typeof parsedState.opponentModel === 'object') {
-            return {
-                ...parsedState,
-                // Provide defaults for new fields if loading old data
-                playerEnvidoHistory: parsedState.playerEnvidoHistory || [],
-                playerPlayOrderHistory: parsedState.playerPlayOrderHistory || [],
-                playerCardPlayStats: parsedState.playerCardPlayStats || undefined, // Let reducer handle initial state
-                roundHistory: parsedState.roundHistory || [],
-            };
+        
+        const parsedState: Partial<GameState> = JSON.parse(serializedState);
+        
+        // Basic validation to make sure we're not loading corrupted/old data.
+        if (parsedState && typeof parsedState.playerScore === 'number' && typeof parsedState.round === 'number') {
+            return parsedState;
         }
+        
+        console.warn("Loaded state from storage failed validation, clearing.");
+        clearStateFromStorage();
         return null;
     } catch (error) {
         console.error("Failed to load state from localStorage:", error);

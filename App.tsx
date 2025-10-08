@@ -25,8 +25,9 @@ const App: React.FC = () => {
     const persistedState = loadStateFromStorage();
     if (persistedState) {
         dispatch({ type: ActionType.LOAD_PERSISTED_STATE, payload: persistedState });
+    } else {
+        dispatch({ type: ActionType.START_NEW_ROUND });
     }
-    dispatch({ type: ActionType.START_NEW_ROUND });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
