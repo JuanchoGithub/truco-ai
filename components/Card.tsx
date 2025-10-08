@@ -64,7 +64,7 @@ const Card: React.FC<CardProps> = ({ card, isFaceDown = false, isPlayable = fals
   const isSmall = size === 'small';
 
   // Adjusted sizes for new aspect ratio (approx 1:1.54)
-  const cardBaseClasses = `rounded-lg shadow-lg border-2 flex items-center justify-center transition-all duration-300 transform relative select-none ${isSmall ? 'w-20 h-[124px]' : 'w-40 h-[248px] md:w-52 md:h-[322px]'}`;
+  const cardBaseClasses = `rounded-lg shadow-lg border-2 flex items-center justify-center transition-all duration-300 transform relative select-none ${isSmall ? 'w-20 h-[124px]' : 'w-32 h-[198px] md:w-52 md:h-[322px]'}`;
   const playableClasses = isPlayable ? "cursor-pointer hover:shadow-2xl hover:border-yellow-400" : "";
   
   if (isFaceDown) {

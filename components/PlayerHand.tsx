@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Card as CardType } from '../types';
 import Card from './Card';
 
@@ -14,6 +15,19 @@ interface PlayerHandProps {
 
 const PlayerHand: React.FC<PlayerHandProps> = ({ cards, playerType, onCardPlay, isMyTurn = false, isThinking = false, isDebugMode = false, className = '' }) => {
   const [hoveredCardIndex, setHoveredCardIndex] = useState<number | null>(null);
+  
+  // Responsive spacing for player cards to look better on mobile
+  const [translateXMultiplier, setTranslateXMultiplier] = useState(() => window.innerWidth < 768 ? 85 : 110);
+
+  useEffect(() => {
+    const handleResize = () => {
+      // Corresponds to Tailwind's 'md' breakpoint
+      setTranslateXMultiplier(window.innerWidth < 768 ? 85 : 110);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  
   const isPlayer = playerType === 'player';
 
   if (isPlayer) {
@@ -25,7 +39,7 @@ const PlayerHand: React.FC<PlayerHandProps> = ({ cards, playerType, onCardPlay, 
 
           const rotation = offset * 12;
           const initialTranslateY = Math.abs(offset) * 30;
-          const translateX = offset * 110;
+          const translateX = offset * translateXMultiplier;
           
           const isHovered = hoveredCardIndex === index;
 
