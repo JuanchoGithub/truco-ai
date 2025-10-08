@@ -239,7 +239,7 @@ const App: React.FC = () => {
 
             {/* BOTTOM: Status Bar */}
             <div className="flex-shrink-0 w-full z-20">
-                <div className="bg-black/40 border-t-2 border-yellow-900/50 shadow-lg rounded-t-lg p-2 flex justify-between lg:justify-center items-center gap-4">
+                <div className="bg-black/40 border-2 border-yellow-900/50 shadow-lg rounded-lg p-2 flex justify-between lg:justify-center items-center gap-4">
                     <LogButton onClick={() => dispatch({ type: ActionType.TOGGLE_GAME_LOG_EXPAND })} className="lg:hidden">
                       Registro
                     </LogButton>
