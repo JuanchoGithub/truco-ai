@@ -157,6 +157,29 @@ export const getTrucoResponse = (state: GameState, reasoning: string[] = []): Ai
   const myStrength = strengthResult.strength;
   reasoning.push(`[Evaluación de Fuerza]`);
   reasoning.push(...strengthResult.reasoning);
+
+  // --- NEW: Certain Loss Logic ---
+  if (myStrength < 0.05) { // Threshold for "certain loss"
+      reasoning.push(`\n[Análisis de Derrota]: Mi probabilidad de ganar esta ronda es casi nula (${(myStrength * 100).toFixed(0)}%).`);
+      
+      // Consider a desperation bluff if the opponent has a history of folding.
+      const desperationBluffChance = 0.10 + (opponentModel.trucoFoldRate * 0.2); // Base 10% + bonus for opponent fold rate
+      reasoning.push(`- Probabilidad de Farol de Desesperación: ${(desperationBluffChance * 100).toFixed(0)}%`);
+
+      if (trucoLevel < 3 && Math.random() < desperationBluffChance) {
+          const escalateType = trucoLevel === 1 ? ActionType.CALL_RETRUCO : ActionType.CALL_VALE_CUATRO;
+          const phrases = trucoLevel === 1 ? RETRUCO_PHRASES : VALE_CUATRO_PHRASES;
+          const blurbText = getRandomPhrase(phrases);
+          const trucoContext: AiTrucoContext = { strength: myStrength, isBluff: true };
+          const decisionReason = `\nDecisión: No tengo nada que perder. Intentaré un farol de desesperación escalando a ${escalateType.replace('CALL_', '')}.`;
+          return { action: { type: escalateType, payload: { blurbText, trucoContext } }, reasoning: [...reasoning, decisionReason].join('\n') };
+      } else {
+          // Otherwise, fold.
+          const decisionReason = `\nDecisión: Las probabilidades son abrumadoramente negativas. Me retiro para minimizar pérdidas.`;
+          return { action: { type: ActionType.DECLINE, payload: { blurbText: getRandomPhrase(NO_QUIERO_PHRASES) } }, reasoning: [...reasoning, decisionReason].join('\n') };
+      }
+  }
+  // --- END NEW LOGIC ---
   
   const isEarlyTruco = currentTrick === 0 && !playerTricks[0];
   if (isEarlyTruco) {

@@ -148,9 +148,16 @@ const App: React.FC = () => {
     }
   }, [state.centralMessage, state.isCentralMessagePersistent, dispatch]);
 
+  const handlePlayerAction = () => {
+    // If a persistent message is showing (like Envido results), clear it when the player acts.
+    if (state.isCentralMessagePersistent) {
+        handleDismissMessage();
+    }
+  };
 
   const handlePlayCard = (cardIndex: number) => {
     if (state.currentTurn === 'player') {
+      handlePlayerAction();
       dispatch({ type: ActionType.PLAY_CARD, payload: { player: 'player', cardIndex } });
     }
   };
@@ -243,7 +250,7 @@ const App: React.FC = () => {
                     <LogButton onClick={() => dispatch({ type: ActionType.TOGGLE_GAME_LOG_EXPAND })} className="lg:hidden">
                       Registro
                     </LogButton>
-                    <ActionBar dispatch={dispatch} gameState={state} />
+                    <ActionBar dispatch={dispatch} gameState={state} onPlayerAction={handlePlayerAction} />
                     <LogButton onClick={() => dispatch({ type: ActionType.TOGGLE_AI_LOG_EXPAND })} className="lg:hidden">
                       Lógica IA
                     </LogButton>
