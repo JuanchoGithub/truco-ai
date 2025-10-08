@@ -1,103 +1,75 @@
-import { GameState, AiMove, ActionType, Card, Rank, Player } from '../../types';
-import { getCardHierarchy, getCardName } from '../trucoLogic';
+
+import { GameState, AiMove, ActionType, Card, Rank, Player, Action, AiTrucoContext } from '../../types';
+import { getCardHierarchy, getCardName, determineTrickWinner, determineRoundWinner, calculateHandStrength, getHandPercentile } from '../trucoLogic';
 import { getRandomPhrase, TRUCO_PHRASES, RETRUCO_PHRASES, VALE_CUATRO_PHRASES, QUIERO_PHRASES, NO_QUIERO_PHRASES } from './phrases';
+import { generateConstrainedOpponentHand } from './inferenceService';
 
-// New: Weighted sampling to generate a plausible opponent hand from probabilities
-const generateOpponentHand = (state: GameState): Card[] => {
-  const { opponentHandProbabilities } = state;
-  if (!opponentHandProbabilities || opponentHandProbabilities.unseenCards.length < 3) {
-    // Fallback to simple random generation if model is not available
-    return Array.from({ length: 3 }, () => ({
-      rank: [4, 5, 6, 7, 10, 11, 12][Math.floor(Math.random() * 7)] as Rank,
-      suit: ['espadas', 'oros', 'bastos', 'copas'][Math.floor(Math.random() * 4)] as 'espadas' | 'oros' | 'bastos' | 'copas'
-    }));
-  }
-
-  const { unseenCards, rankProbs } = opponentHandProbabilities;
-  const hand: Card[] = [];
-  const pool = [...unseenCards];
-
-  // Create a weighted list of cards for sampling
-  const weightedPool = pool.map(card => ({
-    card,
-    weight: rankProbs[card.rank] || 0.01 // Use rank probability as weight
-  }));
-  
-  // Normalize weights
-  const totalWeight = weightedPool.reduce((sum, item) => sum + item.weight, 0);
-  if (totalWeight === 0) return generateOpponentHand({ ...state, opponentHandProbabilities: null }); // fallback
-  
-  for (let i = 0; i < 3 && weightedPool.length > 0; i++) {
-    const rand = Math.random() * totalWeight;
-    let weightSum = 0;
-    for (let j = 0; j < weightedPool.length; j++) {
-      weightSum += weightedPool[j].weight;
-      if (rand <= weightSum) {
-        const selectedCard = weightedPool[j].card;
-        hand.push(selectedCard);
-        // Remove selected card from pool for next draws
-        const removedWeight = weightedPool[j].weight;
-        weightedPool.splice(j, 1);
-        // totalWeight -= removedWeight; // No need to re-adjust total for this sampling method
-        break;
-      }
-    }
-  }
-  return hand;
-};
-
-// NEW: State-aware round simulation
+/**
+ * FIX: Rewritten round simulation to be accurate.
+ * Instead of flawed trick counting, this version simulates each trick,
+ * determines a winner ('player', 'ai', or 'tie'), and then uses the
+ * game's canonical `determineRoundWinner` function to get the correct result.
+ * This correctly handles all complex tie-breaking scenarios.
+ */
 const simulateRoundWin = (
   myHand: Card[], 
   oppHand: Card[], 
-  options: { iterations?: number; currentTrick?: number; initialMyTricks?: number; initialOppTricks?: number; amILeading?: boolean; mano?: Player } = {}
+  options: { state: GameState, iterations?: number; amILeading: boolean; }
 ): number => {
-  const { iterations = 100, currentTrick = 0, initialMyTricks = 0, initialOppTricks = 0, amILeading = true, mano = 'player' } = options;
+  const { state, iterations = 100, amILeading } = options;
+  const { currentTrick, trickWinners, mano, opponentModel } = state;
   let wins = 0;
 
   for (let i = 0; i < iterations; i++) {
-    let myTricks = initialMyTricks;
-    let oppTricks = initialOppTricks;
-    let remainingMy = [...myHand];
-    let remainingOpp = [...oppHand];
+    let simTrickWinners = [...trickWinners];
+    let remainingMy = [...myHand].sort((a, b) => getCardHierarchy(b) - getCardHierarchy(a)); // High to low
+    let remainingOpp = [...oppHand].sort((a, b) => getCardHierarchy(b) - getCardHierarchy(a)); // High to low
     let leading = amILeading;
 
     for (let trick = currentTrick; trick < 3; trick++) {
-      if (remainingMy.length === 0 || remainingOpp.length === 0 || myTricks >= 2 || oppTricks >= 2) break;
+      if (remainingMy.length === 0 || remainingOpp.length === 0) break;
 
-      remainingMy.sort((a, b) => getCardHierarchy(a) - getCardHierarchy(b));
-      remainingOpp.sort((a, b) => getCardHierarchy(a) - getCardHierarchy(b));
-      
       let myCard: Card, oppCard: Card;
 
-      if (leading) {
-        myCard = remainingMy.pop()!; // Lead highest card
+      if (leading) { // I lead
+        myCard = remainingMy.shift()!; // Lead highest card
         const oppWinningCard = remainingOpp.find(c => getCardHierarchy(c) > getCardHierarchy(myCard));
-        oppCard = oppWinningCard ? remainingOpp.splice(remainingOpp.findIndex(c => c === oppWinningCard), 1)[0] : remainingOpp.shift()!;
-      } else {
-        oppCard = remainingOpp.pop()!;
-        const myWinningCard = remainingMy.find(c => getCardHierarchy(c) > getCardHierarchy(oppCard));
-        myCard = myWinningCard ? remainingMy.splice(remainingMy.findIndex(c => c === myWinningCard), 1)[0] : remainingMy.shift()!;
+        oppCard = oppWinningCard ? remainingOpp.splice(remainingOpp.findIndex(c => c === oppWinningCard), 1)[0] : remainingOpp.pop()!;
+      } else { // Opponent leads
+          // Use opponent model to simulate their lead
+          const leadRoll = Math.random();
+          if (trick === 0 && mano === 'player' && leadRoll > opponentModel.playStyle.leadWithHighestRate) {
+              oppCard = remainingOpp.pop()!; // They lead low (bait)
+          } else {
+              oppCard = remainingOpp.shift()!; // They lead high
+          }
+
+          const myWinningCard = remainingMy.find(c => getCardHierarchy(c) > getCardHierarchy(oppCard));
+          if (myWinningCard) {
+              myCard = myWinningCard;
+              remainingMy.splice(remainingMy.findIndex(c => c === myWinningCard), 1);
+          } else {
+              myCard = remainingMy.pop()!; // throw lowest card
+          }
       }
 
-      const myVal = getCardHierarchy(myCard);
-      const oppVal = getCardHierarchy(oppCard);
+      // The determineTrickWinner function expects (playerCard, aiCard)
+      const winner = determineTrickWinner(oppCard, myCard);
+      simTrickWinners[trick] = winner;
 
-      if (myVal > oppVal) {
-        myTricks++;
-        leading = true;
-      } else if (oppVal > myVal) {
-        oppTricks++;
-        leading = false;
+      if (winner !== 'tie') {
+        leading = winner === 'ai';
       } else {
-        if (mano === 'ai') myTricks++; else oppTricks++;
-        leading = mano === 'ai';
+        const firstWinner = simTrickWinners[0];
+        leading = (firstWinner !== null && firstWinner !== 'tie') ? firstWinner === 'ai' : mano === 'ai';
       }
+      
+      const roundIsOver = determineRoundWinner(simTrickWinners, mano);
+      if (roundIsOver) break;
     }
 
-    if (myTricks >= 2 || (myTricks === 1 && oppTricks < 1)) {
-        wins++;
-    } else if (myTricks === 1 && oppTricks === 1 && mano === 'ai') {
+    const finalWinner = determineRoundWinner(simTrickWinners, mano);
+    if (finalWinner === 'ai') {
         wins++;
     }
   }
@@ -115,13 +87,14 @@ interface TrucoStrengthResult {
 }
 
 const calculateTrucoStrength = (state: GameState): TrucoStrengthResult => {
-  const { aiHand, mano, currentTurn, currentTrick, trickWinners, opponentHandProbabilities } = state;
-  const reasoning: string[] = [];
+  const { aiHand, mano, currentTrick, trickWinners, playerTricks } = state;
+  let reasoning: string[] = [];
 
   if (aiHand.length === 0) {
     return { strength: 0, reasoning: ["No quedan cartas para jugar."] };
   }
-
+  
+  // Start with a base heuristic of raw card power
   let heuristic = 0;
   const sorted = [...aiHand].sort((a, b) => getCardHierarchy(b) - getCardHierarchy(a));
   const BRAVAS: Record<string, number> = { '1espadas': 4, '1bastos': 3, '7espadas': 2, '7oros': 1 };
@@ -130,42 +103,148 @@ const calculateTrucoStrength = (state: GameState): TrucoStrengthResult => {
     heuristic += BRAVAS[key] || (LOW_RANKS[card.rank] || 0) * 0.1;
   }
   const heuristicNormalized = heuristic / 4.0;
-  reasoning.push(`- Fuerza Heurística: ${heuristicNormalized.toFixed(2)} (basada en cartas 'bravas').`);
-  
+  reasoning.push(`- Mi Mano Actual: [${aiHand.map(getCardName).join(', ')}]`);
+  reasoning.push(`- Fuerza Heurística (Cartas Propias): ${heuristicNormalized.toFixed(2)}.`);
+
+  // Generate a plausible opponent hand based on all available information
+  const oppSamples = generateConstrainedOpponentHand(state, reasoning); // reasoning is passed by reference and gets updated
+  reasoning.push(`- Mano Fuerte Simulada: [${oppSamples.strong.map(getCardName).join(', ')}].`);
+  reasoning.push(`- Mano Media Simulada: [${oppSamples.medium.map(getCardName).join(', ')}].`);
+  reasoning.push(`- Mano Débil Simulada: [${oppSamples.weak.map(getCardName).join(', ')}].`);
+
+  // Simulate the rest of the round against this plausible hand
+  const amILeading = playerTricks[currentTrick] === null;
   const simOptions = {
+    state: state,
     iterations: 150,
-    currentTrick: currentTrick,
-    initialMyTricks: trickWinners.filter(w => w === 'ai').length,
-    initialOppTricks: trickWinners.filter(w => w === 'player').length,
-    amILeading: currentTurn === 'ai',
-    mano: mano,
+    amILeading: amILeading,
   };
-
-  const oppSample = generateOpponentHand(state);
-  const simWinProb = simulateRoundWin([...aiHand], oppSample, simOptions);
-  reasoning.push(`- % Victoria Simulación: ${(simWinProb * 100).toFixed(0)}% (de 150 rondas simuladas contra una mano probable del oponente).`);
   
-  const hasStrongInferredCards = state.opponentHandProbabilities?.rankProbs[7]! < 0.1;
-  const bravaBoost = hasStrongInferredCards ? 0.1 : 0;
-   if (bravaBoost > 0) {
-      reasoning.push(`- Bono por Inferencia: +${bravaBoost.toFixed(2)} (es poco probable que el jugador tenga cartas clave como los 7).`);
-  }
+  const simWinProbStrong = oppSamples.strong.length > 0 ? simulateRoundWin([...aiHand], oppSamples.strong, simOptions) : 0;
+  const simWinProbMedium = oppSamples.medium.length > 0 ? simulateRoundWin([...aiHand], oppSamples.medium, simOptions) : 0;
+  const simWinProbWeak = oppSamples.weak.length > 0 ? simulateRoundWin([...aiHand], oppSamples.weak, simOptions) : 0;
 
-  const blended = heuristicNormalized * 0.6 + simWinProb * 0.4 + bravaBoost;
+  const simWinProb = (simWinProbStrong + simWinProbMedium + simWinProbWeak) / 3;
+
+  reasoning.push(`- Prob. de Victoria (Simulación): Fuerte=${(simWinProbStrong * 100).toFixed(0)}%, Media=${(simWinProbMedium * 100).toFixed(0)}%, Débil=${(simWinProbWeak * 100).toFixed(0)}%.`);
+  reasoning.push(`- Prob. de Victoria (Promedio): ${(simWinProb * 100).toFixed(0)}%.`);
+  
+  // Final strength is a blend of raw power and simulation result
+  const blended = heuristicNormalized * 0.2 + simWinProb * 0.8; // Give more weight to simulation
   const finalStrength = Math.min(1.0, blended);
-  reasoning.push(`-> Fuerza Ajustada por Sim: ${finalStrength.toFixed(2)} (mezcla de heurística y simulación).`);
+  reasoning.push(`-> Fuerza de Mano Compuesta: ${finalStrength.toFixed(2)}.`);
 
   return { strength: finalStrength, reasoning };
 };
 
 export const getTrucoResponse = (state: GameState, reasoning: string[] = []): AiMove | null => {
-  const { trucoLevel, aiScore, playerScore, playerCalledHighEnvido, opponentModel, currentTrick, trickWinners } = state;
+  const { trucoLevel, aiScore, playerScore, playerCalledHighEnvido, opponentModel, currentTrick, trickWinners, aiHand, playerHand, playerTricks } = state;
   if (trucoLevel === 0) return null;
 
   const strengthResult = calculateTrucoStrength(state);
   const myStrength = strengthResult.strength;
   reasoning.push(`[Evaluación de Fuerza]`);
   reasoning.push(...strengthResult.reasoning);
+  
+  const isEarlyTruco = currentTrick === 0 && !playerTricks[0];
+  if (isEarlyTruco) {
+      const myPercentile = getHandPercentile(aiHand);
+      reasoning.push(`\n[Lógica de Truco Temprano]: Respondiendo a un truco antes de que se jueguen las cartas.`);
+      reasoning.push(`- Mi mano está en el percentil ${myPercentile}.`);
+
+      // 1. Elite Hands (>= 90th percentile) -> High chance to escalate
+      if (myPercentile >= 90) {
+          if (Math.random() < 0.85) { // 85% chance to escalate
+            const escalateType = trucoLevel === 1 ? ActionType.CALL_RETRUCO : ActionType.CALL_VALE_CUATRO;
+            const phrases = trucoLevel === 1 ? RETRUCO_PHRASES : VALE_CUATRO_PHRASES;
+            const blurbText = getRandomPhrase(phrases);
+            const trucoContext: AiTrucoContext = { strength: myStrength, isBluff: false };
+            const decisionReason = `\nDecisión: Mi mano es de élite (percentil ${myPercentile}). Escalando agresivamente a ${escalateType.replace('CALL_', '')}.`;
+            return { action: { type: escalateType, payload: { blurbText, trucoContext } }, reasoning: [...reasoning, decisionReason].join('\n') };
+          }
+      }
+
+      // 2. Strong Hands (>= 50th percentile) -> Accept, with a chance to escalate
+      if (myPercentile >= 50) {
+          if (myPercentile >= 75 && Math.random() < 0.3) { // 30% escalate chance for 75th+
+             const escalateType = trucoLevel === 1 ? ActionType.CALL_RETRUCO : ActionType.CALL_VALE_CUATRO;
+             const phrases = trucoLevel === 1 ? RETRUCO_PHRASES : VALE_CUATRO_PHRASES;
+             const blurbText = getRandomPhrase(phrases);
+             const trucoContext: AiTrucoContext = { strength: myStrength, isBluff: false };
+             const decisionReason = `\nDecisión: Mi mano es fuerte (percentil ${myPercentile}). Probando una escalada.`;
+             return { action: { type: escalateType, payload: { blurbText, trucoContext } }, reasoning: [...reasoning, decisionReason].join('\n') };
+          }
+          const decisionReason = `\nDecisión: Mi mano es sólida (percentil ${myPercentile}). Un truco temprano no me asusta. Aceptando.`;
+          return { action: { type: ActionType.ACCEPT, payload: { blurbText: getRandomPhrase(QUIERO_PHRASES) } }, reasoning: [...reasoning, decisionReason].join('\n') };
+      }
+
+      // 3. Weaker Hands (< 50th percentile) -> Mostly fold, but with bluffing chances
+      if (myPercentile < 50) {
+          const foldChance = 0.65; // Base 65% chance to fold
+          if (Math.random() < foldChance) {
+              const decisionReason = `\nDecisión: Mi mano es débil (percentil ${myPercentile}). No vale la pena el riesgo contra un truco temprano. Rechazando.`;
+              return { action: { type: ActionType.DECLINE, payload: { blurbText: getRandomPhrase(NO_QUIERO_PHRASES) } }, reasoning: [...reasoning, decisionReason].join('\n') };
+          } else {
+              // 35% chance to do something else
+              if (Math.random() < 0.15 && trucoLevel < 3) { // Small chance to bluff-escalate
+                const escalateType = trucoLevel === 1 ? ActionType.CALL_RETRUCO : ActionType.CALL_VALE_CUATRO;
+                const phrases = trucoLevel === 1 ? RETRUCO_PHRASES : VALE_CUATRO_PHRASES;
+                const blurbText = getRandomPhrase(phrases);
+                const trucoContext: AiTrucoContext = { strength: myStrength, isBluff: true };
+                const decisionReason = `\nDecisión: Mi mano es débil, pero intentaré un farol agresivo para robar la mano. Escalando.`;
+                return { action: { type: escalateType, payload: { blurbText, trucoContext } }, reasoning: [...reasoning, decisionReason].join('\n') };
+              }
+              const decisionReason = `\nDecisión: Mi mano es débil, pero el oponente podría estar faroleando. Aceptando el desafío.`;
+              return { action: { type: ActionType.ACCEPT, payload: { blurbText: getRandomPhrase(QUIERO_PHRASES) } }, reasoning: [...reasoning, decisionReason].join('\n') };
+          }
+      }
+  }
+
+  // NEW: Strategic escalation on a strong last card
+  if (aiHand.length === 1 && playerHand.length === 1 && trucoLevel < 3) {
+      const myLastCard = aiHand[0];
+      const myCardHierarchy = getCardHierarchy(myLastCard);
+      
+      if (myCardHierarchy >= 11) { // 7 de oros or higher
+          reasoning.push(`\n[Lógica de Escalada Final]: Tengo una carta final muy fuerte: ${getCardName(myLastCard)}.`);
+
+          // Counter-inference: Does the player likely have a better card?
+          const inferenceReasoning: string[] = []; // Temporary reasoning log for this check
+          const opponentSamples = generateConstrainedOpponentHand(state, inferenceReasoning);
+          let playerHasHigherCard = false;
+          if (opponentSamples.strong.length > 0) {
+              const playerStrongestCard = opponentSamples.strong[0];
+              if (getCardHierarchy(playerStrongestCard) > myCardHierarchy) {
+                  playerHasHigherCard = true;
+                  reasoning.push(`- Inferencia Oponente: La simulación sugiere que el jugador podría tener una carta superior (${getCardName(playerStrongestCard)}). Procediendo con cautela.`);
+              } else {
+                   reasoning.push(`- Inferencia Oponente: La simulación no predice una carta superior en la mano del jugador. Procediendo con confianza.`);
+              }
+          }
+
+          if (!playerHasHigherCard) {
+              let escalationChance = 0;
+              switch (myCardHierarchy) {
+                  case 14: escalationChance = 1.0; break;  // As de Espadas
+                  case 13: escalationChance = 0.95; break; // As de Bastos
+                  case 12: escalationChance = 0.90; break; // 7 de Espadas
+                  case 11: escalationChance = 0.85; break; // 7 de Oros
+              }
+
+              reasoning.push(`- Probabilidad de Escalada Forzada: ${escalationChance * 100}%.`);
+
+              if (Math.random() < escalationChance) {
+                  const escalateType = trucoLevel === 1 ? ActionType.CALL_RETRUCO : ActionType.CALL_VALE_CUATRO;
+                  const phrases = trucoLevel === 1 ? RETRUCO_PHRASES : VALE_CUATRO_PHRASES;
+                  const blurbText = getRandomPhrase(phrases);
+                  const trucoContext: AiTrucoContext = { strength: myStrength, isBluff: false };
+                  const decisionReason = `\nDecisión: Mi carta final es dominante y la inferencia es favorable. Escalando a ${escalateType.replace('CALL_', '')}.`;
+                  return { action: { type: escalateType, payload: { blurbText, trucoContext } }, reasoning: [...reasoning, decisionReason].join('\n') };
+              }
+          }
+      }
+  }
+
 
   const envidoLeak = playerCalledHighEnvido ? 0.2 : 0;
   const scoreDiff = aiScore - playerScore;
@@ -182,17 +261,23 @@ export const getTrucoResponse = (state: GameState, reasoning: string[] = []): Ai
   reasoning.push(`- Tantos: IA ${aiScore} - Jugador ${playerScore} (Dif: ${scoreDiff}).`);
   if (envidoLeak > 0) reasoning.push(`- Penalización por Envido: -${envidoLeak.toFixed(2)} (el oponente reveló una mano fuerte de envido).`);
   if (positionalBonus > 0) reasoning.push(`- Bono Posicional: +${positionalBonus.toFixed(2)} (por ganar una mano anterior).`);
-  reasoning.push(`-> Equidad Final: ${equity.toFixed(2)} (Mi Fuerza - 0.5 + bonos). Una equidad positiva sugiere que aceptar/escalar es rentable.`);
+  reasoning.push(`-> Equidad Final: ${equity.toFixed(2)} (Mi Fuerza - 0.5 + bonos).`);
+  reasoning.push(`Una equidad positiva sugiere que aceptar/escalar es rentable; una negativa, que es más arriesgado.`);
 
+  // The chance of a random move is highest when equity is near 0 (uncertainty)
+  // and decreases as the decision becomes more clear-cut (high absolute equity).
+  const maxRandomChance = 0.10; // 10% max chance for a random move
+  const randomMoveChance = maxRandomChance * Math.max(0, 1 - Math.abs(equity) * 2.5);
 
-  if (rand < 0.1) {
-    reasoning.push('\nDecisión: Aplicando estrategia mixta (desviación aleatoria) para ser impredecible.');
-    const aggressive = rand < 0.05;
+  if (rand < randomMoveChance) {
+    reasoning.push(`\nDecisión: Aplicando estrategia mixta para ser impredecible (prob. ${(randomMoveChance * 100).toFixed(0)}%).`);
+    const aggressive = rand < (randomMoveChance / 2); // 50/50 split of the random move
     if (aggressive && trucoLevel < 3) {
       const escalateType = trucoLevel === 1 ? ActionType.CALL_RETRUCO : ActionType.CALL_VALE_CUATRO;
       const phrases = trucoLevel === 1 ? RETRUCO_PHRASES : VALE_CUATRO_PHRASES;
       const blurbText = getRandomPhrase(phrases);
-      return { action: { type: escalateType, payload: { blurbText } }, reasoning: [...reasoning, 'Resultado: Subiendo la apuesta como farol.'].join('\n') };
+      const trucoContext: AiTrucoContext = { strength: myStrength, isBluff: true };
+      return { action: { type: escalateType, payload: { blurbText, trucoContext } }, reasoning: [...reasoning, 'Resultado: Subiendo la apuesta como farol.'].join('\n') };
     }
     const actionType = aggressive ? ActionType.ACCEPT : ActionType.DECLINE;
     const blurbText = getRandomPhrase(aggressive ? QUIERO_PHRASES : NO_QUIERO_PHRASES);
@@ -200,12 +285,14 @@ export const getTrucoResponse = (state: GameState, reasoning: string[] = []): Ai
              reasoning: [...reasoning, `Resultado: ${aggressive ? 'Aceptando.' : 'Rechazando.'}`].join('\n') };
   }
 
+
   if (equity > 0.25 && trucoLevel < 3) {
     const escalateType = trucoLevel === 1 ? ActionType.CALL_RETRUCO : ActionType.CALL_VALE_CUATRO;
     const phrases = trucoLevel === 1 ? RETRUCO_PHRASES : VALE_CUATRO_PHRASES;
     const blurbText = getRandomPhrase(phrases);
     const decisionReason = `\nDecisión: La equidad es muy alta (${equity.toFixed(2)} > 0.25), indicando una fuerte ventaja. Escalando a ${escalateType.replace('CALL_', '')}.`;
-    return { action: { type: escalateType, payload: { blurbText } }, reasoning: [...reasoning, decisionReason].join('\n') };
+    const trucoContext: AiTrucoContext = { strength: myStrength, isBluff: equity < 0 }; // Bluff if equity is negative but we escalate anyway
+    return { action: { type: escalateType, payload: { blurbText, trucoContext } }, reasoning: [...reasoning, decisionReason].join('\n') };
   } else if (equity > -0.15) {
      const decisionReason = `\nDecisión: La equidad es aceptable (${equity.toFixed(2)} > -0.15). La recompensa potencial supera el riesgo. Aceptando.`;
     return { action: { type: ActionType.ACCEPT, payload: { blurbText: getRandomPhrase(QUIERO_PHRASES) } }, reasoning: [...reasoning, decisionReason].join('\n') };
@@ -227,14 +314,14 @@ export const getTrucoCall = (state: GameState): AiMove | null => {
   const rand = Math.random();
   const foldRate = opponentModel.trucoFoldRate || 0.3;
   const bluffSuccess = opponentModel.bluffSuccessRate || 0.5;
-  const adjustedBluffChance = Math.min(0.45, 0.10 + (foldRate * 0.4) - (bluffSuccess * 0.2));
+  const adjustedBluffChance = Math.min(0.45, 0.10 + (foldRate * 0.4) - (bluffSuccess * 0.2) + (opponentModel.playStyle.baitRate * 0.5));
 
   const strengthResult = calculateTrucoStrength(state);
   const myStrength = strengthResult.strength;
 
   let reasonPrefix = [
     `[Lógica: Cantar Truco]`, 
-    `Mi probabilidad de farol ajustada es ${(adjustedBluffChance*100).toFixed(0)}% (basada en la tasa de abandono del oponente).`,
+    `Mi probabilidad de farol ajustada es ${(adjustedBluffChance*100).toFixed(0)}% (basada en el comportamiento del oponente).`,
     `\n[Evaluación de Fuerza]`,
     ...strengthResult.reasoning
   ];
@@ -245,10 +332,10 @@ export const getTrucoCall = (state: GameState): AiMove | null => {
   if (currentTrick === 1 && trickWinners[0] === 'ai') {
     if (myStrength >= 0.6) {
       const blurbText = getRandomPhrase(TRUCO_PHRASES);
+      const trucoContext: AiTrucoContext = { strength: myStrength, isBluff: false };
       return {
-        action: { type: ActionType.CALL_TRUCO, payload: { blurbText } },
+        action: { type: ActionType.CALL_TRUCO, payload: { blurbText, trucoContext } },
         reasoning: [...reasonPrefix, `\nDecisión: Gané la mano 1 y la fuerza de mi mano es alta. Cantando TRUCO.`].join('\n'),
-        trucoContext: { strength: myStrength, isBluff: false }
       };
     }
   }
@@ -258,16 +345,16 @@ export const getTrucoCall = (state: GameState): AiMove | null => {
       const ev = (foldRate * 1) + (1 - foldRate) * (myStrength * 2 - (1 - myStrength) * 2);
       if (ev > 0) {
         const blurbText = getRandomPhrase(TRUCO_PHRASES);
+        const trucoContext: AiTrucoContext = { strength: myStrength, isBluff: true };
         return {
-            action: { type: ActionType.CALL_TRUCO, payload: { blurbText } },
+            action: { type: ActionType.CALL_TRUCO, payload: { blurbText, trucoContext } },
             reasoning: [...reasonPrefix, `\nDecisión: Parda en la mano 1 y mano débil. El EV de un farol (${ev.toFixed(2)}) es positivo. Farolearé con TRUCO.`].join('\n'),
-            trucoContext: { strength: myStrength, isBluff: true }
         };
       }
   }
 
   let decision = '';
-  let trucoContext = null;
+  let trucoContext: AiTrucoContext | null = null;
   if (rand < adjustedBluffChance && myStrength < 0.45 - envidoLeak) {
     decision = 'Decisión: La mano es débil, pero el oponente puede retirarse. Faroleando con TRUCO.';
     trucoContext = { strength: myStrength, isBluff: true };
@@ -276,11 +363,13 @@ export const getTrucoCall = (state: GameState): AiMove | null => {
     trucoContext = { strength: myStrength, isBluff: false };
   }
 
-  if (decision) {
+  if (decision && trucoContext) {
     const blurbText = getRandomPhrase(TRUCO_PHRASES);
-    return { action: { type: ActionType.CALL_TRUCO, payload: { blurbText } }, 
-             reasoning: [...reasonPrefix, `\n${decision}`].join('\n'),
-             trucoContext };
+    const action: Action = { type: ActionType.CALL_TRUCO, payload: { blurbText, trucoContext } };
+    return { 
+        action,
+        reasoning: [...reasonPrefix, `\n${decision}`].join('\n'),
+    };
   }
 
   return null;

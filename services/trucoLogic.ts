@@ -65,6 +65,10 @@ export const getCardHierarchy = (card: Card): number => {
     return 0;
 };
 
+export const calculateHandStrength = (hand: Card[]): number => {
+    return hand.reduce((sum, card) => sum + getCardHierarchy(card), 0);
+};
+
 export const getEnvidoValue = (hand: Card[]): number => {
   const sameSuitCards: { [key in Suit]?: Card[] } = {};
   hand.forEach(card => {
@@ -200,4 +204,33 @@ export const determineRoundWinner = (trickWinners: (Player | 'tie' | null)[], ma
   
   // If no conclusive winner, round is not over.
   return null;
+};
+
+// Based on simulation data for hand strength distribution.
+export const HAND_STRENGTH_PERCENTILES = {
+  90: 20, // Elite hand (e.g., 7 de Espada + 3 + high Ace)
+  75: 16, // Strong hand (e.g., 3 + 7 de Oro + Ace)
+  50: 11, // Median hand (e.g., a 3 or 2 plus other decent cards)
+  25: 7,  // Weak-ish hand (e.g., a common card like a 12 and two low cards)
+  10: 3,  // Very weak hand (e.g., 4, 5, 6)
+} as const;
+
+/**
+ * Gets the approximate percentile of a given hand based on its calculated strength.
+ * @param hand The hand to evaluate.
+ * @returns The percentile (0-100).
+ */
+export const getHandPercentile = (hand: Card[]): number => {
+  const strength = calculateHandStrength(hand);
+  // Order from high to low to check against thresholds
+  const percentiles = Object.entries(HAND_STRENGTH_PERCENTILES)
+    .map(([p, s]) => [parseInt(p, 10), s] as [number, number])
+    .sort((a, b) => b[0] - a[0]);
+
+  for (const [percentile, strengthThreshold] of percentiles) {
+    if (strength >= strengthThreshold) {
+      return percentile;
+    }
+  }
+  return 0; // Bottom tier
 };

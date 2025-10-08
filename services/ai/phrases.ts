@@ -58,6 +58,35 @@ export const TRICK_LOSE_PHRASES = [
   "Mmm, no esperaba esa.",
 ];
 
+export const FLOR_PHRASES = [
+  "Contra el resto, flor me achico. ¡Flor!",
+  "El jardín de mi mano ha florecido. ¡Tengo flor!",
+  "Perfume de victoria en el aire... ¡Flor!",
+  "Con estas tres del mismo palo, digo ¡Flor!",
+  "No es suerte, es botánica. ¡Flor!",
+  "Linda se te ha puesto la cosa... para mí. ¡Flor!",
+  "Tres del mismo color, ¡qué primor! ¡Flor!",
+];
+
+export const ENVIDO_PRIMERO_PHRASES = [
+  "¡Momento! El envido está primero.",
+  "Frená el carro... primero el envido.",
+  "Un segundito, que los tantos valen. Envido primero.",
+  "No tan rápido. Antes de la guerra, los puntos. Envido primero.",
+  "Primero lo primero... ¡y el envido está primero!",
+];
+
+export const POST_ENVIDO_TRUCO_REMINDER_PHRASES = [
+  "Bueno, resolvimos los tantos. Ahora... ¿qué me decís del truco que te canté?",
+  "Listo el envido. Pero te recuerdo que el truco sigue en pie.",
+  "Bien, el envido ya pasó. Volvamos a lo importante: ¡TRUCO!",
+  "Ya está lo del envido. Ahora a lo que vinimos, ¿aceptás el truco?",
+  "Se acabó el envido. Ahora sí, hablemos del truco.",
+  "Okay, capítulo cerrado con el envido. ¿Y el truco? Te estoy esperando.",
+  "Dejemos los puntos de lado por un momento. Te pregunté... ¿TRUCO?",
+];
+
+
 // Phrases for a standard "Envido" call
 export const ENVIDO_PHRASES = [
   "Amalaya con las penas cuando flaquea el corazón, yo le canto envido apenas pues no tengo pa'l rabón.",

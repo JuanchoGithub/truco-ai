@@ -39,7 +39,7 @@ const ActionBar: React.FC<ActionBarProps> = ({ dispatch, gameState }) => {
     if (gamePhase === 'round_end') {
       return (
         <div className="flex justify-center items-center">
-            <ActionButton onClick={() => dispatch({ type: ActionType.START_NEW_ROUND })} className="font-cinzel tracking-wider text-base md:text-lg !px-5 md:!px-6">
+            <ActionButton onClick={() => dispatch({ type: ActionType.PROCEED_TO_NEXT_ROUND })} className="font-cinzel tracking-wider text-base md:text-lg !px-5 md:!px-6">
                 Siguiente Ronda
             </ActionButton>
         </div>

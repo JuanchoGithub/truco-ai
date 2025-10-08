@@ -1,9 +1,9 @@
-
 import { GameState, ActionType, AiMove } from '../types';
 import { findBestCardToPlay } from './ai/playCardStrategy';
 import { getEnvidoResponse, getEnvidoCall } from './ai/envidoStrategy';
 import { getTrucoResponse, getTrucoCall } from './ai/trucoStrategy';
 import { getCardName } from './trucoLogic';
+import { getRandomPhrase, FLOR_PHRASES, ENVIDO_PRIMERO_PHRASES } from './ai/phrases';
 
 export const getLocalAIMove = (state: GameState): AiMove => {
     const { gamePhase, currentTurn, lastCaller, currentTrick, hasEnvidoBeenCalledThisRound, aiHasFlor, playerHasFlor, hasFlorBeenCalledThisRound, playerTricks, aiTricks, trickWinners } = state;
@@ -28,8 +28,9 @@ export const getLocalAIMove = (state: GameState): AiMove => {
 
     const canDeclareFlor = aiHasFlor && !hasFlorBeenCalledThisRound && currentTrick === 0 && state.aiTricks[0] === null;
     if (canDeclareFlor) {
+        const blurbText = getRandomPhrase(FLOR_PHRASES);
         return {
-            action: { type: ActionType.DECLARE_FLOR },
+            action: { type: ActionType.DECLARE_FLOR, payload: { blurbText } },
             reasoning: "[Lógica de Flor]\n¡Tengo Flor! Debo cantarla para ganar 3 puntos."
         };
     }
@@ -39,12 +40,13 @@ export const getLocalAIMove = (state: GameState): AiMove => {
         reasoning.push(`[Lógica de Respuesta]`);
         reasoning.push(`El jugador cantó ${gamePhase.replace('_called', '').toUpperCase()}. Debo responder.`);
 
-        const canCallEnvidoPrimero = gamePhase === 'truco_called' && currentTrick === 0 && state.playerTricks[0] === null && state.aiTricks[0] === null && !playerHasFlor && !aiHasFlor;
+        const canCallEnvidoPrimero = gamePhase === 'truco_called' && currentTrick === 0 && state.playerTricks[0] === null && state.aiTricks[0] === null && !playerHasFlor && !aiHasFlor && !hasEnvidoBeenCalledThisRound;
         if (canCallEnvidoPrimero) {
             const envidoCallDecision = getEnvidoCall(state);
             if (envidoCallDecision) {
+                 const blurbText = getRandomPhrase(ENVIDO_PRIMERO_PHRASES);
                  const updatedReasoning = `[Lógica de Envido Primero]\nEl jugador cantó TRUCO, pero invocaré la prioridad del Envido.\n` + envidoCallDecision.reasoning;
-                 return { ...envidoCallDecision, reasoning: updatedReasoning, action: { type: ActionType.CALL_ENVIDO } };
+                 return { ...envidoCallDecision, reasoning: updatedReasoning, action: { type: ActionType.CALL_ENVIDO, payload: { blurbText } } };
             }
         }
 

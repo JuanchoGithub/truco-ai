@@ -6,6 +6,7 @@ import { handleRestartGame, handleStartNewRound, handlePlayCard } from './reduce
 import { handleCallEnvido, handleCallRealEnvido, handleCallFaltaEnvido, handleDeclareFlor } from './reducers/envidoReducer';
 import { handleCallTruco, handleCallRetruco, handleCallValeCuatro, handleCallFaltaTruco } from './reducers/trucoReducer';
 import { handleAccept, handleDecline, handleResolveEnvidoAccept, handleResolveEnvidoDecline, handleResolveTrucoDecline } from './reducers/responseReducer';
+import { createInitialCardPlayStats } from '../services/cardAnalysis';
 
 
 export const initialState: GameState = {
@@ -41,10 +42,23 @@ export const initialState: GameState = {
   envidoPointsOnOffer: 0,
   trucoLevel: 0,
   playerEnvidoFoldHistory: [],
+  playerTrucoCallHistory: [],
   playerCalledHighEnvido: false,
   playedCards: [],
   // AI Learning & Modeling
-  opponentModel: { trucoFoldRate: 0.3, bluffSuccessRate: 0.5 }, // Start with default assumptions
+  opponentModel: { 
+    trucoFoldRate: 0.3, 
+    bluffSuccessRate: 0.5,
+    envidoBehavior: {
+      callThreshold: 27,
+      foldRate: 0.4,
+      escalationRate: 0.2,
+    },
+    playStyle: {
+      leadWithHighestRate: 0.75,
+      baitRate: 0.1,
+    }
+  },
   aiCases: [],
   aiTrucoContext: null,
   // Probabilistic Opponent Modeling
@@ -53,15 +67,40 @@ export const initialState: GameState = {
   playerActionHistory: [],
   aiBlurb: null,
   lastRoundWinner: null,
+  centralMessage: null,
+  isDataModalVisible: false,
+  // Granular Behavior Tracking
+  playerEnvidoHistory: [],
+  playerPlayOrderHistory: [],
+  // New Detailed Statistics
+  playerCardPlayStats: createInitialCardPlayStats(),
+  roundHistory: [],
 };
 
 export function useGameReducer(state: GameState, action: Action): GameState {
+  // Log every action and its payload for easier debugging
+  // console.log('Dispatching Action:', action.type, (action as any).payload);
+
+  const updateRoundHistoryWithCall = (callText: string): GameState => {
+    const newRoundHistory = [...state.roundHistory];
+    if (newRoundHistory.length > 0) {
+      const lastRound = newRoundHistory[newRoundHistory.length - 1];
+      if (lastRound.round === state.round) {
+        lastRound.calls.push(callText);
+      }
+    }
+    return { ...state, roundHistory: newRoundHistory };
+  };
+
+
   switch (action.type) {
     // Gameplay Actions
     case ActionType.RESTART_GAME:
-      return handleRestartGame(state, action);
+      return handleRestartGame(initialState, state);
     case ActionType.START_NEW_ROUND:
       return handleStartNewRound(state, action);
+    case ActionType.PROCEED_TO_NEXT_ROUND:
+      return handleStartNewRound(state, { type: ActionType.START_NEW_ROUND });
     case ActionType.PLAY_CARD:
       return handlePlayCard(state, action);
 
@@ -100,17 +139,46 @@ export function useGameReducer(state: GameState, action: Action): GameState {
     case ActionType.RESOLVE_TRUCO_DECLINE:
         return handleResolveTrucoDecline(state);
 
-    // AI Learning Action
-    case ActionType.SET_AI_TRUCO_CONTEXT:
-      return { ...state, aiTrucoContext: action.payload };
-    
     // Opponent Modeling Action
     case ActionType.UPDATE_OPPONENT_PROBS:
       return { ...state, opponentHandProbabilities: action.payload };
 
+    // Central Message
+    case ActionType.CLEAR_CENTRAL_MESSAGE:
+      return { ...state, centralMessage: null };
+
+    // Local Storage & Import/Export Actions
+    case ActionType.LOAD_PERSISTED_STATE:
+    case ActionType.LOAD_IMPORTED_DATA:
+      const loadedState = action.payload;
+      return {
+          ...state,
+          ...loadedState,
+          // Deep merge nested objects to prevent them from being overwritten by `undefined`
+          opponentModel: {
+              ...state.opponentModel,
+              ...(loadedState.opponentModel || {}),
+              envidoBehavior: {
+                  ...state.opponentModel.envidoBehavior,
+                  ...(loadedState.opponentModel?.envidoBehavior || {}),
+              },
+              playStyle: {
+                 ...state.opponentModel.playStyle,
+                 ...(loadedState.opponentModel?.playStyle || {}),
+              }
+          },
+          // Ensure arrays are not undefined if they don't exist in the loaded data
+          roundHistory: loadedState.roundHistory || [],
+          playerCardPlayStats: loadedState.playerCardPlayStats || createInitialCardPlayStats(),
+          playerEnvidoHistory: loadedState.playerEnvidoHistory || [],
+          playerPlayOrderHistory: loadedState.playerPlayOrderHistory || [],
+      };
+
     // Simple state changes & UI actions
     case ActionType.TOGGLE_DEBUG_MODE:
       return { ...state, isDebugMode: !state.isDebugMode };
+    case ActionType.TOGGLE_DATA_MODAL:
+      return { ...state, isDataModalVisible: !state.isDataModalVisible };
     case ActionType.ADD_AI_REASONING_LOG:
       return { ...state, aiReasoningLog: [...state.aiReasoningLog, action.payload] };
     case ActionType.TOGGLE_AI_LOG_EXPAND:

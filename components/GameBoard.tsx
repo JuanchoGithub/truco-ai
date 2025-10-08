@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Card as CardType, Player } from '../types';
+import React from 'react';
+import { Card as CardType, Player, GamePhase, Action, ActionType } from '../types';
 import Card from './Card';
 
 interface GameBoardProps {
@@ -7,6 +7,8 @@ interface GameBoardProps {
   aiTricks: (CardType | null)[];
   trickWinners: (Player | 'tie' | null)[];
   lastRoundWinner: Player | 'tie' | null;
+  gamePhase: GamePhase;
+  dispatch: React.Dispatch<Action>;
 }
 
 const Crown = () => (
@@ -65,31 +67,14 @@ const CardPile: React.FC<CardPileProps> = ({ cards, trickWinners, owner, label }
 };
 
 
-const GameBoard: React.FC<GameBoardProps> = ({ playerTricks, aiTricks, trickWinners, lastRoundWinner }) => {
-  const [winner, setWinner] = useState<Player | 'tie' | null>(null);
-  const [animationClass, setAnimationClass] = useState('');
+const GameBoard: React.FC<GameBoardProps> = ({ playerTricks, aiTricks, trickWinners, lastRoundWinner, gamePhase, dispatch }) => {
+  const isRoundOver = gamePhase === 'round_end' && lastRoundWinner;
 
-  useEffect(() => {
-    if (lastRoundWinner) {
-      setWinner(lastRoundWinner);
-      setAnimationClass('animate-fade-in-scale');
+  const handleDismiss = () => {
+    dispatch({ type: ActionType.PROCEED_TO_NEXT_ROUND });
+  };
 
-      const fadeOutTimer = setTimeout(() => {
-        setAnimationClass('animate-fade-out-scale');
-      }, 1000); // Start fading out after 1 second
-
-      const removeTimer = setTimeout(() => {
-        setWinner(null);
-      }, 1500); // Remove from DOM after fade out (0.5s duration)
-
-      return () => {
-        clearTimeout(fadeOutTimer);
-        clearTimeout(removeTimer);
-      };
-    }
-  }, [lastRoundWinner]);
-
-  const winnerText = winner === 'player' ? 'Ganaste la Ronda' : winner === 'ai' ? 'IA Gana la Ronda' : 'Ronda Empatada';
+  const winnerText = lastRoundWinner === 'player' ? 'Ganaste la Ronda' : lastRoundWinner === 'ai' ? 'Perdiste la Ronda' : 'Ronda Empatada';
   
   return (
     <div className="relative w-full flex flex-row justify-around items-center space-x-2 md:space-x-4 p-4 bg-black/20 rounded-2xl shadow-inner shadow-black/50 min-h-[300px]">
@@ -111,8 +96,15 @@ const GameBoard: React.FC<GameBoardProps> = ({ playerTricks, aiTricks, trickWinn
         />
       </div>
 
-      {winner && (
-        <div className={`absolute inset-0 flex items-center justify-center z-30 rounded-2xl pointer-events-none ${animationClass}`}>
+      {isRoundOver && (
+        <div 
+          className="absolute inset-0 flex items-center justify-center z-30 rounded-2xl bg-black/50 cursor-pointer animate-fade-in-scale"
+          onClick={handleDismiss}
+          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleDismiss()}
+          role="button"
+          tabIndex={0}
+          aria-label={`Round over. ${winnerText}. Click to continue.`}
+        >
           <div className="text-center p-4 rounded-lg bg-yellow-400/20 border-2 border-yellow-300 shadow-2xl shadow-black">
             <h3 className="text-xl md:text-3xl font-cinzel text-white font-bold tracking-wider" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.8)' }}>
               {winnerText}

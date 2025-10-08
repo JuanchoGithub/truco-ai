@@ -65,7 +65,7 @@ const PlayerHand: React.FC<PlayerHandProps> = ({ cards, playerType, onCardPlay, 
     : 'space-x-[-50px]'; // Tightly packed in normal mode
 
   return (
-    <div className="flex flex-col items-center justify-center relative w-full py-2 md:py-4">
+    <div className="flex flex-col items-center justify-center relative w-full py-2 md:py-4 min-h-[140px] md:min-h-[156px]">
       {isThinking && (
         <div className="absolute -top-1 md:-top-2 text-base animate-pulse z-30" style={{ textShadow: '2px 2px 3px rgba(0,0,0,0.7)' }}>IA está pensando...</div>
       )}

@@ -36,7 +36,33 @@ export interface AiReasoningEntry {
 export interface OpponentModel {
   trucoFoldRate: number;
   bluffSuccessRate: number;
+  // New granular behavior modeling
+  envidoBehavior: {
+    callThreshold: number;
+    foldRate: number;
+    escalationRate: number;
+  };
+  playStyle: {
+    leadWithHighestRate: number; // When mano, trick 1
+    baitRate: number;
+  };
 }
+
+export interface PlayerEnvidoActionEntry {
+  round: number;
+  envidoPoints: number;
+  action: 'called' | 'did_not_call' | 'folded' | 'accepted' | 'escalated_real' | 'escalated_falta';
+  wasMano: boolean;
+}
+
+export interface PlayerPlayOrderEntry {
+    round: number;
+    trick: number;
+    handBeforePlay: Card[];
+    playedCard: Card;
+    wasLeadingTrick: boolean;
+}
+
 
 export interface Case {
   strength: number;
@@ -56,6 +82,51 @@ export interface OpponentHandProbabilities {
   unseenCards: Card[];
 }
 
+export interface PlayerTrucoCallEntry {
+  strength: number;
+  mano: boolean;
+}
+
+// New types for detailed card play analysis
+export type CardCategory =
+  | 'ancho_espada'
+  | 'ancho_basto'
+  | 'siete_espada'
+  | 'siete_oro'
+  | 'tres'
+  | 'dos'
+  | 'anchos_falsos' // 1 de oro/copas
+  | 'reyes' // 12
+  | 'caballos' // 11
+  | 'sotas' // 10
+  | 'sietes_malos' // 7 de bastos/copas
+  | 'seis'
+  | 'cincos'
+  | 'cuatros';
+
+export interface CardPlayStats {
+  plays: number;
+  wins: number; // trick wins
+  byTrick: [number, number, number]; // plays in trick 1, 2, 3
+  asLead: number;
+  asResponse: number;
+}
+
+export type PlayerCardPlayStatistics = Record<CardCategory, CardPlayStats>;
+
+export interface RoundSummary {
+    round: number;
+    playerInitialHand: Card[];
+    aiInitialHand: Card[];
+    playerHandStrength: number;
+    aiHandStrength: number;
+    playerEnvidoPoints: number;
+    aiEnvidoPoints: number;
+    calls: string[]; // e.g., "Player: ENVIDO", "AI: REAL ENVIDO", "Player: QUIERO"
+    trickWinners: (Player | 'tie' | null)[];
+    roundWinner: Player | 'tie' | null;
+    pointsAwarded: { player: number; ai: number; };
+}
 
 export interface GameState {
   deck: Card[];
@@ -71,7 +142,7 @@ export interface GameState {
   aiScore: number;
   round: number;
   mano: Player;
-  currentTurn: Player;
+  currentTurn: Player | null;
   gamePhase: GamePhase;
   isThinking: boolean;
   winner: Player | null;
@@ -90,6 +161,7 @@ export interface GameState {
   envidoPointsOnOffer: number;
   trucoLevel: 0 | 1 | 2 | 3;
   playerEnvidoFoldHistory: boolean[];
+  playerTrucoCallHistory: PlayerTrucoCallEntry[];
   playerCalledHighEnvido: boolean;
   playedCards: Card[];
 
@@ -108,12 +180,25 @@ export interface GameState {
 
   // Round Winner Announcement
   lastRoundWinner: Player | 'tie' | null;
+
+  // Central message for key events
+  centralMessage: string | null;
+
+  // Data Modal for user behavior
+  isDataModalVisible: boolean;
+
+  // Granular Behavior Tracking
+  playerEnvidoHistory: PlayerEnvidoActionEntry[];
+  playerPlayOrderHistory: PlayerPlayOrderEntry[];
+
+  // New Detailed Statistics
+  playerCardPlayStats: PlayerCardPlayStatistics;
+  roundHistory: RoundSummary[];
 }
 
 export interface AiMove {
   action: Action;
   reasoning: string;
-  trucoContext?: AiTrucoContext;
 }
 
 export enum ActionType {
@@ -123,6 +208,7 @@ export enum ActionType {
   TOGGLE_GAME_LOG_EXPAND = 'TOGGLE_GAME_LOG_EXPAND',
   RESTART_GAME = 'RESTART_GAME',
   START_NEW_ROUND = 'START_NEW_ROUND',
+  PROCEED_TO_NEXT_ROUND = 'PROCEED_TO_NEXT_ROUND',
   PLAY_CARD = 'PLAY_CARD',
   CALL_ENVIDO = 'CALL_ENVIDO',
   CALL_REAL_ENVIDO = 'CALL_REAL_ENVIDO',
@@ -136,13 +222,20 @@ export enum ActionType {
   DECLINE = 'DECLINE',
   AI_THINKING = 'AI_THINKING',
   ADD_MESSAGE = 'ADD_MESSAGE',
-  SET_AI_TRUCO_CONTEXT = 'SET_AI_TRUCO_CONTEXT',
   // New internal action for model updates
   UPDATE_OPPONENT_PROBS = 'UPDATE_OPPONENT_PROBS',
   // New actions for delayed resolution
   RESOLVE_ENVIDO_ACCEPT = 'RESOLVE_ENVIDO_ACCEPT',
   RESOLVE_ENVIDO_DECLINE = 'RESOLVE_ENVIDO_DECLINE',
   RESOLVE_TRUCO_DECLINE = 'RESOLVE_TRUCO_DECLINE',
+  // Central Message
+  CLEAR_CENTRAL_MESSAGE = 'CLEAR_CENTRAL_MESSAGE',
+  // Data Modal
+  TOGGLE_DATA_MODAL = 'TOGGLE_DATA_MODAL',
+  // Local Storage
+  LOAD_PERSISTED_STATE = 'LOAD_PERSISTED_STATE',
+  // New action for imported data
+  LOAD_IMPORTED_DATA = 'LOAD_IMPORTED_DATA',
 }
 
 export type Action =
@@ -152,21 +245,25 @@ export type Action =
   | { type: ActionType.TOGGLE_GAME_LOG_EXPAND }
   | { type: ActionType.RESTART_GAME }
   | { type: ActionType.START_NEW_ROUND }
+  | { type: ActionType.PROCEED_TO_NEXT_ROUND }
   | { type: ActionType.PLAY_CARD; payload: { player: Player; cardIndex: number } }
   | { type: ActionType.CALL_ENVIDO; payload?: { blurbText: string } }
   | { type: ActionType.CALL_REAL_ENVIDO; payload?: { blurbText: string } }
   | { type: ActionType.CALL_FALTA_ENVIDO; payload?: { blurbText: string } }
-  | { type: ActionType.DECLARE_FLOR }
-  | { type: ActionType.CALL_TRUCO; payload?: { blurbText: string } }
-  | { type: ActionType.CALL_RETRUCO; payload?: { blurbText: string } }
-  | { type: ActionType.CALL_VALE_CUATRO; payload?: { blurbText: string } }
+  | { type: ActionType.DECLARE_FLOR; payload?: { blurbText: string } }
+  | { type: ActionType.CALL_TRUCO; payload?: { blurbText: string; trucoContext?: AiTrucoContext } }
+  | { type: ActionType.CALL_RETRUCO; payload?: { blurbText: string; trucoContext?: AiTrucoContext } }
+  | { type: ActionType.CALL_VALE_CUATRO; payload?: { blurbText: string; trucoContext?: AiTrucoContext } }
   | { type: ActionType.CALL_FALTA_TRUCO }
   | { type: ActionType.ACCEPT; payload?: { blurbText: string } }
   | { type: ActionType.DECLINE; payload?: { blurbText: string } }
   | { type: ActionType.AI_THINKING; payload: boolean }
   | { type: ActionType.ADD_MESSAGE; payload: string }
-  | { type: ActionType.SET_AI_TRUCO_CONTEXT; payload: AiTrucoContext }
   | { type: ActionType.UPDATE_OPPONENT_PROBS; payload: OpponentHandProbabilities }
   | { type: ActionType.RESOLVE_ENVIDO_ACCEPT }
   | { type: ActionType.RESOLVE_ENVIDO_DECLINE }
-  | { type: ActionType.RESOLVE_TRUCO_DECLINE };
+  | { type: ActionType.RESOLVE_TRUCO_DECLINE }
+  | { type: ActionType.CLEAR_CENTRAL_MESSAGE }
+  | { type: ActionType.TOGGLE_DATA_MODAL }
+  | { type: ActionType.LOAD_PERSISTED_STATE; payload: Partial<GameState> }
+  | { type: ActionType.LOAD_IMPORTED_DATA; payload: Partial<GameState> };

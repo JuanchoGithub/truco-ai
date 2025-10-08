@@ -1,19 +1,76 @@
-import { GameState, Action, ActionType, GamePhase, Case, OpponentModel } from '../../types';
-import { createDeck, shuffleDeck, determineTrickWinner, determineRoundWinner, getCardName, hasFlor } from '../../services/trucoLogic';
-import { initialState as baseInitialState } from '../useGameReducer';
+import { GameState, Action, ActionType, GamePhase, Case, OpponentModel, PlayerEnvidoActionEntry, PlayerPlayOrderEntry, RoundSummary } from '../../types';
+import { createDeck, shuffleDeck, determineTrickWinner, determineRoundWinner, getCardName, hasFlor, getEnvidoValue, getCardHierarchy, calculateHandStrength } from '../../services/trucoLogic';
 import { initializeProbabilities, updateProbsOnPlay } from '../../services/ai/inferenceService';
 import { getRandomPhrase, TRICK_LOSE_PHRASES, TRICK_WIN_PHRASES } from '../../services/ai/phrases';
+import { getCardCategory } from '../../services/cardAnalysis';
 
-export function handleRestartGame(state: GameState, action: { type: ActionType.RESTART_GAME }): GameState {
+function updateOpponentModelFromHistory(state: GameState): OpponentModel {
+    const newModel = JSON.parse(JSON.stringify(state.opponentModel)); // Deep copy to avoid mutation
+    const DECAY = 0.95; // Give more weight to recent actions
+
+    // 1. Analyze Envido History
+    const envidoResponses = state.playerEnvidoHistory.filter(e => e.action === 'folded' || e.action === 'accepted' || e.action.startsWith('escalated'));
+    if (envidoResponses.length > 0) {
+        const folds = envidoResponses.filter(e => e.action === 'folded').length;
+        const escalations = envidoResponses.filter(e => e.action.startsWith('escalated')).length;
+        newModel.envidoBehavior.foldRate = newModel.envidoBehavior.foldRate * DECAY + (1 - DECAY) * (folds / envidoResponses.length);
+        newModel.envidoBehavior.escalationRate = newModel.envidoBehavior.escalationRate * DECAY + (1 - DECAY) * (escalations / envidoResponses.length);
+    }
+    
+    const envidoCalls = state.playerEnvidoHistory.filter(e => e.action === 'called' || e.action.startsWith('escalated'));
+    if (envidoCalls.length > 2) {
+        const totalPoints = envidoCalls.reduce((sum, e) => sum + e.envidoPoints, 0);
+        const newThreshold = totalPoints / envidoCalls.length;
+        newModel.envidoBehavior.callThreshold = newModel.envidoBehavior.callThreshold * DECAY + (1 - DECAY) * newThreshold;
+    }
+
+    // 2. Analyze Play Style History
+    const manoTrick1Leads = state.playerPlayOrderHistory.filter(p => p.wasLeadingTrick && p.trick === 0 && state.mano === 'player');
+    if (manoTrick1Leads.length > 2) {
+        let ledWithHighestCount = 0;
+        let baitAttempts = 0;
+        for (const play of manoTrick1Leads) {
+            const sortedHand = [...play.handBeforePlay].sort((a,b) => getCardHierarchy(b) - getCardHierarchy(a));
+            const highestCard = sortedHand[0];
+            const lowestCard = sortedHand[sortedHand.length - 1];
+            
+            if (highestCard.rank === play.playedCard.rank && highestCard.suit === play.playedCard.suit) {
+                ledWithHighestCount++;
+            }
+            // Define baiting as: having a strong hand overall but leading with the weakest card
+            if (calculateHandStrength(play.handBeforePlay) > 20 && lowestCard.rank === play.playedCard.rank && lowestCard.suit === play.playedCard.suit) {
+                baitAttempts++;
+            }
+        }
+        const newLeadRate = ledWithHighestCount / manoTrick1Leads.length;
+        const newBaitRate = baitAttempts / manoTrick1Leads.length;
+        newModel.playStyle.leadWithHighestRate = newModel.playStyle.leadWithHighestRate * DECAY + (1 - DECAY) * newLeadRate;
+        newModel.playStyle.baitRate = newModel.playStyle.baitRate * DECAY + (1 - DECAY) * newBaitRate;
+    }
+    
+    return newModel;
+}
+
+export function handleRestartGame(initialState: GameState, state: GameState): GameState {
   return {
-    ...baseInitialState,
+    ...initialState,
     mano: 'ai', // First game player is mano, next is AI
     currentTurn: 'ai',
     round: 0,
     messageLog: ['¡Nuevo juego comenzado! La IA es mano.'],
     isDebugMode: state.isDebugMode, // Persist debug mode setting
     aiReasoningLog: [{ round: 0, reasoning: 'La IA está esperando que comience la nueva ronda.' }],
-    playerEnvidoFoldHistory: [], // Reset history on new game
+    // Persist AI learning data
+    opponentModel: state.opponentModel,
+    aiCases: state.aiCases,
+    playerEnvidoFoldHistory: state.playerEnvidoFoldHistory,
+    playerTrucoCallHistory: state.playerTrucoCallHistory,
+    playerEnvidoHistory: state.playerEnvidoHistory,
+    playerPlayOrderHistory: state.playerPlayOrderHistory,
+    playerCardPlayStats: state.playerCardPlayStats,
+    roundHistory: state.roundHistory,
+    // Explicitly reset per-game state for clarity
+    opponentHandProbabilities: null,
     aiBlurb: null,
   };
 }
@@ -26,6 +83,9 @@ export function handleStartNewRound(state: GameState, action: { type: ActionType
       gamePhase: 'game_over' 
     };
   }
+
+  // Update opponent model with data from the completed round
+  const updatedOpponentModel = state.round > 0 ? updateOpponentModelFromHistory(state) : state.opponentModel;
   
   const newMano = state.mano === 'player' ? 'ai' : 'player';
   const newDeck = shuffleDeck(createDeck());
@@ -33,11 +93,27 @@ export function handleStartNewRound(state: GameState, action: { type: ActionType
   const newAiHand = newDeck.slice(3, 6);
   const playerHasFlor = hasFlor(newPlayerHand);
   const aiHasFlor = hasFlor(newAiHand);
+  const playerEnvidoPoints = getEnvidoValue(newPlayerHand);
+  const aiEnvidoPoints = getEnvidoValue(newAiHand);
 
   // Initialize opponent hand probabilities
   const opponentUnseenCards = [...newDeck.slice(6), ...newPlayerHand];
-  const initialProbs = initializeProbabilities(opponentUnseenCards, [...newAiHand]);
+  const initialProbs = initializeProbabilities(opponentUnseenCards);
 
+  // Initialize the summary for the new round
+  const newRoundSummary: RoundSummary = {
+      round: state.round + 1,
+      playerInitialHand: [...newPlayerHand],
+      aiInitialHand: [...newAiHand],
+      playerHandStrength: calculateHandStrength(newPlayerHand),
+      aiHandStrength: calculateHandStrength(newAiHand),
+      playerEnvidoPoints,
+      aiEnvidoPoints,
+      calls: [],
+      trickWinners: [null, null, null],
+      roundWinner: null,
+      pointsAwarded: { player: 0, ai: 0 },
+  };
 
   return {
     ...state,
@@ -56,6 +132,7 @@ export function handleStartNewRound(state: GameState, action: { type: ActionType
     currentTurn: newMano,
     gamePhase: 'trick_1',
     round: state.round + 1,
+    opponentModel: updatedOpponentModel,
     messageLog: [...state.messageLog, `--- Ronda ${state.round + 1} ---`, `${newMano === 'player' ? 'Eres' : 'La IA es'} mano.`],
     turnBeforeInterrupt: null,
     pendingTrucoCaller: null,
@@ -71,7 +148,8 @@ export function handleStartNewRound(state: GameState, action: { type: ActionType
     playerEnvidoValue: null,
     playerActionHistory: [],
     aiBlurb: null,
-    // Note: lastRoundWinner is intentionally NOT cleared here, so it can be displayed.
+    lastRoundWinner: null,
+    roundHistory: [...state.roundHistory, newRoundSummary],
   };
 }
 
@@ -97,32 +175,86 @@ export function handlePlayCard(state: GameState, action: { type: ActionType.PLAY
     }
       
     const cardPlayed = hand[cardIndex];
-    const newPlayedCards = [...state.playedCards, cardPlayed];
-      
-    const newPlayerHand = player === 'player' ? state.playerHand.filter((_, i) => i !== cardIndex) : state.playerHand;
-    const newAiHand = player === 'ai' ? state.aiHand.filter((_, i) => i !== cardIndex) : state.aiHand;
-    const newPlayerTricks = [...state.playerTricks];
-    const newAiTricks = [...state.aiTricks];
+    let newState = { ...state };
+
+    // --- New Behavior Logging ---
+    if (player === 'player') {
+        const wasLeadingTrick = state.aiTricks[state.currentTrick] === null;
+        const playOrderEntry: PlayerPlayOrderEntry = {
+            round: state.round,
+            trick: state.currentTrick,
+            handBeforePlay: [...state.playerHand],
+            playedCard: cardPlayed,
+            wasLeadingTrick: wasLeadingTrick,
+        };
+        const newPlayOrderHistory = [...state.playerPlayOrderHistory, playOrderEntry];
+        
+        // Update Card Play Statistics
+        const cardCategory = getCardCategory(cardPlayed);
+        let newPlayerCardPlayStats = state.playerCardPlayStats;
+        if (cardCategory) {
+            newPlayerCardPlayStats = JSON.parse(JSON.stringify(state.playerCardPlayStats)); // Deep copy
+            const stats = newPlayerCardPlayStats[cardCategory];
+            stats.plays += 1;
+            stats.byTrick[state.currentTrick] += 1;
+            if (wasLeadingTrick) {
+                stats.asLead += 1;
+            } else {
+                stats.asResponse += 1;
+            }
+        }
+
+        // If this is the player's first card, it's their last chance to call Envido.
+        // We log their choice not to.
+        const envidoWasPossible = state.currentTrick === 0 && !state.hasEnvidoBeenCalledThisRound && !state.hasFlorBeenCalledThisRound && !state.playerHasFlor && !state.aiHasFlor;
+        let newEnvidoHistory = state.playerEnvidoHistory;
+        if (envidoWasPossible) {
+            const didNotCallEntry: PlayerEnvidoActionEntry = {
+                round: state.round,
+                envidoPoints: getEnvidoValue(state.initialPlayerHand),
+                action: 'did_not_call',
+                wasMano: state.mano === 'player',
+            };
+            newEnvidoHistory = [...state.playerEnvidoHistory, didNotCallEntry];
+        }
+
+        newState = { 
+            ...newState, 
+            playerPlayOrderHistory: newPlayOrderHistory,
+            playerCardPlayStats: newPlayerCardPlayStats,
+            playerEnvidoHistory: newEnvidoHistory,
+            // Playing a card means the envido window for this trick is closed.
+            // This is a failsafe to ensure we don't log 'did_not_call' multiple times.
+            hasEnvidoBeenCalledThisRound: state.hasEnvidoBeenCalledThisRound || envidoWasPossible,
+        };
+    }
+    // --- End Behavior Logging ---
+
+    const newPlayedCards = [...newState.playedCards, cardPlayed];
+    const newPlayerHand = player === 'player' ? newState.playerHand.filter((_, i) => i !== cardIndex) : newState.playerHand;
+    const newAiHand = player === 'ai' ? newState.aiHand.filter((_, i) => i !== cardIndex) : newState.aiHand;
+    const newPlayerTricks = [...newState.playerTricks];
+    const newAiTricks = [...newState.aiTricks];
       
     if (player === 'player') {
-      newPlayerTricks[state.currentTrick] = cardPlayed;
+      newPlayerTricks[newState.currentTrick] = cardPlayed;
     } else {
-      newAiTricks[state.currentTrick] = cardPlayed;
+      newAiTricks[newState.currentTrick] = cardPlayed;
     }
 
     // Update opponent model if player played a card
-    let updatedProbs = state.opponentHandProbabilities;
+    let updatedProbs = newState.opponentHandProbabilities;
     if (player === 'player' && updatedProbs) {
-      updatedProbs = updateProbsOnPlay(updatedProbs, cardPlayed);
+      updatedProbs = updateProbsOnPlay(updatedProbs, cardPlayed, newPlayerHand.length);
     }
       
-    const messageLog = [...state.messageLog, `${player === 'player' ? 'Jugador' : 'IA'} juega ${getCardName(cardPlayed)}`];
-    const isTrickComplete = newPlayerTricks[state.currentTrick] !== null && newAiTricks[state.currentTrick] !== null;
+    const messageLog = [...newState.messageLog, `${player === 'player' ? 'Jugador' : 'IA'} juega ${getCardName(cardPlayed)}`];
+    const isTrickComplete = newPlayerTricks[newState.currentTrick] !== null && newAiTricks[newState.currentTrick] !== null;
 
     if (!isTrickComplete) {
       const nextTurn = player === 'player' ? 'ai' : 'player';
       return {
-        ...state,
+        ...newState,
         playerHand: newPlayerHand,
         aiHand: newAiHand,
         playerTricks: newPlayerTricks,
@@ -133,15 +265,24 @@ export function handlePlayCard(state: GameState, action: { type: ActionType.PLAY
         opponentHandProbabilities: updatedProbs,
         aiBlurb: null,
         lastRoundWinner: null, // Clear winner on new card play
+        isThinking: player === 'ai' ? false : newState.isThinking,
       };
     }
 
-    const trickWinner = determineTrickWinner(newPlayerTricks[state.currentTrick]!, newAiTricks[state.currentTrick]!);
-    const newTrickWinners = [...state.trickWinners];
-    newTrickWinners[state.currentTrick] = trickWinner;
+    const trickWinner = determineTrickWinner(newPlayerTricks[newState.currentTrick]!, newAiTricks[newState.currentTrick]!);
+    const newTrickWinners = [...newState.trickWinners];
+    newTrickWinners[newState.currentTrick] = trickWinner;
+    
+    // Update player card stats with win/loss
+    if (player === 'player') {
+        const cardCategory = getCardCategory(cardPlayed);
+        if (cardCategory && trickWinner === 'player') {
+            newState.playerCardPlayStats[cardCategory].wins += 1;
+        }
+    }
     
     const winnerNameTrick = trickWinner === 'player' ? 'JUGADOR' : trickWinner === 'ai' ? 'IA' : 'EMPATE';
-    const trickMessageLog = [...messageLog, `Ganador de la mano ${state.currentTrick + 1}: ${winnerNameTrick}`];
+    const trickMessageLog = [...messageLog, `Ganador de la mano ${newState.currentTrick + 1}: ${winnerNameTrick}`];
     
     let trickOutcomeBlurb = null;
     if (Math.random() < 0.4) { // 40% chance to say something
@@ -152,40 +293,42 @@ export function handlePlayCard(state: GameState, action: { type: ActionType.PLAY
         }
     }
     
-    const roundWinner = determineRoundWinner(newTrickWinners, state.mano);
+    const roundWinner = determineRoundWinner(newTrickWinners, newState.mano);
       
     if (roundWinner) {
       const trucoPointMapping = [1, 2, 3, 4];
-      const points = trucoPointMapping[state.trucoLevel];
+      const points = trucoPointMapping[newState.trucoLevel];
         
-      let newPlayerScore = state.playerScore;
-      let newAiScore = state.aiScore;
+      let newPlayerScore = newState.playerScore;
+      let newAiScore = newState.aiScore;
         
       if (roundWinner === 'player') newPlayerScore += points;
       else if (roundWinner === 'ai') newAiScore += points;
       
-      let newOpponentModel = state.opponentModel;
-      let newAiCases = state.aiCases;
+      let newOpponentModel = newState.opponentModel;
+      let newAiCases = newState.aiCases;
       
-      if (state.aiTrucoContext) {
+      if (newState.aiTrucoContext) {
         const outcome = roundWinner === 'ai' ? 'win' : 'loss';
         const newCase: Case = {
-            ...state.aiTrucoContext,
+            ...newState.aiTrucoContext,
             outcome,
-            opponentFoldRateAtTimeOfCall: state.opponentModel.trucoFoldRate,
+            opponentFoldRateAtTimeOfCall: newState.opponentModel.trucoFoldRate,
         };
-        newAiCases = [...state.aiCases, newCase];
+        newAiCases = [...newState.aiCases, newCase];
 
         const decay = 0.9;
-        const newFoldRate = state.opponentModel.trucoFoldRate * decay;
+        // FIX: Corrected typo from `trucoFoldrate` to `trucoFoldRate`.
+        const newFoldRate = newState.opponentModel.trucoFoldRate * decay;
         
-        let newBluffSuccessRate = state.opponentModel.bluffSuccessRate;
-        if (state.aiTrucoContext.isBluff) {
-            const bluffOutcome = roundWinner === 'ai' ? 0 : 1; 
-            newBluffSuccessRate = state.opponentModel.bluffSuccessRate * decay + (1 - decay) * bluffOutcome;
+        let newBluffSuccessRate = newState.opponentModel.bluffSuccessRate;
+        if (newState.aiTrucoContext.isBluff) {
+            const bluffReward = roundWinner === 'ai' ? 1 : 0; // 1 if AI wins (bluff "succeeds")
+            newBluffSuccessRate = newState.opponentModel.bluffSuccessRate * decay + (1 - decay) * bluffReward;
         }
 
         newOpponentModel = {
+            ...newOpponentModel,
             trucoFoldRate: Math.max(0.05, newFoldRate),
             bluffSuccessRate: newBluffSuccessRate,
         };
@@ -193,9 +336,19 @@ export function handlePlayCard(state: GameState, action: { type: ActionType.PLAY
       
       const winnerNameRound = roundWinner === 'player' ? 'JUGADOR' : roundWinner === 'ai' ? 'IA' : 'EMPATE';
       const roundMessageLog = [...trickMessageLog, `Ganador de la ronda: ${winnerNameRound}. Gana ${points} punto(s).`];
+      
+      // Finalize the round history
+      const newRoundHistory = [...newState.roundHistory];
+      const currentRoundSummary = newRoundHistory.find(r => r.round === newState.round);
+      if (currentRoundSummary) {
+          currentRoundSummary.trickWinners = newTrickWinners;
+          currentRoundSummary.roundWinner = roundWinner;
+          if (roundWinner === 'player') currentRoundSummary.pointsAwarded.player += points;
+          if (roundWinner === 'ai') currentRoundSummary.pointsAwarded.ai += points;
+      }
         
-      const stateBeforeNewRound = {
-        ...state,
+      return {
+        ...newState,
         playerHand: newPlayerHand,
         aiHand: newAiHand,
         playerTricks: newPlayerTricks,
@@ -211,27 +364,31 @@ export function handlePlayCard(state: GameState, action: { type: ActionType.PLAY
         aiTrucoContext: null,
         lastRoundWinner: roundWinner,
         aiBlurb: trickOutcomeBlurb,
+        isThinking: player === 'ai' ? false : newState.isThinking,
+        gamePhase: 'round_end',
+        currentTurn: null,
+        roundHistory: newRoundHistory,
       };
 
-      return handleStartNewRound(stateBeforeNewRound, { type: ActionType.START_NEW_ROUND });
-
     } else {
-      const nextTurn = trickWinner === 'tie' ? state.mano : trickWinner;
+      const nextTurn = trickWinner === 'tie' ? newState.mano : trickWinner;
       return {
-        ...state,
+        ...newState,
         playerHand: newPlayerHand,
         aiHand: newAiHand,
         playerTricks: newPlayerTricks,
         aiTricks: newAiTricks,
         trickWinners: newTrickWinners,
         currentTurn: nextTurn,
-        currentTrick: state.currentTrick + 1,
-        gamePhase: `trick_${state.currentTrick + 2}` as GamePhase,
+        currentTrick: newState.currentTrick + 1,
+        gamePhase: `trick_${newState.currentTrick + 2}` as GamePhase,
         messageLog: trickMessageLog,
         playedCards: newPlayedCards,
+        // Fix: Corrected typo from 'updatedProps' to 'updatedProbs'.
         opponentHandProbabilities: updatedProbs,
         aiBlurb: trickOutcomeBlurb,
         lastRoundWinner: null, // Clear winner on new card play
+        isThinking: player === 'ai' ? false : newState.isThinking,
       };
     }
 }

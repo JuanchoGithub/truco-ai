@@ -1,4 +1,4 @@
-import React, { useReducer, useEffect } from 'react';
+import React, { useReducer, useEffect, useState, useRef } from 'react';
 import { useGameReducer, initialState } from './hooks/useGameReducer';
 import { getLocalAIMove } from './services/localAiService';
 import { ActionType, Action } from './types';
@@ -10,31 +10,51 @@ import MessageLog from './components/MessageLog';
 import GameOverModal from './components/GameOverModal';
 import AiLogPanel from './components/AiLogPanel';
 import AiBlurb from './components/AiBlurb';
+import CentralMessage from './components/CentralMessage';
+import { saveStateToStorage, loadStateFromStorage } from './services/storageService';
+import DataModal from './components/DataModal';
+import { getCardName } from './services/trucoLogic';
 
 const App: React.FC = () => {
   const [state, dispatch] = useReducer(useGameReducer, initialState);
+  const [localMessage, setLocalMessage] = useState<string | null>(null);
+  const [isMessageVisible, setIsMessageVisible] = useState(false);
+  const messageTimers = useRef<{ fadeOutTimerId?: number; clearTimerId?: number }>({});
 
   useEffect(() => {
+    const persistedState = loadStateFromStorage();
+    if (persistedState) {
+        dispatch({ type: ActionType.LOAD_PERSISTED_STATE, payload: persistedState });
+    }
     dispatch({ type: ActionType.START_NEW_ROUND });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    if (state.currentTurn === 'ai' && !state.isThinking && !state.winner) {
+    // Save learning data whenever it changes, but only after the game has started.
+    if (state.round > 0) {
+        saveStateToStorage(state);
+    }
+  }, [state]);
+
+  useEffect(() => {
+    // New guard to prevent AI from acting during delayed resolution phases
+    const isResolving = state.gamePhase === 'ENVIDO_ACCEPTED' || 
+                        state.gamePhase === 'ENVIDO_DECLINED' || 
+                        state.gamePhase === 'TRUCO_DECLINED';
+
+    if (state.currentTurn === 'ai' && !state.isThinking && !state.winner && !isResolving) {
       const handleAiTurn = () => {
         dispatch({ type: ActionType.AI_THINKING, payload: true });
         
-        const initialReasoning = `Es mi turno. Fase: ${state.gamePhase}. Mi mano: ${state.aiHand.length} cartas. Consultando IA...`;
+        const aiHandString = state.aiHand.map(getCardName).join(', ');
+        const initialReasoning = `Es mi turno. Fase: ${state.gamePhase}.\nMi mano: [${aiHandString}].\nConsultando IA...`;
         dispatch({ type: ActionType.ADD_AI_REASONING_LOG, payload: { round: state.round, reasoning: initialReasoning } });
 
         try {
             const aiMove = getLocalAIMove(state);
         
             dispatch({ type: ActionType.ADD_AI_REASONING_LOG, payload: { round: state.round, reasoning: aiMove.reasoning } });
-            
-            if (aiMove.trucoContext) {
-              dispatch({ type: ActionType.SET_AI_TRUCO_CONTEXT, payload: aiMove.trucoContext });
-            }
             
             setTimeout(() => {
               dispatch(aiMove.action);
@@ -81,6 +101,47 @@ const App: React.FC = () => {
     }
   }, [state.gamePhase, dispatch]);
 
+  // New useEffect to handle round end timer
+  useEffect(() => {
+    let timerId: number;
+    if (state.gamePhase === 'round_end') {
+      timerId = window.setTimeout(() => {
+        dispatch({ type: ActionType.PROCEED_TO_NEXT_ROUND });
+      }, 5000); // 5 seconds
+    }
+    return () => clearTimeout(timerId);
+  }, [state.gamePhase, dispatch]);
+
+  const clearMessageState = () => {
+    dispatch({ type: ActionType.CLEAR_CENTRAL_MESSAGE });
+    setLocalMessage(null);
+  };
+
+  const handleDismissMessage = () => {
+      clearTimeout(messageTimers.current.fadeOutTimerId);
+      clearTimeout(messageTimers.current.clearTimerId);
+      setIsMessageVisible(false); // Start fade-out animation
+      messageTimers.current.clearTimerId = window.setTimeout(clearMessageState, 500); // Clear state after fade-out
+  };
+
+  useEffect(() => {
+    if (state.centralMessage) {
+        setLocalMessage(state.centralMessage);
+        setIsMessageVisible(true);
+
+        messageTimers.current.fadeOutTimerId = window.setTimeout(() => {
+            setIsMessageVisible(false);
+        }, 1500);
+
+        messageTimers.current.clearTimerId = window.setTimeout(clearMessageState, 2000); // 1500ms visible + 500ms fadeout
+
+        return () => {
+            clearTimeout(messageTimers.current.fadeOutTimerId);
+            clearTimeout(messageTimers.current.clearTimerId);
+        };
+    }
+  }, [state.centralMessage, dispatch]);
+
 
   const handlePlayCard = (cardIndex: number) => {
     if (state.currentTurn === 'player') {
@@ -106,12 +167,21 @@ const App: React.FC = () => {
         {/* Center Game Column */}
         <div className="flex-1 flex flex-col relative overflow-hidden h-full">
           <Scoreboard playerScore={state.playerScore} aiScore={state.aiScore} className="absolute top-0 left-0 z-40" />
-          <button 
-            onClick={() => dispatch({ type: ActionType.TOGGLE_DEBUG_MODE })}
-            className={`absolute top-0 right-0 z-50 px-2 py-0.5 text-[10px] md:px-3 md:py-1 md:text-xs rounded-md border-2 transition-colors ${state.isDebugMode ? 'bg-yellow-500 border-yellow-300 text-black font-bold' : 'bg-gray-700/50 border-gray-500 text-white'}`}
-          >
-            VER CARTAS
-          </button>
+          
+          <div className="absolute top-1 right-1 z-50 flex gap-2 p-1">
+            <button 
+                onClick={() => dispatch({ type: ActionType.TOGGLE_DATA_MODAL })}
+                className="px-2 py-0.5 text-[10px] md:px-3 md:py-1 md:text-xs rounded-md border-2 bg-gray-700/50 border-gray-500 text-white transition-colors hover:bg-gray-600/70"
+            >
+                VER DATA
+            </button>
+            <button 
+              onClick={() => dispatch({ type: ActionType.TOGGLE_DEBUG_MODE })}
+              className={`px-2 py-0.5 text-[10px] md:px-3 md:py-1 md:text-xs rounded-md border-2 transition-colors ${state.isDebugMode ? 'bg-yellow-500 border-yellow-300 text-black font-bold' : 'bg-gray-700/50 border-gray-500 text-white'}`}
+            >
+              VER CARTAS
+            </button>
+          </div>
 
           {/* Main Game Layout */}
           <div className="relative z-10 flex flex-col flex-grow w-full max-w-4xl mx-auto h-full">
@@ -135,6 +205,9 @@ const App: React.FC = () => {
             {/* AI Speech Blurb */}
             <AiBlurb text={state.aiBlurb?.text ?? ''} isVisible={!!state.aiBlurb?.isVisible} />
 
+            {/* Central Message Display */}
+            <CentralMessage message={localMessage} isVisible={isMessageVisible} onDismiss={handleDismissMessage} />
+
             {/* MIDDLE: Board */}
             <div className="flex-grow flex items-center justify-center py-2 md:py-4 min-h-0">
                 <GameBoard 
@@ -142,6 +215,8 @@ const App: React.FC = () => {
                   aiTricks={state.aiTricks}
                   trickWinners={state.trickWinners}
                   lastRoundWinner={state.lastRoundWinner}
+                  gamePhase={state.gamePhase}
+                  dispatch={dispatch}
                 />
             </div>
 
@@ -183,6 +258,13 @@ const App: React.FC = () => {
         {state.isGameLogExpanded && <MessageLog messages={state.messageLog} dispatch={dispatch} isModal={true} />}
         {state.isLogExpanded && <AiLogPanel log={state.aiReasoningLog} dispatch={dispatch} isModal={true} />}
       </div>
+
+      {state.isDataModalVisible && (
+        <DataModal 
+            gameState={state}
+            dispatch={dispatch}
+        />
+      )}
       
       {state.winner && (
         <GameOverModal winner={state.winner} onPlayAgain={() => dispatch({ type: ActionType.RESTART_GAME })} />
