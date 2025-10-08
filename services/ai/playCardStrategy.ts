@@ -1,6 +1,5 @@
-
 import { GameState, Card, Suit } from '../../types';
-import { getCardHierarchy, getCardName, getEnvidoValue, determineTrickWinner, determineRoundWinner } from '../trucoLogic';
+import { getCardHierarchy, getCardName, getEnvidoValue, determineTrickWinner, determineRoundWinner, getEnvidoDetails } from '../trucoLogic';
 
 export interface PlayCardResult {
     index: number;
@@ -31,7 +30,7 @@ const getEnvidoSuit = (hand: Card[]): Suit | null => {
 };
 
 export const findBestCardToPlay = (state: GameState): PlayCardResult => {
-    const { aiHand, playerTricks, currentTrick, trickWinners, mano, hasEnvidoBeenCalledThisRound, initialAiHand, playerEnvidoValue } = state;
+    const { aiHand, playerTricks, currentTrick, trickWinners, mano, initialAiHand, playerEnvidoValue, roundHistory, round } = state;
     if (aiHand.length === 0) return { index: 0, reasoning: ["No quedan cartas para jugar."]};
 
     let reasoning: string[] = [`[Lógica: Jugar Carta]`, `Mi mano: ${aiHand.map(getCardName).join(', ')}`];
@@ -67,29 +66,38 @@ export const findBestCardToPlay = (state: GameState): PlayCardResult => {
                 return { index: cardIndex, reasoning };
             case 1: // Second trick
                 if (trickWinners[0] === 'ai') {
-                    // NEW: Deceptive "Suit-Led Misdirection" play.
-                    const envidoSuit = getEnvidoSuit(initialAiHand);
-                    const myEnvido = getEnvidoValue(initialAiHand);
+                    // Deceptive "Suit-Led Misdirection" play.
+                    const currentRoundSummary = roundHistory.find(r => r.round === round);
+                    const envidoShowdownHappened = currentRoundSummary?.calls.some(c => c.toLowerCase().includes('envido')) &&
+                                                   currentRoundSummary?.calls.some(c => c.toLowerCase().includes('quiero'));
                     
-                    // Condition: AI won trick 1, has a strong envido pair that was likely revealed, and still has a card of that suit.
-                    if (envidoSuit && myEnvido >= 27 && hasEnvidoBeenCalledThisRound) {
-                        const matchingSuitCardIndex = aiHand.findIndex(c => c.suit === envidoSuit);
-                        
-                        if (matchingSuitCardIndex !== -1) {
-                            // High probability to make this smart, deceptive play.
-                            if (Math.random() < 0.75) {
-                                reasoning.push(`[Jugada Engañosa]: Mi canto de Envido probablemente reveló mi par de '${envidoSuit}'. En lugar de mi carta más fuerte, lideraré con mi carta restante de '${envidoSuit}'.`);
-                                reasoning.push(`Esto crea incertidumbre, haciendo que el oponente dude si tengo otra carta alta del mismo palo. Camufla la verdadera fuerza restante de mi mano.`);
-                                const cardToPlay = aiHand[matchingSuitCardIndex];
-                                reasoning.push(`\nDecisión: Jugando la engañosa ${getCardName(cardToPlay)}.`);
-                                return { index: matchingSuitCardIndex, reasoning };
-                            } else {
-                                reasoning.push(`[Jugada Engañosa Omitida]: Consideré una jugada engañosa, pero el azar me llevó a una jugada estándar para mantenerme impredecible.`);
+                    if (envidoShowdownHappened && playerEnvidoValue !== null) {
+                        const envidoSuit = getEnvidoSuit(initialAiHand);
+                        if (envidoSuit) { // Check if AI has a suit pair to make this play
+                            const myEnvidoDetails = getEnvidoDetails(initialAiHand);
+                            const myEnvidoPoints = myEnvidoDetails.value;
+                            
+                            let wonEnvido = false;
+                            if (myEnvidoPoints > playerEnvidoValue) {
+                                wonEnvido = true;
+                            } else if (myEnvidoPoints === playerEnvidoValue && mano === 'ai') {
+                                wonEnvido = true; // AI wins ties when mano
+                            }
+
+                            if (wonEnvido && myEnvidoPoints >= 27) {
+                                const matchingSuitCardIndex = aiHand.findIndex(c => c.suit === envidoSuit);
+                                if (matchingSuitCardIndex !== -1 && Math.random() < 0.75) {
+                                    reasoning.push(`[Jugada Engañosa]: El Envido que gané reveló mi par de '${envidoSuit}'. En lugar de mi carta más fuerte, lideraré con mi carta restante de '${envidoSuit}'.`);
+                                    reasoning.push(`Esto crea incertidumbre, haciendo que el oponente dude si tengo otra carta alta del mismo palo. Camufla la verdadera fuerza restante de mi mano.`);
+                                    const cardToPlay = aiHand[matchingSuitCardIndex];
+                                    reasoning.push(`\nDecisión: Jugando la engañosa ${getCardName(cardToPlay)}.`);
+                                    return { index: matchingSuitCardIndex, reasoning };
+                                }
                             }
                         }
                     }
 
-                    // Fallback to original logic if deceptive play isn't triggered.
+                    // Fallback to standard logic if deceptive play isn't triggered.
                     cardIndex = findCardIndexByValue(aiHand, 'max');
                     reasoning.push(`\nDecisión: Gané la primera mano. Jugando mi carta más alta para ganar la ronda: ${getCardName(aiHand[cardIndex])}.`);
                 } else if (trickWinners[0] === 'player') {
