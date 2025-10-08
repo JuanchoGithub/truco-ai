@@ -1,5 +1,3 @@
-
-
 // Fix: Moved the game reducer logic from the misnamed types.ts to its correct location here.
 // This file now contains the full, correct reducer implementation for the game.
 import { GameState, Action, ActionType, AiTrucoContext } from '../types';
@@ -155,39 +153,65 @@ export function useGameReducer(state: GameState, action: Action): GameState {
       return { ...state, centralMessage: null };
 
     // Local Storage & Import/Export Actions
-    case ActionType.LOAD_PERSISTED_STATE:
     case ActionType.LOAD_IMPORTED_DATA:
-      const loadedState = action.payload;
-      return {
-          ...state,
-          ...loadedState,
-          // Deep merge nested objects to prevent them from being overwritten by `undefined`
-          opponentModel: {
-              ...state.opponentModel,
-              ...(loadedState.opponentModel || {}),
-              envidoBehavior: {
-                  ...state.opponentModel.envidoBehavior,
-                  ...(loadedState.opponentModel?.envidoBehavior || {}),
-              },
-              playStyle: {
-                 ...state.opponentModel.playStyle,
-                 ...(loadedState.opponentModel?.playStyle || {}),
-              },
-              trucoBluffs: {
-                  ...state.opponentModel.trucoBluffs,
-                  ...(loadedState.opponentModel?.trucoBluffs || { attempts: 0, successes: 0 }),
-              }
-          },
-          // Ensure arrays are not undefined if they don't exist in the loaded data
-          roundHistory: loadedState.roundHistory || [],
-          // Merge card stats to prevent data loss if new card categories are added in updates.
-          playerCardPlayStats: {
-            ...state.playerCardPlayStats,
-            ...(loadedState.playerCardPlayStats || {}),
-          },
-          playerEnvidoHistory: loadedState.playerEnvidoHistory || [],
-          playerPlayOrderHistory: loadedState.playerPlayOrderHistory || [],
-      };
+    case ActionType.LOAD_PERSISTED_STATE: {
+        const loadedState = action.payload;
+        if (!loadedState) return state; // Should not happen, but guard anyway
+
+        // Construct a clean state, but with the persisted learning data.
+        // This prevents loading into a stale state (e.g., game over, middle of a trick).
+        const restoredState: GameState = {
+            ...initialState, // Start with a fresh game state
+            
+            // Carry over all learning and historical data from storage/import
+            opponentModel: loadedState.opponentModel || initialState.opponentModel,
+            aiCases: loadedState.aiCases || [],
+            playerEnvidoFoldHistory: loadedState.playerEnvidoFoldHistory || [],
+            playerTrucoCallHistory: loadedState.playerTrucoCallHistory || [],
+            playerEnvidoHistory: loadedState.playerEnvidoHistory || [],
+            playerPlayOrderHistory: loadedState.playerPlayOrderHistory || [],
+            playerCardPlayStats: loadedState.playerCardPlayStats || initialState.playerCardPlayStats,
+            roundHistory: loadedState.roundHistory || [],
+            
+            // Carry over user settings and score from the previous game state
+            isDebugMode: loadedState.isDebugMode || false,
+            playerScore: loadedState.playerScore || 0,
+            aiScore: loadedState.aiScore || 0,
+            
+            // Set a message indicating session restoration or import
+            messageLog: action.type === ActionType.LOAD_PERSISTED_STATE
+              ? [...(loadedState.messageLog || []), '--- Sesión Restaurada ---']
+              : ['--- Perfil Importado ---'],
+
+            // Continue the game by setting the correct mano for the *next* round
+            mano: loadedState.mano || 'player',
+            round: loadedState.round || 0,
+        };
+
+        // Deep merge opponent model to handle cases where the model structure has been updated
+        if (loadedState.opponentModel) {
+            restoredState.opponentModel = {
+                ...initialState.opponentModel,
+                ...loadedState.opponentModel,
+                envidoBehavior: {
+                    ...initialState.opponentModel.envidoBehavior,
+                    ...(loadedState.opponentModel.envidoBehavior || {}),
+                },
+                playStyle: {
+                    ...initialState.opponentModel.playStyle,
+                    ...(loadedState.opponentModel.playStyle || {}),
+                },
+                trucoBluffs: {
+                    ...initialState.opponentModel.trucoBluffs,
+                    ...(loadedState.opponentModel.trucoBluffs || { attempts: 0, successes: 0 }),
+                }
+            };
+        }
+
+        // Now, start a new round with this restored context. This ensures the app
+        // always loads into a clean, playable state (trick_1) with all history intact.
+        return handleStartNewRound(restoredState, { type: ActionType.START_NEW_ROUND });
+    }
 
     // Simple state changes & UI actions
     case ActionType.TOGGLE_DEBUG_MODE:

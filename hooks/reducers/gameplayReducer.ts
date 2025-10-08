@@ -72,15 +72,15 @@ function updateOpponentModelFromHistory(state: GameState): OpponentModel {
 }
 
 export function handleRestartGame(initialState: GameState, state: GameState): GameState {
-  return {
-    ...initialState,
-    mano: 'ai', // First game player is mano, next is AI
-    currentTurn: 'ai',
-    round: 0,
-    messageLog: ['¡Nuevo juego comenzado! La IA es mano.'],
-    isDebugMode: state.isDebugMode, // Persist debug mode setting
-    aiReasoningLog: [{ round: 0, reasoning: 'La IA está esperando que comience la nueva ronda.' }],
-    // Persist AI learning data
+  // Create a clean slate for the new game, but persist the AI's learning data
+  // and user settings from the previous game.
+  
+  const newMano = state.mano === 'player' ? 'ai' : 'player'; // Alternate who is 'mano'
+
+  const resetState: GameState = {
+    ...initialState, // Use initialState to reset most fields to default
+    
+    // Explicitly carry over all learning and historical data
     opponentModel: state.opponentModel,
     aiCases: state.aiCases,
     playerEnvidoFoldHistory: state.playerEnvidoFoldHistory,
@@ -89,10 +89,25 @@ export function handleRestartGame(initialState: GameState, state: GameState): Ga
     playerPlayOrderHistory: state.playerPlayOrderHistory,
     playerCardPlayStats: state.playerCardPlayStats,
     roundHistory: state.roundHistory,
-    // Explicitly reset per-game state for clarity
-    opponentHandProbabilities: null,
-    aiBlurb: null,
+    
+    // Preserve user settings like debug mode
+    isDebugMode: state.isDebugMode,
+
+    // Explicitly define the starting state for the new game
+    playerScore: 0,
+    aiScore: 0,
+    round: 0, // handleStartNewRound will increment this to 1
+    mano: newMano,
+    currentTurn: newMano,
+    winner: null,
+    messageLog: [...state.messageLog, `--- Nuevo Juego ---`, `Un nuevo juego ha comenzado. ${newMano === 'player' ? 'Eres' : 'La IA es'} mano.`],
+    aiReasoningLog: [{ round: 0, reasoning: 'La IA se está preparando para la nueva partida.' }],
   };
+
+  // By calling handleStartNewRound immediately, we ensure a seamless transition
+  // into the new game without getting stuck in an intermediate state, and we
+  // guarantee that the preserved historical data is correctly used.
+  return handleStartNewRound(resetState, { type: ActionType.START_NEW_ROUND });
 }
 
 export function handleStartNewRound(state: GameState, action: { type: ActionType.START_NEW_ROUND }): GameState {
@@ -107,7 +122,7 @@ export function handleStartNewRound(state: GameState, action: { type: ActionType
   // Update opponent model with data from the completed round
   const updatedOpponentModel = state.round > 0 ? updateOpponentModelFromHistory(state) : state.opponentModel;
   
-  const newMano = state.mano === 'player' ? 'ai' : 'player';
+  const newMano = state.mano; // Mano is now set by handleRestartGame
   const newDeck = shuffleDeck(createDeck());
   const newPlayerHand = newDeck.slice(0, 3);
   const newAiHand = newDeck.slice(3, 6);
@@ -137,6 +152,11 @@ export function handleStartNewRound(state: GameState, action: { type: ActionType
       pointsAwarded: { player: 0, ai: 0 },
       playerTrucoCall: null,
   };
+  
+  const initialMessage = state.round === 0 
+    ? state.messageLog // Use the message from handleRestartGame
+    : [...state.messageLog, `--- Ronda ${state.round + 1} ---`, `${newMano === 'player' ? 'Eres' : 'La IA es'} mano.`];
+
 
   return {
     ...state,
@@ -156,7 +176,7 @@ export function handleStartNewRound(state: GameState, action: { type: ActionType
     gamePhase: 'trick_1',
     round: state.round + 1,
     opponentModel: updatedOpponentModel,
-    messageLog: [...state.messageLog, `--- Ronda ${state.round + 1} ---`, `${newMano === 'player' ? 'Eres' : 'La IA es'} mano.`],
+    messageLog: initialMessage,
     turnBeforeInterrupt: null,
     pendingTrucoCaller: null,
     hasEnvidoBeenCalledThisRound: false,

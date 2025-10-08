@@ -27,6 +27,7 @@ export const getLocalAIMove = (state: GameState): AiMove => {
         }
     }
 
+    // Flor has the highest priority and must be called if present at the start of the round.
     const canDeclareFlor = aiHasFlor && !hasFlorBeenCalledThisRound && currentTrick === 0 && state.aiTricks[0] === null;
     if (canDeclareFlor) {
         const blurbText = getRandomPhrase(FLOR_PHRASES);
@@ -40,6 +41,16 @@ export const getLocalAIMove = (state: GameState): AiMove => {
     if (gamePhase.includes('_called') && currentTurn === 'ai' && lastCaller === 'player') {
         reasoning.push(`[Lógica de Respuesta]`);
         reasoning.push(`El jugador cantó ${gamePhase.replace('_called', '').toUpperCase()}. Debo responder.`);
+
+        // Flor has top priority, even over responding to Truco. This is redundant with the top-level check
+        // but makes the AI's priority explicit in this context.
+        if (aiHasFlor && !hasFlorBeenCalledThisRound && currentTrick === 0) {
+            const blurbText = getRandomPhrase(FLOR_PHRASES);
+            return {
+                action: { type: ActionType.DECLARE_FLOR, payload: { blurbText } },
+                reasoning: "[Lógica de Prioridad: Flor]\nEl jugador hizo un llamado, pero mi Flor tiene la máxima prioridad. Debo declararla antes de continuar."
+            };
+        }
 
         const canCallEnvidoPrimero = gamePhase === 'truco_called' && currentTrick === 0 && state.playerTricks[0] === null && state.aiTricks[0] === null && !playerHasFlor && !aiHasFlor && !hasEnvidoBeenCalledThisRound;
         if (canCallEnvidoPrimero) {
