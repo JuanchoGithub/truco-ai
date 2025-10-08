@@ -122,7 +122,8 @@ export function handleStartNewRound(state: GameState, action: { type: ActionType
   // Update opponent model with data from the completed round
   const updatedOpponentModel = state.round > 0 ? updateOpponentModelFromHistory(state) : state.opponentModel;
   
-  const newMano = state.mano; // Mano is now set by handleRestartGame
+  // Alternate mano each round. For the very first round (round 0), mano is set by initialState or restartGame.
+  const newMano = state.round === 0 ? state.mano : (state.mano === 'player' ? 'ai' : 'player');
   const newDeck = shuffleDeck(createDeck());
   const newPlayerHand = newDeck.slice(0, 3);
   const newAiHand = newDeck.slice(3, 6);
@@ -149,7 +150,7 @@ export function handleStartNewRound(state: GameState, action: { type: ActionType
       aiTricks: [null, null, null],
       trickWinners: [null, null, null],
       roundWinner: null,
-      pointsAwarded: { player: 0, ai: 0 },
+      pointsAwarded: { player: 0; ai: 0; },
       playerTrucoCall: null,
   };
   
