@@ -3,6 +3,38 @@ import { AiMove, GameState, ActionType, Card } from '../types';
 import { getCardName } from './trucoLogic';
 import { findBestCardToPlay } from './ai/playCardStrategy';
 
+function createMirroredState(currentState: GameState): GameState {
+    const mirroredTrickWinners = currentState.trickWinners.map(winner => {
+        if (winner === 'player') return 'ai';
+        if (winner === 'ai') return 'player';
+        return winner; // 'tie' or null
+    });
+
+    const mirroredState: GameState = {
+        ...currentState,
+        playerHand: currentState.aiHand,
+        aiHand: currentState.playerHand,
+        initialPlayerHand: currentState.initialAiHand,
+        initialAiHand: currentState.initialPlayerHand,
+        playerTricks: currentState.aiTricks,
+        aiTricks: currentState.playerTricks,
+        trickWinners: mirroredTrickWinners,
+        playerScore: currentState.aiScore,
+        aiScore: currentState.playerScore,
+        currentTurn: 'ai', // From the perspective of the AI playing as the player
+        playerHasFlor: currentState.aiHasFlor,
+        aiHasFlor: currentState.playerHasFlor,
+        mano: currentState.mano === 'player' ? 'ai' : 'player',
+        lastRoundWinner: currentState.lastRoundWinner === 'player' ? 'ai' : currentState.lastRoundWinner === 'ai' ? 'player' : currentState.lastRoundWinner,
+        lastCaller: currentState.lastCaller === 'player' ? 'ai' : (currentState.lastCaller === 'ai' ? 'player' : null),
+        turnBeforeInterrupt: currentState.turnBeforeInterrupt === 'player' ? 'ai' : (currentState.turnBeforeInterrupt === 'ai' ? 'player' : null),
+        pendingTrucoCaller: currentState.pendingTrucoCaller === 'player' ? 'ai' : (currentState.pendingTrucoCaller === 'ai' ? 'player' : null),
+        playerEnvidoValue: currentState.aiEnvidoValue,
+        aiEnvidoValue: currentState.playerEnvidoValue,
+    };
+    return mirroredState;
+}
+
 // This function provides a simple, direct text for a move.
 export const getSimpleSuggestionText = (move: AiMove, playerHand: Card[]): string => {
     const { action } = move;
@@ -56,7 +88,7 @@ export const generateSuggestionSummary = (move: AiMove, state: GameState): strin
                 if (reasoning.includes("podría ser un farol")) {
                     return `Tenemos ${playerEnvidoPoints} puntos. Es arriesgado, pero la IA podría estar de farol. Podemos 'Querer' para ver sus cartas.`;
                 }
-                return `Con ${playerEnvidoPoints} puntos, la IA nos desafía. La recomendación es aceptar con 'Quiero'.`;
+                return `La IA nos desafía, y nosotros tenemos ${playerEnvidoPoints} puntos. La recomendación es aceptar con 'Quiero'.`;
             }
             if (gamePhase.includes('truco')) {
                  if (reasoning.includes("Mi mano es sólida") || reasoning.includes("La equidad es aceptable")) {
@@ -118,7 +150,15 @@ export const generateSuggestionSummary = (move: AiMove, state: GameState): strin
              if (foldRateMatch && foldRateMatch[1]) {
                  opponentInfo = `la IA tiene una probabilidad de retirarse del ${foldRateMatch[1]}%.`;
              }
-             return `Tenemos solo ${playerEnvidoPoints} puntos de envido, que es bajo. Sin embargo, ${opponentInfo} Podemos intentar un farol (bluff) cantando '${callType}'.`;
+             const mirroredStateForSafePlay = createMirroredState(state);
+             const safePlay = findBestCardToPlay(mirroredStateForSafePlay);
+             const cardToPlay = playerHand[safePlay.index];
+
+             let alternativeText = "";
+             if (cardToPlay) {
+                 alternativeText = ` Si no te animás, la jugada más segura es tirar el ${getCardName(cardToPlay)}.`;
+             }
+             return `Tenemos solo ${playerEnvidoPoints} puntos de envido, que es bajo. Sin embargo, ${opponentInfo} Podemos intentar un farol (bluff) cantando '${callType}'.${alternativeText}`;
         }
         return `¡Tenemos ${playerEnvidoPoints} de envido! Es un buen puntaje, deberíamos cantar '${callType}'.`;
     }
@@ -137,16 +177,7 @@ export const generateSuggestionSummary = (move: AiMove, state: GameState): strin
         const callType = action.type.replace('CALL_', '').replace('_',' ');
 
         if (isBluff) {
-            const mirroredStateForSafePlay: GameState = {
-                ...state,
-                playerHand: state.aiHand,
-                aiHand: state.playerHand,
-                initialPlayerHand: state.initialAiHand,
-                initialAiHand: state.initialPlayerHand,
-                playerTricks: state.aiTricks,
-                aiTricks: state.playerTricks,
-                currentTurn: 'ai'
-            } as GameState;
+            const mirroredStateForSafePlay = createMirroredState(state);
             const safePlay = findBestCardToPlay(mirroredStateForSafePlay);
             const cardToPlay = playerHand[safePlay.index];
 

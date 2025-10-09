@@ -5,6 +5,7 @@ import { getRandomizerMove } from '../services/randomizerAiService';
 import { GameState, ActionType, Card as CardType, Action } from '../types';
 import CardComponent from './Card';
 import { getCardName } from '../services/trucoLogic';
+import BatchAnalyzer from './BatchAnalyzer';
 
 // A simple card row display
 const HandDisplay: React.FC<{ cards: CardType[], title: string }> = ({ cards, title }) => (
@@ -48,6 +49,7 @@ const Simulation: React.FC<{ onExit: () => void }> = ({ onExit }) => {
     const [copyButtonText, setCopyButtonText] = useState('Copiar Texto');
     const eventLogRef = useRef<HTMLDivElement>(null);
     const previousRoundRef = useRef<number>(0);
+    const [showAnalyzer, setShowAnalyzer] = useState(false);
 
     // Auto-scroll the event log
     useEffect(() => {
@@ -217,6 +219,9 @@ const Simulation: React.FC<{ onExit: () => void }> = ({ onExit }) => {
                     <button onClick={handleNextRound} disabled={isRoundInProgress} className="px-4 py-2 rounded-lg font-bold text-white bg-green-600 border-b-4 border-green-800 hover:bg-green-500 disabled:bg-gray-500 disabled:border-gray-700 transition-colors">
                         {isRoundInProgress ? 'Simulando...' : (state.winner ? 'Reiniciar' : 'Simular Ronda')}
                     </button>
+                    <button onClick={() => setShowAnalyzer(true)} className="px-4 py-2 rounded-lg font-bold text-white bg-purple-600 border-b-4 border-purple-800 hover:bg-purple-500 transition-colors">
+                        Análisis de Manos
+                    </button>
                     <button onClick={handleCopy} className="px-4 py-2 rounded-lg font-bold text-white bg-blue-600 border-b-4 border-blue-800 hover:bg-blue-500 disabled:bg-gray-500 disabled:border-gray-700 transition-colors">
                         {copyButtonText}
                     </button>
@@ -256,6 +261,7 @@ const Simulation: React.FC<{ onExit: () => void }> = ({ onExit }) => {
                     })}
                 </div>
             </div>
+            {showAnalyzer && <BatchAnalyzer onExit={() => setShowAnalyzer(false)} />}
         </div>
     );
 };

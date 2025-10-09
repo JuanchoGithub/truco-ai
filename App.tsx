@@ -104,7 +104,18 @@ const App: React.FC = () => {
 
   // New useEffect to generate suggestions for the player
   useEffect(() => {
-    if (gameMode === 'playing-with-help' && state.currentTurn === 'player' && !state.winner) {
+    const isResolving = state.gamePhase.includes('_ACCEPTED') ||
+                        state.gamePhase.includes('_DECLINED') ||
+                        state.gamePhase.includes('_SHOWDOWN');
+
+    const canSuggest = gameMode === 'playing-with-help' &&
+                       state.currentTurn === 'player' &&
+                       !state.winner &&
+                       !state.isThinking &&
+                       !isResolving &&
+                       !state.centralMessage;
+
+    if (canSuggest) {
       const getPlayerSuggestion = (currentState: GameState): AiMove => {
           const mirroredTrickWinners = currentState.trickWinners.map(winner => {
               if (winner === 'player') return 'ai';

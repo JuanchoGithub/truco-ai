@@ -1,5 +1,3 @@
-
-
 import { Card, Suit, Rank, Player } from '../types';
 
 const SUITS: Suit[] = ['espadas', 'bastos', 'oros', 'copas'];

@@ -1,5 +1,4 @@
 
-
 import { GameState, AiMove, ActionType } from '../../types';
 import { getEnvidoDetails, getFlorValue, hasFlor } from '../trucoLogic';
 import { ENVIDO_PHRASES, REAL_ENVIDO_PHRASES, FALTA_ENVIDO_PHRASES, FLOR_PHRASES, getRandomPhrase, QUIERO_PHRASES, NO_QUIERO_PHRASES, CONTRAFLOR_PHRASES, CONTRAFLOR_QUIERO_PHRASES, CONTRAFLOR_ACHICO_FRASES } from './phrases';
@@ -65,7 +64,7 @@ export const getEnvidoResponse = (state: GameState, reasoning: string[]): AiMove
 
     // Low advantage -> Mostly Decline
     reasoning.push(`Mi mano parece más débil de lo que el jugador representa.`);
-    if (randomFactor < 0.10) { // 10% chance to "hero call"
+    if (myEnvido >= 23 && randomFactor < 0.15) { // 15% chance to "hero call" with a half-decent hand (23+)
          reasoning.push(`\nDecisión: Podría ser un farol. Tomaré el riesgo y voy a ACEPTAR.`);
          return { action: { type: ActionType.ACCEPT, payload: { blurbText: getRandomPhrase(QUIERO_PHRASES) } }, reasoning: reasoning.join('\n') };
     }

@@ -1,4 +1,3 @@
-
 import { GameState, AiMove, ActionType, Card, Rank, Player, Action, AiTrucoContext } from '../../types';
 import { getCardHierarchy, getCardName, determineTrickWinner, determineRoundWinner, calculateHandStrength, getHandPercentile } from '../trucoLogic';
 import { getRandomPhrase, TRUCO_PHRASES, RETRUCO_PHRASES, VALE_CUATRO_PHRASES, QUIERO_PHRASES, NO_QUIERO_PHRASES } from './phrases';
@@ -93,12 +92,14 @@ const LOW_RANKS: { [key: number]: number } = {
 };
 
 
-interface TrucoStrengthResult {
+// Fix: Exported interface to be used in BatchAnalyzer.
+export interface TrucoStrengthResult {
     strength: number;
     reasoning: string[];
 }
 
-const calculateTrucoStrength = (state: GameState): TrucoStrengthResult => {
+// Fix: Exported function to be used in BatchAnalyzer.
+export const calculateTrucoStrength = (state: GameState): TrucoStrengthResult => {
   const { aiHand, mano, currentTrick, trickWinners, playerTricks } = state;
   let reasoning: string[] = [];
 
