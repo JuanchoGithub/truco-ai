@@ -11,17 +11,7 @@ export const QUIERO_PHRASES = [
   "Veamos... ¡Sí, quiero!",
   "Sí, quiero. Sin miedo.",
   "Va pa' delante. ¡Quiero!",
-  "Aceptado... ¡Quiero!",
-  "Asi que cantó olorosa? Está jugando con fuego. Sabe cual es mi respuesta? Mi respuesta es ¡Con Flor Quiero!",
-  "Asi que te haces el guapo? Y me estas jugando fiero? Vas a perder el partido, porque yo... con flor quiero...",
-  "En la puerta de mi rancho hizo su nido un jilguero. Todas las mananas canta: Con Flor Quiero... Con Flor Quiero...",
-  "Me gusta templar la voz con un canto verdadero y cuando me cantan Flor yo contesto Con Flor Quiero.",
-  "Mientras ganarte yo espero voy diciendo: Con Flor Quiero.",
-  "Me tocó un rival humano 'ligueró pero yo igualmente canto: con Flor Quiero.",
-  "No me gusta ser querendon pero ya que yo tambien ligué entonces Con Flor Quiero.",
-  "Se cruzaron las flores y no las palizas mejor asi entonces con flor quiero.",
-  "Si por vos de amor me muero entonces con Flor Quiero.",
-  "Me tocó un rival muy fiero. Esta mano con flor Quiero."
+  "Aceptado... ¡Quiero!"
 ];
 
 export const NO_QUIERO_PHRASES = [
@@ -64,28 +54,7 @@ export const NO_QUIERO_PHRASES = [
   "Hasta el mazo, con la cabeza en alto.",
   "Me voy al mazo, que las cartas hablan solas.",
   "El mazo es mi amigo fiel en momentos así.",
-  "Al mazo con elegancia, que soy un experto.",
-  "Me retiro al mazo, pero mi estrategia brilla en la sombra.",
-  "Al mazo, que hoy la diosa fortuna está de vacaciones.",
-  "Directo al mazo, que no soy de los que forcejean.",
-  "Me voy al mazo, pero te vigilo de cerca.",
-  "El mazo me consuela, y yo lo agradezco.",
-  "Al mazo con picardía, que hay más rondas.",
-  "Hasta aquí mi apuesta, al mazo sin drama.",
-  "Me rindo al mazo, que el instinto manda.",
-  "Al mazo, prefiriendo la paz a la guerra perdida.",
-  "Me voy al mazo, pero esta noche sueño con ases.",
-  "Yo juego mejor que Usté y perder me importa un pito, y aunque me crea cobarde le diré Con Flor Me Achico.",
-  "Páganarle a este rival es bastante lo que aplico, pero páesta ocasion cantare Con Flor me Achico.",
-  "Le ganare por pucho y por eso yo no pico. Parece que tiene mucho. Por eso... con Flor me Achico.",
-  "Buen dia dijo Jose, buen dia dijo Perico. Que le gano ya lo sé pero con Flor Me Achico.",
-  "Mi china con la calor traiba un gran abanico, yo le dije: Apantallá, por favor que si no con Flor me Achico ...",
-  "Usté me quiere pescar, en ese anzuelo no pico. No me dejo acorralar y canto: Con Flor me Achico.",
-  "Con los cuatros que sacas no te vas a hacer muy rico pero igual te los ganas porque yo con Flor... me achico ...",
-  "Yo tambien ligué pero por si acaso con Flor me Achico.",
-  "Yo tengo lo mismo pero el palpito me dice que con Flor me Achico.",
-  "Me parece que con Flor me Achico y me dejo de jorobar.",
-  "Las olorosas se nos cruzaron, viste? pero yo que tengo olfato declaro Con Flor me Achico."
+  "Al mazo con elegancia, que soy un experto."
 ];
 
 export const ENVIDO_WIN_PHRASES = [
@@ -121,7 +90,6 @@ export const TRICK_LOSE_PHRASES = [
 ];
 
 export const FLOR_PHRASES = [
-  "Contra el resto, flor me achico. ¡Flor!",
   "El jardín de mi mano ha florecido. ¡Tengo flor!",
   "Perfume de victoria en el aire... ¡Flor!",
   "Con estas tres del mismo palo, digo ¡Flor!",
@@ -154,6 +122,34 @@ export const CONTRAFLOR_PHRASES = [
   "Uy, uy,uy, que pest ahora te zampo el Contraflor al Resto. Qué tal? No juego tan mal, Verdad?",
   "Vos te la buscaste... Contraflor al Resto."
 ];
+
+export const CONTRAFLOR_QUIERO_PHRASES = [
+  "Asi que cantó olorosa? Está jugando con fuego. Sabe cual es mi respuesta? Mi respuesta es ¡Con Flor Quiero!",
+  "Asi que te haces el guapo? Y me estas jugando fiero? Vas a perder el partido, porque yo... con flor quiero...",
+  "En la puerta de mi rancho hizo su nido un jilguero. Todas las mananas canta: Con Flor Quiero... Con Flor Quiero...",
+  "Me gusta templar la voz con un canto verdadero y cuando me cantan Flor yo contesto Con Flor Quiero.",
+  "Mientras ganarte yo espero voy diciendo: Con Flor Quiero.",
+  "Me tocó un rival humano 'ligueró pero yo igualmente canto: con Flor Quiero.",
+  "No me gusta ser querendon pero ya que yo tambien ligué entonces Con Flor Quiero.",
+  "Se cruzaron las flores y no las palizas mejor asi entonces con flor quiero.",
+  "Si por vos de amor me muero entonces con Flor Quiero.",
+  "Me tocó un rival muy fiero. Esta mano con flor Quiero."
+];
+
+export const CONTRAFLOR_ACHICO_FRASES = [
+  "Yo juego mejor que Usté y perder me importa un pito, y aunque me crea cobarde le diré Con Flor Me Achico.",
+  "Páganarle a este rival es bastante lo que aplico, pero páesta ocasion cantare Con Flor me Achico.",
+  "Le ganare por pucho y por eso yo no pico. Parece que tiene mucho. Por eso... con Flor me Achico.",
+  "Buen dia dijo Jose, buen dia dijo Perico. Que le gano ya lo sé pero con Flor Me Achico.",
+  "Mi china con la calor traiba un gran abanico, yo le dije: Apantallá, por favor que si no con Flor me Achico ...",
+  "Usté me quiere pescar, en ese anzuelo no pico. No me dejo acorralar y canto: Con Flor me Achico.",
+  "Con los cuatros que sacas no te vas a hacer muy rico pero igual te los ganas porque yo con Flor... me achico ...",
+  "Yo tambien ligué pero por si acaso con Flor me Achico.",
+  "Yo tengo lo mismo pero el palpito me dice que con Flor me Achico.",
+  "Me parece que con Flor me Achico y me dejo de jorobar.",
+  "Las olorosas se nos cruzaron, viste? pero yo que tengo olfato declaro Con Flor me Achico."
+];
+
 
 export const ENVIDO_PRIMERO_PHRASES = [
   "¡Momento! El envido está primero.",
@@ -194,7 +190,6 @@ export const ENVIDO_PHRASES = [
   "Del espacio exterior, un OVNI trae envido, real que aterriza y al rival lo envide.",
   "Envido con twist: cartas y un poco de twist, real que baila tango en el fist.",
   "Envido ecológico: verde como la pampa, real que recicla tu drama.",
-  "El otro día jugaba con el viejo Salvador; vuelta a vuelta envido y truco, ¡pucha, viejo ligador!",
   "Envido y mate: caliente como el desafío, real que quema el desvío.",
   "Envido retro: como un vinilo rayado, real que suena en el faded.",
   "Envido superheroico: capa de espadas, real que salva las jugadas.",
@@ -300,14 +295,11 @@ export const TRUCO_PHRASES = [
     "¡Truco, che, que con este mazo te mando al revés!",
     "Por el río Paraná navegaba un piojo con un truco en el ojal.",
     "Truco al resto, porque hoy las cartas bailan tango en mi mano.",
-    "¡Quiero truco, boludo! Que si no querés, te quedás con el envido solo.",
     "Truco y punto final, como el mate amargo que no se endulza.",
     "Con tres de espada y un ojo en tu cara, ¡truco para ganarte la partida!",
     "Truco, mi viejo, que las estrellas alinearon mi suerte hoy.",
     "¡Truco! Si me lo querés, traé el as de oros o andate a la concha.",
-    "Truco con flor, que huelo a victoria desde acá nomás.",
     "Aquí me planto, truco en la voz, porque no hay laburo pero sí cartas.",
-    "Truco, retruco no te lo acepto, ¡dale que va o te vas al mazo!",
     "Como el Gaucho Gil, canto truco con el corazón en la espada.",
     "Truco y un abrazo de oso, que te voy a apretar hasta que pidas paz.",
     "¡Truco, carajo! Que con este 7 de oro te limpio el piso.",
@@ -320,8 +312,6 @@ export const TRUCO_PHRASES = [
     "Soy de Tartagal, truco en la sangre, cristianado en el fuego.",
     "Truco, no seas rata, que las cartas no mienten pero vos sí.",
     "¡Truco! Como el viento pampeano, impredecible y letal.",
-    "Truco con envido, que sumo puntos como goles en el clásico.",
-    "Pampa, flor y truco agudo, si querés jugar, mostrame el basto.",
     "Truco, boludo, que hoy soy el rey del mazo y vos el peón.",
     "Con un hachazo en el ojo y truco en la boca, ¡avanzá o retrocede!",
     "Truco poético, como versos de Sarmiento en la campaña.",

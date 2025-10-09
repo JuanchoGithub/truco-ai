@@ -7,9 +7,10 @@ interface MainMenuProps {
   onLearn: () => void;
   onPlayWithHelp: () => void;
   onManual: () => void;
+  onSimulate: () => void;
 }
 
-const MainMenu: React.FC<MainMenuProps> = ({ onPlay, onLearn, onPlayWithHelp, onManual }) => {
+const MainMenu: React.FC<MainMenuProps> = ({ onPlay, onLearn, onPlayWithHelp, onManual, onSimulate }) => {
   return (
     <div className="h-screen bg-green-900 text-white font-sans flex items-center justify-center" style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/felt.png')"}}>
       <div className="text-center p-8 bg-black/40 border-4 border-yellow-800/60 rounded-xl shadow-2xl animate-fade-in-scale">
@@ -45,6 +46,13 @@ const MainMenu: React.FC<MainMenuProps> = ({ onPlay, onLearn, onPlayWithHelp, on
             style={{ textShadow: '1px 1px 3px rgba(0,0,0,0.5)' }}
           >
             Manual del Truco
+          </button>
+           <button
+            onClick={onSimulate}
+            className="px-8 py-3 text-lg rounded-lg font-bold text-cyan-200 shadow-lg transition-transform transform hover:scale-105 border-b-4 bg-gradient-to-b from-gray-700 to-gray-800 border-gray-900 hover:from-gray-600 hover:to-gray-700 mt-4"
+            style={{ textShadow: '1px 1px 3px rgba(0,0,0,0.5)' }}
+          >
+            Modo Simulación (IA vs IA)
           </button>
         </div>
       </div>

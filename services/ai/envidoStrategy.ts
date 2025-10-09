@@ -2,7 +2,7 @@
 
 import { GameState, AiMove, ActionType } from '../../types';
 import { getEnvidoDetails, getFlorValue, hasFlor } from '../trucoLogic';
-import { ENVIDO_PHRASES, REAL_ENVIDO_PHRASES, FALTA_ENVIDO_PHRASES, FLOR_PHRASES, getRandomPhrase, QUIERO_PHRASES, NO_QUIERO_PHRASES, CONTRAFLOR_PHRASES } from './phrases';
+import { ENVIDO_PHRASES, REAL_ENVIDO_PHRASES, FALTA_ENVIDO_PHRASES, FLOR_PHRASES, getRandomPhrase, QUIERO_PHRASES, NO_QUIERO_PHRASES, CONTRAFLOR_PHRASES, CONTRAFLOR_QUIERO_PHRASES, CONTRAFLOR_ACHICO_FRASES } from './phrases';
 
 // Helper for getEnvidoResponse: Estimates opponent's strength based on their call.
 const estimateOpponentStrengthOnCall = (state: GameState): number => {
@@ -171,10 +171,10 @@ export const getFlorResponse = (state: GameState, reasoning: string[]): AiMove |
         // High risk, high reward. Be conservative.
         if (myFlor >= 32) {
             const decisionReason = `\nDecisión: Mi Flor es excepcional. Acepto el desafío. ¡CON FLOR QUIERO!`;
-            return { action: { type: ActionType.ACCEPT_CONTRAFLOR, payload: { blurbText: getRandomPhrase(QUIERO_PHRASES) } }, reasoning: [...reasoning, decisionReason].join('\n') };
+            return { action: { type: ActionType.ACCEPT_CONTRAFLOR, payload: { blurbText: getRandomPhrase(CONTRAFLOR_QUIERO_PHRASES) } }, reasoning: [...reasoning, decisionReason].join('\n') };
         } else {
             const decisionReason = `\nDecisión: El jugador debe tener una Flor increíble para cantar Contraflor. Mi mano (${myFlor}) no es suficiente para arriesgarme. CON FLOR ME ACHICO.`;
-            return { action: { type: ActionType.DECLINE_CONTRAFLOR, payload: { blurbText: getRandomPhrase(NO_QUIERO_PHRASES) } }, reasoning: [...reasoning, decisionReason].join('\n') };
+            return { action: { type: ActionType.DECLINE_CONTRAFLOR, payload: { blurbText: getRandomPhrase(CONTRAFLOR_ACHICO_FRASES) } }, reasoning: [...reasoning, decisionReason].join('\n') };
         }
     }
 

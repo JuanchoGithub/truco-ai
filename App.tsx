@@ -22,8 +22,9 @@ import Manual from './components/Manual';
 import AssistantPanel from './components/AssistantPanel';
 import { generateSuggestionSummary } from './services/suggestionService';
 import { speechService } from './services/speechService';
+import Simulation from './components/Simulation';
 
-type GameMode = 'menu' | 'playing' | 'tutorial' | 'playing-with-help' | 'manual';
+type GameMode = 'menu' | 'playing' | 'tutorial' | 'playing-with-help' | 'manual' | 'simulation';
 
 const App: React.FC = () => {
   const [state, dispatch] = useReducer(useGameReducer, initialState);
@@ -302,6 +303,7 @@ const App: React.FC = () => {
         }}
         onLearn={() => setGameMode('tutorial')}
         onManual={() => setGameMode('manual')}
+        onSimulate={() => setGameMode('simulation')}
       />
     );
   }
@@ -312,6 +314,10 @@ const App: React.FC = () => {
   
   if (gameMode === 'manual') {
     return <Manual onExit={() => setGameMode('menu')} />;
+  }
+  
+  if (gameMode === 'simulation') {
+    return <Simulation onExit={() => setGameMode('menu')} />;
   }
 
 
