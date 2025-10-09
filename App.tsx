@@ -1,3 +1,4 @@
+
 import React, { useReducer, useEffect, useState, useRef } from 'react';
 import { useGameReducer, initialState } from './hooks/useGameReducer';
 import { getLocalAIMove } from './services/localAiService';
@@ -35,7 +36,7 @@ const App: React.FC = () => {
   const [assistantMove, setAssistantMove] = useState<AiMove | null>(null);
   const [isSoundEnabled, setIsSoundEnabled] = useState(() => {
     const saved = localStorage.getItem('trucoAiSoundEnabled');
-    return saved !== null ? JSON.parse(saved) : true;
+    return saved !== null ? JSON.parse(saved) : false; // Default to false
   });
 
   useEffect(() => {
@@ -105,6 +106,12 @@ const App: React.FC = () => {
   useEffect(() => {
     if (gameMode === 'playing-with-help' && state.currentTurn === 'player' && !state.winner) {
       const getPlayerSuggestion = (currentState: GameState): AiMove => {
+          const mirroredTrickWinners = currentState.trickWinners.map(winner => {
+              if (winner === 'player') return 'ai';
+              if (winner === 'ai') return 'player';
+              return winner; // 'tie' or null
+          });
+
           const mirroredState: GameState = {
               ...currentState,
               playerHand: currentState.aiHand,
@@ -113,11 +120,14 @@ const App: React.FC = () => {
               initialAiHand: currentState.initialPlayerHand,
               playerTricks: currentState.aiTricks,
               aiTricks: currentState.playerTricks,
+              trickWinners: mirroredTrickWinners,
               playerScore: currentState.aiScore,
               aiScore: currentState.playerScore,
               currentTurn: 'ai',
               playerHasFlor: currentState.aiHasFlor,
               aiHasFlor: currentState.playerHasFlor,
+              mano: currentState.mano === 'player' ? 'ai' : 'player',
+              lastRoundWinner: currentState.lastRoundWinner === 'player' ? 'ai' : currentState.lastRoundWinner === 'ai' ? 'player' : currentState.lastRoundWinner,
               // Flip context-sensitive properties
               lastCaller: currentState.lastCaller === 'player' ? 'ai' : (currentState.lastCaller === 'ai' ? 'player' : null),
               turnBeforeInterrupt: currentState.turnBeforeInterrupt === 'player' ? 'ai' : (currentState.turnBeforeInterrupt === 'ai' ? 'player' : null),
@@ -247,18 +257,22 @@ const App: React.FC = () => {
     }
   }, [state.playerBlurb, dispatch, gameMode]);
 
-  // Effect to trigger AI speech
+  // Effect to trigger AI speech for opponent or assistant
   useEffect(() => {
     const isPlaying = gameMode === 'playing' || gameMode === 'playing-with-help';
     if (!isPlaying) {
-        speechService.cancel(); // Stop speech if we exit to menu
-        return;
-    };
-
-    if (isSoundEnabled && state.aiBlurb?.isVisible && state.aiBlurb.text) {
-        speechService.speak(state.aiBlurb.text);
+      speechService.cancel(); // Stop speech if we exit to menu
+      return;
     }
-  }, [state.aiBlurb, isSoundEnabled, gameMode]);
+
+    if (isSoundEnabled) {
+      if (gameMode === 'playing-with-help' && assistantMove?.summary) {
+        speechService.speak(assistantMove.summary);
+      } else if (gameMode === 'playing' && state.aiBlurb?.isVisible && state.aiBlurb.text) {
+        speechService.speak(state.aiBlurb.text);
+      }
+    }
+  }, [state.aiBlurb, assistantMove, isSoundEnabled, gameMode]);
 
   const handlePlayerAction = () => {
     // If a persistent message is showing (like Envido results), clear it when the player acts.

@@ -116,6 +116,7 @@ export function handleStartNewRound(state: GameState, action: { type: ActionType
       gamePhase: 'game_over' 
     };
   }
+  const isNewGame = state.round === 0;
 
   // Update opponent model with data from the completed round
   const updatedOpponentModel = state.round > 0 ? updateOpponentModelFromHistory(state) : state.opponentModel;
@@ -196,6 +197,8 @@ export function handleStartNewRound(state: GameState, action: { type: ActionType
     aiBlurb: null,
     playerBlurb: null,
     lastRoundWinner: null,
+    centralMessage: isNewGame ? "Puedes activar la voz de la IA con el ícono de sonido." : null,
+    isCentralMessagePersistent: isNewGame,
     roundHistory: [...state.roundHistory, newRoundSummary],
   };
 }
