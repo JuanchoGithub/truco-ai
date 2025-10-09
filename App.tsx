@@ -1,5 +1,3 @@
-
-
 import React, { useReducer, useEffect, useState, useRef } from 'react';
 import { useGameReducer, initialState } from './hooks/useGameReducer';
 import { getLocalAIMove } from './services/localAiService';
@@ -23,6 +21,7 @@ import Tutorial from './components/Tutorial';
 import Manual from './components/Manual';
 import AssistantPanel from './components/AssistantPanel';
 import { generateSuggestionSummary } from './services/suggestionService';
+import { speechService } from './services/speechService';
 
 type GameMode = 'menu' | 'playing' | 'tutorial' | 'playing-with-help' | 'manual';
 
@@ -33,6 +32,14 @@ const App: React.FC = () => {
   const messageTimers = useRef<{ fadeOutTimerId?: number; clearTimerId?: number }>({});
   const [gameMode, setGameMode] = useState<GameMode>('menu');
   const [assistantMove, setAssistantMove] = useState<AiMove | null>(null);
+  const [isSoundEnabled, setIsSoundEnabled] = useState(() => {
+    const saved = localStorage.getItem('trucoAiSoundEnabled');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('trucoAiSoundEnabled', JSON.stringify(isSoundEnabled));
+  }, [isSoundEnabled]);
 
   useEffect(() => {
     const isPlaying = gameMode === 'playing' || gameMode === 'playing-with-help';
@@ -110,6 +117,10 @@ const App: React.FC = () => {
               currentTurn: 'ai',
               playerHasFlor: currentState.aiHasFlor,
               aiHasFlor: currentState.playerHasFlor,
+              // Flip context-sensitive properties
+              lastCaller: currentState.lastCaller === 'player' ? 'ai' : (currentState.lastCaller === 'ai' ? 'player' : null),
+              turnBeforeInterrupt: currentState.turnBeforeInterrupt === 'player' ? 'ai' : (currentState.turnBeforeInterrupt === 'ai' ? 'player' : null),
+              pendingTrucoCaller: currentState.pendingTrucoCaller === 'player' ? 'ai' : (currentState.pendingTrucoCaller === 'ai' ? 'player' : null),
           };
           const suggestion = getLocalAIMove(mirroredState);
           
@@ -138,7 +149,7 @@ const App: React.FC = () => {
     } else {
       setAssistantMove(null);
     }
-  }, [gameMode, state, state.currentTurn, state.winner]);
+  }, [gameMode, state]);
 
   // New useEffect to handle delayed resolutions after an AI response
   useEffect(() => {
@@ -232,6 +243,19 @@ const App: React.FC = () => {
     }
   }, [state.playerBlurb, dispatch, gameMode]);
 
+  // Effect to trigger AI speech
+  useEffect(() => {
+    const isPlaying = gameMode === 'playing' || gameMode === 'playing-with-help';
+    if (!isPlaying) {
+        speechService.cancel(); // Stop speech if we exit to menu
+        return;
+    };
+
+    if (isSoundEnabled && state.aiBlurb?.isVisible && state.aiBlurb.text) {
+        speechService.speak(state.aiBlurb.text);
+    }
+  }, [state.aiBlurb, isSoundEnabled, gameMode]);
+
   const handlePlayerAction = () => {
     // If a persistent message is showing (like Envido results), clear it when the player acts.
     if (state.isCentralMessagePersistent) {
@@ -250,6 +274,16 @@ const App: React.FC = () => {
     <button onClick={onClick} className={`px-3 py-1.5 text-xs md:px-4 md:py-2 md:text-sm rounded-lg font-semibold text-yellow-200 bg-black/40 border-2 border-yellow-800/80 shadow-md hover:bg-black/60 hover:border-yellow-600 transition-colors ${className}`}>
       {children}
     </button>
+  );
+
+  const SoundIcon: React.FC<{ enabled: boolean; className?: string }> = ({ enabled, className = '' }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          {enabled ? (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+          ) : (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15zM17 14l-4-4m0 4l4-4" />
+          )}
+      </svg>
   );
 
   if (gameMode === 'menu') {
@@ -292,6 +326,13 @@ const App: React.FC = () => {
           <Scoreboard playerScore={state.playerScore} aiScore={state.aiScore} className="absolute top-0 left-0 z-40" />
           
           <div className="absolute top-1 right-1 z-50 flex gap-2 p-1">
+            <button
+              onClick={() => setIsSoundEnabled(!isSoundEnabled)}
+              className="p-1.5 rounded-md border-2 bg-gray-700/50 border-gray-500 text-white transition-colors hover:bg-gray-600/70"
+              aria-label={isSoundEnabled ? "Desactivar Sonido" : "Activar Sonido"}
+            >
+                <SoundIcon enabled={isSoundEnabled} className="w-3 h-3 md:w-4 md:h-4" />
+            </button>
             <button
               onClick={() => setGameMode('menu')}
               className="px-2 py-0.5 text-[10px] md:px-3 md:py-1 md:text-xs rounded-md border-2 bg-red-700/80 border-red-500 text-white transition-colors hover:bg-red-600/90"

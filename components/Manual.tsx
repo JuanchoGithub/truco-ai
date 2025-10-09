@@ -161,6 +161,62 @@ const Manual: React.FC<ManualProps> = ({ onExit }) => {
                 <p>El truco es el arte del engaño. ¡Podés cantar "Truco" con malas cartas (un "farol" o "bluff") para intentar que tu oponente se retire!</p>
             </Section>
 
+            <Section title="Ejemplo de una Ronda Completa">
+                <p>Veamos cómo se desarrolla una ronda paso a paso para entender cómo se suman los puntos.</p>
+
+                <h3 className="text-xl font-cinzel mt-4">1. Inicio de la Ronda</h3>
+                <p>El marcador está 0 a 0. En esta ronda, tú eres "mano" (juegas primero).</p>
+                <div className="flex flex-wrap justify-around items-center bg-black/20 p-2 rounded-md">
+                    <div>
+                        <p className="text-center font-semibold mb-2">Tu Mano</p>
+                        <div className="flex gap-2">
+                            <CardDisplay card={{ rank: 7, suit: 'oros' }} />
+                            <CardDisplay card={{ rank: 5, suit: 'bastos' }} />
+                            <CardDisplay card={{ rank: 4, suit: 'copas' }} />
+                        </div>
+                    </div>
+                    <div>
+                        <p className="text-center font-semibold mb-2">Mano de la IA</p>
+                        <div className="flex gap-2">
+                            <CardDisplay card={{ rank: 1, suit: 'espadas' }} />
+                            <CardDisplay card={{ rank: 2, suit: 'oros' }} />
+                            <CardDisplay card={{ rank: 3, suit: 'copas' }} />
+                        </div>
+                    </div>
+                </div>
+
+                <h3 className="text-xl font-cinzel mt-4">2. Primera Mano</h3>
+                <p>Como eres mano, empiezas jugando. Una estrategia común es jugar tu carta más fuerte para intentar ganar la primera mano.</p>
+                <Example title="Juego de la Primera Mano">
+                    <ul className="list-disc list-inside space-y-2">
+                        <li><strong>Tú juegas:</strong> <div className="inline-block align-middle ml-2"><CardDisplay card={{ rank: 7, suit: 'oros' }} /></div>. Es una carta muy buena.</li>
+                        <li><strong>La IA responde:</strong> <div className="inline-block align-middle ml-2"><CardDisplay card={{ rank: 1, suit: 'espadas' }} /></div>. ¡Es la carta más poderosa del juego!</li>
+                        <li className="!mt-4"><strong>Resultado:</strong> La IA gana la primera mano y ahora le toca jugar primero en la segunda.</li>
+                    </ul>
+                </Example>
+
+                <h3 className="text-xl font-cinzel mt-4">3. Segunda Mano y el Truco</h3>
+                <p>La IA ganó la primera mano con su mejor carta. Ahora, desde una posición de poder, decide apostar por la ronda.</p>
+                <Example title="La IA canta 'Truco'">
+                    <ul className="list-disc list-inside">
+                        <li>La IA dice: <strong>"¡Truco!"</strong>. Esto sube el valor de la ronda a 2 puntos.</li>
+                        <li><strong>Tu decisión:</strong> Tus cartas restantes son el 5 de Bastos y el 4 de Copas, ambas muy débiles. Sabes que la IA ya usó su mejor carta, pero es muy probable que sus cartas restantes sean mejores que las tuyas.</li>
+                        <li>Decides decir <strong>"No Quiero"</strong>. Es una retirada estratégica para no perder más puntos.</li>
+                    </ul>
+                </Example>
+
+                <h3 className="text-xl font-cinzel mt-4">4. Resultado de la Ronda</h3>
+                <p>Como no aceptaste el Truco, la ronda termina inmediatamente.</p>
+                <ul className="list-disc list-inside">
+                    <li>La IA gana <strong>1 punto</strong> por el Truco que no quisiste.</li>
+                    <li>No se jugó Envido, así que no hay puntos por tantos.</li>
+                </ul>
+                <div className="mt-2 p-3 bg-yellow-900/40 border border-yellow-600/30 rounded-md text-center">
+                    <strong className="text-xl">Marcador Final de la Ronda: Tú 0 - IA 1</strong>
+                </div>
+                <p className="mt-2">En la siguiente ronda, la IA será "mano" y el juego continúa hasta que alguien llegue a 15 puntos.</p>
+            </Section>
+
         </div>
     </div>
   );

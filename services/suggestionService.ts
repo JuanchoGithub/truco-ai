@@ -1,3 +1,4 @@
+
 import { AiMove, GameState, ActionType, Card } from '../types';
 import { getCardName } from './trucoLogic';
 import { findBestCardToPlay } from './ai/playCardStrategy';
@@ -40,22 +41,22 @@ const summarizeHand = (hand: Card[]): string => {
 // This function generates a more conversational, strategic summary.
 export const generateSuggestionSummary = (move: AiMove, state: GameState): string => {
     const { action, reasoning } = move;
-    const { playerHand, gamePhase } = state;
+    const { playerHand, gamePhase, round, roundHistory } = state;
 
+    const playerEnvidoPoints = roundHistory.find(r => r.round === round)?.playerEnvidoPoints || 0;
     const isResponding = gamePhase.includes('_called');
 
     if (isResponding) {
         // --- Specific logic for responding to AI calls ---
         if (action.type === ActionType.ACCEPT) {
             if (gamePhase.includes('envido')) {
-                const envidoPoints = state.roundHistory.find(r => r.round === state.round)?.playerEnvidoPoints || 0;
                 if (reasoning.includes("Las probabilidades están a mi favor")) {
-                    return `Tenemos ${envidoPoints} puntos. La IA cantó, pero nuestras chances de ganar son buenas. Deberíamos aceptar con 'Quiero'.`;
+                    return `Tenemos ${playerEnvidoPoints} puntos. La IA cantó, pero nuestras chances de ganar son buenas. Deberíamos aceptar con 'Quiero'.`;
                 }
                 if (reasoning.includes("podría ser un farol")) {
-                    return `Tenemos ${envidoPoints} puntos. Es arriesgado, pero la IA podría estar de farol. Podemos 'Querer' para ver sus cartas.`;
+                    return `Tenemos ${playerEnvidoPoints} puntos. Es arriesgado, pero la IA podría estar de farol. Podemos 'Querer' para ver sus cartas.`;
                 }
-                return `Con ${envidoPoints} puntos, la IA nos desafía. La recomendación es aceptar.`;
+                return `Con ${playerEnvidoPoints} puntos, la IA nos desafía. La recomendación es aceptar con 'Quiero'.`;
             }
             if (gamePhase.includes('truco')) {
                  if (reasoning.includes("Mi mano es sólida") || reasoning.includes("La equidad es aceptable")) {
@@ -64,14 +65,16 @@ export const generateSuggestionSummary = (move: AiMove, state: GameState): strin
                 if (reasoning.includes("oponente podría estar faroleando")) {
                     return `Aunque nuestra mano no es ideal, la IA podría estar mintiendo. Acepta con 'Quiero' para no dejar que nos intimide.`;
                 }
-                return `La IA subió la apuesta. La sugerencia es aceptar con 'Quiero'.`;
+                return `La IA subió la apuesta. La sugerencia es aceptar el desafío con 'Quiero'.`;
             }
         }
 
         if (action.type === ActionType.DECLINE) {
             if (gamePhase.includes('envido')) {
-                const envidoPoints = state.roundHistory.find(r => r.round === state.round)?.playerEnvidoPoints || 0;
-                return `Tenemos ${envidoPoints} puntos, pero la IA cantó fuerte. Es probable que tengan más, así que lo más seguro es retirarse con 'No Quiero'.`;
+                if (reasoning.includes("El riesgo es muy alto") || reasoning.includes("Mi mano parece más débil")) {
+                    return `Tenemos ${playerEnvidoPoints} puntos, pero la IA cantó fuerte, y es probable que tengan más. Lo más seguro es retirarse con 'No Quiero'.`;
+                }
+                return `Nuestros ${playerEnvidoPoints} puntos de envido probablemente no son suficientes. Es mejor decir 'No Quiero' para no perder puntos.`;
             }
             if (gamePhase.includes('truco')) {
                 if (reasoning.includes("La equidad es muy baja") || reasoning.includes("Mi mano es débil") || reasoning.includes("casi nula")) {
@@ -89,13 +92,15 @@ export const generateSuggestionSummary = (move: AiMove, state: GameState): strin
              if (reasoning.includes("farol de desesperación") || reasoning.includes("farol agresivo")) {
                 return `Estamos en una mala posición, pero podemos intentar un farol arriesgado. Sube la apuesta a '${callType}' para ver si logramos que la IA se retire.`;
             }
-            return `Tenemos una mano muy fuerte. Es un buen momento para responder con '${callType}'.`;
+            return `Tenemos una mano muy fuerte. Es un buen momento para responder al Truco de la IA con un '${callType}'.`;
         }
         
         if (action.type === ActionType.CALL_REAL_ENVIDO || action.type === ActionType.CALL_FALTA_ENVIDO || (action.type === ActionType.CALL_ENVIDO && isResponding)) {
             const callType = action.type.replace('CALL_', '').replace('_', ' ');
-            const envidoPoints = state.roundHistory.find(r => r.round === state.round)?.playerEnvidoPoints || 0;
-            return `¡Tenemos ${envidoPoints} puntos! Es una mano muy fuerte. Deberíamos responder al 'Envido' de la IA subiendo la apuesta a '${callType}'.`;
+            if (reasoning.includes("Mi mano es mucho más fuerte")) {
+                 return `¡Tenemos ${playerEnvidoPoints} puntos! La IA cree que tiene una buena mano, pero la nuestra es superior. Deberíamos redoblar la apuesta con '${callType}'.`;
+            }
+            return `¡Tenemos ${playerEnvidoPoints} puntos! Es una mano muy fuerte. Deberíamos responder al 'Envido' de la IA subiendo la apuesta a '${callType}'.`;
         }
     }
 
@@ -103,7 +108,6 @@ export const generateSuggestionSummary = (move: AiMove, state: GameState): strin
 
     // --- Envido call ---
     if (action.type === ActionType.CALL_ENVIDO || action.type === ActionType.CALL_REAL_ENVIDO || action.type === ActionType.CALL_FALTA_ENVIDO) {
-        const envidoPoints = state.roundHistory.find(r => r.round === state.round)?.playerEnvidoPoints || 0;
         const callType = action.type.replace('CALL_', '').replace('_', ' ');
         
         const isBluff = /farol|mano.*débil/i.test(reasoning);
@@ -114,9 +118,9 @@ export const generateSuggestionSummary = (move: AiMove, state: GameState): strin
              if (foldRateMatch && foldRateMatch[1]) {
                  opponentInfo = `la IA tiene una probabilidad de retirarse del ${foldRateMatch[1]}%.`;
              }
-             return `Tenemos solo ${envidoPoints} puntos de envido, que es bajo. Sin embargo, ${opponentInfo} Podemos intentar un farol (bluff) cantando '${callType}'.`;
+             return `Tenemos solo ${playerEnvidoPoints} puntos de envido, que es bajo. Sin embargo, ${opponentInfo} Podemos intentar un farol (bluff) cantando '${callType}'.`;
         }
-        return `¡Tenemos ${envidoPoints} de envido! Es un buen puntaje, deberíamos cantar '${callType}'.`;
+        return `¡Tenemos ${playerEnvidoPoints} de envido! Es un buen puntaje, deberíamos cantar '${callType}'.`;
     }
 
     // --- Truco call ---
