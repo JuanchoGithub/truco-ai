@@ -119,6 +119,7 @@ export function handleResolveEnvidoAccept(state: GameState): GameState {
         playerCalledHighEnvido,
         opponentHandProbabilities: updatedProbs,
         playerEnvidoValue: playerEnvido,
+        aiEnvidoValue: aiEnvido,
         hasRealEnvidoBeenCalledThisSequence: false, // Reset for next round
         ...postEnvidoState,
         aiBlurb: finalBlurb,

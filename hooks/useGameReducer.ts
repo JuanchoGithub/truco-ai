@@ -73,6 +73,7 @@ export const initialState: GameState = {
   // Probabilistic Opponent Modeling
   opponentHandProbabilities: null,
   playerEnvidoValue: null,
+  aiEnvidoValue: null,
   playerActionHistory: [],
   aiBlurb: null,
   playerBlurb: null,

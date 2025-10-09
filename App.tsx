@@ -121,6 +121,9 @@ const App: React.FC = () => {
               lastCaller: currentState.lastCaller === 'player' ? 'ai' : (currentState.lastCaller === 'ai' ? 'player' : null),
               turnBeforeInterrupt: currentState.turnBeforeInterrupt === 'player' ? 'ai' : (currentState.turnBeforeInterrupt === 'ai' ? 'player' : null),
               pendingTrucoCaller: currentState.pendingTrucoCaller === 'player' ? 'ai' : (currentState.pendingTrucoCaller === 'ai' ? 'player' : null),
+              // Mirror the revealed envido values. The assistant AI needs to see the real AI's score as the opponent's score.
+              playerEnvidoValue: currentState.aiEnvidoValue, // The assistant's opponent (real AI) has aiEnvidoValue
+              aiEnvidoValue: currentState.playerEnvidoValue, // The assistant AI itself has playerEnvidoValue
           };
           const suggestion = getLocalAIMove(mirroredState);
           

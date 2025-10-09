@@ -193,6 +193,7 @@ export interface GameState {
   // New: Probabilistic Opponent Modeling
   opponentHandProbabilities: OpponentHandProbabilities | null;
   playerEnvidoValue: number | null;
+  aiEnvidoValue: number | null;
   playerActionHistory: ActionType[];
   
   // Blurbs for phrases
