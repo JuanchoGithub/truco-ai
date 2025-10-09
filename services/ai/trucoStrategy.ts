@@ -1,3 +1,4 @@
+
 import { GameState, AiMove, ActionType, Card, Rank, Player, Action, AiTrucoContext } from '../../types';
 import { getCardHierarchy, getCardName, determineTrickWinner, determineRoundWinner, calculateHandStrength, getHandPercentile } from '../trucoLogic';
 import { getRandomPhrase, TRUCO_PHRASES, RETRUCO_PHRASES, VALE_CUATRO_PHRASES, QUIERO_PHRASES, NO_QUIERO_PHRASES } from './phrases';
@@ -345,9 +346,73 @@ export const getTrucoResponse = (state: GameState, reasoning: string[] = []): Ai
 
 export const getTrucoCall = (state: GameState): AiMove | null => {
   const { trucoLevel, gamePhase, aiScore, playerScore, playerCalledHighEnvido, opponentModel, 
-          trickWinners, currentTrick, aiTricks, aiHand, playerHand, lastCaller } = state;
+          trickWinners, currentTrick, aiTricks, aiHand, playerHand, lastCaller, playerTricks } = state;
   
   if (aiTricks?.[currentTrick] !== null || gamePhase.includes('envido')) return null;
+
+  // --- NEW: "Parda y Gano" (Tie and Win) special scenario ---
+  if (currentTrick === 1 && trickWinners[0] === 'tie' && trucoLevel === 0) {
+      const playerCardOnBoard = playerTricks[1];
+      let canWinForSure = false;
+      let winningCard: Card | undefined;
+      let reasoningText: string[] = [];
+
+      if (playerCardOnBoard) {
+          // AI is responding and can win for sure
+          const playerCardValue = getCardHierarchy(playerCardOnBoard);
+          const winningCards = aiHand.filter(c => getCardHierarchy(c) > playerCardValue);
+          if (winningCards.length > 0) {
+              canWinForSure = true;
+              winningCard = winningCards.sort((a,b) => getCardHierarchy(a) - getCardHierarchy(b))[0]; // lowest winning card
+              reasoningText = [
+                `El jugador jugó ${getCardName(playerCardOnBoard)}.`,
+                `Mi carta '${getCardName(winningCard!)}' gana esta mano.`
+              ];
+          }
+      } else {
+          // AI is leading. Can my best card win for sure?
+          const myBestCard = aiHand.slice().sort((a, b) => getCardHierarchy(b) - getCardHierarchy(a))[0];
+          const unseenCards = state.opponentHandProbabilities?.unseenCards || [];
+
+          if (unseenCards.length > 0) {
+              const bestPossibleOpponentCard = unseenCards.slice().sort((a, b) => getCardHierarchy(b) - getCardHierarchy(a))[0];
+              if (getCardHierarchy(myBestCard) > getCardHierarchy(bestPossibleOpponentCard)) {
+                  canWinForSure = true;
+                  winningCard = myBestCard;
+                  reasoningText = [
+                    `Lidero la mano. Mi mejor carta es ${getCardName(myBestCard)}.`,
+                    `La mejor carta posible que el oponente podría tener es ${getCardName(bestPossibleOpponentCard)}.`,
+                    `Como mi carta es superior, tengo la victoria asegurada.`
+                  ];
+              }
+          } else if (getCardHierarchy(myBestCard) >= 14) { // Ancho de Espada, nothing can beat it
+              canWinForSure = true;
+              winningCard = myBestCard;
+              reasoningText = [
+                `Lidero la mano y tengo el As de Espadas. Nadie puede superarlo.`
+              ];
+          }
+      }
+
+      if (canWinForSure) {
+          const blurbText = getRandomPhrase(TRUCO_PHRASES);
+          const trucoContext: AiTrucoContext = { strength: 1.0, isBluff: false }; // Strength is effectively 100%
+          const reasoning = [
+              `[Lógica de Oportunidad: Parda y Gano]`,
+              `La primera mano fue un empate. Ganar la segunda mano gana la ronda.`,
+              ...reasoningText,
+              `Cantar TRUCO ahora es una jugada de valor sin riesgo.`,
+              `- Si el jugador se retira, gano 1 punto (lo mismo que ganaría sin cantar).`,
+              `- Si el jugador acepta, gano 2 puntos.`,
+              `\nDecisión: Cantar TRUCO por valor garantizado.`
+          ].join('\n');
+          return {
+              action: { type: ActionType.CALL_TRUCO, payload: { blurbText, trucoContext } },
+              reasoning: reasoning,
+          };
+      }
+  }
+  // --- END NEW LOGIC ---
 
   // --- NEW LOGIC: "Certainty" Escalation Call ---
   if (aiHand.length === 1 && playerHand.length === 1 && trucoLevel < 3 && lastCaller !== 'ai') {

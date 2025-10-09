@@ -138,33 +138,12 @@ export const generateSuggestionSummary = (move: AiMove, state: GameState): strin
 
     // --- Logic for proactive moves ---
 
-    // --- Envido call ---
-    if (action.type === ActionType.CALL_ENVIDO || action.type === ActionType.CALL_REAL_ENVIDO || action.type === ActionType.CALL_FALTA_ENVIDO) {
-        const callType = action.type.replace('CALL_', '').replace('_', ' ');
-        
-        const isBluff = /farol|mano.*débil/i.test(reasoning);
-
-        if (isBluff) {
-             const foldRateMatch = reasoning.match(/tasa de abandono.* ([\d\.]+)%/);
-             let opponentInfo = "la IA podría retirarse.";
-             if (foldRateMatch && foldRateMatch[1]) {
-                 opponentInfo = `la IA tiene una probabilidad de retirarse del ${foldRateMatch[1]}%.`;
-             }
-             const mirroredStateForSafePlay = createMirroredState(state);
-             const safePlay = findBestCardToPlay(mirroredStateForSafePlay);
-             const cardToPlay = playerHand[safePlay.index];
-
-             let alternativeText = "";
-             if (cardToPlay) {
-                 alternativeText = ` Si no te animás, la jugada más segura es tirar el ${getCardName(cardToPlay)}.`;
-             }
-             return `Tenemos solo ${playerEnvidoPoints} puntos de envido, que es bajo. Sin embargo, ${opponentInfo} Podemos intentar un farol (bluff) cantando '${callType}'.${alternativeText}`;
-        }
-        return `¡Tenemos ${playerEnvidoPoints} de envido! Es un buen puntaje, deberíamos cantar '${callType}'.`;
-    }
-
     // --- Truco call ---
     if (action.type === ActionType.CALL_TRUCO || action.type === ActionType.CALL_RETRUCO || action.type === ActionType.CALL_VALE_CUATRO) {
+        if (reasoning.includes("Parda y Gano")) {
+            return "¡Jugada clave! La primera mano fue empate. Si ganas esta, ganas la ronda. Cantar 'Truco' es una jugada sin riesgo: si se retiran, ganas 1 punto. Si aceptan, ¡ganas 2!";
+        }
+
         let isBluff = false;
         // Check for the explicit bluff flag in the action payload first for reliability
         if ('payload' in action && action.payload && 'trucoContext' in action.payload && action.payload.trucoContext) {
@@ -189,6 +168,31 @@ export const generateSuggestionSummary = (move: AiMove, state: GameState): strin
         } else {
             return `¡Tenemos una mano muy fuerte! Es el momento ideal para cantar '${callType}' y aumentar el valor de la ronda.`;
         }
+    }
+
+    // --- Envido call ---
+    if (action.type === ActionType.CALL_ENVIDO || action.type === ActionType.CALL_REAL_ENVIDO || action.type === ActionType.CALL_FALTA_ENVIDO) {
+        const callType = action.type.replace('CALL_', '').replace('_', ' ');
+        
+        const isBluff = /farol|mano.*débil/i.test(reasoning);
+
+        if (isBluff) {
+             const foldRateMatch = reasoning.match(/tasa de abandono.* ([\d\.]+)%/);
+             let opponentInfo = "la IA podría retirarse.";
+             if (foldRateMatch && foldRateMatch[1]) {
+                 opponentInfo = `la IA tiene una probabilidad de retirarse del ${foldRateMatch[1]}%.`;
+             }
+             const mirroredStateForSafePlay = createMirroredState(state);
+             const safePlay = findBestCardToPlay(mirroredStateForSafePlay);
+             const cardToPlay = playerHand[safePlay.index];
+
+             let alternativeText = "";
+             if (cardToPlay) {
+                 alternativeText = ` Si no te animás, la jugada más segura es tirar el ${getCardName(cardToPlay)}.`;
+             }
+             return `Tenemos solo ${playerEnvidoPoints} puntos de envido, que es bajo. Sin embargo, ${opponentInfo} Podemos intentar un farol (bluff) cantando '${callType}'.${alternativeText}`;
+        }
+        return `¡Tenemos ${playerEnvidoPoints} de envido! Es un buen puntaje, deberíamos cantar '${callType}'.`;
     }
 
     // --- Playing a card ---
