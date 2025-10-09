@@ -1,5 +1,3 @@
-
-
 import { GameState, Action, ActionType, GamePhase, Case, OpponentModel, PlayerEnvidoActionEntry, PlayerPlayOrderEntry, RoundSummary, Card } from '../../types';
 import { createDeck, shuffleDeck, determineTrickWinner, determineRoundWinner, getCardName, hasFlor, getEnvidoValue, getCardHierarchy, calculateHandStrength, getCardCode, decodeCardFromCode } from '../../services/trucoLogic';
 import { initializeProbabilities, updateProbsOnPlay } from '../../services/ai/inferenceService';
@@ -150,7 +148,7 @@ export function handleStartNewRound(state: GameState, action: { type: ActionType
       aiTricks: [null, null, null],
       trickWinners: [null, null, null],
       roundWinner: null,
-      pointsAwarded: { player: 0; ai: 0 },
+      pointsAwarded: { player: 0, ai: 0 },
       playerTrucoCall: null,
   };
   
