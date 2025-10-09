@@ -1,5 +1,4 @@
 
-
 import { GameState, ActionType, Player, GamePhase, Case, PlayerEnvidoActionEntry } from '../../types';
 import { getEnvidoValue, getFlorValue, getCardCode } from '../../services/trucoLogic';
 import { updateProbsOnEnvido } from '../../services/ai/inferenceService';
@@ -413,6 +412,7 @@ export function handleAcknowledgeFlor(state: GameState, action: { type: ActionTy
         roundHistory: newRoundHistory,
         playerBlurb: isPlayer ? { text: 'Son Buenas', isVisible: true } : null,
         aiBlurb: !isPlayer && action.payload?.blurbText ? { text: action.payload.blurbText, isVisible: true } : null,
+        isThinking: false,
     };
 }
 
