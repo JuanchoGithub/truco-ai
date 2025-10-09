@@ -40,16 +40,16 @@ const generateProfileAnalysis = (state: GameState): React.ReactNode[] => {
     const { callThreshold, foldRate } = opponentModel.envidoBehavior;
     let envidoInsight = "Analizando tu estilo de Envido... ";
     if (callThreshold > 28) {
-        envidoInsight += "Eres un jugador de Envido 'Puntual', tiendes a cantar solo cuando tienes 29 o más, lo que te hace muy creíble. ";
+        envidoInsight += "Sos un jugador de Envido 'Puntual', tendés a cantar solo cuando tenés 29 o más, lo que te hace muy creíble. ";
     } else if (callThreshold < 26) {
-        envidoInsight += "Muestras agresividad en el Envido, a menudo cantando con 26 o más para presionar. ";
+        envidoInsight += "Mostrás agresividad en el Envido, a menudo cantando con 26 o más para presionar. ";
     } else {
         envidoInsight += "Tu umbral de Envido es equilibrado y difícil de predecir. ";
     }
     if (foldRate > 0.5) {
-        envidoInsight += "Además, eres cauteloso, prefiriendo no aceptar si no tienes un buen presentimiento.";
+        envidoInsight += "Además, sos cauteloso, prefiriendo no aceptar si no tenés un buen presentimiento.";
     } else if (foldRate < 0.3) {
-        envidoInsight += "Rara vez te retiras del Envido, demostrando que estás dispuesto a ver las cartas de la IA.";
+        envidoInsight += "Rara vez te retirás del Envido, demostrando que estás dispuesto a ver las cartas de la IA.";
     }
     insights.push(<li key="envido">{envidoInsight}</li>);
     
@@ -62,9 +62,9 @@ const generateProfileAnalysis = (state: GameState): React.ReactNode[] => {
     if (playerTrucoCallHistory.length < 3) {
         trucoInsight += "aún estoy recopilando datos sobre tu estilo de apuesta.";
     } else if (avgTrucoStrength > 28) {
-        trucoInsight += "eres extremadamente conservador, solo apostando con manos de élite. He aprendido a respetar mucho tus llamadas.";
+        trucoInsight += "sos extremadamente conservador, solo apostando con manos de élite. He aprendido a respetar mucho tus llamadas.";
     } else if (avgTrucoStrength < 22) {
-        trucoInsight += "eres un jugador agresivo, no dudas en cantar Truco para meter presión, incluso con manos modestas. Esto te hace peligroso pero vulnerable a un contraataque.";
+        trucoInsight += "sos un jugador agresivo, no dudás en cantar Truco para meter presión, incluso con manos modestas. Esto te hace peligroso pero vulnerable a un contraataque.";
     } else {
         trucoInsight += "mantienes un estilo balanceado, haciendo que tus intenciones sean difíciles de leer.";
     }
@@ -95,7 +95,7 @@ const generateProfileAnalysis = (state: GameState): React.ReactNode[] => {
     // Card Play Analysis
     const tresStats = playerCardPlayStats.tres;
     if (tresStats.plays > 2 && tresStats.asResponse > tresStats.asLead) {
-         insights.push(<li key="cards">Muestras una tendencia a usar tus 'Tres' como cartas de respuesta, sugiriendo un estilo de contraataque en lugar de liderar con tu máxima fuerza.</li>);
+         insights.push(<li key="cards">Mostrás una tendencia a usar tus 'Tres' como cartas de respuesta, sugiriendo un estilo de contraataque en lugar de liderar con tu máxima fuerza.</li>);
     }
 
     return insights;
@@ -267,7 +267,7 @@ const DataModal: React.FC<DataModalProps> = ({ gameState, dispatch }) => {
                     Ronda {summary.round} - {summary.roundWinner ? `Ganador: ${summary.roundWinner.toUpperCase()}` : 'En curso...'} ({summary.pointsAwarded.player} - {summary.pointsAwarded.ai})
                   </summary>
                   <div className="mt-2 pl-4 border-l-2 border-amber-600/50 space-y-1">
-                    <p><span className="font-semibold">Fuerza / Envido:</span> Tú {summary.playerHandStrength} / {summary.playerEnvidoPoints} vs IA {summary.aiHandStrength} / {summary.aiEnvidoPoints}</p>
+                    <p><span className="font-semibold">Fuerza / Envido:</span> Vos {summary.playerHandStrength} / {summary.playerEnvidoPoints} vs IA {summary.aiHandStrength} / {summary.aiEnvidoPoints}</p>
                     <p><span className="font-semibold">Llamadas:</span> {summary.calls.join(', ') || 'Ninguna'}</p>
                     <p><span className="font-semibold">Ganadores de Manos:</span> {summary.trickWinners.map((w, i) => `M${i+1}: ${w ? w.toUpperCase() : 'N/A'}`).join(' | ')}</p>
                     {summary.playerTricks && summary.aiTricks && (
@@ -279,7 +279,7 @@ const DataModal: React.FC<DataModalProps> = ({ gameState, dispatch }) => {
                             if (!pCardCode && !aCardCode) return null;
                             const playerCardName = pCardCode ? getCardName(decodeCardFromCode(pCardCode)) : '---';
                             const aiCardName = aCardCode ? getCardName(decodeCardFromCode(aCardCode)) : '---';
-                            return <li key={i}>Mano {i+1}: Tú ({playerCardName}) vs IA ({aiCardName})</li>
+                            return <li key={i}>Mano {i+1}: Vos ({playerCardName}) vs IA ({aiCardName})</li>
                           }).filter(Boolean)}
                         </ul>
                       </div>

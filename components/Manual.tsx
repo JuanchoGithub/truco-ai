@@ -165,7 +165,7 @@ const Manual: React.FC<ManualProps> = ({ onExit }) => {
                 <p>Veamos cómo se desarrolla una ronda paso a paso para entender cómo se suman los puntos.</p>
 
                 <h3 className="text-xl font-cinzel mt-4">1. Inicio de la Ronda</h3>
-                <p>El marcador está 0 a 0. En esta ronda, tú eres "mano" (juegas primero).</p>
+                <p>El marcador está 0 a 0. En esta ronda, vos sos "mano" (jugás primero).</p>
                 <div className="flex flex-wrap justify-around items-center bg-black/20 p-2 rounded-md">
                     <div>
                         <p className="text-center font-semibold mb-2">Tu Mano</p>
@@ -186,10 +186,10 @@ const Manual: React.FC<ManualProps> = ({ onExit }) => {
                 </div>
 
                 <h3 className="text-xl font-cinzel mt-4">2. Primera Mano</h3>
-                <p>Como eres mano, empiezas jugando. Una estrategia común es jugar tu carta más fuerte para intentar ganar la primera mano.</p>
+                <p>Como sos mano, empezás jugando. Una estrategia común es jugar tu carta más fuerte para intentar ganar la primera mano.</p>
                 <Example title="Juego de la Primera Mano">
                     <ul className="list-disc list-inside space-y-2">
-                        <li><strong>Tú juegas:</strong> <div className="inline-block align-middle ml-2"><CardDisplay card={{ rank: 7, suit: 'oros' }} /></div>. Es una carta muy buena.</li>
+                        <li><strong>Vos jugás:</strong> <div className="inline-block align-middle ml-2"><CardDisplay card={{ rank: 7, suit: 'oros' }} /></div>. Es una carta muy buena.</li>
                         <li><strong>La IA responde:</strong> <div className="inline-block align-middle ml-2"><CardDisplay card={{ rank: 1, suit: 'espadas' }} /></div>. ¡Es la carta más poderosa del juego!</li>
                         <li className="!mt-4"><strong>Resultado:</strong> La IA gana la primera mano y ahora le toca jugar primero en la segunda.</li>
                     </ul>
@@ -200,8 +200,8 @@ const Manual: React.FC<ManualProps> = ({ onExit }) => {
                 <Example title="La IA canta 'Truco'">
                     <ul className="list-disc list-inside">
                         <li>La IA dice: <strong>"¡Truco!"</strong>. Esto sube el valor de la ronda a 2 puntos.</li>
-                        <li><strong>Tu decisión:</strong> Tus cartas restantes son el 5 de Bastos y el 4 de Copas, ambas muy débiles. Sabes que la IA ya usó su mejor carta, pero es muy probable que sus cartas restantes sean mejores que las tuyas.</li>
-                        <li>Decides decir <strong>"No Quiero"</strong>. Es una retirada estratégica para no perder más puntos.</li>
+                        <li><strong>Tu decisión:</strong> Tus cartas restantes son el 5 de Bastos y el 4 de Copas, ambas muy débiles. Sabés que la IA ya usó su mejor carta, pero es muy probable que sus cartas restantes sean mejores que las tuyas.</li>
+                        <li>Decidís decir <strong>"No Quiero"</strong>. Es una retirada estratégica para no perder más puntos.</li>
                     </ul>
                 </Example>
 
@@ -212,7 +212,7 @@ const Manual: React.FC<ManualProps> = ({ onExit }) => {
                     <li>No se jugó Envido, así que no hay puntos por tantos.</li>
                 </ul>
                 <div className="mt-2 p-3 bg-yellow-900/40 border border-yellow-600/30 rounded-md text-center">
-                    <strong className="text-xl">Marcador Final de la Ronda: Tú 0 - IA 1</strong>
+                    <strong className="text-xl">Marcador Final de la Ronda: Vos 0 - IA 1</strong>
                 </div>
                 <p className="mt-2">En la siguiente ronda, la IA será "mano" y el juego continúa hasta que alguien llegue a 15 puntos.</p>
             </Section>

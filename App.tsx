@@ -369,7 +369,7 @@ const App: React.FC = () => {
             <div className="flex-shrink-0 flex flex-col items-center justify-start pt-1 md:pt-2">
                 <div className="text-center">
                     <h1 className="text-3xl md:text-4xl font-cinzel font-bold tracking-wider text-yellow-300" style={{ textShadow: '3px 3px 5px rgba(0,0,0,0.8)' }}>TRUCO</h1>
-                    <p className="text-xs md:text-sm text-gray-200 tracking-widest">Ronda {state.round} | Mano: {state.mano === 'player' ? 'Tú' : 'IA'}</p>
+                    <p className="text-xs md:text-sm text-gray-200 tracking-widest">Ronda {state.round} | Mano: {state.mano === 'player' ? 'Vos' : 'IA'}</p>
                 </div>
                 <div className="flex items-center">
                     <PlayerHand 
