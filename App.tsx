@@ -34,6 +34,7 @@ const App: React.FC = () => {
   const messageTimers = useRef<{ fadeOutTimerId?: number; clearTimerId?: number }>({});
   const [gameMode, setGameMode] = useState<GameMode>('menu');
   const [assistantMove, setAssistantMove] = useState<AiMove | null>(null);
+  const lastSpokenSummary = useRef<string | null>(null);
   const [isSoundEnabled, setIsSoundEnabled] = useState(() => {
     const saved = localStorage.getItem('trucoAiSoundEnabled');
     return saved !== null ? JSON.parse(saved) : false; // Default to false
@@ -273,14 +274,26 @@ const App: React.FC = () => {
     const isPlaying = gameMode === 'playing' || gameMode === 'playing-with-help';
     if (!isPlaying) {
       speechService.cancel(); // Stop speech if we exit to menu
+      lastSpokenSummary.current = null; // Reset on exit
       return;
     }
 
     if (isSoundEnabled) {
       if (gameMode === 'playing-with-help' && assistantMove?.summary) {
-        speechService.speak(assistantMove.summary);
+        // Only speak if the summary text has actually changed.
+        if (assistantMove.summary !== lastSpokenSummary.current) {
+            speechService.speak(assistantMove.summary);
+            lastSpokenSummary.current = assistantMove.summary;
+        }
       } else if (gameMode === 'playing' && state.aiBlurb?.isVisible && state.aiBlurb.text) {
         speechService.speak(state.aiBlurb.text);
+        // Clear last summary so the assistant speaks again if mode is switched back.
+        lastSpokenSummary.current = null;
+      } else {
+        // When there's no active suggestion (e.g., turn ended), reset the tracker.
+        if (gameMode === 'playing-with-help' && !assistantMove?.summary) {
+            lastSpokenSummary.current = null;
+        }
       }
     }
   }, [state.aiBlurb, assistantMove, isSoundEnabled, gameMode]);
