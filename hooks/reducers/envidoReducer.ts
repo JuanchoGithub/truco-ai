@@ -16,9 +16,13 @@ function updateRoundHistoryWithCall(state: GameState, callText: string): GameSta
 export function handleCallEnvido(state: GameState, action: { type: ActionType.CALL_ENVIDO; payload?: { blurbText: string } }): GameState {
   const caller = state.currentTurn!;
   const opponent = caller === 'player' ? 'ai' : 'player';
+  const isPlayer = caller === 'player';
+  const isEscalation = state.gamePhase === 'envido_called';
+  const previousPoints = isEscalation ? state.envidoPointsOnOffer : 0;
+  const newPoints = isEscalation ? state.envidoPointsOnOffer + 2 : 2;
 
   let newEnvidoHistory = state.playerEnvidoHistory;
-  if (caller === 'player') {
+  if (isPlayer) {
     // We remove the 'did_not_call' entry that was preemptively added on the first card play
     const filteredHistory = state.playerEnvidoHistory.filter(e => !(e.round === state.round && e.action === 'did_not_call'));
     const entry: PlayerEnvidoActionEntry = {
@@ -30,7 +34,9 @@ export function handleCallEnvido(state: GameState, action: { type: ActionType.CA
     newEnvidoHistory = [...filteredHistory, entry];
   }
 
-  const message = state.pendingTrucoCaller !== null
+  const message = isEscalation
+    ? `${caller === 'player' ? 'Jugador' : 'IA'} canta ¡ENVIDO! de nuevo.`
+    : state.pendingTrucoCaller !== null
     ? `${caller === 'player' ? 'Jugador' : 'IA'}: "¡El envido está primero!"`
     : `${caller === 'player' ? 'Jugador' : 'IA'} canta ¡ENVIDO!`;
 
@@ -43,11 +49,12 @@ export function handleCallEnvido(state: GameState, action: { type: ActionType.CA
     currentTurn: opponent,
     turnBeforeInterrupt: state.pendingTrucoCaller !== null ? state.turnBeforeInterrupt : caller,
     hasEnvidoBeenCalledThisRound: true,
-    envidoPointsOnOffer: 2,
-    previousEnvidoPoints: 0,
+    envidoPointsOnOffer: newPoints,
+    previousEnvidoPoints: previousPoints,
     playerEnvidoHistory: newEnvidoHistory,
     messageLog: [...state.messageLog, message],
-    aiBlurb: action.payload?.blurbText ? { text: action.payload.blurbText, isVisible: true } : null,
+    playerBlurb: isPlayer ? { text: '¡Envido!', isVisible: true } : null,
+    aiBlurb: !isPlayer && action.payload?.blurbText ? { text: action.payload.blurbText, isVisible: true } : null,
     isThinking: caller === 'ai' ? false : state.isThinking,
   };
 }
@@ -55,6 +62,7 @@ export function handleCallEnvido(state: GameState, action: { type: ActionType.CA
 export function handleCallRealEnvido(state: GameState, action: { type: ActionType.CALL_REAL_ENVIDO, payload?: { blurbText: string } }): GameState {
   const caller = state.currentTurn!;
   const opponent = caller === 'player' ? 'ai' : 'player';
+  const isPlayer = caller === 'player';
 
   const isPlayerRespondingToAI = state.lastCaller === 'ai';
   const newFoldHistory = isPlayerRespondingToAI
@@ -62,7 +70,7 @@ export function handleCallRealEnvido(state: GameState, action: { type: ActionTyp
       : state.playerEnvidoFoldHistory;
 
   let newEnvidoHistory = state.playerEnvidoHistory;
-  if (caller === 'player') {
+  if (isPlayer) {
     const entry: PlayerEnvidoActionEntry = {
         round: state.round,
         envidoPoints: getEnvidoValue(state.initialPlayerHand),
@@ -76,6 +84,7 @@ export function handleCallRealEnvido(state: GameState, action: { type: ActionTyp
 
   const isEscalation = state.gamePhase === 'envido_called';
   const previousPoints = isEscalation ? state.envidoPointsOnOffer : 0;
+  const newPoints = isEscalation ? state.envidoPointsOnOffer + 3 : 3;
 
   return {
     ...updatedState,
@@ -83,13 +92,15 @@ export function handleCallRealEnvido(state: GameState, action: { type: ActionTyp
     lastCaller: caller,
     currentTurn: opponent,
     turnBeforeInterrupt: state.turnBeforeInterrupt || caller,
-    envidoPointsOnOffer: 3,
+    envidoPointsOnOffer: newPoints,
     previousEnvidoPoints: previousPoints,
+    hasRealEnvidoBeenCalledThisSequence: true,
     playerEnvidoHistory: newEnvidoHistory,
     messageLog: [...state.messageLog, `${caller === 'player' ? 'Jugador' : 'IA'} sube a ¡REAL ENVIDO!`],
     playerEnvidoFoldHistory: newFoldHistory,
     hasEnvidoBeenCalledThisRound: true,
-    aiBlurb: action.payload?.blurbText ? { text: action.payload.blurbText, isVisible: true } : null,
+    playerBlurb: isPlayer ? { text: '¡Real Envido!', isVisible: true } : null,
+    aiBlurb: !isPlayer && action.payload?.blurbText ? { text: action.payload.blurbText, isVisible: true } : null,
     isThinking: caller === 'ai' ? false : state.isThinking,
   };
 }
@@ -97,6 +108,7 @@ export function handleCallRealEnvido(state: GameState, action: { type: ActionTyp
 export function handleCallFaltaEnvido(state: GameState, action: { type: ActionType.CALL_FALTA_ENVIDO, payload?: { blurbText: string } }): GameState {
   const caller = state.currentTurn!;
   const opponent = caller === 'player' ? 'ai' : 'player';
+  const isPlayer = caller === 'player';
 
   const isPlayerRespondingToAI = state.lastCaller === 'ai';
   const newFoldHistory = isPlayerRespondingToAI
@@ -108,7 +120,7 @@ export function handleCallFaltaEnvido(state: GameState, action: { type: ActionTy
   const faltaPoints = 15 - leadingScore;
 
   let newEnvidoHistory = state.playerEnvidoHistory;
-  if (caller === 'player') {
+  if (isPlayer) {
     const entry: PlayerEnvidoActionEntry = {
         round: state.round,
         envidoPoints: getEnvidoValue(state.initialPlayerHand),
@@ -135,77 +147,77 @@ export function handleCallFaltaEnvido(state: GameState, action: { type: ActionTy
     messageLog: [...state.messageLog, `${caller === 'player' ? 'Jugador' : 'IA'} canta ¡FALTA ENVIDO!`],
     playerEnvidoFoldHistory: newFoldHistory,
     hasEnvidoBeenCalledThisRound: true,
-    aiBlurb: action.payload?.blurbText ? { text: action.payload.blurbText, isVisible: true } : null,
+    playerBlurb: isPlayer ? { text: '¡Falta Envido!', isVisible: true } : null,
+    aiBlurb: !isPlayer && action.payload?.blurbText ? { text: action.payload.blurbText, isVisible: true } : null,
     isThinking: caller === 'ai' ? false : state.isThinking,
   };
 }
 
 export function handleDeclareFlor(state: GameState, action: { type: ActionType.DECLARE_FLOR; payload?: { blurbText?: string; player?: Player } }): GameState {
   const caller = action.payload?.player || state.currentTurn!;
-  const points = 3;
+  const opponent = caller === 'player' ? 'ai' : 'player';
+  const isPlayer = caller === 'player';
 
-  let newPlayerScore = state.playerScore;
-  let newAiScore = state.aiScore;
-
-  if (caller === 'player') {
-    newPlayerScore += points;
-  } else {
-    newAiScore += points;
-  }
-  
-  const callerName = caller === 'player' ? 'Jugador' : 'IA';
-  const messageLog = [
-    ...state.messageLog, 
-    `${callerName} canta ¡FLOR!`,
-    `${callerName} gana ${points} puntos.`
-  ];
-  
   const updatedState = updateRoundHistoryWithCall(state, `${caller}: Flor`);
   
-  // Finalize the round history points
-  const newRoundHistory = [...updatedState.roundHistory];
-  const currentRoundSummary = newRoundHistory.find(r => r.round === updatedState.round);
-  if (currentRoundSummary) {
-      if (caller === 'player') currentRoundSummary.pointsAwarded.player += points;
-      if (caller === 'ai') currentRoundSummary.pointsAwarded.ai += points;
-  }
-  
-  // Check for a game winner immediately after awarding points
-  if (newPlayerScore >= 15 || newAiScore >= 15) {
-      const finalWinner = newPlayerScore >= 15 ? 'player' : 'ai';
-      return {
-          ...updatedState,
-          playerScore: newPlayerScore,
-          aiScore: newAiScore,
-          winner: finalWinner,
-          gamePhase: 'game_over',
-          messageLog,
-          roundHistory: newRoundHistory,
-          hasFlorBeenCalledThisRound: true,
-          hasEnvidoBeenCalledThisRound: true,
-      };
-  }
-
-  // If flor was declared while another call (like truco) was pending,
-  // we resolve flor but keep the game in that pending state.
-  // Otherwise, we proceed with the trick.
-  const nextGamePhase = state.gamePhase.includes('_called')
-    ? state.gamePhase
-    : `trick_${state.currentTrick + 1}`;
-
   return {
     ...updatedState,
-    playerScore: newPlayerScore,
-    aiScore: newAiScore,
+    gamePhase: 'flor_called',
+    lastCaller: caller,
+    currentTurn: opponent,
+    turnBeforeInterrupt: state.turnBeforeInterrupt || caller,
     hasFlorBeenCalledThisRound: true,
-    hasEnvidoBeenCalledThisRound: true, // Flor overrides envido
-    messageLog,
-    roundHistory: newRoundHistory,
-    gamePhase: nextGamePhase as GamePhase,
-    aiBlurb: caller === 'ai' && action.payload?.blurbText 
-      ? { text: action.payload.blurbText, isVisible: true } 
-      : state.aiBlurb, // Preserve existing blurb if player acts
+    hasEnvidoBeenCalledThisRound: true, // Flor cancels any envido for the round
+    florPointsOnOffer: 3,
+    messageLog: [...state.messageLog, `${caller === 'player' ? 'Jugador' : 'IA'} canta ¡FLOR!`],
+    playerBlurb: isPlayer ? { text: '¡Flor!', isVisible: true } : null,
+    aiBlurb: !isPlayer && action.payload?.blurbText
+      ? { text: action.payload.blurbText, isVisible: true }
+      : state.aiBlurb,
     isThinking: caller === 'ai' ? false : state.isThinking,
-    // currentTurn does not change, it's still this player's turn to act
+  };
+}
+
+export function handleRespondToEnvidoWithFlor(state: GameState, action: { type: ActionType.RESPOND_TO_ENVIDO_WITH_FLOR, payload?: { blurbText?: string } }): GameState {
+  const caller = state.currentTurn!; // The one with Flor
+  const opponent = caller === 'player' ? 'ai' : 'player'; // The one who called Envido
+  const isPlayer = caller === 'player';
+
+  const updatedState = updateRoundHistoryWithCall(state, `${caller}: Flor`);
+  
+  return {
+    ...updatedState,
+    gamePhase: 'flor_called',
+    lastCaller: caller,
+    currentTurn: opponent, // Turn goes to the Envido caller to respond to the Flor
+    turnBeforeInterrupt: state.turnBeforeInterrupt,
+    hasFlorBeenCalledThisRound: true,
+    hasEnvidoBeenCalledThisRound: true,
+    florPointsOnOffer: 3,
+    envidoPointsOnOffer: 0, // Envido is cancelled
+    messageLog: [...state.messageLog, `${caller === 'player' ? 'Jugador' : 'IA'} responde al Envido con ¡FLOR!`],
+    playerBlurb: isPlayer ? { text: '¡Flor!', isVisible: true } : null,
+    aiBlurb: !isPlayer && action.payload?.blurbText ? { text: action.payload.blurbText, isVisible: true } : null,
+    isThinking: caller === 'ai' ? false : state.isThinking,
+  };
+}
+
+export function handleCallContraflor(state: GameState, action: { type: ActionType.CALL_CONTRAFLOR, payload?: { blurbText?: string } }): GameState {
+  const caller = state.currentTurn!;
+  const opponent = caller === 'player' ? 'ai' : 'player';
+  const isPlayer = caller === 'player';
+
+  const updatedState = updateRoundHistoryWithCall(state, `${caller}: Contraflor`);
+  
+  return {
+    ...updatedState,
+    gamePhase: 'contraflor_called',
+    lastCaller: caller,
+    currentTurn: opponent,
+    turnBeforeInterrupt: state.turnBeforeInterrupt,
+    messageLog: [...state.messageLog, `${caller === 'player' ? 'Jugador' : 'IA'} canta ¡CONTRAFLOR AL RESTO!`],
+    playerBlurb: isPlayer ? { text: '¡Contraflor!', isVisible: true } : null,
+    aiBlurb: !isPlayer && action.payload?.blurbText ? { text: action.payload.blurbText, isVisible: true } : null,
+    isThinking: caller === 'ai' ? false : state.isThinking,
   };
 }

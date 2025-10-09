@@ -12,6 +12,16 @@ export const QUIERO_PHRASES = [
   "Sí, quiero. Sin miedo.",
   "Va pa' delante. ¡Quiero!",
   "Aceptado... ¡Quiero!",
+  "Asi que cantó olorosa? Está jugando con fuego. Sabe cual es mi respuesta? Mi respuesta es ¡Con Flor Quiero!",
+  "Asi que te haces el guapo? Y me estas jugando fiero? Vas a perder el partido, porque yo... con flor quiero...",
+  "En la puerta de mi rancho hizo su nido un jilguero. Todas las mananas canta: Con Flor Quiero... Con Flor Quiero...",
+  "Me gusta templar la voz con un canto verdadero y cuando me cantan Flor yo contesto Con Flor Quiero.",
+  "Mientras ganarte yo espero voy diciendo: Con Flor Quiero.",
+  "Me tocó un rival humano 'ligueró pero yo igualmente canto: con Flor Quiero.",
+  "No me gusta ser querendon pero ya que yo tambien ligué entonces Con Flor Quiero.",
+  "Se cruzaron las flores y no las palizas mejor asi entonces con flor quiero.",
+  "Si por vos de amor me muero entonces con Flor Quiero.",
+  "Me tocó un rival muy fiero. Esta mano con flor Quiero."
 ];
 
 export const NO_QUIERO_PHRASES = [
@@ -65,6 +75,17 @@ export const NO_QUIERO_PHRASES = [
   "Me rindo al mazo, que el instinto manda.",
   "Al mazo, prefiriendo la paz a la guerra perdida.",
   "Me voy al mazo, pero esta noche sueño con ases.",
+  "Yo juego mejor que Usté y perder me importa un pito, y aunque me crea cobarde le diré Con Flor Me Achico.",
+  "Páganarle a este rival es bastante lo que aplico, pero páesta ocasion cantare Con Flor me Achico.",
+  "Le ganare por pucho y por eso yo no pico. Parece que tiene mucho. Por eso... con Flor me Achico.",
+  "Buen dia dijo Jose, buen dia dijo Perico. Que le gano ya lo sé pero con Flor Me Achico.",
+  "Mi china con la calor traiba un gran abanico, yo le dije: Apantallá, por favor que si no con Flor me Achico ...",
+  "Usté me quiere pescar, en ese anzuelo no pico. No me dejo acorralar y canto: Con Flor me Achico.",
+  "Con los cuatros que sacas no te vas a hacer muy rico pero igual te los ganas porque yo con Flor... me achico ...",
+  "Yo tambien ligué pero por si acaso con Flor me Achico.",
+  "Yo tengo lo mismo pero el palpito me dice que con Flor me Achico.",
+  "Me parece que con Flor me Achico y me dejo de jorobar.",
+  "Las olorosas se nos cruzaron, viste? pero yo que tengo olfato declaro Con Flor me Achico."
 ];
 
 export const ENVIDO_WIN_PHRASES = [
@@ -107,6 +128,31 @@ export const FLOR_PHRASES = [
   "No es suerte, es botánica. ¡Flor!",
   "Linda se te ha puesto la cosa... para mí. ¡Flor!",
   "Tres del mismo color, ¡qué primor! ¡Flor!",
+  "En la estancia del remanso a una vaca medio loca la seguia un toro manso con una Flor en la boca.",
+  "Qué cartas fuleras. Qué bronca, que dolor. No tengo otro consuelo que esta hermosa Flor.",
+  "Ayer pasé por tu casa y me tiraste con una Flor. Hoy cuando pase de nuevo: Sin maceta, por favor!",
+  "Tengo en la mano un misterio. Tengo en el alma un dolor. No se me ponga tan serio! En la mano tengo Flor.",
+  "De los bichos: la cigarra, el verde como color en instrumentos: la guitarra..., y elijo al malvon de flor!",
+  "El paisano anda de negro, apero y facon. Los Domingos va de blanco y en su sonrisa una Flor.",
+  "Tengo un chancho color verde, un caballo volador, una gallina que muerde y en la mano tengo Flor.",
+  "Por recostarme a tu reja tuve que ver al dotor para sacarme la Flor que me clavaste en la oreja.",
+  "Todo gaucho que presume de haber tenido un amor se queda con el perfume si se le pianta la Flor.",
+  "Yo nunca he sido pintor, pero algo sé de colores, y para pintar las flores le doy amor a la Flor. Qué tal??",
+  "En la esquina de arrabal por defender un amor me bordó un barbeijo FLOR un Taura Animal."
+];
+
+export const CONTRAFLOR_PHRASES = [
+  "Te voy a dar flor de pesto, Flor y por si eso era poco... Contraflor al Resto.",
+  "El otro dia a mi pingo se le quedó el cabestro, y al verme pasar un gringo, dijo contraflor al resto.",
+  "No está sintiendo una aroma? y no me dirá que apesto! Aunque su flor no sea broma canto... contraflor al resto.",
+  "Si te crees que estas de suerte te voy a dar un gran pesto, Ni al espejo podes verte Flor y Contraflor al Resto.",
+  "Qué barajas, aparcero. Tirá las tuyas al cesto. O reculá, te sugiero. Digo Contraflor al Resto.",
+  "No sos un mal jugador. No agradezcas, no hay de qué. Tengo en la mano algo nuevo. Contraflor al resto... ché!",
+  "Qué me dice si le hago esto? Devolviendole su flor con Contraflor al Resto!!",
+  "Yo a vos te tengo que matar. Como? dandote el pesto con contraflor al resto.",
+  "Con Usté ya no me queda ningun buen gesto. Yo le devuelvo con Contraflor al Resto.",
+  "Uy, uy,uy, que pest ahora te zampo el Contraflor al Resto. Qué tal? No juego tan mal, Verdad?",
+  "Vos te la buscaste... Contraflor al Resto."
 ];
 
 export const ENVIDO_PRIMERO_PHRASES = [
@@ -301,6 +347,17 @@ export const TRUCO_PHRASES = [
     "Truco y un chiste: ¿por qué el 4 no canta? Porque se va al mazo.",
     "Con el alma de criollo, truco que late como un corazón gaucho.",
     "Truco final, che, que esta mano es mía y la próxima también.",
+    "Jugaron una carrera el sapo y la comadreja. El sapo al aventajarla le dijo Truco en la oreja.",
+    "Te noto muy asustado o será que viste al cuco? Y aunque parezca apurado te vi'á cantar el Truco.",
+    "Tengo un vagon en la mano. Por eso no puedo jugar, y aunque te parezca en vano, Truco tengo que cantar.",
+    "Pápintar una pared Tuve que usar mameluco, y páganarle a Usté tengo que hacerle algun truco.",
+    "Cuando me pongo a rimar muchas veces me trabuco, si el tanto quiero cantar a veces me sale truco.",
+    "Pá poder salir del bosque muchas plantas yo machuco. Pá ganarle a Usté no hay otra que cantar Truco.",
+    "Si queres jugar conmigo no te hagas el pituco yo te quiero ganar porque estoy jugando al Truco.",
+    "No me importa si sos tan bruto con tal que me aceptes mi modesto truco.",
+    "Turco... este... Bueno! Digo Truco!!",
+    "Dejame pensar... Bah. Ni siquiera merece esto ser pensado... Vas a ver qué inspiracion la mia: Te digo Truco, y a otra cosa, che.",
+    "Jugas como un viejo caduco. Yo te voy a sacudir con mi Quiero Retruco."
 ];
 
 export const RETRUCO_PHRASES = [
@@ -354,6 +411,16 @@ export const RETRUCO_PHRASES = [
     "¡Retruco al revés! Te doy la vuelta como a un guante viejo.",
     "Retruco filosófico: la duda mata, el retruco revive.",
     "Quiero retruco final, che, que esta es la mano que rompe la mesa.",
+    "Viene muy facil la cosa... me lo llevo al campo Santo, Me queda una carta hermosa y quiero Retruco canto ...",
+    "Me parece que está frito, eso espero... y como yo tengo el quiero quiero Retruco le grito !",
+    "Espero que no me dé sino la va a pasar mal y grito de buena Fé: Quiero Retruco... Qué tal ... ?",
+    "Tengo poca inspiracion. Cuando tengo que mentir Me traiciona la pasion: Quiero Retruco, y morir.",
+    "A mi esposa quiero, A mi hijo educo, y a vos companero, quiero Retruco !!",
+    "En mi casa de verano se come fideos con tuco, y el partido yo te gano con este quiero Retruco !",
+    "Pensaste que me achicaba o que iba a salir corriendo. Te voy a dar flor de biaba quiero Retruco mintiendo.",
+    "Barrunto que está mintiendo, no le tengo miedo al cuco y en sus ojos estoy viendo ansias de un Quiero Retruco !!",
+    "No temas al Diablo... No temas al Cuco... Si tenes naipes buenos quereme este quiero Retruco.",
+    "A ver... A ver... Mi olfato me dice te gasto si me aceptas un Quiero Retruco, che."
 ];
 
 export const VALE_CUATRO_PHRASES = [
@@ -407,4 +474,15 @@ export const VALE_CUATRO_PHRASES = [
     "¡Vale cuatro al cielo! Que Dios bendice esta mano audaz.",
     "Vale cuatro filosófico: el riesgo es la vida, cuatro es la eternidad.",
     "Quiero vale cuatro final, che, que esta mesa es mía para siempre.",
+    "Qué bronca, Qué maltrato. Ya te voy a dar digo Quiero Vale Cuatro.",
+    "Mi china se recostó con un sospechoso sapo y cuando despertó le dijo: Mi amor! Quiero Vale Cuatro!",
+    "Usté... que juega conmigo me vé pinta de aparato, Tengo adentro un Enano que chiya: Mi amigo, quiero Vale Cuatro!!",
+    "Ya cayó el chivo en el lazo, y el rival no es para tanto te vi'á dar con un hachazo quiero Vale Cuatro canto!!",
+    "Esta guitarra gastada fué encontrada en un teatro y aunque no he ligado nada, canto quiero Vale Cuatro!",
+    "Ganarme esta partida te dará mucho trabajo. Te costará mas todavia si yo Quiero Vale Cuatro!",
+    "Te enterraste hasta el espanto. No vas a poder salir, Quiero vale cuatro canto y me voy a divertir.",
+    "Aqui me pongo a jugar al compas de la mentira. Canto quiero vale cuatro, Tengo un tres y no se estira.",
+    "Este alarde de guapeza se me hace que es teatro, la cosa recien empieza. Quiero... Quiero vale cuatro.",
+    "Hasta aqui te haces el gallo. Yo te vi'á dejar pollito, y este canto no lo callo, quiero vale cuatro grito.",
+    "La Pampa, en su inmensidad, tiene al ombú de testigo. Que ligué una cantidad Quiero Vale Cuatro digo."
 ];

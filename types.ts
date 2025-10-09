@@ -26,7 +26,12 @@ export type GamePhase =
   // New intermediate phases for delayed resolution
   | 'ENVIDO_ACCEPTED'
   | 'ENVIDO_DECLINED'
-  | 'TRUCO_DECLINED';
+  | 'TRUCO_DECLINED'
+  // New Flor phases
+  | 'flor_called'
+  | 'contraflor_called'
+  | 'FLOR_SHOWDOWN'
+  | 'CONTRAFLOR_DECLINED';
 
 
 export interface AiReasoningEntry {
@@ -167,11 +172,13 @@ export interface GameState {
   turnBeforeInterrupt: Player | null;
   pendingTrucoCaller: Player | null;
   hasEnvidoBeenCalledThisRound: boolean;
+  hasRealEnvidoBeenCalledThisSequence: boolean;
   hasFlorBeenCalledThisRound: boolean;
   playerHasFlor: boolean;
   aiHasFlor: boolean;
   envidoPointsOnOffer: number;
   previousEnvidoPoints: number;
+  florPointsOnOffer: number;
   trucoLevel: 0 | 1 | 2 | 3;
   playerEnvidoFoldHistory: boolean[];
   playerTrucoCallHistory: PlayerTrucoCallEntry[];
@@ -188,8 +195,9 @@ export interface GameState {
   playerEnvidoValue: number | null;
   playerActionHistory: ActionType[];
   
-  // AI Blurb for phrases
+  // Blurbs for phrases
   aiBlurb: { text: string; isVisible: boolean; } | null;
+  playerBlurb: { text: string; isVisible: boolean; } | null;
 
   // Round Winner Announcement
   lastRoundWinner: Player | 'tie' | null;
@@ -213,6 +221,7 @@ export interface GameState {
 export interface AiMove {
   action: Action;
   reasoning: string;
+  summary?: string;
 }
 
 export enum ActionType {
@@ -242,14 +251,24 @@ export enum ActionType {
   RESOLVE_ENVIDO_ACCEPT = 'RESOLVE_ENVIDO_ACCEPT',
   RESOLVE_ENVIDO_DECLINE = 'RESOLVE_ENVIDO_DECLINE',
   RESOLVE_TRUCO_DECLINE = 'RESOLVE_TRUCO_DECLINE',
+  RESOLVE_FLOR_SHOWDOWN = 'RESOLVE_FLOR_SHOWDOWN',
+  RESOLVE_CONTRAFLOR_DECLINE = 'RESOLVE_CONTRAFLOR_DECLINE',
   // Central Message
   CLEAR_CENTRAL_MESSAGE = 'CLEAR_CENTRAL_MESSAGE',
+  // Player Blurb
+  CLEAR_PLAYER_BLURB = 'CLEAR_PLAYER_BLURB',
   // Data Modal
   TOGGLE_DATA_MODAL = 'TOGGLE_DATA_MODAL',
   // Local Storage
   LOAD_PERSISTED_STATE = 'LOAD_PERSISTED_STATE',
   // New action for imported data
   LOAD_IMPORTED_DATA = 'LOAD_IMPORTED_DATA',
+  // New Flor Actions
+  RESPOND_TO_ENVIDO_WITH_FLOR = 'RESPOND_TO_ENVIDO_WITH_FLOR',
+  ACKNOWLEDGE_FLOR = 'ACKNOWLEDGE_FLOR',
+  CALL_CONTRAFLOR = 'CALL_CONTRAFLOR',
+  ACCEPT_CONTRAFLOR = 'ACCEPT_CONTRAFLOR',
+  DECLINE_CONTRAFLOR = 'DECLINE_CONTRAFLOR',
 }
 
 export type Action =
@@ -277,7 +296,16 @@ export type Action =
   | { type: ActionType.RESOLVE_ENVIDO_ACCEPT }
   | { type: ActionType.RESOLVE_ENVIDO_DECLINE }
   | { type: ActionType.RESOLVE_TRUCO_DECLINE }
+  | { type: ActionType.RESOLVE_FLOR_SHOWDOWN }
+  | { type: ActionType.RESOLVE_CONTRAFLOR_DECLINE }
   | { type: ActionType.CLEAR_CENTRAL_MESSAGE }
+  | { type: ActionType.CLEAR_PLAYER_BLURB }
   | { type: ActionType.TOGGLE_DATA_MODAL }
   | { type: ActionType.LOAD_PERSISTED_STATE; payload: Partial<GameState> }
-  | { type: ActionType.LOAD_IMPORTED_DATA; payload: Partial<GameState> };
+  | { type: ActionType.LOAD_IMPORTED_DATA; payload: Partial<GameState> }
+  // New Flor Actions
+  | { type: ActionType.RESPOND_TO_ENVIDO_WITH_FLOR; payload?: { blurbText: string } }
+  | { type: ActionType.ACKNOWLEDGE_FLOR; payload?: { blurbText: string } }
+  | { type: ActionType.CALL_CONTRAFLOR; payload?: { blurbText: string } }
+  | { type: ActionType.ACCEPT_CONTRAFLOR; payload?: { blurbText: string } }
+  | { type: ActionType.DECLINE_CONTRAFLOR; payload?: { blurbText: string } };

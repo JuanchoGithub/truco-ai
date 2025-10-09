@@ -1,12 +1,13 @@
 
+
 // Fix: Moved the game reducer logic from the misnamed types.ts to its correct location here.
 // This file now contains the full, correct reducer implementation for the game.
 import { GameState, Action, ActionType, AiTrucoContext } from '../types';
 import { handleRestartGame, handleStartNewRound, handlePlayCard } from './reducers/gameplayReducer';
 // Fix: Corrected typo in function name from 'handleCallFalfaEnvido' to 'handleCallFaltaEnvido'.
-import { handleCallEnvido, handleCallRealEnvido, handleCallFaltaEnvido, handleDeclareFlor } from './reducers/envidoReducer';
+import { handleCallEnvido, handleCallRealEnvido, handleCallFaltaEnvido, handleDeclareFlor, handleRespondToEnvidoWithFlor, handleCallContraflor } from './reducers/envidoReducer';
 import { handleCallTruco, handleCallRetruco, handleCallValeCuatro, handleCallFaltaTruco } from './reducers/trucoReducer';
-import { handleAccept, handleDecline, handleResolveEnvidoAccept, handleResolveEnvidoDecline, handleResolveTrucoDecline } from './reducers/responseReducer';
+import { handleAccept, handleDecline, handleResolveEnvidoAccept, handleResolveEnvidoDecline, handleResolveTrucoDecline, handleAcknowledgeFlor, handleAcceptContraflor, handleDeclineContraflor, handleResolveFlorShowdown, handleResolveContraflorDecline } from './reducers/responseReducer';
 import { createInitialCardPlayStats } from '../services/cardAnalysis';
 
 
@@ -37,11 +38,13 @@ export const initialState: GameState = {
   turnBeforeInterrupt: null,
   pendingTrucoCaller: null,
   hasEnvidoBeenCalledThisRound: false,
+  hasRealEnvidoBeenCalledThisSequence: false,
   hasFlorBeenCalledThisRound: false,
   playerHasFlor: false,
   aiHasFlor: false,
   envidoPointsOnOffer: 0,
   previousEnvidoPoints: 0,
+  florPointsOnOffer: 0,
   trucoLevel: 0,
   playerEnvidoFoldHistory: [],
   playerTrucoCallHistory: [],
@@ -72,6 +75,7 @@ export const initialState: GameState = {
   playerEnvidoValue: null,
   playerActionHistory: [],
   aiBlurb: null,
+  playerBlurb: null,
   lastRoundWinner: null,
   centralMessage: null,
   isCentralMessagePersistent: false,
@@ -111,16 +115,19 @@ export function useGameReducer(state: GameState, action: Action): GameState {
     case ActionType.PLAY_CARD:
       return handlePlayCard(state, action);
 
-    // Envido Calling Actions
+    // Envido & Flor Calling Actions
     case ActionType.CALL_ENVIDO:
       return handleCallEnvido(state, action);
     case ActionType.CALL_REAL_ENVIDO:
       return handleCallRealEnvido(state, action);
     case ActionType.CALL_FALTA_ENVIDO:
-      // Fix: Corrected typo in function name from 'handleCallFalfaEnvido' to 'handleCallFaltaEnvido'.
       return handleCallFaltaEnvido(state, action);
     case ActionType.DECLARE_FLOR:
       return handleDeclareFlor(state, action);
+    case ActionType.RESPOND_TO_ENVIDO_WITH_FLOR:
+      return handleRespondToEnvidoWithFlor(state, action);
+    case ActionType.CALL_CONTRAFLOR:
+      return handleCallContraflor(state, action);
 
     // Truco Calling Actions
     case ActionType.CALL_TRUCO:
@@ -137,14 +144,25 @@ export function useGameReducer(state: GameState, action: Action): GameState {
       return handleAccept(state, action);
     case ActionType.DECLINE:
       return handleDecline(state, action);
+    case ActionType.ACKNOWLEDGE_FLOR:
+      return handleAcknowledgeFlor(state, action);
+    case ActionType.ACCEPT_CONTRAFLOR:
+      return handleAcceptContraflor(state, action);
+    case ActionType.DECLINE_CONTRAFLOR:
+      return handleDeclineContraflor(state, action);
 
-    // New Resolution Actions for delayed flow
+
+    // Resolution Actions for delayed flow
     case ActionType.RESOLVE_ENVIDO_ACCEPT:
         return handleResolveEnvidoAccept(state);
     case ActionType.RESOLVE_ENVIDO_DECLINE:
         return handleResolveEnvidoDecline(state);
     case ActionType.RESOLVE_TRUCO_DECLINE:
         return handleResolveTrucoDecline(state);
+    case ActionType.RESOLVE_FLOR_SHOWDOWN:
+        return handleResolveFlorShowdown(state);
+    case ActionType.RESOLVE_CONTRAFLOR_DECLINE:
+        return handleResolveContraflorDecline(state);
 
     // Opponent Modeling Action
     case ActionType.UPDATE_OPPONENT_PROBS:
@@ -153,12 +171,25 @@ export function useGameReducer(state: GameState, action: Action): GameState {
     // Central Message
     case ActionType.CLEAR_CENTRAL_MESSAGE:
       return { ...state, centralMessage: null, isCentralMessagePersistent: false };
+    
+    // Player Blurb
+    case ActionType.CLEAR_PLAYER_BLURB:
+      return { ...state, playerBlurb: null };
 
     // Local Storage & Import/Export Actions
     case ActionType.LOAD_IMPORTED_DATA:
     case ActionType.LOAD_PERSISTED_STATE: {
         const loadedState = action.payload;
-        if (!loadedState) return state; // Should not happen, but guard anyway
+        if (!loadedState) return state;
+
+        // If the loaded state includes a specific hand, it's a scenario setup (like the tutorial).
+        // In this case, we apply the state directly and don't start a new round.
+        if (loadedState.playerHand && loadedState.playerHand.length > 0) {
+            return {
+                ...initialState, // Start from a clean slate
+                ...loadedState, // Apply the specific scenario state
+            };
+        }
 
         // Construct a clean state, but with the persisted learning data.
         // This prevents loading into a stale state (e.g., game over, middle of a trick).

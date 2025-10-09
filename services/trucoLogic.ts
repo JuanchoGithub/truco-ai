@@ -1,4 +1,5 @@
 
+
 import { Card, Suit, Rank, Player } from '../types';
 
 const SUITS: Suit[] = ['espadas', 'bastos', 'oros', 'copas'];
@@ -62,6 +63,11 @@ export const hasFlor = (hand: Card[]): boolean => {
   if (hand.length < 3) return false;
   const firstSuit = hand[0].suit;
   return hand.every(card => card.suit === firstSuit);
+};
+
+export const getFlorValue = (hand: Card[]): number => {
+    if (!hasFlor(hand)) return 0;
+    return 20 + hand.reduce((sum, card) => sum + (card.rank >= 10 ? 0 : card.rank), 0);
 };
 
 export const shuffleDeck = <T,>(array: T[]): T[] => {

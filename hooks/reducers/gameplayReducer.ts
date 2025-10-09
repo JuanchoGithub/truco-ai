@@ -1,3 +1,5 @@
+
+
 import { GameState, Action, ActionType, GamePhase, Case, OpponentModel, PlayerEnvidoActionEntry, PlayerPlayOrderEntry, RoundSummary, Card } from '../../types';
 import { createDeck, shuffleDeck, determineTrickWinner, determineRoundWinner, getCardName, hasFlor, getEnvidoValue, getCardHierarchy, calculateHandStrength, getCardCode, decodeCardFromCode } from '../../services/trucoLogic';
 import { initializeProbabilities, updateProbsOnPlay } from '../../services/ai/inferenceService';
@@ -148,7 +150,7 @@ export function handleStartNewRound(state: GameState, action: { type: ActionType
       aiTricks: [null, null, null],
       trickWinners: [null, null, null],
       roundWinner: null,
-      pointsAwarded: { player: 0, ai: 0 },
+      pointsAwarded: { player: 0; ai: 0 },
       playerTrucoCall: null,
   };
   
@@ -179,9 +181,11 @@ export function handleStartNewRound(state: GameState, action: { type: ActionType
     turnBeforeInterrupt: null,
     pendingTrucoCaller: null,
     hasEnvidoBeenCalledThisRound: false,
+    hasRealEnvidoBeenCalledThisSequence: false,
     hasFlorBeenCalledThisRound: false,
     envidoPointsOnOffer: 0,
     previousEnvidoPoints: 0,
+    florPointsOnOffer: 0,
     trucoLevel: 0,
     lastCaller: null,
     playerCalledHighEnvido: false,
@@ -191,6 +195,7 @@ export function handleStartNewRound(state: GameState, action: { type: ActionType
     playerEnvidoValue: null,
     playerActionHistory: [],
     aiBlurb: null,
+    playerBlurb: null,
     lastRoundWinner: null,
     roundHistory: [...state.roundHistory, newRoundSummary],
   };
@@ -249,7 +254,7 @@ export function handlePlayCard(state: GameState, action: { type: ActionType.PLAY
 
         // If this is the player's first card, it's their last chance to call Envido.
         // We log their choice not to.
-        const envidoWasPossible = state.currentTrick === 0 && !state.hasEnvidoBeenCalledThisRound && !state.hasFlorBeenCalledThisRound && !state.playerHasFlor && !state.aiHasFlor;
+        const envidoWasPossible = state.currentTrick === 0 && !state.hasEnvidoBeenCalledThisRound && !state.playerHasFlor && !state.aiHasFlor;
         let newEnvidoHistory = state.playerEnvidoHistory;
         if (envidoWasPossible) {
             const didNotCallEntry: PlayerEnvidoActionEntry = {
@@ -307,6 +312,7 @@ export function handlePlayCard(state: GameState, action: { type: ActionType.PLAY
         playedCards: newPlayedCards,
         opponentHandProbabilities: updatedProbs,
         aiBlurb: null,
+        playerBlurb: null,
         lastRoundWinner: null, // Clear winner on new card play
         isThinking: player === 'ai' ? false : newState.isThinking,
       };
@@ -409,6 +415,7 @@ export function handlePlayCard(state: GameState, action: { type: ActionType.PLAY
         aiTrucoContext: null,
         lastRoundWinner: roundWinner,
         aiBlurb: trickOutcomeBlurb,
+        playerBlurb: null,
         isThinking: player === 'ai' ? false : newState.isThinking,
         gamePhase: 'round_end',
         currentTurn: null,
@@ -432,6 +439,7 @@ export function handlePlayCard(state: GameState, action: { type: ActionType.PLAY
         // Fix: Corrected typo from 'updatedProps' to 'updatedProbs'.
         opponentHandProbabilities: updatedProbs,
         aiBlurb: trickOutcomeBlurb,
+        playerBlurb: null,
         lastRoundWinner: null, // Clear winner on new card play
         isThinking: player === 'ai' ? false : newState.isThinking,
       };

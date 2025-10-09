@@ -1,10 +1,11 @@
 
+
 import { GameState, ActionType, AiMove } from '../types';
 import { findBestCardToPlay } from './ai/playCardStrategy';
-import { getEnvidoResponse, getEnvidoCall } from './ai/envidoStrategy';
+import { getEnvidoResponse, getEnvidoCall, getFlorResponse, getFlorCallOrEnvidoCall } from './ai/envidoStrategy';
 import { getTrucoResponse, getTrucoCall } from './ai/trucoStrategy';
 import { getCardName, getEnvidoDetails, calculateHandStrength } from './trucoLogic';
-import { getRandomPhrase, FLOR_PHRASES, ENVIDO_PRIMERO_PHRASES } from './ai/phrases';
+import { getRandomPhrase, FLOR_PHRASES, ENVIDO_PRIMERO_PHRASES, QUIERO_PHRASES, NO_QUIERO_PHRASES } from './ai/phrases';
 
 export const getLocalAIMove = (state: GameState): AiMove => {
     const { gamePhase, currentTurn, lastCaller, currentTrick, hasEnvidoBeenCalledThisRound, aiHasFlor, playerHasFlor, hasFlorBeenCalledThisRound, playerTricks, aiTricks, trickWinners } = state;
@@ -27,33 +28,27 @@ export const getLocalAIMove = (state: GameState): AiMove => {
         }
     }
 
-    // Flor has the highest priority and must be called if present at the start of the round.
-    const canDeclareFlor = aiHasFlor && !hasFlorBeenCalledThisRound && currentTrick === 0 && state.aiTricks[0] === null;
-    if (canDeclareFlor) {
-        const blurbText = getRandomPhrase(FLOR_PHRASES);
-        return {
-            action: { type: ActionType.DECLARE_FLOR, payload: { blurbText, player: 'ai' } },
-            reasoning: "[Lógica de Flor]\n¡Tengo Flor! Debo cantarla para ganar 3 puntos."
-        };
-    }
-
     // 1. MUST RESPOND to a player's call
     if (gamePhase.includes('_called') && currentTurn === 'ai' && lastCaller === 'player') {
         reasoning.push(`[Lógica de Respuesta]`);
         reasoning.push(`El jugador cantó ${gamePhase.replace('_called', '').toUpperCase()}. Debo responder.`);
 
-        // Flor has top priority, even over responding to Truco. This is redundant with the top-level check
-        // but makes the AI's priority explicit in this context.
-        if (aiHasFlor && !hasFlorBeenCalledThisRound && currentTrick === 0) {
-            const blurbText = getRandomPhrase(FLOR_PHRASES);
-            return {
-                action: { type: ActionType.DECLARE_FLOR, payload: { blurbText, player: 'ai' } },
-                reasoning: "[Lógica de Prioridad: Flor]\nEl jugador hizo un llamado, pero mi Flor tiene la máxima prioridad. Debo declararla antes de continuar."
-            };
+        // Flor response logic
+        if (gamePhase === 'flor_called' || gamePhase === 'contraflor_called') {
+            move = getFlorResponse(state, reasoning);
+            if (move) return move;
         }
 
-        const canCallEnvidoPrimero = gamePhase === 'truco_called' && currentTrick === 0 && state.playerTricks[0] === null && state.aiTricks[0] === null && !playerHasFlor && !aiHasFlor && !hasEnvidoBeenCalledThisRound;
+        const canCallEnvidoPrimero = gamePhase === 'truco_called' && currentTrick === 0 && state.playerTricks[0] === null && state.aiTricks[0] === null && !hasEnvidoBeenCalledThisRound;
         if (canCallEnvidoPrimero) {
+            // If AI has flor, it must respond with flor to envido/truco.
+            if (aiHasFlor) {
+                const blurbText = getRandomPhrase(FLOR_PHRASES);
+                return {
+                    action: { type: ActionType.RESPOND_TO_ENVIDO_WITH_FLOR, payload: { blurbText } },
+                    reasoning: "[Lógica de Prioridad: Flor]\nEl jugador cantó TRUCO, pero mi Flor tiene prioridad. Debo declararla."
+                };
+            }
             const envidoCallDecision = getEnvidoCall(state);
             if (envidoCallDecision) {
                  const blurbText = getRandomPhrase(ENVIDO_PRIMERO_PHRASES);
@@ -61,11 +56,19 @@ export const getLocalAIMove = (state: GameState): AiMove => {
                  return { ...envidoCallDecision, reasoning: updatedReasoning, action: { type: ActionType.CALL_ENVIDO, payload: { blurbText } } };
             }
         }
-
-        if (gamePhase.includes('envido')) {
+        
+        if (gamePhase === 'envido_called') {
+            // Check for Flor response to Envido
+            if (aiHasFlor) {
+                const blurbText = getRandomPhrase(FLOR_PHRASES);
+                return {
+                    action: { type: ActionType.RESPOND_TO_ENVIDO_WITH_FLOR, payload: { blurbText } },
+                    reasoning: "[Lógica de Prioridad: Flor]\nEl jugador cantó Envido. Mi Flor lo anula y gana 3 puntos."
+                };
+            }
             move = getEnvidoResponse(state, reasoning);
         }
-        // FIX: Broadened the condition to include 'vale_cuatro' to correctly handle all truco-related responses.
+
         if (gamePhase.includes('truco') || gamePhase.includes('vale_cuatro')) {
             move = getTrucoResponse(state, reasoning);
         }
@@ -74,22 +77,22 @@ export const getLocalAIMove = (state: GameState): AiMove => {
 
     // 2. DECIDE TO MAKE A CALL
     if (!gamePhase.includes('_called')) {
-        let envidoMove: AiMove | null = null;
+        let singingMove: AiMove | null = null;
         let trucoMove: AiMove | null = null;
         
-        // Envido can only be called in trick 1 before cards are played, and if no one has flor
-        const canCallEnvido = !hasEnvidoBeenCalledThisRound && !hasFlorBeenCalledThisRound && !aiHasFlor && !playerHasFlor && currentTrick === 0 && state.playerTricks[0] === null && state.aiTricks[0] === null;
-        if (canCallEnvido) {
-            envidoMove = getEnvidoCall(state);
+        // Envido/Flor can only be called in trick 1 before cards are played.
+        const canSing = !hasEnvidoBeenCalledThisRound && currentTrick === 0 && state.playerTricks[0] === null && state.aiTricks[0] === null;
+        if (canSing) {
+            singingMove = getFlorCallOrEnvidoCall(state);
         }
         
-        // Truco can be called anytime envido is not active
-        if (!gamePhase.includes('envido')) {
+        // Truco can be called anytime envido/flor is not active
+        if (!gamePhase.includes('envido') && !gamePhase.includes('flor')) {
             trucoMove = getTrucoCall(state);
         }
 
-        // New strategic decision point: Choose between Envido and Truco
-        if (envidoMove && trucoMove) {
+        // New strategic decision point: Choose between Envido/Flor and Truco
+        if (singingMove && trucoMove) {
             const aiEnvidoDetails = getEnvidoDetails(state.initialAiHand);
             const handStrength = calculateHandStrength(state.initialAiHand);
             
@@ -100,20 +103,20 @@ export const getLocalAIMove = (state: GameState): AiMove => {
                 if (Math.random() < 0.60) {
                     const reasoning = `[Lógica Estratégica Superior: Sacrificar Envido]\n` +
                                     `Evaluación de Mano Completa:\n` +
-                                    `  - Puntos de Envido: ${aiEnvidoDetails.value} (Extremadamente Fuerte).\n` +
+                                    `  - Puntos de Envido/Flor: ${aiEnvidoDetails.value} (Extremadamente Fuerte).\n` +
                                     `  - Fuerza de Truco: ${handStrength} (Élite).\n` +
-                                    `Análisis: Mi mano es un "monstruo" en ambas fases. Cantar un Envido tan alto (que probablemente ganaría) alertaría al jugador de mis cartas altas (como el As de Espadas, 7s, 3s), haciéndolo jugar el Truco con extrema cautela.\n` +
-                                    `Decisión Táctica: No cantaré Envido. Sacrificaré la ganancia de puntos del Envido para ocultar mi fuerza y tender una trampa, con el objetivo de ganar más puntos en un Truco posterior.\n` +
+                                    `Análisis: Mi mano es un "monstruo" en ambas fases. Cantar un Envido/Flor tan alto (que probablemente ganaría) alertaría al jugador de mis cartas altas, haciéndolo jugar el Truco con extrema cautela.\n` +
+                                    `Decisión Táctica: No cantaré. Sacrificaré la ganancia de puntos para ocultar mi fuerza y tender una trampa, con el objetivo de ganar más puntos en un Truco posterior.\n` +
                                     `\n--- Procediendo con el plan de Truco ---\n` +
                                     trucoMove.reasoning;
                     return { ...trucoMove, reasoning };
                 }
             }
-            // By default, a valid Envido call takes precedence.
-            return envidoMove;
+            // By default, a valid Envido/Flor call takes precedence.
+            return singingMove;
         }
 
-        if (envidoMove) return envidoMove;
+        if (singingMove) return singingMove;
         if (trucoMove) return trucoMove;
     }
 

@@ -1,4 +1,5 @@
 
+
 import { GameState, ActionType, AiTrucoContext, PlayerTrucoCallEntry } from '../../types';
 import { calculateHandStrength, getHandPercentile } from '../../services/trucoLogic';
 
@@ -15,11 +16,12 @@ export function handleCallTruco(state: GameState, action: { type: ActionType.CAL
   const isEnvidoPossible = state.currentTrick === 0 && state.playerTricks[0] === null && state.aiTricks[0] === null;
   const callerName = state.currentTurn === 'player' ? 'Jugador' : 'IA';
   const caller = state.currentTurn!;
+  const isPlayer = caller === 'player';
   
   const newState: Partial<GameState> = {};
   let updatedState = { ...state };
 
-  if (caller === 'player') {
+  if (isPlayer) {
     const handStrength = calculateHandStrength(state.initialPlayerHand);
     const handPercentile = getHandPercentile(state.initialPlayerHand);
     const isBluff = handPercentile < 40; // Bluff is defined as a hand in the bottom 40%
@@ -53,7 +55,8 @@ export function handleCallTruco(state: GameState, action: { type: ActionType.CAL
     pendingTrucoCaller: isEnvidoPossible ? state.currentTurn : null,
     messageLog: [...state.messageLog, `${callerName} canta ¡TRUCO!`],
     aiTrucoContext: action.payload?.trucoContext || null,
-    aiBlurb: action.payload?.blurbText ? { text: action.payload.blurbText, isVisible: true } : null,
+    playerBlurb: isPlayer ? { text: '¡Truco!', isVisible: true } : null,
+    aiBlurb: !isPlayer && action.payload?.blurbText ? { text: action.payload.blurbText, isVisible: true } : null,
     isThinking: caller === 'ai' ? false : state.isThinking,
   };
 }
@@ -61,6 +64,7 @@ export function handleCallTruco(state: GameState, action: { type: ActionType.CAL
 export function handleCallRetruco(state: GameState, action: { type: ActionType.CALL_RETRUCO, payload?: { blurbText: string, trucoContext?: AiTrucoContext } }): GameState {
    const callerName = state.currentTurn === 'player' ? 'Jugador' : 'IA';
    const caller = state.currentTurn!;
+   const isPlayer = caller === 'player';
    const updatedState = updateRoundHistoryWithCall(state, `${caller}: Retruco`);
    return { 
       ...updatedState, 
@@ -72,7 +76,8 @@ export function handleCallRetruco(state: GameState, action: { type: ActionType.C
       pendingTrucoCaller: null,
       messageLog: [...state.messageLog, `${callerName} canta ¡RETRUCO!`],
       aiTrucoContext: action.payload?.trucoContext || null,
-      aiBlurb: action.payload?.blurbText ? { text: action.payload.blurbText, isVisible: true } : null,
+      playerBlurb: isPlayer ? { text: '¡Retruco!', isVisible: true } : null,
+      aiBlurb: !isPlayer && action.payload?.blurbText ? { text: action.payload.blurbText, isVisible: true } : null,
       isThinking: caller === 'ai' ? false : state.isThinking,
     };
 }
@@ -80,6 +85,7 @@ export function handleCallRetruco(state: GameState, action: { type: ActionType.C
 export function handleCallValeCuatro(state: GameState, action: { type: ActionType.CALL_VALE_CUATRO, payload?: { blurbText: string, trucoContext?: AiTrucoContext } }): GameState {
    const callerName = state.currentTurn === 'player' ? 'Jugador' : 'IA';
    const caller = state.currentTurn!;
+   const isPlayer = caller === 'player';
    const updatedState = updateRoundHistoryWithCall(state, `${caller}: Vale Cuatro`);
    return { 
       ...updatedState, 
@@ -91,7 +97,8 @@ export function handleCallValeCuatro(state: GameState, action: { type: ActionTyp
       pendingTrucoCaller: null,
       messageLog: [...state.messageLog, `${callerName} canta ¡VALE CUATRO!`],
       aiTrucoContext: action.payload?.trucoContext || null,
-      aiBlurb: action.payload?.blurbText ? { text: action.payload.blurbText, isVisible: true } : null,
+      playerBlurb: isPlayer ? { text: '¡Vale Cuatro!', isVisible: true } : null,
+      aiBlurb: !isPlayer && action.payload?.blurbText ? { text: action.payload.blurbText, isVisible: true } : null,
       isThinking: caller === 'ai' ? false : state.isThinking,
     };
 }

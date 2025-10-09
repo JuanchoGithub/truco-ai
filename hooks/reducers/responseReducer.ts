@@ -1,7 +1,7 @@
 
 
 import { GameState, ActionType, Player, GamePhase, Case, PlayerEnvidoActionEntry } from '../../types';
-import { getEnvidoValue, getCardCode } from '../../services/trucoLogic';
+import { getEnvidoValue, getFlorValue, getCardCode } from '../../services/trucoLogic';
 import { updateProbsOnEnvido } from '../../services/ai/inferenceService';
 import { getRandomPhrase, ENVIDO_LOSE_PHRASES, ENVIDO_WIN_PHRASES, POST_ENVIDO_TRUCO_REMINDER_PHRASES } from '../../services/ai/phrases';
 import { handleStartNewRound } from './gameplayReducer';
@@ -119,6 +119,7 @@ export function handleResolveEnvidoAccept(state: GameState): GameState {
         playerCalledHighEnvido,
         opponentHandProbabilities: updatedProbs,
         playerEnvidoValue: playerEnvido,
+        hasRealEnvidoBeenCalledThisSequence: false, // Reset for next round
         ...postEnvidoState,
         aiBlurb: finalBlurb,
         centralMessage: centralMessageText,
@@ -146,10 +147,11 @@ function handleTrucoAccept(state: GameState, messageLog: string[]): GameState {
 export function handleAccept(state: GameState, action: { type: ActionType.ACCEPT; payload?: { blurbText: string } }): GameState {
     const acceptor = state.currentTurn!;
     const acceptorName = acceptor === 'player' ? 'Jugador' : 'IA';
+    const isPlayer = acceptor === 'player';
     const messageLog = [...state.messageLog, `¡${acceptorName} quiere!`];
 
     let newEnvidoHistory = state.playerEnvidoHistory;
-    if (state.gamePhase.includes('envido') && state.currentTurn === 'player') {
+    if (state.gamePhase.includes('envido') && isPlayer) {
         const entry: PlayerEnvidoActionEntry = {
             round: state.round,
             envidoPoints: getEnvidoValue(state.initialPlayerHand),
@@ -164,9 +166,10 @@ export function handleAccept(state: GameState, action: { type: ActionType.ACCEPT
     const newState = {
       ...updatedStateWithCall,
       playerEnvidoHistory: newEnvidoHistory,
-      aiBlurb: state.currentTurn === 'ai' && action.payload?.blurbText 
+      playerBlurb: isPlayer ? { text: '¡Quiero!', isVisible: true } : null,
+      aiBlurb: !isPlayer && action.payload?.blurbText 
         ? { text: action.payload.blurbText, isVisible: true } 
-        : state.aiBlurb, // Preserve blurb if player is acting
+        : null,
     };
 
     if (state.gamePhase.includes('envido')) {
@@ -249,6 +252,7 @@ export function handleResolveEnvidoDecline(state: GameState): GameState {
         messageLog: [...state.messageLog, finalMessage],
         playerEnvidoFoldHistory: newFoldHistory,
         playerActionHistory: [...state.playerActionHistory, ActionType.DECLINE],
+        hasRealEnvidoBeenCalledThisSequence: false, // Reset for next round
         ...postEnvidoState,
         aiBlurb: finalBlurb,
         roundHistory: newRoundHistory,
@@ -325,10 +329,11 @@ export function handleResolveTrucoDecline(state: GameState): GameState {
 export function handleDecline(state: GameState, action: { type: ActionType.DECLINE; payload?: { blurbText: string } }): GameState {
     const decliner = state.currentTurn!;
     const declinerName = decliner === 'player' ? 'Jugador' : 'IA';
+    const isPlayer = decliner === 'player';
     const messageLog = [...state.messageLog, `${declinerName} no quiere.`];
 
     let newEnvidoHistory = state.playerEnvidoHistory;
-    if (state.gamePhase.includes('envido') && state.currentTurn === 'player') {
+    if (state.gamePhase.includes('envido') && isPlayer) {
         const entry: PlayerEnvidoActionEntry = {
             round: state.round,
             envidoPoints: getEnvidoValue(state.initialPlayerHand),
@@ -343,9 +348,10 @@ export function handleDecline(state: GameState, action: { type: ActionType.DECLI
     const newState = {
       ...updatedStateWithCall,
       playerEnvidoHistory: newEnvidoHistory,
-      aiBlurb: state.currentTurn === 'ai' && action.payload?.blurbText 
+      playerBlurb: isPlayer ? { text: 'No Quiero', isVisible: true } : null,
+      aiBlurb: !isPlayer && action.payload?.blurbText 
         ? { text: action.payload.blurbText, isVisible: true } 
-        : state.aiBlurb,
+        : null,
     };
 
     if (state.gamePhase.includes('envido')) {
@@ -366,4 +372,154 @@ export function handleDecline(state: GameState, action: { type: ActionType.DECLI
         };
     }
     return newState;
+}
+
+// New Flor Handlers
+export function handleAcknowledgeFlor(state: GameState, action: { type: ActionType.ACKNOWLEDGE_FLOR, payload?: { blurbText?: string } }): GameState {
+    const florCaller = state.lastCaller!;
+    const acknowledger = state.currentTurn!;
+    const isPlayer = acknowledger === 'player';
+    const points = state.florPointsOnOffer;
+    const winnerName = florCaller === 'player' ? 'Jugador' : 'IA';
+
+    let newPlayerScore = state.playerScore;
+    let newAiScore = state.aiScore;
+
+    if (florCaller === 'player') newPlayerScore += points;
+    else newAiScore += points;
+
+    const message = `${winnerName} gana ${points} puntos por la Flor.`;
+    const newRoundHistory = [...state.roundHistory];
+    const currentRoundSummary = newRoundHistory.find(r => r.round === state.round);
+    if (currentRoundSummary) {
+        if (florCaller === 'player') currentRoundSummary.pointsAwarded.player += points;
+        else currentRoundSummary.pointsAwarded.ai += points;
+    }
+    
+    // Restore turn and continue
+    const nextTurn = state.turnBeforeInterrupt!;
+    const nextPhase = `trick_${state.currentTrick + 1}` as GamePhase;
+
+    return {
+        ...state,
+        playerScore: newPlayerScore,
+        aiScore: newAiScore,
+        messageLog: [...state.messageLog, message],
+        currentTurn: nextTurn,
+        gamePhase: nextPhase,
+        turnBeforeInterrupt: null,
+        lastCaller: null,
+        roundHistory: newRoundHistory,
+        playerBlurb: isPlayer ? { text: 'Son Buenas', isVisible: true } : null,
+        aiBlurb: !isPlayer && action.payload?.blurbText ? { text: action.payload.blurbText, isVisible: true } : null,
+    };
+}
+
+export function handleAcceptContraflor(state: GameState, action: { type: ActionType.ACCEPT_CONTRAFLOR, payload?: { blurbText?: string } }): GameState {
+    const acceptor = state.currentTurn!;
+    const isPlayer = acceptor === 'player';
+    updateRoundHistoryWithCall(state, `${acceptor}: Con Flor Quiero`);
+    return {
+        ...state,
+        gamePhase: 'FLOR_SHOWDOWN',
+        florPointsOnOffer: 6,
+        messageLog: [...state.messageLog, `${acceptor === 'player' ? 'Jugador' : 'IA'}: "¡Con Flor Quiero!"`],
+        playerBlurb: isPlayer ? { text: '¡Quiero!', isVisible: true } : null,
+        aiBlurb: !isPlayer && action.payload?.blurbText ? { text: action.payload.blurbText, isVisible: true } : null,
+        isThinking: false,
+    };
+}
+
+export function handleDeclineContraflor(state: GameState, action: { type: ActionType.DECLINE_CONTRAFLOR, payload?: { blurbText?: string } }): GameState {
+    const decliner = state.currentTurn!;
+    const isPlayer = decliner === 'player';
+    updateRoundHistoryWithCall(state, `${decliner}: Con Flor me achico`);
+    return {
+        ...state,
+        gamePhase: 'CONTRAFLOR_DECLINED',
+        florPointsOnOffer: 4,
+        messageLog: [...state.messageLog, `${decliner === 'player' ? 'Jugador' : 'IA'}: "Con Flor me achico."`],
+        playerBlurb: isPlayer ? { text: 'Me achico', isVisible: true } : null,
+        aiBlurb: !isPlayer && action.payload?.blurbText ? { text: action.payload.blurbText, isVisible: true } : null,
+        isThinking: false,
+    };
+}
+
+export function handleResolveFlorShowdown(state: GameState): GameState {
+    const playerFlor = getFlorValue(state.initialPlayerHand);
+    const aiFlor = getFlorValue(state.initialAiHand);
+
+    let winner: Player;
+    if (playerFlor > aiFlor) winner = 'player';
+    else if (aiFlor > playerFlor) winner = 'ai';
+    else winner = state.mano;
+
+    const points = state.florPointsOnOffer;
+    let newPlayerScore = state.playerScore;
+    let newAiScore = state.aiScore;
+
+    if (winner === 'player') newPlayerScore += points;
+    else newAiScore += points;
+
+    const centralMessage = `Tus puntos: ${playerFlor}. IA: ${aiFlor}. ${winner === 'player' ? '¡Ganaste la Flor!' : 'Gana la IA.'}`;
+    const logMessage = `${centralMessage} ${winner === 'player' ? 'Jugador' : 'IA'} gana ${points} puntos.`;
+
+    const newRoundHistory = [...state.roundHistory];
+    const currentRoundSummary = newRoundHistory.find(r => r.round === state.round);
+    if (currentRoundSummary) {
+        if (winner === 'player') currentRoundSummary.pointsAwarded.player += points;
+        else currentRoundSummary.pointsAwarded.ai += points;
+    }
+
+    const nextTurn = state.turnBeforeInterrupt!;
+    const nextPhase = `trick_${state.currentTrick + 1}` as GamePhase;
+
+    return {
+        ...state,
+        playerScore: newPlayerScore,
+        aiScore: newAiScore,
+        messageLog: [...state.messageLog, logMessage],
+        centralMessage,
+        isCentralMessagePersistent: true,
+        currentTurn: nextTurn,
+        gamePhase: nextPhase,
+        turnBeforeInterrupt: null,
+        lastCaller: null,
+        roundHistory: newRoundHistory,
+    };
+}
+
+export function handleResolveContraflorDecline(state: GameState): GameState {
+    const winner = state.lastCaller!; // The one who called Contraflor
+    const points = state.florPointsOnOffer; // 4 points
+
+    let newPlayerScore = state.playerScore;
+    let newAiScore = state.aiScore;
+
+    if (winner === 'player') newPlayerScore += points;
+    else newAiScore += points;
+
+    const message = `${winner === 'player' ? 'Jugador' : 'IA'} gana ${points} puntos.`;
+
+    const newRoundHistory = [...state.roundHistory];
+    const currentRoundSummary = newRoundHistory.find(r => r.round === state.round);
+    if (currentRoundSummary) {
+        if (winner === 'player') currentRoundSummary.pointsAwarded.player += points;
+        else currentRoundSummary.pointsAwarded.ai += points;
+    }
+
+    const nextTurn = state.turnBeforeInterrupt!;
+    const nextPhase = `trick_${state.currentTrick + 1}` as GamePhase;
+    
+    return {
+        ...state,
+        playerScore: newPlayerScore,
+        aiScore: newAiScore,
+        messageLog: [...state.messageLog, message],
+        currentTurn: nextTurn,
+        gamePhase: nextPhase,
+        turnBeforeInterrupt: null,
+        lastCaller: null,
+        roundHistory: newRoundHistory,
+    };
 }

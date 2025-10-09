@@ -1,8 +1,9 @@
 
+
 import React, { useReducer, useEffect, useState, useRef } from 'react';
 import { useGameReducer, initialState } from './hooks/useGameReducer';
 import { getLocalAIMove } from './services/localAiService';
-import { ActionType, Action } from './types';
+import { ActionType, Action, GameState, AiMove } from './types';
 import Scoreboard from './components/Scoreboard';
 import GameBoard from './components/GameBoard';
 import PlayerHand from './components/PlayerHand';
@@ -11,42 +12,58 @@ import MessageLog from './components/MessageLog';
 import GameOverModal from './components/GameOverModal';
 import AiLogPanel from './components/AiLogPanel';
 import AiBlurb from './components/AiBlurb';
+import PlayerBlurb from './components/PlayerBlurb';
 import CentralMessage from './components/CentralMessage';
 import { saveStateToStorage, loadStateFromStorage } from './services/storageService';
 import DataModal from './components/DataModal';
 import { getCardName } from './services/trucoLogic';
 import { getRandomPhrase, FLOR_PHRASES } from './services/ai/phrases';
+import MainMenu from './components/MainMenu';
+import Tutorial from './components/Tutorial';
+import Manual from './components/Manual';
+import AssistantPanel from './components/AssistantPanel';
+import { generateSuggestionSummary } from './services/suggestionService';
+
+type GameMode = 'menu' | 'playing' | 'tutorial' | 'playing-with-help' | 'manual';
 
 const App: React.FC = () => {
   const [state, dispatch] = useReducer(useGameReducer, initialState);
   const [localMessage, setLocalMessage] = useState<string | null>(null);
   const [isMessageVisible, setIsMessageVisible] = useState(false);
   const messageTimers = useRef<{ fadeOutTimerId?: number; clearTimerId?: number }>({});
+  const [gameMode, setGameMode] = useState<GameMode>('menu');
+  const [assistantMove, setAssistantMove] = useState<AiMove | null>(null);
 
   useEffect(() => {
-    const persistedState = loadStateFromStorage();
-    if (persistedState) {
-        dispatch({ type: ActionType.LOAD_PERSISTED_STATE, payload: persistedState });
-    } else {
-        dispatch({ type: ActionType.START_NEW_ROUND });
+    const isPlaying = gameMode === 'playing' || gameMode === 'playing-with-help';
+    if (isPlaying) {
+        const persistedState = loadStateFromStorage();
+        if (persistedState) {
+            dispatch({ type: ActionType.LOAD_PERSISTED_STATE, payload: persistedState });
+        } else {
+            dispatch({ type: ActionType.START_NEW_ROUND });
+        }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [gameMode]);
+
 
   useEffect(() => {
-    // Save learning data whenever it changes, but only after the game has started.
-    if (state.round > 0) {
+    const isPlaying = gameMode === 'playing' || gameMode === 'playing-with-help';
+    if (isPlaying && state.round > 0) {
         saveStateToStorage(state);
     }
-  }, [state]);
+  }, [state, gameMode]);
 
   useEffect(() => {
-    // New guard to prevent AI from acting during delayed resolution phases
+    const isPlaying = gameMode === 'playing' || gameMode === 'playing-with-help';
     const isResolving = state.gamePhase === 'ENVIDO_ACCEPTED' || 
                         state.gamePhase === 'ENVIDO_DECLINED' || 
-                        state.gamePhase === 'TRUCO_DECLINED';
+                        state.gamePhase === 'TRUCO_DECLINED' ||
+                        state.gamePhase === 'FLOR_SHOWDOWN' ||
+                        state.gamePhase === 'CONTRAFLOR_DECLINED';
 
-    if (state.currentTurn === 'ai' && !state.isThinking && !state.winner && !isResolving) {
+    if (isPlaying && state.currentTurn === 'ai' && !state.isThinking && !state.winner && !isResolving) {
       const handleAiTurn = () => {
         dispatch({ type: ActionType.AI_THINKING, payload: true });
         
@@ -61,9 +78,6 @@ const App: React.FC = () => {
             
             setTimeout(() => {
               dispatch(aiMove.action);
-              // The AI_THINKING payload is now set to false inside the response reducers
-              // for a better user experience, so it stops when the response is shown.
-              // dispatch({ type: ActionType.AI_THINKING, payload: false });
             }, 700);
         } catch(error) {
             console.error("Error getting AI move from local AI:", error);
@@ -77,10 +91,59 @@ const App: React.FC = () => {
       const timeoutId = setTimeout(handleAiTurn, 1200);
       return () => clearTimeout(timeoutId);
     }
-  }, [state.currentTurn, state.isThinking, state.winner, state.round, state]);
+  }, [state.currentTurn, state.isThinking, state.winner, state.round, state, gameMode]);
+
+  // New useEffect to generate suggestions for the player
+  useEffect(() => {
+    if (gameMode === 'playing-with-help' && state.currentTurn === 'player' && !state.winner) {
+      const getPlayerSuggestion = (currentState: GameState): AiMove => {
+          const mirroredState: GameState = {
+              ...currentState,
+              playerHand: currentState.aiHand,
+              aiHand: currentState.playerHand,
+              initialPlayerHand: currentState.initialAiHand,
+              initialAiHand: currentState.initialPlayerHand,
+              playerTricks: currentState.aiTricks,
+              aiTricks: currentState.playerTricks,
+              playerScore: currentState.aiScore,
+              aiScore: currentState.playerScore,
+              currentTurn: 'ai',
+              playerHasFlor: currentState.aiHasFlor,
+              aiHasFlor: currentState.playerHasFlor,
+          };
+          const suggestion = getLocalAIMove(mirroredState);
+          
+          if (suggestion.action.type === ActionType.PLAY_CARD) {
+              if (suggestion.action.payload.player === 'ai') {
+                  suggestion.action.payload.player = 'player';
+              }
+          }
+           if (suggestion.action.type === ActionType.DECLARE_FLOR) {
+              if (suggestion.action.payload?.player === 'ai') {
+                  suggestion.action.payload.player = 'player';
+              }
+          }
+          return suggestion;
+      };
+      
+      try {
+          const suggestion = getPlayerSuggestion(state);
+          const summary = generateSuggestionSummary(suggestion, state);
+          const suggestionWithSummary: AiMove = { ...suggestion, summary };
+          setAssistantMove(suggestionWithSummary);
+      } catch(error) {
+          console.error("Error getting player suggestion:", error);
+          setAssistantMove(null);
+      }
+    } else {
+      setAssistantMove(null);
+    }
+  }, [gameMode, state, state.currentTurn, state.winner]);
 
   // New useEffect to handle delayed resolutions after an AI response
   useEffect(() => {
+    const isPlaying = gameMode === 'playing' || gameMode === 'playing-with-help';
+    if (!isPlaying) return;
     let resolutionAction: Action | null = null;
     switch (state.gamePhase) {
         case 'ENVIDO_ACCEPTED':
@@ -92,6 +155,12 @@ const App: React.FC = () => {
         case 'TRUCO_DECLINED':
             resolutionAction = { type: ActionType.RESOLVE_TRUCO_DECLINE };
             break;
+        case 'FLOR_SHOWDOWN':
+            resolutionAction = { type: ActionType.RESOLVE_FLOR_SHOWDOWN };
+            break;
+        case 'CONTRAFLOR_DECLINED':
+            resolutionAction = { type: ActionType.RESOLVE_CONTRAFLOR_DECLINE };
+            break;
         default:
             break;
     }
@@ -102,10 +171,12 @@ const App: React.FC = () => {
         }, 1200); // 1.2 second delay for a natural pause
         return () => clearTimeout(timeoutId);
     }
-  }, [state.gamePhase, dispatch]);
+  }, [state.gamePhase, dispatch, gameMode]);
 
   // New useEffect to handle round end timer
   useEffect(() => {
+    const isPlaying = gameMode === 'playing' || gameMode === 'playing-with-help';
+    if (!isPlaying) return;
     let timerId: number;
     if (state.gamePhase === 'round_end') {
       timerId = window.setTimeout(() => {
@@ -113,30 +184,7 @@ const App: React.FC = () => {
       }, 5000); // 5 seconds
     }
     return () => clearTimeout(timerId);
-  }, [state.gamePhase, dispatch]);
-
-  // New useEffect to allow AI to interrupt with Flor
-  useEffect(() => {
-    const { aiHasFlor, gamePhase, hasFlorBeenCalledThisRound, round, currentTurn } = state;
-    // Condition: AI has flor, it's the start of trick 1, flor hasn't been called yet,
-    // and it's the player's turn to act. This effect makes the AI interrupt the player
-    // to declare its mandatory Flor.
-    if (aiHasFlor && gamePhase === 'trick_1' && !hasFlorBeenCalledThisRound && round > 0 && currentTurn === 'player') {
-        const timerId = setTimeout(() => {
-            // Re-check state to avoid race conditions if player acted fast
-            if (state.gamePhase === 'trick_1' && !state.hasFlorBeenCalledThisRound) {
-                dispatch({ type: ActionType.AI_THINKING, payload: true });
-                const blurbText = getRandomPhrase(FLOR_PHRASES);
-                dispatch({ 
-                    type: ActionType.DECLARE_FLOR, 
-                    payload: { blurbText, player: 'ai' } 
-                });
-            }
-        }, 800); // 800ms delay for dramatic effect
-
-        return () => clearTimeout(timerId);
-    }
-  }, [state, dispatch]); // Depend on whole state to re-check inside timeout
+  }, [state.gamePhase, dispatch, gameMode]);
 
   const clearMessageState = () => {
     dispatch({ type: ActionType.CLEAR_CENTRAL_MESSAGE });
@@ -151,11 +199,12 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
+    const isPlaying = gameMode === 'playing' || gameMode === 'playing-with-help';
+    if (!isPlaying) return;
     if (state.centralMessage) {
         setLocalMessage(state.centralMessage);
         setIsMessageVisible(true);
 
-        // If the message is NOT persistent, set timers to hide it automatically.
         if (!state.isCentralMessagePersistent) {
             messageTimers.current.fadeOutTimerId = window.setTimeout(() => {
                 setIsMessageVisible(false);
@@ -164,13 +213,24 @@ const App: React.FC = () => {
             messageTimers.current.clearTimerId = window.setTimeout(clearMessageState, 2000); // 1500ms visible + 500ms fadeout
         }
 
-        // Always clear timers on cleanup to prevent stale timeouts
         return () => {
             clearTimeout(messageTimers.current.fadeOutTimerId);
             clearTimeout(messageTimers.current.clearTimerId);
         };
     }
-  }, [state.centralMessage, state.isCentralMessagePersistent, dispatch]);
+  }, [state.centralMessage, state.isCentralMessagePersistent, dispatch, gameMode]);
+
+  // Automatically clear the player's blurb after a short delay
+  useEffect(() => {
+    const isPlaying = gameMode === 'playing' || gameMode === 'playing-with-help';
+    if (!isPlaying) return;
+    if (state.playerBlurb?.isVisible) {
+      const timerId = window.setTimeout(() => {
+        dispatch({ type: ActionType.CLEAR_PLAYER_BLURB });
+      }, 1500);
+      return () => clearTimeout(timerId);
+    }
+  }, [state.playerBlurb, dispatch, gameMode]);
 
   const handlePlayerAction = () => {
     // If a persistent message is showing (like Envido results), clear it when the player acts.
@@ -192,6 +252,32 @@ const App: React.FC = () => {
     </button>
   );
 
+  if (gameMode === 'menu') {
+    return (
+      <MainMenu
+        onPlay={() => {
+            dispatch({ type: ActionType.RESTART_GAME });
+            setGameMode('playing');
+        }}
+        onPlayWithHelp={() => {
+            dispatch({ type: ActionType.RESTART_GAME });
+            setGameMode('playing-with-help');
+        }}
+        onLearn={() => setGameMode('tutorial')}
+        onManual={() => setGameMode('manual')}
+      />
+    );
+  }
+
+  if (gameMode === 'tutorial') {
+    return <Tutorial onExit={() => setGameMode('menu')} />;
+  }
+  
+  if (gameMode === 'manual') {
+    return <Manual onExit={() => setGameMode('menu')} />;
+  }
+
+
   return (
     <div className="h-screen bg-green-900 text-white font-sans overflow-hidden" style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/felt.png')"}}>
       <div className="w-full h-full max-w-screen-2xl mx-auto flex flex-row gap-4 p-2 md:p-4">
@@ -206,6 +292,12 @@ const App: React.FC = () => {
           <Scoreboard playerScore={state.playerScore} aiScore={state.aiScore} className="absolute top-0 left-0 z-40" />
           
           <div className="absolute top-1 right-1 z-50 flex gap-2 p-1">
+            <button
+              onClick={() => setGameMode('menu')}
+              className="px-2 py-0.5 text-[10px] md:px-3 md:py-1 md:text-xs rounded-md border-2 bg-red-700/80 border-red-500 text-white transition-colors hover:bg-red-600/90"
+            >
+                MENÚ
+            </button>
             <button 
                 onClick={() => dispatch({ type: ActionType.TOGGLE_DATA_MODAL })}
                 className="px-2 py-0.5 text-[10px] md:px-3 md:py-1 md:text-xs rounded-md border-2 bg-gray-700/50 border-gray-500 text-white transition-colors hover:bg-gray-600/70"
@@ -241,6 +333,10 @@ const App: React.FC = () => {
 
             {/* AI Speech Blurb */}
             <AiBlurb text={state.aiBlurb?.text ?? ''} isVisible={!!state.aiBlurb?.isVisible} />
+            
+            {/* Player Speech Blurb */}
+            <PlayerBlurb text={state.playerBlurb?.text ?? ''} isVisible={!!state.playerBlurb?.isVisible} />
+
 
             {/* Central Message Display */}
             <CentralMessage message={localMessage} isVisible={isMessageVisible} onDismiss={handleDismissMessage} />
@@ -322,6 +418,10 @@ const App: React.FC = () => {
       
       {state.winner && (
         <GameOverModal winner={state.winner} onPlayAgain={() => dispatch({ type: ActionType.RESTART_GAME })} />
+      )}
+
+      {gameMode === 'playing-with-help' && (
+        <AssistantPanel suggestion={assistantMove} playerHand={state.playerHand} />
       )}
     </div>
   );
