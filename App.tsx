@@ -118,6 +118,7 @@ const App: React.FC = () => {
 
     const canSuggest = gameMode === 'playing-with-help' &&
                        state.currentTurn === 'player' &&
+                       state.playerHand.length > 0 &&
                        !state.winner &&
                        !state.isThinking &&
                        !isResolving &&
@@ -320,7 +321,7 @@ const App: React.FC = () => {
   };
 
   const LogButton: React.FC<{onClick: () => void, children: React.ReactNode, className?: string}> = ({ onClick, children, className = '' }) => (
-    <button onClick={onClick} className={`px-3 py-1.5 text-xs md:px-4 md:py-2 md:text-sm rounded-lg font-semibold text-yellow-200 bg-black/40 border-2 border-yellow-800/80 shadow-md hover:bg-black/60 hover:border-yellow-600 transition-colors ${className}`}>
+    <button onClick={onClick} className={`px-3 py-1.5 text-xs lg:px-4 lg:py-2 lg:text-sm rounded-lg font-semibold text-yellow-200 bg-black/40 border-2 border-yellow-800/80 shadow-md hover:bg-black/60 hover:border-yellow-600 transition-colors ${className}`}>
       {children}
     </button>
   );
@@ -369,7 +370,7 @@ const App: React.FC = () => {
 
   return (
     <div className="h-screen bg-green-900 text-white font-sans overflow-hidden" style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/felt.png')"}}>
-      <div className="w-full h-full max-w-screen-2xl mx-auto flex flex-row gap-4 p-2 md:p-4">
+      <div className="w-full h-full max-w-screen-2xl mx-auto flex flex-row gap-4 p-2 lg:p-4">
 
         {/* Left Panel */}
         <div className="hidden lg:flex w-full max-w-xs flex-shrink-0">
@@ -386,23 +387,23 @@ const App: React.FC = () => {
               className="p-1.5 rounded-md border-2 bg-gray-700/50 border-gray-500 text-white transition-colors hover:bg-gray-600/70"
               aria-label={isSoundEnabled ? "Desactivar Sonido" : "Activar Sonido"}
             >
-                <SoundIcon enabled={isSoundEnabled} className="w-3 h-3 md:w-4 md:h-4" />
+                <SoundIcon enabled={isSoundEnabled} className="w-3 h-3 lg:w-4 lg:h-4" />
             </button>
             <button
               onClick={() => setGameMode('menu')}
-              className="px-2 py-0.5 text-[10px] md:px-3 md:py-1 md:text-xs rounded-md border-2 bg-red-700/80 border-red-500 text-white transition-colors hover:bg-red-600/90"
+              className="px-2 py-0.5 text-[10px] lg:px-3 lg:py-1 lg:text-xs rounded-md border-2 bg-red-700/80 border-red-500 text-white transition-colors hover:bg-red-600/90"
             >
                 MENÚ
             </button>
             <button 
                 onClick={() => dispatch({ type: ActionType.TOGGLE_DATA_MODAL })}
-                className="px-2 py-0.5 text-[10px] md:px-3 md:py-1 md:text-xs rounded-md border-2 bg-gray-700/50 border-gray-500 text-white transition-colors hover:bg-gray-600/70"
+                className="px-2 py-0.5 text-[10px] lg:px-3 lg:py-1 lg:text-xs rounded-md border-2 bg-gray-700/50 border-gray-500 text-white transition-colors hover:bg-gray-600/70"
             >
                 VER DATA
             </button>
             <button 
               onClick={() => dispatch({ type: ActionType.TOGGLE_DEBUG_MODE })}
-              className={`px-2 py-0.5 text-[10px] md:px-3 md:py-1 md:text-xs rounded-md border-2 transition-colors ${state.isDebugMode ? 'bg-yellow-500 border-yellow-300 text-black font-bold' : 'bg-gray-700/50 border-gray-500 text-white'}`}
+              className={`px-2 py-0.5 text-[10px] lg:px-3 lg:py-1 lg:text-xs rounded-md border-2 transition-colors ${state.isDebugMode ? 'bg-yellow-500 border-yellow-300 text-black font-bold' : 'bg-gray-700/50 border-gray-500 text-white'}`}
             >
               VER CARTAS
             </button>
@@ -412,10 +413,10 @@ const App: React.FC = () => {
           <div className="relative z-10 flex flex-col flex-grow w-full max-w-4xl mx-auto h-full">
             
             {/* TOP: Title & AI Hand */}
-            <div className="flex-shrink-0 flex flex-col items-center justify-start pt-1 md:pt-2">
+            <div className="flex-shrink-0 flex flex-col items-center justify-start pt-1 lg:pt-2">
                 <div className="text-center">
-                    <h1 className="text-3xl md:text-4xl font-cinzel font-bold tracking-wider text-yellow-300" style={{ textShadow: '3px 3px 5px rgba(0,0,0,0.8)' }}>TRUCO</h1>
-                    <p className="text-xs md:text-sm text-gray-200 tracking-widest">Ronda {state.round} | Mano: {state.mano === 'player' ? 'Vos' : 'IA'}</p>
+                    <h1 className="text-3xl lg:text-4xl font-cinzel font-bold tracking-wider text-yellow-300" style={{ textShadow: '3px 3px 5px rgba(0,0,0,0.8)' }}>TRUCO</h1>
+                    <p className="text-xs lg:text-sm text-gray-200 tracking-widest">Ronda {state.round} | Mano: {state.mano === 'player' ? 'Vos' : 'IA'}</p>
                 </div>
                 <div className="flex items-center">
                     <PlayerHand 
@@ -438,7 +439,7 @@ const App: React.FC = () => {
             <CentralMessage message={localMessage} isVisible={isMessageVisible} onDismiss={handleDismissMessage} />
 
             {/* MIDDLE: Board */}
-            <div className="flex-grow flex items-center justify-center py-2 md:py-4 min-h-0">
+            <div className="flex-grow flex items-center justify-center py-2 lg:py-4 min-h-0">
                 <GameBoard 
                   playerTricks={state.playerTricks} 
                   aiTricks={state.aiTricks}
@@ -486,7 +487,7 @@ const App: React.FC = () => {
             <div className="pt-4">
               <button 
                 onClick={() => dispatch({ type: ActionType.TOGGLE_AI_LOG_EXPAND })}
-                className="px-3 py-1.5 text-xs md:px-4 md:py-2 md:text-sm rounded-lg font-semibold text-cyan-200 bg-black/40 border-2 border-cyan-800/80 shadow-md hover:bg-black/60 hover:border-cyan-600 transition-colors flex items-center gap-2"
+                className="px-3 py-1.5 text-xs lg:px-4 lg:py-2 lg:text-sm rounded-lg font-semibold text-cyan-200 bg-black/40 border-2 border-cyan-800/80 shadow-md hover:bg-black/60 hover:border-cyan-600 transition-colors flex items-center gap-2"
                 aria-label="Mostrar Lógica de la IA"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

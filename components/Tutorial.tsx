@@ -1,3 +1,4 @@
+
 import React, { useState, useReducer, useEffect } from 'react';
 import { tutorialScenarios, TutorialStep } from '../services/tutorialService';
 import { Action, ActionType, GameState } from '../types';
@@ -12,7 +13,7 @@ interface TutorialProps {
 }
 
 const TutorialButton: React.FC<{ onClick: () => void; children: React.ReactNode; highlighted?: boolean }> = ({ onClick, children, highlighted }) => {
-    const baseClasses = "px-4 py-2 text-sm md:text-base rounded-lg font-bold text-white shadow-lg transition-transform transform hover:scale-105 border-b-4";
+    const baseClasses = "px-4 py-2 text-sm lg:text-base rounded-lg font-bold text-white shadow-lg transition-transform transform hover:scale-105 border-b-4";
     const highlightClass = highlighted ? 'animate-pulse' : '';
     return (
         <button onClick={onClick} className={`${baseClasses} ${highlightClass} bg-gradient-to-b from-yellow-600 to-yellow-700 border-yellow-900 hover:from-yellow-500 hover:to-yellow-600`}>
@@ -71,7 +72,7 @@ const Tutorial: React.FC<TutorialProps> = ({ onExit }) => {
 
   return (
     <div className="h-screen bg-green-900 text-white font-sans overflow-hidden" style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/felt.png')"}}>
-      <div className="w-full h-full max-w-screen-2xl mx-auto flex flex-col relative p-2 md:p-4">
+      <div className="w-full h-full max-w-screen-2xl mx-auto flex flex-col relative p-2 lg:p-4">
         
         <div className="absolute top-1 right-1 z-50 flex gap-2 p-1">
             <button 
@@ -83,7 +84,7 @@ const Tutorial: React.FC<TutorialProps> = ({ onExit }) => {
         </div>
 
         {/* TOP: AI Hand - Always visible for learning */}
-        <div className="flex-shrink-0 flex flex-col items-center justify-start pt-1 md:pt-2">
+        <div className="flex-shrink-0 flex flex-col items-center justify-start pt-1 lg:pt-2">
             <PlayerHand 
                 cards={gameState.aiHand} 
                 playerType="ai" 
@@ -98,7 +99,7 @@ const Tutorial: React.FC<TutorialProps> = ({ onExit }) => {
         />
 
         {/* MIDDLE: Board */}
-        <div className="flex-grow flex items-center justify-center py-2 md:py-4 min-h-0">
+        <div className="flex-grow flex items-center justify-center py-2 lg:py-4 min-h-0">
             <GameBoard 
                 playerTricks={gameState.playerTricks} 
                 aiTricks={gameState.aiTricks}
@@ -134,7 +135,7 @@ const Tutorial: React.FC<TutorialProps> = ({ onExit }) => {
                         {scenario.highlightedAction === 'truco' && (
                              <TutorialButton highlighted={true} onClick={() => handlePlayerAction({type: ActionType.CALL_TRUCO})}>Truco</TutorialButton>
                         )}
-                        <button onClick={handleNextStep} className="px-4 py-2 text-sm md:text-base rounded-lg font-bold text-white shadow-lg transition-transform transform hover:scale-105 border-b-4 bg-gray-600 border-gray-800 hover:bg-gray-500">Siguiente</button>
+                        <button onClick={handleNextStep} className="px-4 py-2 text-sm lg:text-base rounded-lg font-bold text-white shadow-lg transition-transform transform hover:scale-105 border-b-4 bg-gray-600 border-gray-800 hover:bg-gray-500">Siguiente</button>
                     </>
                 )}
             </div>

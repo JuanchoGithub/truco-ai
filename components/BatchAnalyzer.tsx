@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo } from 'react';
 import { Card, GameState, Suit, Rank } from '../types';
 import { calculateHandStrength, getCardHierarchy } from '../services/trucoLogic';
@@ -262,13 +263,13 @@ const BatchAnalyzer: React.FC<{ onExit: () => void }> = ({ onExit }) => {
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
             <div className="bg-stone-800/95 border-4 border-amber-700/50 rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
                 <div className="p-4 border-b-2 border-amber-700/30 flex justify-between items-center flex-shrink-0">
-                    <h2 className="text-xl md:text-2xl font-bold text-amber-300 font-cinzel tracking-widest">
+                    <h2 className="text-xl lg:text-2xl font-bold text-amber-300 font-cinzel tracking-widest">
                         Análisis de Manos por IA
                     </h2>
-                    <button onClick={onExit} className="text-amber-200 text-2xl md:text-3xl font-bold hover:text-white transition-colors">&times;</button>
+                    <button onClick={onExit} className="text-amber-200 text-2xl lg:text-3xl font-bold hover:text-white transition-colors">&times;</button>
                 </div>
 
-                <div className="p-4 md:p-6 flex-grow overflow-y-auto text-amber-50 space-y-4">
+                <div className="p-4 lg:p-6 flex-grow overflow-y-auto text-amber-50 space-y-4">
                     <p className="text-sm text-gray-300">
                         Esta herramienta analiza <strong>{totalCombinations} combinaciones</strong> de manos estratégicamente distintas (incluyendo pares y tríos) para evaluar cómo la IA valora cada una. La "Evaluación IA" es una métrica de 0.0 a 1.0 basada en simulaciones complejas, no solo en el valor de las cartas.
                     </p>
@@ -305,7 +306,7 @@ const BatchAnalyzer: React.FC<{ onExit: () => void }> = ({ onExit }) => {
                                 </div>
                             </div>
                             <div className="overflow-x-auto">
-                                <table className="w-full text-left text-xs md:text-sm">
+                                <table className="w-full text-left text-xs lg:text-sm">
                                     <thead className="bg-black/40 text-amber-100">
                                         <tr>
                                             <SortableHeader sortKey="hand" title="Mano" sortConfig={sortConfig} requestSort={() => requestSort('trucoValue')} />
@@ -321,7 +322,7 @@ const BatchAnalyzer: React.FC<{ onExit: () => void }> = ({ onExit }) => {
                                                         <div className="flex gap-1 flex-shrink-0">
                                                             {result.hand.map(card => <CardComponent key={`${card.rank}-${card.suit}`} card={card} size="small" />)}
                                                         </div>
-                                                        <span className="text-gray-300 text-[11px] md:text-xs pl-2">
+                                                        <span className="text-gray-300 text-[11px] lg:text-xs pl-2">
                                                             {result.hand.map(getSimpleCardName).join(', ')}
                                                         </span>
                                                     </div>

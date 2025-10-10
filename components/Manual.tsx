@@ -1,3 +1,4 @@
+
 import React from 'react';
 import Card from './Card';
 import { Card as CardType, Suit } from '../types';
@@ -69,12 +70,12 @@ const Manual: React.FC<ManualProps> = ({ onExit }) => {
     const cuatros: CardType[] = SUITS.map(suit => ({ rank: 4, suit }));
 
   return (
-    <div className="h-screen bg-green-900 text-white font-lora flex flex-col items-center p-2 md:p-4" style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/felt.png')" }}>
+    <div className="h-screen bg-green-900 text-white font-lora flex flex-col items-center p-2 lg:p-4" style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/felt.png')" }}>
         <div className="w-full max-w-5xl flex justify-between items-center mb-4 flex-shrink-0 px-2">
-            <h1 className="text-3xl md:text-4xl font-cinzel text-yellow-300" style={{ textShadow: '2px 2px 4px #000' }}>Manual del Truco</h1>
+            <h1 className="text-3xl lg:text-4xl font-cinzel text-yellow-300" style={{ textShadow: '2px 2px 4px #000' }}>Manual del Truco</h1>
             <button onClick={onExit} className="px-4 py-2 text-sm rounded-md border-2 bg-red-700/80 border-red-500 text-white transition-colors hover:bg-red-600/90">Volver al Menú</button>
         </div>
-        <div className="w-full max-w-5xl overflow-y-auto flex-grow p-2 md:p-4 bg-black/40 rounded-lg border-2 border-yellow-900/50">
+        <div className="w-full max-w-5xl overflow-y-auto flex-grow p-2 lg:p-4 bg-black/40 rounded-lg border-2 border-yellow-900/50">
             <Section title="Objetivo del Juego">
                 <p>El Truco es un juego de cartas de origen español muy popular en Argentina. El objetivo es ser el primer jugador en alcanzar <strong>15 puntos</strong>. Los puntos se ganan a través de dos tipos de apuestas: el <strong>Envido</strong> y el <strong>Truco</strong>.</p>
             </Section>

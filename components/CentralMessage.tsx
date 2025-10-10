@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 interface CentralMessageProps {
@@ -22,7 +23,7 @@ const CentralMessage: React.FC<CentralMessageProps> = ({ message, isVisible, onD
         role="button"
         tabIndex={0}
       >
-        <h3 className="text-lg md:text-2xl font-cinzel text-white font-bold tracking-wider" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.8)' }}>
+        <h3 className="text-lg lg:text-2xl font-cinzel text-white font-bold tracking-wider" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.8)' }}>
           {message}
         </h3>
       </div>

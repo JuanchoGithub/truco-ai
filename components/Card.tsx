@@ -64,14 +64,14 @@ const Card: React.FC<CardProps> = ({ card, isFaceDown = false, isPlayable = fals
   const isSmall = size === 'small';
 
   // Adjusted sizes for new aspect ratio (approx 1:1.54)
-  const cardBaseClasses = `rounded-lg shadow-lg border-2 flex items-center justify-center transition-all duration-300 transform relative select-none ${isSmall ? 'w-20 h-[124px]' : 'w-28 h-[174px] md:w-36 md:h-[222px]'}`;
+  const cardBaseClasses = `rounded-lg shadow-lg border-2 flex items-center justify-center transition-all duration-300 transform relative select-none ${isSmall ? 'w-20 h-[124px]' : 'w-28 h-[174px] lg:w-36 lg:h-[222px]'}`;
   const playableClasses = isPlayable ? "cursor-pointer hover:shadow-2xl hover:border-yellow-400" : "";
   
   if (isFaceDown) {
     return (
       <div className={`${cardBaseClasses} bg-red-800 border-red-900 ${className}`}>
         <div className="w-full h-full rounded-md border-4 border-red-600/50 flex items-center justify-center bg-red-900/50">
-           <div className={`text-yellow-300/50 ${isSmall ? 'w-10 h-10' : 'w-16 h-16 md:w-24 md:h-24'}`}>
+           <div className={`text-yellow-300/50 ${isSmall ? 'w-10 h-10' : 'w-16 h-16 lg:w-24 lg:h-24'}`}>
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12,2L1,9H4V14H2V16H4V21H6V16H18V21H20V16H22V14H20V9H23L12,2M12,5.69L15,8H9L12,5.69M6,14V9H18V14H6Z" />
             </svg>
@@ -120,8 +120,8 @@ const Card: React.FC<CardProps> = ({ card, isFaceDown = false, isPlayable = fals
   const cardBgColor = 'bg-amber-50';
 
   const renderCenterArt = () => {
-    const baseFigureClass = isSmall ? 'text-5xl' : 'text-7xl md:text-8xl';
-    const heldSuitClass = `absolute ${isSmall ? 'text-2xl' : 'text-4xl md:text-5xl'}`;
+    const baseFigureClass = isSmall ? 'text-5xl' : 'text-7xl lg:text-8xl';
+    const heldSuitClass = `absolute ${isSmall ? 'text-2xl' : 'text-4xl lg:text-5xl'}`;
     const shadowStyle = { textShadow: '1px 1px 2px rgba(0,0,0,0.3)' };
 
     switch (card.rank) {
@@ -129,21 +129,21 @@ const Card: React.FC<CardProps> = ({ card, isFaceDown = false, isPlayable = fals
         return (
           <div className="relative flex items-center justify-center">
             <span className={baseFigureClass} style={shadowStyle}>🧑</span>
-            <SuitIcon suit={card.suit} className={`${heldSuitClass} ${isSmall ? 'top-2 -right-1' : 'top-5 -right-2 md:top-7 md:-right-3'}`} style={shadowStyle} />
+            <SuitIcon suit={card.suit} className={`${heldSuitClass} ${isSmall ? 'top-2 -right-1' : 'top-5 -right-2 lg:top-7 lg:-right-3'}`} style={shadowStyle} />
           </div>
         );
       case 11: // Caballo (Knight/Horse)
         return (
           <div className="relative flex items-center justify-center">
             <span className={baseFigureClass} style={shadowStyle}>🐎</span>
-            <SuitIcon suit={card.suit} className={`${heldSuitClass} ${isSmall ? '-top-2 right-0' : '-top-2 right-0 md:-top-3 md:right-1'}`} style={shadowStyle} />
+            <SuitIcon suit={card.suit} className={`${heldSuitClass} ${isSmall ? '-top-2 right-0' : '-top-2 right-0 lg:-top-3 lg:right-1'}`} style={shadowStyle} />
           </div>
         );
       case 12: // Rey (King)
         return (
           <div className="relative flex items-center justify-center">
             <span className={baseFigureClass} style={shadowStyle}>🤴</span>
-            <SuitIcon suit={card.suit} className={`${heldSuitClass} ${isSmall ? 'top-0 -right-1' : 'top-1 -right-3 md:top-1 md:-right-4'}`} style={shadowStyle} />
+            <SuitIcon suit={card.suit} className={`${heldSuitClass} ${isSmall ? 'top-0 -right-1' : 'top-1 -right-3 lg:top-1 lg:-right-4'}`} style={shadowStyle} />
           </div>
         );
       default:
@@ -157,18 +157,18 @@ const Card: React.FC<CardProps> = ({ card, isFaceDown = false, isPlayable = fals
       className={`${cardBaseClasses} ${cardBgColor} border-gray-400 shadow-inner shadow-black/20 ${playableClasses} ${className}`}
       aria-label={getCardName(card)}
     >
-        <div className={`absolute text-center leading-none ${isSmall ? 'top-1 left-1.5' : 'top-2 left-2.5 md:top-3 md:left-3'}`}>
-            <div className={`font-bold text-gray-800 ${isSmall ? 'text-lg' : 'text-2xl md:text-3xl'}`}>{rankDisplay}</div>
-            <SuitIcon suit={card.suit} className={`${isSmall ? 'text-lg' : 'text-2xl md:text-3xl'} mx-auto`}/>
+        <div className={`absolute text-center leading-none ${isSmall ? 'top-1 left-1.5' : 'top-2 left-2.5 lg:top-3 lg:left-3'}`}>
+            <div className={`font-bold text-gray-800 ${isSmall ? 'text-lg' : 'text-2xl lg:text-3xl'}`}>{rankDisplay}</div>
+            <SuitIcon suit={card.suit} className={`${isSmall ? 'text-lg' : 'text-2xl lg:text-3xl'} mx-auto`}/>
         </div>
 
         <div className="flex items-center justify-center">
             {renderCenterArt()}
         </div>
         
-        <div className={`absolute text-center leading-none transform rotate-180 ${isSmall ? 'bottom-1 right-1.5' : 'bottom-2 right-2.5 md:bottom-3 md:right-3'}`}>
-            <div className={`font-bold text-gray-800 ${isSmall ? 'text-lg' : 'text-2xl md:text-3xl'}`}>{rankDisplay}</div>
-            <SuitIcon suit={card.suit} className={`${isSmall ? 'text-lg' : 'text-2xl md:text-3xl'} mx-auto`}/>
+        <div className={`absolute text-center leading-none transform rotate-180 ${isSmall ? 'bottom-1 right-1.5' : 'bottom-2 right-2.5 lg:bottom-3 lg:right-3'}`}>
+            <div className={`font-bold text-gray-800 ${isSmall ? 'text-lg' : 'text-2xl lg:text-3xl'}`}>{rankDisplay}</div>
+            <SuitIcon suit={card.suit} className={`${isSmall ? 'text-lg' : 'text-2xl lg:text-3xl'} mx-auto`}/>
         </div>
     </div>
   );

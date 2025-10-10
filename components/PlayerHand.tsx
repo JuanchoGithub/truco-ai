@@ -17,12 +17,12 @@ const PlayerHand: React.FC<PlayerHandProps> = ({ cards, playerType, onCardPlay, 
   const [hoveredCardIndex, setHoveredCardIndex] = useState<number | null>(null);
   
   // Responsive spacing for player cards to look better on mobile
-  const [translateXMultiplier, setTranslateXMultiplier] = useState(() => window.innerWidth < 768 ? 65 : 80);
+  const [translateXMultiplier, setTranslateXMultiplier] = useState(() => window.innerWidth < 1024 ? 65 : 80);
 
   useEffect(() => {
     const handleResize = () => {
-      // Corresponds to Tailwind's 'md' breakpoint
-      setTranslateXMultiplier(window.innerWidth < 768 ? 65 : 80);
+      // Corresponds to Tailwind's 'lg' breakpoint
+      setTranslateXMultiplier(window.innerWidth < 1024 ? 65 : 80);
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -32,7 +32,7 @@ const PlayerHand: React.FC<PlayerHandProps> = ({ cards, playerType, onCardPlay, 
 
   if (isPlayer) {
     return (
-      <div className={`flex justify-center items-center relative h-[200px] md:h-[240px] ${className}`}>
+      <div className={`flex justify-center items-center relative h-[200px] lg:h-[240px] ${className}`}>
         {cards.map((card, index) => {
           const middleIndex = (cards.length - 1) / 2;
           const offset = index - middleIndex;
@@ -79,9 +79,9 @@ const PlayerHand: React.FC<PlayerHandProps> = ({ cards, playerType, onCardPlay, 
     : 'space-x-[-50px]'; // Tightly packed in normal mode
 
   return (
-    <div className="flex flex-col items-center justify-center relative w-full py-2 md:py-4 min-h-[140px] md:min-h-[156px]">
+    <div className="flex flex-col items-center justify-center relative w-full py-2 lg:py-4 min-h-[140px] lg:min-h-[156px]">
       {isThinking && (
-        <div className="absolute -top-1 md:-top-2 text-base animate-pulse z-30" style={{ textShadow: '2px 2px 3px rgba(0,0,0,0.7)' }}>IA está pensando...</div>
+        <div className="absolute -top-1 lg:-top-2 text-base animate-pulse z-30" style={{ textShadow: '2px 2px 3px rgba(0,0,0,0.7)' }}>IA está pensando...</div>
       )}
       <div className={`flex justify-center ${handSpacingClasses}`}>
         {cards.map((card, index) => (

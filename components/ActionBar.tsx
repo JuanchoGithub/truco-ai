@@ -10,7 +10,7 @@ interface ActionBarProps {
 }
 
 const ActionButton: React.FC<{ onClick: () => void; disabled?: boolean; children: React.ReactNode, className?: string }> = ({ onClick, disabled = false, children, className = '' }) => {
-  const baseClasses = "px-3 py-1.5 text-xs md:px-4 md:py-2 md:text-sm rounded-lg font-bold text-white shadow-lg transition-transform transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none border-b-4";
+  const baseClasses = "px-3 py-1.5 text-xs lg:px-4 lg:py-2 lg:text-sm rounded-lg font-bold text-white shadow-lg transition-transform transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none border-b-4";
   const enabledClasses = "bg-gradient-to-b from-yellow-600 to-yellow-700 border-yellow-900 hover:from-yellow-500 hover:to-yellow-600";
   const disabledClasses = "bg-gray-600 border-gray-800";
   
@@ -46,7 +46,7 @@ const ActionBar: React.FC<ActionBarProps> = ({ dispatch, gameState, onPlayerActi
     if (gamePhase === 'round_end') {
       return (
         <div className="flex justify-center items-center">
-            <ActionButton onClick={() => dispatchAction({ type: ActionType.PROCEED_TO_NEXT_ROUND })} className="font-cinzel tracking-wider text-base md:text-lg !px-5 md:!px-6">
+            <ActionButton onClick={() => dispatchAction({ type: ActionType.PROCEED_TO_NEXT_ROUND })} className="font-cinzel tracking-wider text-base lg:text-lg !px-5 lg:!px-6">
                 Siguiente Ronda
             </ActionButton>
         </div>

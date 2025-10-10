@@ -1,3 +1,4 @@
+
 import React, { useRef } from 'react';
 // Fix: Imported `CardPlayStats` to use in type assertions.
 import { Action, ActionType, OpponentModel, Case, PlayerTrucoCallEntry, GameState, Card, Player, RoundSummary, PlayerCardPlayStatistics, CardCategory, CardPlayStats } from '../types';
@@ -189,16 +190,16 @@ const DataModal: React.FC<DataModalProps> = ({ gameState, dispatch }) => {
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
       <div className="bg-stone-800/95 border-4 border-amber-700/50 rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
         <div className="p-4 border-b-2 border-amber-700/30 flex justify-between items-center flex-shrink-0">
-          <h2 className="text-xl md:text-2xl font-bold text-amber-300 font-cinzel tracking-widest" style={{ textShadow: '2px 2px 3px rgba(0,0,0,0.7)' }}>
+          <h2 className="text-xl lg:text-2xl font-bold text-amber-300 font-cinzel tracking-widest" style={{ textShadow: '2px 2px 3px rgba(0,0,0,0.7)' }}>
             Análisis de Comportamiento
           </h2>
-          <button onClick={() => dispatch({ type: ActionType.TOGGLE_DATA_MODAL })} className="text-amber-200 text-2xl md:text-3xl font-bold hover:text-white transition-colors">&times;</button>
+          <button onClick={() => dispatch({ type: ActionType.TOGGLE_DATA_MODAL })} className="text-amber-200 text-2xl lg:text-3xl font-bold hover:text-white transition-colors">&times;</button>
         </div>
-        <div className="p-4 md:p-6 flex-grow overflow-y-auto text-amber-50 space-y-6">
+        <div className="p-4 lg:p-6 flex-grow overflow-y-auto text-amber-50 space-y-6">
           
           {/* Section: AI Style Analysis */}
           <div>
-            <h3 className="text-lg md:text-xl font-bold text-amber-200 mb-2 border-b border-amber-200/20 pb-1">Análisis de Estilo por la IA</h3>
+            <h3 className="text-lg lg:text-xl font-bold text-amber-200 mb-2 border-b border-amber-200/20 pb-1">Análisis de Estilo por la IA</h3>
             <div className="bg-black/30 p-3 rounded-md space-y-2 text-sm">
                 <ul className="list-disc list-inside text-gray-300 italic space-y-1">
                     {profileAnalysis}
@@ -208,8 +209,8 @@ const DataModal: React.FC<DataModalProps> = ({ gameState, dispatch }) => {
           
           {/* Section: Behavioral Profile */}
           <div>
-            <h3 className="text-lg md:text-xl font-bold text-amber-200 mb-2 border-b border-amber-200/20 pb-1">Perfil de Comportamiento</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <h3 className="text-lg lg:text-xl font-bold text-amber-200 mb-2 border-b border-amber-200/20 pb-1">Perfil de Comportamiento</h3>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 text-sm">
                 <div className="bg-black/30 p-3 rounded-md space-y-1">
                     <p><span className="font-semibold text-white">Umbral de Truco (promedio):</span> {avgTrucoStrength > 0 ? avgTrucoStrength.toFixed(1) : 'N/A'}</p>
                     <p><span className="font-semibold text-white">Éxito de Farol en Truco:</span> {liveBluffStats.attempts > 0 ? `${((liveBluffStats.successes / liveBluffStats.attempts) * 100).toFixed(0)}%` : 'N/A'} <span className="text-gray-400">({liveBluffStats.successes}/{liveBluffStats.attempts})</span></p>
@@ -226,9 +227,9 @@ const DataModal: React.FC<DataModalProps> = ({ gameState, dispatch }) => {
 
           {/* Section: Card Play Patterns */}
           <div>
-            <h3 className="text-lg md:text-xl font-bold text-amber-200 mb-2 border-b border-amber-200/20 pb-1">Patrones de Juego de Cartas</h3>
+            <h3 className="text-lg lg:text-xl font-bold text-amber-200 mb-2 border-b border-amber-200/20 pb-1">Patrones de Juego de Cartas</h3>
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs md:text-sm">
+              <table className="w-full text-left text-xs lg:text-sm">
                 <thead className="bg-black/40 text-amber-100">
                   <tr>
                     <th className="p-2">Tipo de Carta</th>
@@ -265,7 +266,7 @@ const DataModal: React.FC<DataModalProps> = ({ gameState, dispatch }) => {
 
           {/* Section: Round History */}
           <div>
-            <h3 className="text-lg md:text-xl font-bold text-amber-200 mb-2 border-b border-amber-200/20 pb-1">Historial de Rondas</h3>
+            <h3 className="text-lg lg:text-xl font-bold text-amber-200 mb-2 border-b border-amber-200/20 pb-1">Historial de Rondas</h3>
             <div className="space-y-2 max-h-64 overflow-y-auto pr-2">
               {[...roundHistory].reverse().map(summary => (
                 <details key={summary.round} className="bg-black/30 p-2 rounded-md text-xs">
@@ -299,8 +300,8 @@ const DataModal: React.FC<DataModalProps> = ({ gameState, dispatch }) => {
         </div>
         <div className="p-3 border-t-2 border-amber-700/30 flex-shrink-0 flex justify-end items-center gap-4">
           <input type="file" ref={fileInputRef} onChange={handleFileChange} accept=".json" style={{ display: 'none' }} />
-          <button onClick={handleImportClick} className="px-3 py-1.5 text-xs md:text-sm rounded-lg font-semibold text-cyan-200 bg-black/40 border-2 border-cyan-800/80 shadow-md hover:bg-black/60 hover:border-cyan-600 transition-colors">Importar Perfil</button>
-          <button onClick={handleExport} className="px-3 py-1.5 text-xs md:text-sm rounded-lg font-semibold text-yellow-200 bg-black/40 border-2 border-yellow-800/80 shadow-md hover:bg-black/60 hover:border-yellow-600 transition-colors">Exportar Perfil</button>
+          <button onClick={handleImportClick} className="px-3 py-1.5 text-xs lg:text-sm rounded-lg font-semibold text-cyan-200 bg-black/40 border-2 border-cyan-800/80 shadow-md hover:bg-black/60 hover:border-cyan-600 transition-colors">Importar Perfil</button>
+          <button onClick={handleExport} className="px-3 py-1.5 text-xs lg:text-sm rounded-lg font-semibold text-yellow-200 bg-black/40 border-2 border-yellow-800/80 shadow-md hover:bg-black/60 hover:border-yellow-600 transition-colors">Exportar Perfil</button>
         </div>
       </div>
     </div>

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Action, ActionType } from '../types';
 
@@ -33,13 +34,13 @@ const MessageLog: React.FC<MessageLogProps> = ({ messages, dispatch, isModal }) 
     <div className={wrapperClasses}>
       <div className={containerClasses} style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/felt.png')"}}>
         <div className="p-4 border-b-2 border-yellow-400/30 flex justify-between items-center flex-shrink-0">
-          <h2 className="text-xl md:text-2xl font-bold text-yellow-300 font-cinzel tracking-widest" style={{ textShadow: '2px 2px 3px rgba(0,0,0,0.7)' }}>
+          <h2 className="text-xl lg:text-2xl font-bold text-yellow-300 font-cinzel tracking-widest" style={{ textShadow: '2px 2px 3px rgba(0,0,0,0.7)' }}>
             Registro de Juego
           </h2>
           {isModal && (
             <button
               onClick={() => dispatch({ type: ActionType.TOGGLE_GAME_LOG_EXPAND })}
-              className="text-yellow-200 text-2xl md:text-3xl font-bold hover:text-white transition-colors"
+              className="text-yellow-200 text-2xl lg:text-3xl font-bold hover:text-white transition-colors"
             >
               &times;
             </button>
@@ -48,12 +49,12 @@ const MessageLog: React.FC<MessageLogProps> = ({ messages, dispatch, isModal }) 
         <div className="p-4 flex-grow overflow-y-auto">
           {Object.keys(groupedLog).reverse().map(roundKey => (
             <div key={`round-${roundKey}`} className="mb-4">
-              <h3 className="text-base md:text-lg font-bold text-yellow-300 border-b border-yellow-300/30 mb-2 pb-1">
+              <h3 className="text-base lg:text-lg font-bold text-yellow-300 border-b border-yellow-300/30 mb-2 pb-1">
                 {roundKey}
               </h3>
               <div className="space-y-1 pl-2">
                   {groupedLog[roundKey].map((message, index) => (
-                      <p key={index} className="text-xs md:text-sm text-amber-50 whitespace-pre-wrap">
+                      <p key={index} className="text-xs lg:text-sm text-amber-50 whitespace-pre-wrap">
                           {message}
                       </p>
                   ))}

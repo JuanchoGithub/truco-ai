@@ -13,7 +13,7 @@ interface GameBoardProps {
 }
 
 const Crown = () => (
-    <div className="absolute -top-2 -right-2 text-3xl md:-top-3 md:-right-3 md:text-4xl text-yellow-400 z-20" style={{ textShadow: '0 0 6px rgba(250, 204, 21, 0.9)' }}>
+    <div className="absolute -top-2 -right-2 text-3xl lg:-top-3 lg:-right-3 lg:text-4xl text-yellow-400 z-20" style={{ textShadow: '0 0 6px rgba(250, 204, 21, 0.9)' }}>
         👑
     </div>
 );
@@ -28,11 +28,11 @@ interface CardPileProps {
 const CardPile: React.FC<CardPileProps> = ({ cards, trickWinners, owner, label }) => {
     const playedCards = cards.map((card, index) => ({ card, index })).filter(item => item.card !== null);
     const renderPlaceholder = playedCards.length === 0;
-    const cardSizeClasses = "!w-24 !h-[150px] md:!w-28 md:!h-[174px]";
+    const cardSizeClasses = "!w-24 !h-[150px] lg:!w-28 lg:!h-[174px]";
 
     return (
         <div className="relative w-full h-56 flex items-center justify-center">
-            <p className="absolute -top-2 text-center text-sm md:text-base text-gray-300 font-bold tracking-wider">{label}</p>
+            <p className="absolute -top-2 text-center text-sm lg:text-base text-gray-300 font-bold tracking-wider">{label}</p>
             {renderPlaceholder && (
                  <div className={`rounded-lg border-2 border-dashed border-gray-400/30 bg-black/20 ${cardSizeClasses} flex items-center justify-center`}>
                     <span className="text-gray-400/50 text-xs">Pila Vacía</span>
@@ -78,7 +78,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ playerTricks, aiTricks, trickWinn
   const winnerText = lastRoundWinner === 'player' ? 'Ganaste la Ronda' : lastRoundWinner === 'ai' ? 'Perdiste la Ronda' : 'Ronda Empatada';
   
   return (
-    <div className="relative w-full flex flex-row justify-around items-center space-x-2 md:space-x-4 p-4 bg-black/20 rounded-2xl shadow-inner shadow-black/50 min-h-[280px]">
+    <div className="relative w-full flex flex-row justify-around items-center space-x-2 lg:space-x-4 p-4 bg-black/20 rounded-2xl shadow-inner shadow-black/50 min-h-[280px]">
       <div className="w-1/2">
         <CardPile 
           cards={aiTricks}
@@ -107,7 +107,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ playerTricks, aiTricks, trickWinn
           aria-label={`Round over. ${winnerText}. Click to continue.`}
         >
           <div className="text-center p-4 rounded-lg bg-yellow-400/20 border-2 border-yellow-300 shadow-2xl shadow-black">
-            <h3 className="text-xl md:text-3xl font-cinzel text-white font-bold tracking-wider" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.8)' }}>
+            <h3 className="text-xl lg:text-3xl font-cinzel text-white font-bold tracking-wider" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.8)' }}>
               {winnerText}
             </h3>
           </div>

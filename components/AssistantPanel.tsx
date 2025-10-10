@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { AiMove, Card } from '../types';
 import { getSimpleSuggestionText } from '../services/suggestionService';
@@ -55,7 +56,7 @@ const AssistantPanel: React.FC<AssistantPanelProps> = ({ suggestion, playerHand 
   }
 
   return (
-    <div ref={panelRef} className="fixed bottom-4 right-4 w-80 md:w-96 bg-gray-900/95 border-2 border-green-400 rounded-lg shadow-2xl shadow-green-500/20 z-50 text-white animate-fade-in-scale">
+    <div ref={panelRef} className="fixed bottom-4 right-4 w-80 lg:w-96 bg-gray-900/95 border-2 border-green-400 rounded-lg shadow-2xl shadow-green-500/20 z-50 text-white animate-fade-in-scale">
       <div className="p-3 border-b border-green-400/30 flex justify-between items-center">
         <h3 className="font-bold text-green-300 font-cinzel tracking-wider flex items-center gap-2">
           <span className="text-xl">🤖</span> Asistente de IA
