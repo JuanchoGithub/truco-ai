@@ -100,7 +100,6 @@ export function handleResolveEnvidoAccept(state: GameState): GameState {
         gamePhase: 'truco_called' as GamePhase,
         currentTurn: state.pendingTrucoCaller === 'player' ? 'ai' : 'player' as Player,
         lastCaller: state.pendingTrucoCaller,
-        turnBeforeInterrupt: state.pendingTrucoCaller,
         pendingTrucoCaller: null,
     } : {
         gamePhase: `trick_${state.currentTrick + 1}` as GamePhase,
@@ -236,7 +235,6 @@ export function handleResolveEnvidoDecline(state: GameState): GameState {
         gamePhase: 'truco_called' as GamePhase,
         currentTurn: state.pendingTrucoCaller === 'player' ? 'ai' : 'player' as Player,
         lastCaller: state.pendingTrucoCaller,
-        turnBeforeInterrupt: state.pendingTrucoCaller,
         pendingTrucoCaller: null,
     } : {
         gamePhase: `trick_${state.currentTrick + 1}` as GamePhase,
