@@ -13,7 +13,7 @@ import AiLogPanel from './components/AiLogPanel';
 import AiBlurb from './components/AiBlurb';
 import PlayerBlurb from './components/PlayerBlurb';
 import CentralMessage from './components/CentralMessage';
-import { saveStateToStorage, loadStateFromStorage } from './services/storageService';
+import { saveStateToStorage, loadStateFromStorage, clearStateFromStorage } from './services/storageService';
 import DataModal from './components/DataModal';
 import { getCardName } from './services/trucoLogic';
 import { getRandomPhrase, FLOR_PHRASES } from './services/ai/phrases';
@@ -47,11 +47,18 @@ const App: React.FC = () => {
   useEffect(() => {
     const isPlaying = gameMode === 'playing' || gameMode === 'playing-with-help';
     if (isPlaying) {
-        const persistedState = loadStateFromStorage();
+        const persistedState = loadStateFromStorage(gameMode);
         if (persistedState) {
             dispatch({ type: ActionType.LOAD_PERSISTED_STATE, payload: persistedState });
         } else {
-            dispatch({ type: ActionType.START_NEW_ROUND });
+            // This handles two cases:
+            // 1. User clicks "Continue Game" but the save file was deleted between menu load and click.
+            // 2. A brand new user starts a game in a mode for which no save file exists.
+            // It does NOT run for "New Game" because `handleStartGame` already dispatched RESTART_GAME,
+            // so the state is already initialized with round > 0.
+            if (state.round === 0) {
+                 dispatch({ type: ActionType.RESTART_GAME });
+            }
         }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -61,7 +68,7 @@ const App: React.FC = () => {
   useEffect(() => {
     const isPlaying = gameMode === 'playing' || gameMode === 'playing-with-help';
     if (isPlaying && state.round > 0) {
-        saveStateToStorage(state);
+        saveStateToStorage(state, gameMode);
     }
   }, [state, gameMode]);
 
@@ -328,17 +335,18 @@ const App: React.FC = () => {
       </svg>
   );
 
+  const handleStartGame = (mode: 'playing' | 'playing-with-help', continueGame: boolean) => {
+    if (!continueGame) {
+        clearStateFromStorage(mode);
+        dispatch({ type: ActionType.RESTART_GAME });
+    }
+    setGameMode(mode);
+  };
+
   if (gameMode === 'menu') {
     return (
       <MainMenu
-        onPlay={() => {
-            dispatch({ type: ActionType.RESTART_GAME });
-            setGameMode('playing');
-        }}
-        onPlayWithHelp={() => {
-            dispatch({ type: ActionType.RESTART_GAME });
-            setGameMode('playing-with-help');
-        }}
+        onStartGame={handleStartGame}
         onLearn={() => setGameMode('tutorial')}
         onManual={() => setGameMode('manual')}
         onSimulate={() => setGameMode('simulation')}

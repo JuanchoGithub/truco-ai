@@ -132,12 +132,9 @@ export const calculateTrucoStrength = (state: GameState): TrucoStrengthResult =>
   reasoning.push(`- Fuerza Heurística (Cartas Propias): ${heuristicNormalized.toFixed(2)}.`);
 
   // Generate a plausible opponent hand based on all available information
-  const oppSamples = generateConstrainedOpponentHand(state, reasoning); // reasoning is passed by reference and gets updated
-  reasoning.push(`- Mano Fuerte Simulada: [${oppSamples.strong.map(getCardName).join(', ')}].`);
-  reasoning.push(`- Mano Media Simulada: [${oppSamples.medium.map(getCardName).join(', ')}].`);
-  reasoning.push(`- Mano Débil Simulada: [${oppSamples.weak.map(getCardName).join(', ')}].`);
+  const oppSamples = generateConstrainedOpponentHand(state, reasoning, { strong: 3, medium: 5, weak: 2 });
 
-  // Simulate the rest of the round against this plausible hand
+  // Simulate the rest of the round against these plausible hand
   const amILeading = playerTricks[currentTrick] === null;
   const simOptions = {
     state: state,
@@ -145,13 +142,25 @@ export const calculateTrucoStrength = (state: GameState): TrucoStrengthResult =>
     amILeading: amILeading,
   };
   
-  const simWinProbStrong = oppSamples.strong.length > 0 ? simulateRoundWin([...aiHand], oppSamples.strong, simOptions) : 0;
-  const simWinProbMedium = oppSamples.medium.length > 0 ? simulateRoundWin([...aiHand], oppSamples.medium, simOptions) : 0;
-  const simWinProbWeak = oppSamples.weak.length > 0 ? simulateRoundWin([...aiHand], oppSamples.weak, simOptions) : 0;
+  const runSimsForStratum = (samples: Card[][]): number => {
+      if (samples.length === 0) return 0;
+      let totalWinProb = 0;
+      for (const sampleHand of samples) {
+          // It's possible for a sample to be an empty array if something went wrong, guard against that.
+          if (sampleHand.length > 0) {
+              totalWinProb += simulateRoundWin([...aiHand], sampleHand, simOptions);
+          }
+      }
+      return totalWinProb / samples.length;
+  };
 
-  const simWinProb = (simWinProbStrong + simWinProbMedium + simWinProbWeak) / 3;
+  const avgWinProbStrong = runSimsForStratum(oppSamples.strong);
+  const avgWinProbMedium = runSimsForStratum(oppSamples.medium);
+  const avgWinProbWeak = runSimsForStratum(oppSamples.weak);
 
-  reasoning.push(`- Prob. de Victoria (Simulación): Fuerte=${(simWinProbStrong * 100).toFixed(0)}%, Media=${(simWinProbMedium * 100).toFixed(0)}%, Débil=${(simWinProbWeak * 100).toFixed(0)}%.`);
+  const simWinProb = (avgWinProbStrong + avgWinProbMedium + avgWinProbWeak) / 3;
+
+  reasoning.push(`- Prob. de Victoria (Simulación): Fuerte (${oppSamples.strong.length} muestras)=${(avgWinProbStrong * 100).toFixed(0)}%, Media (${oppSamples.medium.length} muestras)=${(avgWinProbMedium * 100).toFixed(0)}%, Débil (${oppSamples.weak.length} muestras)=${(avgWinProbWeak * 100).toFixed(0)}%.`);
   reasoning.push(`- Prob. de Victoria (Promedio): ${(simWinProb * 100).toFixed(0)}%.`);
   
   // Final strength is a blend of raw power and simulation result
@@ -257,10 +266,10 @@ export const getTrucoResponse = (state: GameState, gamePressure: number, reasoni
 
           // Counter-inference: Does the player likely have a better card?
           const inferenceReasoning: string[] = []; // Temporary reasoning log for this check
-          const opponentSamples = generateConstrainedOpponentHand(state, inferenceReasoning);
+          const opponentSamples = generateConstrainedOpponentHand(state, inferenceReasoning, { strong: 1, medium: 1, weak: 1 });
           let playerHasHigherCard = false;
-          if (opponentSamples.strong.length > 0) {
-              const playerStrongestCard = opponentSamples.strong[0];
+          if (opponentSamples.strong.length > 0 && opponentSamples.strong[0].length > 0) {
+              const playerStrongestCard = opponentSamples.strong[0][0];
               if (getCardHierarchy(playerStrongestCard) > myCardHierarchy) {
                   playerHasHigherCard = true;
                   reasoning.push(`- Inferencia Oponente: La simulación sugiere que el jugador podría tener una carta superior (${getCardName(playerStrongestCard)}). Procediendo con cautela.`);
@@ -416,8 +425,8 @@ export const getTrucoCall = (state: GameState, gamePressure: number): AiMove | n
             if (simRoundWinner === 'ai') { winIsCertain = true; reasoningElements.opponentCard = opponentCard; reasoningElements.winProbability = 1; }
         } else {
             const reasoningForCertainty: string[] = [];
-            const opponentSamples = generateConstrainedOpponentHand(state, reasoningForCertainty);
-            const possibleOpponentCards = [opponentSamples.strong[0], opponentSamples.medium[0], opponentSamples.weak[0]].filter(Boolean);
+            const opponentSamples = generateConstrainedOpponentHand(state, reasoningForCertainty, { strong: 1, medium: 1, weak: 1 });
+            const possibleOpponentCards = [...opponentSamples.strong, ...opponentSamples.medium, ...opponentSamples.weak].flat();
 
             if (possibleOpponentCards.length > 0) {
                 let wins = 0;

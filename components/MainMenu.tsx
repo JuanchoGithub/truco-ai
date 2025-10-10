@@ -1,16 +1,45 @@
 
-
-import React from 'react';
+import React, { useState } from 'react';
+import { loadStateFromStorage } from '../services/storageService';
+import ContinueGameModal from './ContinueGameModal';
 
 interface MainMenuProps {
-  onPlay: () => void;
+  onStartGame: (mode: 'playing' | 'playing-with-help', continueGame: boolean) => void;
   onLearn: () => void;
-  onPlayWithHelp: () => void;
   onManual: () => void;
   onSimulate: () => void;
 }
 
-const MainMenu: React.FC<MainMenuProps> = ({ onPlay, onLearn, onPlayWithHelp, onManual, onSimulate }) => {
+const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onLearn, onManual, onSimulate }) => {
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    mode: 'playing' | 'playing-with-help' | null;
+  }>({ isOpen: false, mode: null });
+
+  const handlePlayClick = (mode: 'playing' | 'playing-with-help') => {
+    const savedState = loadStateFromStorage(mode);
+    // Check if there's a game in progress (round > 0 and no winner).
+    if (savedState && savedState.round && savedState.round > 0 && !savedState.winner) {
+      setConfirmModal({ isOpen: true, mode });
+    } else {
+      onStartGame(mode, false);
+    }
+  };
+
+  const handleContinue = () => {
+    if (confirmModal.mode) {
+      onStartGame(confirmModal.mode, true);
+      setConfirmModal({ isOpen: false, mode: null });
+    }
+  };
+
+  const handleNewGame = () => {
+    if (confirmModal.mode) {
+      onStartGame(confirmModal.mode, false);
+      setConfirmModal({ isOpen: false, mode: null });
+    }
+  };
+
   return (
     <div className="h-screen bg-green-900 text-white font-sans flex items-center justify-center" style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/felt.png')"}}>
       <div className="text-center p-8 bg-black/40 border-4 border-yellow-800/60 rounded-xl shadow-2xl animate-fade-in-scale">
@@ -20,14 +49,14 @@ const MainMenu: React.FC<MainMenuProps> = ({ onPlay, onLearn, onPlayWithHelp, on
         <p className="text-gray-300 mb-12">Un desafío de cartas contra una IA estratégica.</p>
         <div className="flex flex-col gap-6">
           <button
-            onClick={onPlay}
+            onClick={() => handlePlayClick('playing')}
             className="px-8 py-4 text-xl md:text-2xl rounded-lg font-bold text-white shadow-lg transition-transform transform hover:scale-105 border-b-4 bg-gradient-to-b from-yellow-600 to-yellow-700 border-yellow-900 hover:from-yellow-500 hover:to-yellow-600"
             style={{ textShadow: '1px 1px 3px rgba(0,0,0,0.5)' }}
           >
             Jugar contra la IA
           </button>
           <button
-            onClick={onPlayWithHelp}
+            onClick={() => handlePlayClick('playing-with-help')}
             className="px-8 py-4 text-xl md:text-2xl rounded-lg font-bold text-white shadow-lg transition-transform transform hover:scale-105 border-b-4 bg-gradient-to-b from-green-600 to-green-700 border-green-900 hover:from-green-500 hover:to-green-600"
             style={{ textShadow: '1px 1px 3px rgba(0,0,0,0.5)' }}
           >
@@ -56,6 +85,13 @@ const MainMenu: React.FC<MainMenuProps> = ({ onPlay, onLearn, onPlayWithHelp, on
           </button>
         </div>
       </div>
+      {confirmModal.isOpen && (
+        <ContinueGameModal
+          onContinue={handleContinue}
+          onNewGame={handleNewGame}
+          onCancel={() => setConfirmModal({ isOpen: false, mode: null })}
+        />
+      )}
     </div>
   );
 };

@@ -1,8 +1,8 @@
 import { GameState } from '../types';
 
-const STORAGE_KEY = 'trucoAiGameState';
+const getStorageKey = (gameMode: 'playing' | 'playing-with-help'): string => `trucoAiGameState_${gameMode}`;
 
-export const saveStateToStorage = (state: GameState): void => {
+export const saveStateToStorage = (state: GameState, gameMode: 'playing' | 'playing-with-help'): void => {
     try {
         // Omit transient UI state that shouldn't be persisted.
         // This prevents loading the app into a weird UI state (e.g., a modal open).
@@ -16,15 +16,17 @@ export const saveStateToStorage = (state: GameState): void => {
             ...stateToPersist 
         } = state;
 
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToPersist));
+        const key = getStorageKey(gameMode);
+        localStorage.setItem(key, JSON.stringify(stateToPersist));
     } catch (error) {
         console.error("Failed to save state to localStorage:", error);
     }
 };
 
-export const loadStateFromStorage = (): Partial<GameState> | null => {
+export const loadStateFromStorage = (gameMode: 'playing' | 'playing-with-help'): Partial<GameState> | null => {
     try {
-        const serializedState = localStorage.getItem(STORAGE_KEY);
+        const key = getStorageKey(gameMode);
+        const serializedState = localStorage.getItem(key);
         if (serializedState === null) {
             return null;
         }
@@ -37,7 +39,7 @@ export const loadStateFromStorage = (): Partial<GameState> | null => {
         }
         
         console.warn("Loaded state from storage failed validation, clearing.");
-        clearStateFromStorage();
+        clearStateFromStorage(gameMode);
         return null;
     } catch (error) {
         console.error("Failed to load state from localStorage:", error);
@@ -45,9 +47,10 @@ export const loadStateFromStorage = (): Partial<GameState> | null => {
     }
 };
 
-export const clearStateFromStorage = (): void => {
+export const clearStateFromStorage = (gameMode: 'playing' | 'playing-with-help'): void => {
     try {
-        localStorage.removeItem(STORAGE_KEY);
+        const key = getStorageKey(gameMode);
+        localStorage.removeItem(key);
     } catch (error) {
         console.error("Failed to clear state from localStorage:", error);
     }

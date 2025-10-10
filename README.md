@@ -192,13 +192,18 @@ La tarea principal de la IA es descifrar qué cartas es probable que tengas vos,
 
     *   **Restricción 4: Envido Pasivo (Inferencia por Inacción):** Este es un filtro sutil pero poderoso. Si tuviste la oportunidad de cantar Envido pero elegiste jugar una carta en su lugar, la IA infiere que probablemente *no* tenés un puntaje de Envido alto. Luego, filtra la población para reducir la probabilidad de manos con puntos de Envido altos, reflejando tu juego pasivo. No las elimina por completo (¡podrías estar engañando!), pero les resta importancia.
 
-3.  **Muestreo Estratificado (Creando Manos Representativas para Simulación):**
-    Después de aplicar las restricciones, la población de manos posibles todavía puede ser grande. Para simular el resultado de la ronda de manera eficiente, la IA no prueba contra cada posibilidad. En su lugar, utiliza una técnica llamada **Muestreo Estratificado**:
-    1.  Ordena toda la población restante de manos posibles de la más débil a la más fuerte.
-    2.  Divide esta lista ordenada en diez grupos (deciles).
-    3.  Luego, elige una mano al azar del **grupo más fuerte** (un "mejor caso" plausible para vos), una de los **grupos intermedios** (un "caso promedio"), y una del **grupo más débil** (un "peor caso").
+3.  **Simulación de Múltiples Muestras Ponderadas (Creando un Pronóstico Preciso):**
+    Después de aplicar las restricciones, la población de manos posibles todavía puede ser grande. Para simular el resultado de la ronda de manera eficiente y precisa, la IA no prueba contra una sola posibilidad, sino que utiliza una técnica avanzada llamada **Simulación de Múltiples Muestras Ponderadas**:
+    1.  **Estratificación por Deciles:** Ordena toda la población restante de manos posibles de la más débil a la más fuerte y la divide en diez grupos (deciles).
+    2.  **Muestreo Estratificado:** La IA toma múltiples muestras aleatorias de diferentes estratos para obtener una visión completa de tus posibles manos:
+        *   **3 Muestras Fuertes:** Del decil más alto (las mejores manos posibles que podrías tener).
+        *   **5 Muestras Medias:** De los deciles intermedios (manos promedio y comunes).
+        *   **2 Muestras Débiles:** De los deciles más bajos (las peores manos posibles que podrías tener).
+    3.  **Simulación por Estrato:** La IA simula la ronda completa contra *cada una de las 10 manos de muestra*.
+    4.  **Cálculo de Probabilidad:** Calcula la probabilidad de victoria promedio para cada estrato por separado (ej., "Probabilidad de ganar contra una mano fuerte: 25%").
+    5.  **Pronóstico Final:** Finalmente, promedia las probabilidades de los tres estratos para obtener una única y robusta **probabilidad de victoria final**. Este número es el que informa su decisión de cantar Truco, aceptar una apuesta o retirarse.
 
-Estas tres manos—**Fuerte, Media y Débil**—se convierten en la población final y representativa contra la que la IA simula para calcular su probabilidad de ganar la ronda y tomar su decisión final.
+Este enfoque de 10 muestras le da a la IA una comprensión mucho más matizada y precisa de su posición real en la ronda, superando la incertidumbre al considerar una amplia gama de escenarios plausibles en lugar de basarse en una sola mano hipotética del oponente.
 
 ### 10 Rondas de Ejemplo: El Proceso de Pensamiento de la IA
 

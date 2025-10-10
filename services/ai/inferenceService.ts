@@ -1,4 +1,3 @@
-
 import { GameState, Card, Suit, Rank, OpponentHandProbabilities, ActionType, Player } from '../../types';
 import { createDeck, getEnvidoValue, getCardHierarchy, calculateHandStrength } from '../trucoLogic';
 
@@ -139,8 +138,9 @@ export const updateProbsOnEnvido = (
  */
 export const generateConstrainedOpponentHand = (
     state: GameState, 
-    reasoning: string[]
-): { strong: Card[]; medium: Card[]; weak: Card[] } => {
+    reasoning: string[],
+    numSamples: { strong: number; medium: number; weak: number }
+): { strong: Card[][]; medium: Card[][]; weak: Card[][] } => {
     const { playerEnvidoValue, initialPlayerHand, playerHand, playedCards, aiHand, playerHasFlor, currentTrick, mano, hasEnvidoBeenCalledThisRound, playerTricks, gamePhase, lastCaller, playerTrucoCallHistory } = state;
     
     const cardsToGenerate = playerHand.length;
@@ -333,51 +333,49 @@ export const generateConstrainedOpponentHand = (
         const end = Math.min(start + decileSize, totalHands);
         deciles.push(sortedHands.slice(start, end));
     }
-
-    // 3. Sample from strata with fallbacks
-    let strongHand: Card[], mediumHand: Card[], weakHand: Card[];
-
-    // Strong hand (Decile 10, which is index 9)
-    const strongPool = deciles[9];
-    if (strongPool && strongPool.length > 0) {
-        strongHand = strongPool[Math.floor(Math.random() * strongPool.length)];
-    } else {
-        // Fallback: get the absolute strongest hand
-        strongHand = sortedHands[totalHands - 1];
-    }
-
-    // Medium hand (Deciles 4, 5, 6 -> indices 3, 4, 5)
-    const mediumPool = [...(deciles[3] || []), ...(deciles[4] || []), ...(deciles[5] || [])];
-    if (mediumPool.length > 0) {
-        mediumHand = mediumPool[Math.floor(Math.random() * mediumPool.length)];
-    } else {
-        // Fallback: get the median hand
-        mediumHand = sortedHands[Math.floor(totalHands / 2)];
-    }
-
-    // Weak hand (Deciles 1, 2 -> indices 0, 1)
-    const weakPool = [...(deciles[0] || []), ...(deciles[1] || [])];
-    if (weakPool.length > 0) {
-        weakHand = weakPool[Math.floor(Math.random() * weakPool.length)];
-    } else {
-        // Fallback: get the absolute weakest hand
-        weakHand = sortedHands[0];
-    }
     
-    // Ensure hands are defined even in extreme edge cases (e.g., only 1 possible hand)
-    if (!strongHand) strongHand = sortedHands[totalHands-1];
-    if (!mediumHand) mediumHand = sortedHands[Math.floor(totalHands / 2)];
-    if (!weakHand) weakHand = sortedHands[0];
+    // Helper to randomly sample unique hands from a pool
+    const sampleFromPool = (pool: Card[][], count: number): Card[][] => {
+        if (!pool || pool.length === 0) return [];
+        // Make a copy and shuffle it to get random unique samples
+        const shuffled = [...pool].sort(() => 0.5 - Math.random());
+        // Return either the requested count or the entire pool if it's smaller
+        return shuffled.slice(0, Math.min(count, shuffled.length));
+    };
+    
+    // 3. Sample from strata with fallbacks
+    let strongSamples: Card[][], mediumSamples: Card[][], weakSamples: Card[][];
+
+    // Strong hand samples (Decile 10, index 9)
+    const strongPool = deciles[9] || [];
+    strongSamples = sampleFromPool(strongPool, numSamples.strong);
+    // Fallback: if no samples and hands exist, add the absolute strongest hand
+    if (strongSamples.length === 0 && totalHands > 0) {
+        strongSamples.push(sortedHands[totalHands - 1]);
+    }
+
+    // Medium hand samples (Deciles 4, 5, 6 -> indices 3, 4, 5)
+    const mediumPool = [...(deciles[3] || []), ...(deciles[4] || []), ...(deciles[5] || [])];
+    mediumSamples = sampleFromPool(mediumPool, numSamples.medium);
+    // Fallback: if no samples and hands exist, add the median hand
+    if (mediumSamples.length === 0 && totalHands > 0) {
+        mediumSamples.push(sortedHands[Math.floor(totalHands / 2)]);
+    }
+
+    // Weak hand samples (Deciles 1, 2 -> indices 0, 1)
+    const weakPool = [...(deciles[0] || []), ...(deciles[1] || [])];
+    weakSamples = sampleFromPool(weakPool, numSamples.weak);
+    // Fallback: if no samples and hands exist, add the absolute weakest hand
+    if (weakSamples.length === 0 && totalHands > 0) {
+        weakSamples.push(sortedHands[0]);
+    }
     
     // 4. Update reasoning log and return
-    const strongStrength = calculateHandStrength(strongHand);
-    const mediumStrength = calculateHandStrength(mediumHand);
-    const weakStrength = calculateHandStrength(weakHand);
-    reasoning.push(`- Muestras de Manos (Estratificado): [Fuerte: ${strongStrength}, Media: ${mediumStrength}, Débil: ${weakStrength}].`);
+    reasoning.push(`- Muestras de Manos (Estratificado): [Fuerte: ${strongSamples.length}, Media: ${mediumSamples.length}, Débil: ${weakSamples.length}].`);
 
     return {
-        strong: strongHand,
-        medium: mediumHand,
-        weak: weakHand,
+        strong: strongSamples,
+        medium: mediumSamples,
+        weak: weakSamples,
     };
 };
