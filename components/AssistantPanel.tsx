@@ -14,8 +14,10 @@ const AssistantPanel: React.FC<AssistantPanelProps> = ({ suggestion, playerHand 
   const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // This now correctly updates the internal state when the suggestion prop becomes null,
+    // causing the component to disappear when it should.
+    setCurrentSuggestion(suggestion);
     if (suggestion) {
-      setCurrentSuggestion(suggestion);
       setShowLogic(false); // Collapse logic view on new suggestion
     }
   }, [suggestion]);

@@ -218,6 +218,7 @@ export function handleStartNewRound(state: GameState, action: { type: ActionType
     playerEnvidoValue: null,
     aiEnvidoValue: null,
     playerActionHistory: [],
+    aiTrucoContext: null, // <-- BUG FIX: Ensure truco context is cleared
     aiBlurb: null,
     playerBlurb: null,
     lastRoundWinner: null,
