@@ -1,6 +1,6 @@
 
 
-import { GameState, ActionType, AiMove } from '../types';
+import { GameState, ActionType, AiMove, Action } from '../types';
 import { findBestCardToPlay } from './ai/playCardStrategy';
 import { getEnvidoResponse, getEnvidoCall, getFlorResponse, getFlorCallOrEnvidoCall } from './ai/envidoStrategy';
 import { getTrucoResponse, getTrucoCall } from './ai/trucoStrategy';
@@ -77,7 +77,26 @@ export const getLocalAIMove = (state: GameState): AiMove => {
             if (envidoCallDecision) {
                  const blurbText = getRandomPhrase(ENVIDO_PRIMERO_PHRASES);
                  const updatedReasoning = `[Lógica de Envido Primero]\nEl jugador cantó TRUCO, pero invocaré la prioridad del Envido.\n` + envidoCallDecision.reasoning;
-                 return { ...envidoCallDecision, reasoning: updatedReasoning, action: { type: ActionType.CALL_ENVIDO, payload: { blurbText } } };
+                 // FIX: Preserve the original envido action type (Envido, Real Envido, Falta Envido)
+                 // instead of hardcoding it to a simple Envido.
+                 const originalAction = envidoCallDecision.action;
+                 let newAction: AiMove['action'];
+
+                 switch (originalAction.type) {
+                     case ActionType.CALL_ENVIDO:
+                         newAction = { type: ActionType.CALL_ENVIDO, payload: { blurbText } };
+                         break;
+                     case ActionType.CALL_REAL_ENVIDO:
+                         newAction = { type: ActionType.CALL_REAL_ENVIDO, payload: { blurbText } };
+                         break;
+                     case ActionType.CALL_FALTA_ENVIDO:
+                         newAction = { type: ActionType.CALL_FALTA_ENVIDO, payload: { blurbText } };
+                         break;
+                     default:
+                         newAction = { type: ActionType.CALL_ENVIDO, payload: { blurbText } };
+                         break;
+                 }
+                 return { ...envidoCallDecision, reasoning: updatedReasoning, action: newAction };
             }
         }
         

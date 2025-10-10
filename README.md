@@ -1,3 +1,4 @@
+
 # Truco AI 🃏
 
 ¡Bienvenido a Truco AI! Una aplicación web para un solo jugador del clásico juego de cartas argentino, "Truco". Enfréntate a un oponente de IA estratégico y adaptable, aprende los secretos del juego y analiza tu propio estilo de juego.
@@ -167,7 +168,9 @@ La IA emplea varias estrategias que van más allá de jugar la carta más alta.
 
 *   **"Parda y Canto"**: Una táctica clásica. Si en la primera mano puedes empatar ("hacer parda") con el jugador teniendo una carta muy fuerte guardada, la IA puede elegir empatar intencionadamente. Esto oculta su carta ganadora y le da una ventaja psicológica y estratégica para cantar Truco en la siguiente mano.
 
-*   **Inferencia y Deducción**: La IA presta atención a cada carta jugada. Por ejemplo, si la IA juega una carta de Espadas y tú no respondes con Espadas (no "fallas"), la IA infiere que no tienes más cartas de ese palo ("palo negado") y ajusta sus probabilidades sobre tu mano restante.
+*   **Inferencia y Deducción**: La IA presta atención a cada jugada para deducir información sobre tu mano. Por ejemplo:
+    *   **Inferencia de Envido Pasivo**: Si tienes la oportunidad de cantar Envido en la primera mano pero eliges jugar una carta en su lugar, la IA infiere que es *poco probable* que tengas un Envido muy alto (ej. 28+). Reduce la probabilidad de que tengas cartas que formen un buen Envido en sus simulaciones, permitiéndole tomar decisiones de Truco más informadas.
+    *   **Inferencia de Canto**: Cuando cantas Envido o Truco, la IA utiliza tu historial de juego para estimar la fuerza probable de tu mano, ajustando su respuesta para ser más agresiva contra un farol o más cautelosa contra una apuesta de valor.
 
 ---
 

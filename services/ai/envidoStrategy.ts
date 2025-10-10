@@ -102,6 +102,9 @@ export const getEnvidoCall = (state: GameState, gamePressure: number): AiMove | 
     const dynamicCallThreshold = opponentContextualBehavior.callThreshold - (gamePressure * 3); // More desperate -> lower threshold
     reasonPrefix.push(`\n[Modelo Oponente (${playerContext.toUpperCase()})]: Umbral de llamada del jugador: ~${opponentContextualBehavior.callThreshold.toFixed(1)}. Mi umbral ajustado por presión: ${dynamicCallThreshold.toFixed(1)}.`);
 
+    const isObjectivelyStrong = myEnvido >= 28;
+    reasonPrefix.push(`Mano objetivamente fuerte (>=28): ${isObjectivelyStrong ? 'Sí' : 'No'}.`);
+
     // High strength hand -> Escalate
     if (myEnvido >= 30) {
         if (aiPointsToWin <= 5 && randomFactor < 0.75) {
@@ -115,14 +118,14 @@ export const getEnvidoCall = (state: GameState, gamePressure: number): AiMove | 
         }
     } 
     // Strong hand -> Standard call
-    else if (myEnvido >= dynamicCallThreshold) {
+    else if (isObjectivelyStrong || myEnvido >= dynamicCallThreshold) {
         if (playerPointsToWin <= 3 && myEnvido >= 28) {
              const blurbText = getRandomPhrase(FALTA_ENVIDO_PHRASES);
              const reasoning = `\nDecisión: El jugador está cerca de ganar. Un Falta Envido es una jugada defensiva fuerte con mi mano (${myEnvido.toFixed(1)}).`;
              return { action: { type: ActionType.CALL_FALTA_ENVIDO, payload: { blurbText } }, reasoning: [...reasonPrefix, reasoning].join('\n') };
         } else {
             const blurbText = getRandomPhrase(ENVIDO_PHRASES);
-            const reasoning = `\nDecisión: Mi envido de ${myEnvido.toFixed(1)} es fuerte y supera el umbral dinámico. Inciaré con ENVIDO.`;
+            const reasoning = `\nDecisión: Mi envido de ${myEnvido.toFixed(1)} es fuerte y ${isObjectivelyStrong ? 'es objetivamente bueno.' : 'supera el umbral dinámico.'} Inciaré con ENVIDO.`;
             return { action: { type: ActionType.CALL_ENVIDO, payload: { blurbText } }, reasoning: [...reasonPrefix, reasoning].join('\n') };
         }
     }

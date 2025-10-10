@@ -162,14 +162,14 @@ export const generateSuggestionSummary = (move: AiMove, state: GameState): strin
             const strengthText = getEnvidoStrengthText(playerEnvidoPoints);
 
             // Case 1: Responding to TRUCO with Envido Primero
-            if (gamePhase === 'truco_called' && action.type === ActionType.CALL_ENVIDO) {
+            if (gamePhase === 'truco_called' && (action.type === ActionType.CALL_ENVIDO || action.type === ActionType.CALL_REAL_ENVIDO || action.type === ActionType.CALL_FALTA_ENVIDO)) {
                 const isBluff = /farol|mano.*débil/i.test(reasoning);
                 if (isBluff) {
-                    return `La IA cantó Truco, pero podemos interrumpir con 'Envido Primero'. Aunque nuestros ${playerEnvidoPoints} puntos son bajos, es un buen farol.`;
+                    return `La IA cantó Truco, pero podemos interrumpir con '${callType}'. Aunque nuestros ${playerEnvidoPoints} puntos son bajos, es un buen farol.`;
                 }
                 const opponentCardPlayed = state.aiTricks[0];
                 const context = opponentCardPlayed ? `Después de que la IA jugara el ${getCardName(opponentCardPlayed)}, ` : "";
-                return `${context}la IA cantó Truco. Tenemos ${playerEnvidoPoints} de envido (${strengthText}), así que deberíamos interrumpir con 'Envido Primero' para reclamar esos puntos.`;
+                return `${context}la IA cantó Truco. Tenemos ${playerEnvidoPoints} de envido (${strengthText}), así que deberíamos interrumpir con '${callType}' para reclamar esos puntos.`;
             }
 
             // Case 2: Responding to ENVIDO with another Envido call

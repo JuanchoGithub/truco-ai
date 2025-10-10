@@ -141,7 +141,7 @@ export const generateConstrainedOpponentHand = (
     state: GameState, 
     reasoning: string[]
 ): { strong: Card[]; medium: Card[]; weak: Card[] } => {
-    const { playerEnvidoValue, initialPlayerHand, playerHand, playedCards, aiHand, playerHasFlor, currentTrick, mano, trickWinners, aiTricks, playerTricks, gamePhase, lastCaller, playerTrucoCallHistory } = state;
+    const { playerEnvidoValue, initialPlayerHand, playerHand, playedCards, aiHand, playerHasFlor, currentTrick, mano, hasEnvidoBeenCalledThisRound, playerTricks, gamePhase, lastCaller, playerTrucoCallHistory } = state;
     
     const cardsToGenerate = playerHand.length;
     if (cardsToGenerate === 0) {
@@ -149,39 +149,15 @@ export const generateConstrainedOpponentHand = (
     }
 
     const knownImpossibleCards = [...aiHand, ...playedCards];
-    let unseenCards = FULL_DECK.filter(deckCard => 
+    const unseenCards = FULL_DECK.filter(deckCard => 
         !knownImpossibleCards.some(knownCard => knownCard.rank === deckCard.rank && knownCard.suit === deckCard.suit)
     );
     
     const playerPlayedCards = initialPlayerHand.filter(c => !playerHand.some(h => h.rank === c.rank && h.suit === c.suit));
 
-    // 1. Suit-Following Constraint
-    const voidedSuits = new Set<Suit>();
-    for (let i = 0; i < currentTrick; i++) {
-        let leader: Player = mano;
-        for (let j = 0; j < i; j++) {
-            const winner = trickWinners[j];
-            if (winner && winner !== 'tie') {
-                leader = winner;
-            }
-        }
-        if (leader === 'ai' && aiTricks[i] && playerTricks[i]) {
-            const leadCard = aiTricks[i]!;
-            const playerCard = playerTricks[i]!;
-            if (playerCard.suit !== leadCard.suit) {
-                voidedSuits.add(leadCard.suit);
-            }
-        }
-    }
-
-    if (voidedSuits.size > 0) {
-        reasoning.push(`- Inferencia de Palo: El jugador no tiene ${[...voidedSuits].join(', ')}.`);
-        unseenCards = unseenCards.filter(c => !voidedSuits.has(c.suit));
-    }
-    
     let validOpponentHands: Card[][] = [];
 
-    // 2. Flor Constraint (strongest)
+    // 1. Flor Constraint (strongest)
     if (playerHasFlor) {
         reasoning.push('- Inferencia de Flor: La mano del jugador es de un solo palo.');
         if (playerPlayedCards.length > 1 && !playerPlayedCards.every(c => c.suit === playerPlayedCards[0].suit)) {
@@ -210,7 +186,7 @@ export const generateConstrainedOpponentHand = (
         }
     }
     
-    // 3. Envido Constraint (if no valid flor hands were found)
+    // 2. Envido Constraint (if no valid flor hands were found)
     if (validOpponentHands.length === 0 && playerEnvidoValue !== null) {
         reasoning.push(`- Inferencia de Envido: El jugador declaró ${playerEnvidoValue} puntos.`);
         const cardsToFind = 3 - playerPlayedCards.length;
@@ -228,7 +204,7 @@ export const generateConstrainedOpponentHand = (
         }
     }
 
-    // 4. Behavioral Truco Constraint
+    // 3. Behavioral Truco Constraint
     const isRespondingToPlayerTruco = gamePhase === 'truco_called' && lastCaller === 'player' && currentTrick === 0;
     if (validOpponentHands.length === 0 && isRespondingToPlayerTruco) {
         const relevantHistory = playerTrucoCallHistory;
@@ -294,6 +270,45 @@ export const generateConstrainedOpponentHand = (
         }
         allPossibleHands = combinations(unseenCards, cardsToGenerate);
     }
+    
+    // 4. Envido inference from player inaction.
+    // This is applied *after* other constraints have been (or failed to be) applied.
+    const envidoOpportunityPassed =
+        currentTrick === 0 &&
+        !hasEnvidoBeenCalledThisRound &&
+        !playerHasFlor &&
+        playerTricks[0] !== null; // Player has played a card in trick 1 without calling envido
+
+    if (validOpponentHands.length === 0 && envidoOpportunityPassed) {
+        reasoning.push(`- Inferencia de Envido (Pasivo): El jugador jugó una carta sin cantar Envido.`);
+        const playerContext = mano === 'player' ? 'mano' : 'pie';
+        const callThreshold = state.opponentModel.envidoBehavior[playerContext].callThreshold;
+        reasoning.push(`  - Su umbral de canto aprendido es ~${callThreshold.toFixed(0)}. Es poco probable que tengan más que eso.`);
+        
+        const filteredHands = allPossibleHands.filter(hand => {
+            const fullHand = [...playerPlayedCards, ...hand];
+            const envidoValue = getEnvidoValue(fullHand);
+            
+            // A player might bait with a very high envido, so we keep a small chance for that.
+            if (envidoValue > callThreshold + 2) {
+                return Math.random() < 0.1; // 10% chance to keep a hand well above their usual call threshold (represents baiting)
+            }
+            // They might also stretch their call threshold sometimes.
+            if (envidoValue > callThreshold) {
+                return Math.random() < 0.3; // 30% chance to keep a hand just above their threshold
+            }
+            return true; // Keep all hands below the threshold
+        });
+
+        // Only apply the filter if it doesn't drastically reduce the sample size, which could lead to bias.
+        if (filteredHands.length > Math.min(10, allPossibleHands.length * 0.1)) {
+            reasoning.push(`  - Reduciendo la probabilidad de manos con Envido > ${callThreshold.toFixed(0)}. Manos posibles: ${allPossibleHands.length} -> ${filteredHands.length}.`);
+            allPossibleHands = filteredHands;
+        } else {
+            reasoning.push(`  - El filtro de Envido pasivo no fue efectivo o resultó en muy pocas manos. Se mantiene el set de manos original para evitar sesgos.`);
+        }
+    }
+
 
     if (allPossibleHands.length === 0) {
         reasoning.push(`- Error de Simulación: No se pudieron generar manos de oponente.`);
