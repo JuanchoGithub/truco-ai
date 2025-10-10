@@ -38,23 +38,40 @@ export interface AiReasoningEntry {
 }
 
 // New types for AI learning
-export interface OpponentModel {
-  trucoFoldRate: number;
-  bluffSuccessRate: number;
-  // New granular behavior modeling
-  envidoBehavior: {
+
+// New: Types for granular, contextual opponent modeling
+export interface ActionStat {
+    attempts: number;
+    successes: number;
+}
+
+export interface ContextualActionStat {
+    mano: ActionStat;
+    pie: ActionStat;
+}
+
+export interface EnvidoContextualBehavior {
     callThreshold: number;
     foldRate: number;
     escalationRate: number;
-  };
+}
+
+export interface EnvidoBehavior {
+    mano: EnvidoContextualBehavior;
+    pie: EnvidoContextualBehavior;
+}
+
+
+export interface OpponentModel {
+  trucoFoldRate: number; // General fold rate, acts as a fallback/total
+  bluffSuccessRate: number; // General success rate
+  envidoBehavior: EnvidoBehavior;
   playStyle: {
     leadWithHighestRate: number; // When mano, trick 1
     baitRate: number;
+    envidoPrimeroRate: number; // NEW: Rate of responding to Truco with Envido
   };
-  trucoBluffs: {
-      attempts: number;
-      successes: number;
-  };
+  trucoBluffs: ContextualActionStat;
 }
 
 export interface PlayerEnvidoActionEntry {
@@ -125,6 +142,7 @@ export type PlayerCardPlayStatistics = Record<CardCategory, CardPlayStats>;
 
 export interface RoundSummary {
     round: number;
+    mano: Player;
     playerInitialHand: string[];
     aiInitialHand: string[];
     playerHandStrength: number;
@@ -211,6 +229,8 @@ export interface GameState {
   // Granular Behavior Tracking
   playerEnvidoHistory: PlayerEnvidoActionEntry[];
   playerPlayOrderHistory: PlayerPlayOrderEntry[];
+  envidoPrimeroOpportunities: number;
+  envidoPrimeroCalls: number;
 
   // New Detailed Statistics
   playerCardPlayStats: PlayerCardPlayStatistics;

@@ -37,7 +37,9 @@ const generateProfileAnalysis = (state: GameState): React.ReactNode[] => {
     }
 
     // Envido Analysis
-    const { callThreshold, foldRate } = opponentModel.envidoBehavior;
+    // Fix: Calculate average Envido behavior from 'mano' and 'pie' contexts for a general profile.
+    const callThreshold = (opponentModel.envidoBehavior.mano.callThreshold + opponentModel.envidoBehavior.pie.callThreshold) / 2;
+    const foldRate = (opponentModel.envidoBehavior.mano.foldRate + opponentModel.envidoBehavior.pie.foldRate) / 2;
     let envidoInsight = "Analizando tu estilo de Envido... ";
     if (callThreshold > 28) {
         envidoInsight += "Sos un jugador de Envido 'Puntual', tendés a cantar solo cuando tenés 29 o más, lo que te hace muy creíble. ";
@@ -139,6 +141,8 @@ const DataModal: React.FC<DataModalProps> = ({ gameState, dispatch }) => {
       playerPlayOrderHistory: gameState.playerPlayOrderHistory,
       playerCardPlayStats: gameState.playerCardPlayStats,
       roundHistory: gameState.roundHistory,
+      envidoPrimeroOpportunities: gameState.envidoPrimeroOpportunities,
+      envidoPrimeroCalls: gameState.envidoPrimeroCalls,
     };
     const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(JSON.stringify(dataToExport, null, 2))}`;
     const link = document.createElement("a");
@@ -209,10 +213,12 @@ const DataModal: React.FC<DataModalProps> = ({ gameState, dispatch }) => {
                 <div className="bg-black/30 p-3 rounded-md space-y-1">
                     <p><span className="font-semibold text-white">Umbral de Truco (promedio):</span> {avgTrucoStrength > 0 ? avgTrucoStrength.toFixed(1) : 'N/A'}</p>
                     <p><span className="font-semibold text-white">Éxito de Farol en Truco:</span> {liveBluffStats.attempts > 0 ? `${((liveBluffStats.successes / liveBluffStats.attempts) * 100).toFixed(0)}%` : 'N/A'} <span className="text-gray-400">({liveBluffStats.successes}/{liveBluffStats.attempts})</span></p>
+                    <p><span className="font-semibold text-white">Tasa de "Envido Primero":</span> {(opponentModel.playStyle.envidoPrimeroRate * 100).toFixed(0)}%</p>
                 </div>
                 <div className="bg-black/30 p-3 rounded-md space-y-1">
-                     <p><span className="font-semibold text-white">Umbral de Envido (promedio):</span> ~{opponentModel.envidoBehavior.callThreshold.toFixed(1)}</p>
-                     <p><span className="font-semibold text-white">Tasa de Abandono Envido (vs IA):</span> {(opponentModel.envidoBehavior.foldRate * 100).toFixed(1)}%</p>
+                     {/* Fix: Calculate and display average Envido behavior from 'mano' and 'pie' contexts. */}
+                     <p><span className="font-semibold text-white">Umbral de Envido (promedio):</span> ~{((opponentModel.envidoBehavior.mano.callThreshold + opponentModel.envidoBehavior.pie.callThreshold) / 2).toFixed(1)}</p>
+                     <p><span className="font-semibold text-white">Tasa de Abandono Envido (vs IA):</span> {(((opponentModel.envidoBehavior.mano.foldRate + opponentModel.envidoBehavior.pie.foldRate) / 2) * 100).toFixed(1)}%</p>
                      <p><span className="font-semibold text-white">Preferencia Envido (Mano/Respuesta):</span> {totalCalls > 0 ? `${manoCallRate.toFixed(0)}% / ${(100 - manoCallRate).toFixed(0)}%` : 'N/A'}</p>
                 </div>
             </div>

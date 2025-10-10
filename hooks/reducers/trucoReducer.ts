@@ -1,5 +1,3 @@
-
-
 import { GameState, ActionType, AiTrucoContext, PlayerTrucoCallEntry } from '../../types';
 import { calculateHandStrength, getHandPercentile } from '../../services/trucoLogic';
 
@@ -40,6 +38,10 @@ export function handleCallTruco(state: GameState, action: { type: ActionType.CAL
         newRoundHistory[currentRoundIndex] = updatedSummary;
         updatedState = { ...updatedState, roundHistory: newRoundHistory };
     }
+  }
+  
+  if (caller === 'ai' && state.currentTrick === 0) {
+    updatedState.envidoPrimeroOpportunities = (updatedState.envidoPrimeroOpportunities || 0) + 1;
   }
 
   updatedState = updateRoundHistoryWithCall(updatedState, `${caller}: Truco`);

@@ -1,5 +1,3 @@
-
-
 // Fix: Imported `GamePhase` to make the type available for casting.
 import { GameState, ActionType, Player, GamePhase, PlayerEnvidoActionEntry } from '../../types';
 import { getEnvidoValue } from '../../services/trucoLogic';
@@ -42,6 +40,10 @@ export function handleCallEnvido(state: GameState, action: { type: ActionType.CA
 
   const updatedState = updateRoundHistoryWithCall(state, `${caller}: Envido`);
 
+  if (isPlayer && state.pendingTrucoCaller === 'ai') {
+    updatedState.envidoPrimeroCalls = (updatedState.envidoPrimeroCalls || 0) + 1;
+  }
+
   return { 
     ...updatedState, 
     gamePhase: 'envido_called', 
@@ -77,7 +79,7 @@ export function handleCallRealEnvido(state: GameState, action: { type: ActionTyp
         action: 'escalated_real',
         wasMano: state.mano === 'player',
     };
-    newEnvidoHistory = [...state.playerEnvidoHistory, entry];
+    newEnvidoHistory = [...state.playerEnvidoHistory.filter(e => !(e.round === state.round && e.action === 'did_not_call')), entry];
   }
   
   const updatedState = updateRoundHistoryWithCall(state, `${caller}: Real Envido`);
@@ -127,7 +129,7 @@ export function handleCallFaltaEnvido(state: GameState, action: { type: ActionTy
         action: 'escalated_falta',
         wasMano: state.mano === 'player',
     };
-    newEnvidoHistory = [...state.playerEnvidoHistory, entry];
+    newEnvidoHistory = [...state.playerEnvidoHistory.filter(e => !(e.round === state.round && e.action === 'did_not_call')), entry];
   }
 
   const updatedState = updateRoundHistoryWithCall(state, `${caller}: Falta Envido`);

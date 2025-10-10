@@ -1,5 +1,3 @@
-
-
 // Fix: Moved the game reducer logic from the misnamed types.ts to its correct location here.
 // This file now contains the full, correct reducer implementation for the game.
 import { GameState, Action, ActionType, AiTrucoContext } from '../types';
@@ -55,17 +53,17 @@ export const initialState: GameState = {
     trucoFoldRate: 0.3, 
     bluffSuccessRate: 0.5,
     envidoBehavior: {
-      callThreshold: 27,
-      foldRate: 0.4,
-      escalationRate: 0.2,
+      mano: { callThreshold: 27, foldRate: 0.4, escalationRate: 0.2 },
+      pie: { callThreshold: 26, foldRate: 0.3, escalationRate: 0.25 },
     },
     playStyle: {
       leadWithHighestRate: 0.75,
       baitRate: 0.1,
+      envidoPrimeroRate: 0.3,
     },
     trucoBluffs: {
-        attempts: 0,
-        successes: 0,
+        mano: { attempts: 0, successes: 0 },
+        pie: { attempts: 0, successes: 0 },
     },
   },
   aiCases: [],
@@ -84,6 +82,8 @@ export const initialState: GameState = {
   // Granular Behavior Tracking
   playerEnvidoHistory: [],
   playerPlayOrderHistory: [],
+  envidoPrimeroOpportunities: 0,
+  envidoPrimeroCalls: 0,
   // New Detailed Statistics
   playerCardPlayStats: createInitialCardPlayStats(),
   roundHistory: [],
@@ -206,6 +206,8 @@ export function useGameReducer(state: GameState, action: Action): GameState {
             playerPlayOrderHistory: loadedState.playerPlayOrderHistory || [],
             playerCardPlayStats: loadedState.playerCardPlayStats || initialState.playerCardPlayStats,
             roundHistory: loadedState.roundHistory || [],
+            envidoPrimeroOpportunities: loadedState.envidoPrimeroOpportunities || 0,
+            envidoPrimeroCalls: loadedState.envidoPrimeroCalls || 0,
             
             // Carry over user settings and score from the previous game state
             isDebugMode: loadedState.isDebugMode || false,
@@ -230,6 +232,14 @@ export function useGameReducer(state: GameState, action: Action): GameState {
                 envidoBehavior: {
                     ...initialState.opponentModel.envidoBehavior,
                     ...(loadedState.opponentModel.envidoBehavior || {}),
+                    mano: {
+                      ...initialState.opponentModel.envidoBehavior.mano,
+                      ...(loadedState.opponentModel.envidoBehavior?.mano || {})
+                    },
+                    pie: {
+                      ...initialState.opponentModel.envidoBehavior.pie,
+                      ...(loadedState.opponentModel.envidoBehavior?.pie || {})
+                    }
                 },
                 playStyle: {
                     ...initialState.opponentModel.playStyle,
@@ -237,7 +247,15 @@ export function useGameReducer(state: GameState, action: Action): GameState {
                 },
                 trucoBluffs: {
                     ...initialState.opponentModel.trucoBluffs,
-                    ...(loadedState.opponentModel.trucoBluffs || { attempts: 0, successes: 0 }),
+                    ...(loadedState.opponentModel.trucoBluffs || {}),
+                    mano: {
+                      ...initialState.opponentModel.trucoBluffs.mano,
+                      ...(loadedState.opponentModel.trucoBluffs?.mano || {})
+                    },
+                     pie: {
+                      ...initialState.opponentModel.trucoBluffs.pie,
+                      ...(loadedState.opponentModel.trucoBluffs?.pie || {})
+                    }
                 }
             };
         }

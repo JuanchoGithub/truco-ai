@@ -8,23 +8,34 @@ function updateOpponentModelFromHistory(state: GameState): OpponentModel {
     const newModel = JSON.parse(JSON.stringify(state.opponentModel)); // Deep copy to avoid mutation
     const DECAY = 0.95; // Give more weight to recent actions
 
-    // 1. Analyze Envido History
-    const envidoResponses = state.playerEnvidoHistory.filter(e => e.action === 'folded' || e.action === 'accepted' || e.action.startsWith('escalated'));
-    if (envidoResponses.length > 0) {
-        const folds = envidoResponses.filter(e => e.action === 'folded').length;
-        const escalations = envidoResponses.filter(e => e.action.startsWith('escalated')).length;
-        newModel.envidoBehavior.foldRate = newModel.envidoBehavior.foldRate * DECAY + (1 - DECAY) * (folds / envidoResponses.length);
-        newModel.envidoBehavior.escalationRate = newModel.envidoBehavior.escalationRate * DECAY + (1 - DECAY) * (escalations / envidoResponses.length);
+    // 1. Analyze Envido History with context
+    const envidoActions = state.playerEnvidoHistory;
+    if (envidoActions.length > 2) {
+        const manoActions = envidoActions.filter(e => e.wasMano);
+        const pieActions = envidoActions.filter(e => !e.wasMano);
+
+        const updateContext = (actions: PlayerEnvidoActionEntry[], context: 'mano' | 'pie') => {
+            if (actions.length < 2) return;
+            const responses = actions.filter(e => e.action === 'folded' || e.action === 'accepted' || e.action.startsWith('escalated'));
+            if (responses.length > 0) {
+                const folds = responses.filter(e => e.action === 'folded').length;
+                const escalations = responses.filter(e => e.action.startsWith('escalated')).length;
+                newModel.envidoBehavior[context].foldRate = newModel.envidoBehavior[context].foldRate * DECAY + (1 - DECAY) * (folds / responses.length);
+                newModel.envidoBehavior[context].escalationRate = newModel.envidoBehavior[context].escalationRate * DECAY + (1 - DECAY) * (escalations / responses.length);
+            }
+            const calls = actions.filter(e => e.action === 'called' || e.action.startsWith('escalated'));
+            if (calls.length > 1) {
+                const totalPoints = calls.reduce((sum, e) => sum + e.envidoPoints, 0);
+                const newThreshold = totalPoints / calls.length;
+                newModel.envidoBehavior[context].callThreshold = newModel.envidoBehavior[context].callThreshold * DECAY + (1 - DECAY) * newThreshold;
+            }
+        };
+
+        updateContext(manoActions, 'mano');
+        updateContext(pieActions, 'pie');
     }
     
-    const envidoCalls = state.playerEnvidoHistory.filter(e => e.action === 'called' || e.action.startsWith('escalated'));
-    if (envidoCalls.length > 2) {
-        const totalPoints = envidoCalls.reduce((sum, e) => sum + e.envidoPoints, 0);
-        const newThreshold = totalPoints / envidoCalls.length;
-        newModel.envidoBehavior.callThreshold = newModel.envidoBehavior.callThreshold * DECAY + (1 - DECAY) * newThreshold;
-    }
-
-    // 2. Analyze Play Style History
+    // 2. Analyze Play Style History (Remains as is, as it's already contextual)
     const manoTrick1Leads = state.playerPlayOrderHistory.filter(p => p.wasLeadingTrick && p.trick === 0 && state.mano === 'player');
     if (manoTrick1Leads.length > 2) {
         let ledWithHighestCount = 0;
@@ -40,7 +51,6 @@ function updateOpponentModelFromHistory(state: GameState): OpponentModel {
             if (highestCard.rank === playedCard_decoded.rank && highestCard.suit === playedCard_decoded.suit) {
                 ledWithHighestCount++;
             }
-            // Define baiting as: having a strong hand overall but leading with the weakest card
             if (calculateHandStrength(handBeforePlay_decoded) > 20 && lowestCard.rank === playedCard_decoded.rank && lowestCard.suit === playedCard_decoded.suit) {
                 baitAttempts++;
             }
@@ -51,20 +61,31 @@ function updateOpponentModelFromHistory(state: GameState): OpponentModel {
         newModel.playStyle.baitRate = newModel.playStyle.baitRate * DECAY + (1 - DECAY) * newBaitRate;
     }
     
-    // 3. Analyze Truco Bluffing History
-    let successfulBluffs = 0;
-    let attemptedBluffs = 0;
+    // 3. Analyze Truco Bluffing History with context
+    const manoBluffs = { attempts: 0, successes: 0 };
+    const pieBluffs = { attempts: 0, successes: 0 };
+
     state.roundHistory.forEach(round => {
-        // A round must be complete to judge success
         if (round.playerTrucoCall?.isBluff && round.roundWinner !== null) {
-            attemptedBluffs++;
-            // Player wins the round (via points or opponent folding)
-            if (round.roundWinner === 'player') {
-                successfulBluffs++;
+            const context = round.mano === 'player' ? 'mano' : 'pie';
+            if (context === 'mano') {
+                manoBluffs.attempts++;
+                if (round.roundWinner === 'player') manoBluffs.successes++;
+            } else {
+                pieBluffs.attempts++;
+                if (round.roundWinner === 'player') pieBluffs.successes++;
             }
         }
     });
-    newModel.trucoBluffs = { attempts: attemptedBluffs, successes: successfulBluffs };
+
+    newModel.trucoBluffs.mano = { attempts: manoBluffs.attempts, successes: manoBluffs.successes };
+    newModel.trucoBluffs.pie = { attempts: pieBluffs.attempts, successes: pieBluffs.successes };
+    
+    // 4. Analyze "Envido Primero" Rate
+    if (state.envidoPrimeroOpportunities > 2) { // Only update if we have enough data points
+        const newRate = state.envidoPrimeroCalls / state.envidoPrimeroOpportunities;
+        newModel.playStyle.envidoPrimeroRate = newModel.playStyle.envidoPrimeroRate * DECAY + (1 - DECAY) * newRate;
+    }
 
     return newModel;
 }
@@ -87,6 +108,8 @@ export function handleRestartGame(initialState: GameState, state: GameState): Ga
     playerPlayOrderHistory: state.playerPlayOrderHistory,
     playerCardPlayStats: state.playerCardPlayStats,
     roundHistory: state.roundHistory,
+    envidoPrimeroOpportunities: state.envidoPrimeroOpportunities,
+    envidoPrimeroCalls: state.envidoPrimeroCalls,
     
     // Preserve user settings like debug mode
     isDebugMode: state.isDebugMode,
@@ -138,6 +161,7 @@ export function handleStartNewRound(state: GameState, action: { type: ActionType
   // Initialize the summary for the new round
   const newRoundSummary: RoundSummary = {
       round: state.round + 1,
+      mano: newMano,
       playerInitialHand: newPlayerHand.map(getCardCode),
       aiInitialHand: newAiHand.map(getCardCode),
       playerHandStrength: calculateHandStrength(newPlayerHand),
@@ -149,7 +173,7 @@ export function handleStartNewRound(state: GameState, action: { type: ActionType
       aiTricks: [null, null, null],
       trickWinners: [null, null, null],
       roundWinner: null,
-      pointsAwarded: { player: 0, ai: 0 },
+      pointsAwarded: { player: 0; ai: 0; },
       playerTrucoCall: null,
   };
   
@@ -254,11 +278,13 @@ export function handlePlayCard(state: GameState, action: { type: ActionType.PLAY
             }
         }
 
-        // If this is the player's first card, it's their last chance to call Envido.
-        // We log their choice not to.
+        // If this is the player's turn in the first trick and they haven't called envido, log 'did_not_call'.
+        // This only happens once per round when the opportunity first arises.
         const envidoWasPossible = state.currentTrick === 0 && !state.hasEnvidoBeenCalledThisRound && !state.playerHasFlor && !state.aiHasFlor;
+        const hasAlreadyLoggedEnvidoAction = state.playerEnvidoHistory.some(e => e.round === state.round);
+
         let newEnvidoHistory = state.playerEnvidoHistory;
-        if (envidoWasPossible) {
+        if (envidoWasPossible && !hasAlreadyLoggedEnvidoAction) {
             const didNotCallEntry: PlayerEnvidoActionEntry = {
                 round: state.round,
                 envidoPoints: getEnvidoValue(state.initialPlayerHand),
@@ -273,9 +299,6 @@ export function handlePlayCard(state: GameState, action: { type: ActionType.PLAY
             playerPlayOrderHistory: newPlayOrderHistory,
             playerCardPlayStats: newPlayerCardPlayStats,
             playerEnvidoHistory: newEnvidoHistory,
-            // Playing a card means the envido window for this trick is closed.
-            // This is a failsafe to ensure we don't log 'did_not_call' multiple times.
-            hasEnvidoBeenCalledThisRound: state.hasEnvidoBeenCalledThisRound || envidoWasPossible,
         };
     }
     // --- End Behavior Logging ---
@@ -323,6 +346,9 @@ export function handlePlayCard(state: GameState, action: { type: ActionType.PLAY
     const trickWinner = determineTrickWinner(newPlayerTricks[newState.currentTrick]!, newAiTricks[newState.currentTrick]!);
     const newTrickWinners = [...newState.trickWinners];
     newTrickWinners[newState.currentTrick] = trickWinner;
+
+    // FIX: Only close the Envido window after the first trick is *complete*.
+    const updatedHasEnvidoBeenCalled = state.currentTrick === 0 ? true : state.hasEnvidoBeenCalledThisRound;
     
     // Update player card stats with win/loss
     if (player === 'player') {
@@ -369,7 +395,7 @@ export function handlePlayCard(state: GameState, action: { type: ActionType.PLAY
         newAiCases = [...newState.aiCases, newCase];
 
         const decay = 0.9;
-        // FIX: Corrected typo from `trucoFoldrate` to `trucoFoldRate`.
+        // FIX: Corrected typo from 'trucoFoldrate' to 'trucoFoldRate'.
         const newFoldRate = newState.opponentModel.trucoFoldRate * decay;
         
         let newBluffSuccessRate = newState.opponentModel.bluffSuccessRate;
@@ -422,6 +448,7 @@ export function handlePlayCard(state: GameState, action: { type: ActionType.PLAY
         gamePhase: 'round_end',
         currentTurn: null,
         roundHistory: newRoundHistory,
+        hasEnvidoBeenCalledThisRound: updatedHasEnvidoBeenCalled,
       };
 
     } else {
@@ -444,6 +471,7 @@ export function handlePlayCard(state: GameState, action: { type: ActionType.PLAY
         playerBlurb: null,
         lastRoundWinner: null, // Clear winner on new card play
         isThinking: player === 'ai' ? false : newState.isThinking,
+        hasEnvidoBeenCalledThisRound: updatedHasEnvidoBeenCalled,
       };
     }
 }

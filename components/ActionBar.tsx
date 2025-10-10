@@ -26,11 +26,11 @@ const ActionBar: React.FC<ActionBarProps> = ({ dispatch, gameState, onPlayerActi
     const isPlayerTurn = currentTurn === 'player';
 
     // --- Button Visibility Logic ---
-    const canMakeCall = isPlayerTurn && currentTrick === 0 && !playerTricks[0];
-    const envidoPhaseAvailable = !hasEnvidoBeenCalledThisRound;
+    const isPlayersTurnToPlayCard = isPlayerTurn && playerTricks[currentTrick] === null;
+    const envidoWindowIsOpen = currentTrick === 0 && !hasEnvidoBeenCalledThisRound;
 
-    const canCallFlor = canMakeCall && playerHasFlor;
-    const canCallEnvido = canMakeCall && envidoPhaseAvailable && !playerHasFlor && !aiHasFlor;
+    const canCallFlor = isPlayersTurnToPlayCard && envidoWindowIsOpen && playerHasFlor && !hasFlorBeenCalledThisRound;
+    const canCallEnvido = isPlayersTurnToPlayCard && envidoWindowIsOpen && !playerHasFlor;
     const canCallTruco = isPlayerTurn && trucoLevel === 0 && !gamePhase.includes('envido') && !gamePhase.includes('flor');
     const canEscalateToRetruco = isPlayerTurn && trucoLevel === 1 && !gamePhase.includes('envido') && !gamePhase.includes('flor');
     const canEscalateToValeCuatro = isPlayerTurn && trucoLevel === 2 && !gamePhase.includes('envido') && !gamePhase.includes('flor');
@@ -84,8 +84,9 @@ const ActionBar: React.FC<ActionBarProps> = ({ dispatch, gameState, onPlayerActi
 
 
     const renderResponseButtons = () => {
-        const canCallEnvidoPrimero = gamePhase === 'truco_called' && currentTrick === 0 && !playerTricks[0] && !aiTricks[0] && !playerHasFlor && !aiHasFlor && !hasEnvidoBeenCalledThisRound;
-        const canDeclareFlorOnTruco = gamePhase === 'truco_called' && currentTrick === 0 && !playerTricks[0] && !aiTricks[0] && playerHasFlor && !hasFlorBeenCalledThisRound;
+        // FIX: Broadened condition. "Envido Primero" is possible as long as the envido window is open.
+        const canCallEnvidoPrimero = gamePhase === 'truco_called' && envidoWindowIsOpen && !playerHasFlor;
+        const canDeclareFlorOnTruco = gamePhase === 'truco_called' && envidoWindowIsOpen && playerHasFlor;
         
         // New: Player can respond to Envido with Flor
         if (gamePhase === 'envido_called' && playerHasFlor) {
@@ -128,7 +129,7 @@ const ActionBar: React.FC<ActionBarProps> = ({ dispatch, gameState, onPlayerActi
                         ¡FLOR!
                     </ActionButton>
                 )}
-                {canCallEnvido || (canMakeCall && playerHasFlor) ? (
+                {canCallEnvido ? (
                     <>
                         <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_ENVIDO })} className="!from-blue-600 !to-blue-700 !border-blue-900 hover:!from-blue-500 hover:!to-blue-600">
                             Envido

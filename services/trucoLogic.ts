@@ -191,55 +191,48 @@ export const determineTrickWinner = (playerCard: Card, aiCard: Card): Player | '
 };
 
 export const determineRoundWinner = (trickWinners: (Player | 'tie' | null)[], mano: Player): Player | 'tie' | null => {
+  const [t1, t2, t3] = trickWinners;
+
   const playerWins = trickWinners.filter(w => w === 'player').length;
   const aiWins = trickWinners.filter(w => w === 'ai').length;
 
-  // Simple case: win 2 tricks
+  // Rule 1: First to win 2 tricks wins immediately.
   if (playerWins >= 2) return 'player';
   if (aiWins >= 2) return 'ai';
 
-  const [t1, t2, t3] = trickWinners;
-
-  // Round is not over if less than 2 tricks have been played, unless there's a tie.
-  // After trick 2 is complete:
-  if (t2 !== null) {
-      // Tie in first trick, winner of second trick wins the round.
-      if (t1 === 'tie' && t2 !== 'tie') {
-          return t2;
-      }
-      // Win in first trick, tie in second trick. Winner of first trick wins the round.
-      if (t1 !== 'tie' && t2 === 'tie') {
-          return t1;
-      }
+  // Case after trick 2 is complete but not trick 3:
+  if (t2 !== null && t3 === null) {
+    if (t1 === 'tie' && t2 !== 'tie') return t2; // Tie on 1st, winner of 2nd wins
+    if (t1 !== 'tie' && t2 === 'tie') return t1; // Win on 1st, tie on 2nd, winner of 1st wins
   }
 
-  // After trick 3 is complete:
+  // Case after trick 3 is complete:
   if (t3 !== null) {
-      // Tie in third trick, winner of first trick wins.
-      if (t3 === 'tie' && t1 !== 'tie') {
-          return t1;
+    // If we're here, it means nobody has 2 wins.
+    // Scenarios: (1 win, 1 loss, 1 tie), (1 win, 0 loss, 2 ties), (0 wins, 0 loss, 3 ties)
+    
+    // All ties -> mano wins
+    if (playerWins === 0 && aiWins === 0) return mano;
+    
+    // One win, two ties -> winner of that one trick wins
+    if (playerWins === 1 && aiWins === 0) return 'player';
+    if (aiWins === 1 && playerWins === 0) return 'ai';
+    
+    // One win each, one tie -> the winner is determined by the first trick
+    if (playerWins === 1 && aiWins === 1) {
+      if (t1 !== 'tie') {
+        return t1;
+      } else {
+        // First trick was the tie, e.g., ['tie', 'player', 'ai']. Mano wins.
+        return mano;
       }
-      // First and second tricks tied, winner of third trick wins.
-      if (t1 === 'tie' && t2 === 'tie' && t3 !== 'tie') {
-          return t3;
-      }
-      // One win each, one tie. Winner of first trick wins.
-      if (playerWins === 1 && aiWins === 1) { // Implies one tie
-          if (t1 !== 'tie') {
-              return t1;
-          } else { // First trick was the tie, e.g., ['tie', 'player', 'ai']. Mano wins.
-              return mano;
-          }
-      }
-      // All three tricks tied. Mano wins.
-      if (t1 === 'tie' && t2 === 'tie' && t3 === 'tie') {
-          return mano;
-      }
+    }
   }
   
-  // If no conclusive winner, round is not over.
+  // No winner decided yet, round is still in progress
   return null;
 };
+
 
 // Based on simulation data for hand strength distribution.
 export const HAND_STRENGTH_PERCENTILES = {

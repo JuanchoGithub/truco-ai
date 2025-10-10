@@ -1,6 +1,7 @@
 
+
 import { AiMove, GameState, ActionType, Card } from '../types';
-import { getCardName } from './trucoLogic';
+import { getCardName, getEnvidoValue } from './trucoLogic';
 import { findBestCardToPlay } from './ai/playCardStrategy';
 
 function createMirroredState(currentState: GameState): GameState {
@@ -97,9 +98,11 @@ function getSafeCardPlayAlternative(state: GameState): string {
 // This function generates a more conversational, strategic summary.
 export const generateSuggestionSummary = (move: AiMove, state: GameState): string => {
     const { action, reasoning } = move;
-    const { playerHand, gamePhase, round, roundHistory } = state;
+    const { playerHand, gamePhase, round, roundHistory, initialPlayerHand } = state;
 
-    const playerEnvidoPoints = roundHistory.find(r => r.round === round)?.playerEnvidoPoints || 0;
+    // FIX: Calculate envido points directly from the player's initial hand to ensure accuracy for the assistant,
+    // avoiding any potential stale or incorrect data in roundHistory.
+    const playerEnvidoPoints = getEnvidoValue(initialPlayerHand);
     const isResponding = gamePhase.includes('_called');
     const alternativePlayText = getSafeCardPlayAlternative(state);
 
@@ -162,7 +165,9 @@ export const generateSuggestionSummary = (move: AiMove, state: GameState): strin
                 if (isBluff) {
                     return `La IA cantó Truco, pero podemos interrumpir con 'Envido Primero'. Aunque nuestros ${playerEnvidoPoints} puntos son bajos, es un buen farol.${alternativePlayText}`;
                 }
-                return `La IA cantó Truco, pero tenemos ${playerEnvidoPoints} de envido (${strengthText}). Deberíamos interrumpir con 'Envido Primero' para reclamar esos puntos.${alternativePlayText}`;
+                const opponentCardPlayed = state.aiTricks[0];
+                const context = opponentCardPlayed ? `Después de que la IA jugara el ${getCardName(opponentCardPlayed)}, ` : "";
+                return `${context}la IA cantó Truco. Tenemos ${playerEnvidoPoints} de envido (${strengthText}), así que deberíamos interrumpir con 'Envido Primero' para reclamar esos puntos.`;
             }
 
             // Case 2: Responding to ENVIDO with another Envido call

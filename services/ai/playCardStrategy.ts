@@ -30,7 +30,7 @@ const getEnvidoSuit = (hand: Card[]): Suit | null => {
 };
 
 export const findBestCardToPlay = (state: GameState): PlayCardResult => {
-    const { aiHand, playerTricks, currentTrick, trickWinners, mano, initialAiHand, playerEnvidoValue, roundHistory, round } = state;
+    const { aiHand, playerTricks, currentTrick, trickWinners, mano, initialAiHand, playerEnvidoValue, roundHistory, round, trucoLevel } = state;
     if (aiHand.length === 0) return { index: 0, reasoning: ["No quedan cartas para jugar."]};
 
     let reasoning: string[] = [`[Lógica: Jugar Carta]`, `Mi mano: ${aiHand.map(getCardName).join(', ')}`];
@@ -56,6 +56,26 @@ export const findBestCardToPlay = (state: GameState): PlayCardResult => {
         let cardIndex = 0;
         switch (currentTrick) {
             case 0: // First trick
+                // NEW: "Sacrificial" Deceptive Play
+                // If AI is mano, has a monster hand, and Truco hasn't been called, consider playing the 2nd best card to bait the opponent.
+                if (trucoLevel === 0 && mano === 'ai' && Math.random() < 0.4) { // 40% chance to consider this play
+                    const sortedHand = [...aiHand].sort((a, b) => getCardHierarchy(b) - getCardHierarchy(a));
+                    const hasAsDeEspadas = sortedHand.length > 0 && getCardHierarchy(sortedHand[0]) === 14;
+                    const hasSecondTopTier = sortedHand.length > 1 && getCardHierarchy(sortedHand[1]) >= 11; // 7 de Oros or better
+
+                    if (hasAsDeEspadas && hasSecondTopTier) {
+                        const secondBestCard = sortedHand[1];
+                        const sacrificialIndex = aiHand.findIndex(c => c.rank === secondBestCard.rank && c.suit === secondBestCard.suit);
+                        
+                        reasoning.push(`[Táctica Avanzada: Jugada de Sacrificio]`);
+                        reasoning.push(`- Tengo una mano monstruosa (As de Espadas y ${getCardName(secondBestCard)}).`);
+                        reasoning.push(`- En lugar de jugar mi carta más fuerte, jugaré la segunda mejor para ocultar mi verdadera fuerza.`);
+                        reasoning.push(`- El objetivo es incitar al jugador a subestimar mi mano y cantar Truco, para poder contraatacar con un Retruco devastador.`);
+                        reasoning.push(`\nDecisión: Jugando ${getCardName(secondBestCard)} como cebo.`);
+                        return { index: sacrificialIndex, reasoning };
+                    }
+                }
+
                 if (mano === 'ai') {
                     cardIndex = findCardIndexByValue(aiHand, 'max');
                     reasoning.push(`\nDecisión: Soy mano, así que jugaré mi carta más alta para asegurar la ventaja: ${getCardName(aiHand[cardIndex])}.`);
