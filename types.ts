@@ -154,7 +154,15 @@ export interface RoundSummary {
     aiTricks: (string | null)[];
     trickWinners: (Player | 'tie' | null)[];
     roundWinner: Player | 'tie' | null;
-    pointsAwarded: { player: number; ai: number; };
+    pointsAwarded: {
+        player: number;
+        ai: number;
+        by?: {
+            flor: { player: number; ai: number; note: string };
+            envido: { player: number; ai: number; note: string };
+            truco: { player: number; ai: number; note: string };
+        }
+    };
     playerTrucoCall: {
         handStrength: number;
         isBluff: boolean;
@@ -277,6 +285,7 @@ export enum ActionType {
   CLEAR_CENTRAL_MESSAGE = 'CLEAR_CENTRAL_MESSAGE',
   // Player Blurb
   CLEAR_PLAYER_BLURB = 'CLEAR_PLAYER_BLURB',
+  CLEAR_AI_BLURB = 'CLEAR_AI_BLURB',
   // Data Modal
   TOGGLE_DATA_MODAL = 'TOGGLE_DATA_MODAL',
   // Local Storage
@@ -320,6 +329,7 @@ export type Action =
   | { type: ActionType.RESOLVE_CONTRAFLOR_DECLINE }
   | { type: ActionType.CLEAR_CENTRAL_MESSAGE }
   | { type: ActionType.CLEAR_PLAYER_BLURB }
+  | { type: ActionType.CLEAR_AI_BLURB }
   | { type: ActionType.TOGGLE_DATA_MODAL }
   | { type: ActionType.LOAD_PERSISTED_STATE; payload: Partial<GameState> }
   | { type: ActionType.LOAD_IMPORTED_DATA; payload: Partial<GameState> }

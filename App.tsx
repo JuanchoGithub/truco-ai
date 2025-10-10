@@ -24,6 +24,8 @@ import AssistantPanel from './components/AssistantPanel';
 import { generateSuggestionSummary } from './services/suggestionService';
 import { speechService } from './services/speechService';
 import Simulation from './components/Simulation';
+import GameMenu from './components/GameMenu';
+import SoundHint from './components/SoundHint';
 
 type GameMode = 'menu' | 'playing' | 'tutorial' | 'playing-with-help' | 'manual' | 'simulation';
 
@@ -39,6 +41,22 @@ const App: React.FC = () => {
     const saved = localStorage.getItem('trucoAiSoundEnabled');
     return saved !== null ? JSON.parse(saved) : false; // Default to false
   });
+  const [showSoundHint, setShowSoundHint] = useState(false);
+
+  useEffect(() => {
+    const hintShown = localStorage.getItem('trucoAiSoundHintShown');
+    if (!hintShown && gameMode.startsWith('playing')) {
+      const timer = setTimeout(() => {
+        setShowSoundHint(true);
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [gameMode]);
+
+  const handleDismissSoundHint = () => {
+    setShowSoundHint(false);
+    localStorage.setItem('trucoAiSoundHintShown', 'true');
+  };
 
   useEffect(() => {
     localStorage.setItem('trucoAiSoundEnabled', JSON.stringify(isSoundEnabled));
@@ -218,19 +236,6 @@ const App: React.FC = () => {
     }
   }, [state.gamePhase, dispatch, gameMode]);
 
-  // New useEffect to handle round end timer
-  useEffect(() => {
-    const isPlaying = gameMode === 'playing' || gameMode === 'playing-with-help';
-    if (!isPlaying) return;
-    let timerId: number;
-    if (state.gamePhase === 'round_end') {
-      timerId = window.setTimeout(() => {
-        dispatch({ type: ActionType.PROCEED_TO_NEXT_ROUND });
-      }, 5000); // 5 seconds
-    }
-    return () => clearTimeout(timerId);
-  }, [state.gamePhase, dispatch, gameMode]);
-
   const clearMessageState = () => {
     dispatch({ type: ActionType.CLEAR_CENTRAL_MESSAGE });
     setLocalMessage(null);
@@ -326,16 +331,6 @@ const App: React.FC = () => {
     </button>
   );
 
-  const SoundIcon: React.FC<{ enabled: boolean; className?: string }> = ({ enabled, className = '' }) => (
-      <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          {enabled ? (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-          ) : (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15zM17 14l-4-4m0 4l4-4" />
-          )}
-      </svg>
-  );
-
   const handleStartGame = (mode: 'playing' | 'playing-with-help', continueGame: boolean) => {
     if (!continueGame) {
         clearStateFromStorage(mode);
@@ -381,36 +376,24 @@ const App: React.FC = () => {
         <div className="flex-1 flex flex-col relative overflow-hidden h-full">
           <Scoreboard playerScore={state.playerScore} aiScore={state.aiScore} className="absolute top-0 left-0 z-40" />
           
-          <div className="absolute top-1 right-1 z-50 flex gap-2 p-1">
-            <button
-              onClick={() => setIsSoundEnabled(!isSoundEnabled)}
-              className="p-1.5 rounded-md border-2 bg-gray-700/50 border-gray-500 text-white transition-colors hover:bg-gray-600/70"
-              aria-label={isSoundEnabled ? "Desactivar Sonido" : "Activar Sonido"}
-            >
-                <SoundIcon enabled={isSoundEnabled} className="w-3 h-3 lg:w-4 lg:h-4" />
-            </button>
-            <button
-              onClick={() => setGameMode('menu')}
-              className="px-2 py-0.5 text-[10px] lg:px-3 lg:py-1 lg:text-xs rounded-md border-2 bg-red-700/80 border-red-500 text-white transition-colors hover:bg-red-600/90"
-            >
-                MENÚ
-            </button>
-            <button 
-                onClick={() => dispatch({ type: ActionType.TOGGLE_DATA_MODAL })}
-                className="px-2 py-0.5 text-[10px] lg:px-3 lg:py-1 lg:text-xs rounded-md border-2 bg-gray-700/50 border-gray-500 text-white transition-colors hover:bg-gray-600/70"
-            >
-                VER DATA
-            </button>
-            <button 
-              onClick={() => dispatch({ type: ActionType.TOGGLE_DEBUG_MODE })}
-              className={`px-2 py-0.5 text-[10px] lg:px-3 lg:py-1 lg:text-xs rounded-md border-2 transition-colors ${state.isDebugMode ? 'bg-yellow-500 border-yellow-300 text-black font-bold' : 'bg-gray-700/50 border-gray-500 text-white'}`}
-            >
-              VER CARTAS
-            </button>
+          <div className="absolute top-2 right-2 z-50">
+              <GameMenu
+                gameMode={gameMode as 'playing' | 'playing-with-help'}
+                isSoundEnabled={isSoundEnabled}
+                isDebugMode={state.isDebugMode}
+                onToggleSound={() => {
+                  setIsSoundEnabled(!isSoundEnabled);
+                  if (showSoundHint) handleDismissSoundHint();
+                }}
+                onToggleDebug={() => dispatch({ type: ActionType.TOGGLE_DEBUG_MODE })}
+                onShowData={() => dispatch({ type: ActionType.TOGGLE_DATA_MODAL })}
+                onGoToMainMenu={() => setGameMode('menu')}
+              />
+              <SoundHint isVisible={showSoundHint} onDismiss={handleDismissSoundHint} />
           </div>
 
           {/* Main Game Layout */}
-          <div className="relative z-10 flex flex-col flex-grow w-full max-w-4xl mx-auto h-full">
+          <div className="relative flex flex-col flex-grow w-full max-w-4xl mx-auto h-full">
             
             {/* TOP: Title & AI Hand */}
             <div className="flex-shrink-0 flex flex-col items-center justify-start pt-1 lg:pt-2">
@@ -429,7 +412,7 @@ const App: React.FC = () => {
             </div>
 
             {/* AI Speech Blurb */}
-            <AiBlurb text={state.aiBlurb?.text ?? ''} isVisible={!!state.aiBlurb?.isVisible} />
+            <AiBlurb text={state.aiBlurb?.text ?? ''} isVisible={!!state.aiBlurb?.isVisible} dispatch={dispatch} />
             
             {/* Player Speech Blurb */}
             <PlayerBlurb text={state.playerBlurb?.text ?? ''} isVisible={!!state.playerBlurb?.isVisible} />
@@ -441,11 +424,7 @@ const App: React.FC = () => {
             {/* MIDDLE: Board */}
             <div className="flex-grow flex items-center justify-center py-2 lg:py-4 min-h-0">
                 <GameBoard 
-                  playerTricks={state.playerTricks} 
-                  aiTricks={state.aiTricks}
-                  trickWinners={state.trickWinners}
-                  lastRoundWinner={state.lastRoundWinner}
-                  gamePhase={state.gamePhase}
+                  gameState={state}
                   dispatch={dispatch}
                 />
             </div>

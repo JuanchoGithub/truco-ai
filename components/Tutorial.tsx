@@ -1,4 +1,3 @@
-
 import React, { useState, useReducer, useEffect } from 'react';
 import { tutorialScenarios, TutorialStep } from '../services/tutorialService';
 import { Action, ActionType, GameState } from '../types';
@@ -100,12 +99,9 @@ const Tutorial: React.FC<TutorialProps> = ({ onExit }) => {
 
         {/* MIDDLE: Board */}
         <div className="flex-grow flex items-center justify-center py-2 lg:py-4 min-h-0">
+            {/* FIX: The GameBoard component expects a single `gameState` prop, not individual properties. This change aligns with the component's props interface. */}
             <GameBoard 
-                playerTricks={gameState.playerTricks} 
-                aiTricks={gameState.aiTricks}
-                trickWinners={gameState.trickWinners}
-                lastRoundWinner={null}
-                gamePhase={gameState.gamePhase}
+                gameState={gameState}
                 dispatch={() => {}} // Dispatch is a no-op in tutorial
             />
         </div>

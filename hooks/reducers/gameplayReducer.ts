@@ -1,3 +1,4 @@
+
 import { GameState, Action, ActionType, GamePhase, Case, OpponentModel, PlayerEnvidoActionEntry, PlayerPlayOrderEntry, RoundSummary, Card } from '../../types';
 import { createDeck, shuffleDeck, determineTrickWinner, determineRoundWinner, getCardName, hasFlor, getEnvidoValue, getCardHierarchy, calculateHandStrength, getCardCode, decodeCardFromCode } from '../../services/trucoLogic';
 import { initializeProbabilities, updateProbsOnPlay } from '../../services/ai/inferenceService';
@@ -139,7 +140,6 @@ export function handleStartNewRound(state: GameState, action: { type: ActionType
       gamePhase: 'game_over' 
     };
   }
-  const isNewGame = state.round === 0;
 
   // Update opponent model with data from the completed round
   const updatedOpponentModel = state.round > 0 ? updateOpponentModelFromHistory(state) : state.opponentModel;
@@ -173,7 +173,15 @@ export function handleStartNewRound(state: GameState, action: { type: ActionType
       aiTricks: [null, null, null],
       trickWinners: [null, null, null],
       roundWinner: null,
-      pointsAwarded: { player: 0, ai: 0 },
+      pointsAwarded: {
+          player: 0,
+          ai: 0,
+          by: {
+              flor: { player: 0, ai: 0, note: "No se cantó" },
+              envido: { player: 0, ai: 0, note: "No se cantó" },
+              truco: { player: 0, ai: 0, note: "" },
+          }
+      },
       playerTrucoCall: null,
   };
   
@@ -222,8 +230,8 @@ export function handleStartNewRound(state: GameState, action: { type: ActionType
     aiBlurb: null,
     playerBlurb: null,
     lastRoundWinner: null,
-    centralMessage: isNewGame ? "Puedes activar la voz de la IA con el ícono de sonido." : null,
-    isCentralMessagePersistent: isNewGame,
+    centralMessage: null,
+    isCentralMessagePersistent: false,
     roundHistory: [...state.roundHistory, newRoundSummary],
   };
 }
@@ -419,10 +427,21 @@ export function handlePlayCard(state: GameState, action: { type: ActionType.PLAY
       const newRoundHistory = [...newState.roundHistory];
       const currentRoundSummary = newRoundHistory.find(r => r.round === newState.round);
       if (currentRoundSummary) {
+          if (!currentRoundSummary.pointsAwarded.by) {
+            currentRoundSummary.pointsAwarded.by = { flor: { player: 0, ai: 0, note: "" }, envido: { player: 0, ai: 0, note: "" }, truco: { player: 0, ai: 0, note: "" } };
+          }
           currentRoundSummary.trickWinners = newTrickWinners;
           currentRoundSummary.roundWinner = roundWinner;
-          if (roundWinner === 'player') currentRoundSummary.pointsAwarded.player += points;
-          if (roundWinner === 'ai') currentRoundSummary.pointsAwarded.ai += points;
+          if (roundWinner === 'player') {
+              currentRoundSummary.pointsAwarded.player += points;
+              currentRoundSummary.pointsAwarded.by.truco.player = points;
+          }
+          if (roundWinner === 'ai') {
+              currentRoundSummary.pointsAwarded.ai += points;
+              currentRoundSummary.pointsAwarded.by.truco.ai = points;
+          }
+          const trucoLevels = ["Ronda simple", "Truco", "Retruco", "Vale Cuatro"];
+          currentRoundSummary.pointsAwarded.by.truco.note = trucoLevels[newState.trucoLevel];
           currentRoundSummary.playerTricks = newPlayerTricks.map(c => c ? getCardCode(c) : null);
           currentRoundSummary.aiTricks = newAiTricks.map(c => c ? getCardCode(c) : null);
       }

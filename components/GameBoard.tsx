@@ -1,14 +1,10 @@
 
 import React from 'react';
-import { Card as CardType, Player, GamePhase, Action, ActionType } from '../types';
+import { Card as CardType, Player, GameState, Action, ActionType } from '../types';
 import Card from './Card';
 
 interface GameBoardProps {
-  playerTricks: (CardType | null)[];
-  aiTricks: (CardType | null)[];
-  trickWinners: (Player | 'tie' | null)[];
-  lastRoundWinner: Player | 'tie' | null;
-  gamePhase: GamePhase;
+  gameState: GameState;
   dispatch: React.Dispatch<Action>;
 }
 
@@ -68,14 +64,66 @@ const CardPile: React.FC<CardPileProps> = ({ cards, trickWinners, owner, label }
 };
 
 
-const GameBoard: React.FC<GameBoardProps> = ({ playerTricks, aiTricks, trickWinners, lastRoundWinner, gamePhase, dispatch }) => {
+const GameBoard: React.FC<GameBoardProps> = ({ gameState, dispatch }) => {
+  const { playerTricks, aiTricks, trickWinners, lastRoundWinner, gamePhase, round, roundHistory, playerScore, aiScore } = gameState;
   const isRoundOver = gamePhase === 'round_end' && lastRoundWinner;
 
   const handleDismiss = () => {
     dispatch({ type: ActionType.PROCEED_TO_NEXT_ROUND });
   };
 
-  const winnerText = lastRoundWinner === 'player' ? 'Ganaste la Ronda' : lastRoundWinner === 'ai' ? 'Perdiste la Ronda' : 'Ronda Empatada';
+  const currentRoundSummary = roundHistory.find(r => r.round === round);
+  const pointsData = currentRoundSummary?.pointsAwarded?.by;
+
+  const renderRoundSummary = () => {
+    if (!pointsData) {
+        const winnerText = lastRoundWinner === 'player' ? 'Ganaste la Ronda' : lastRoundWinner === 'ai' ? 'Perdiste la Ronda' : 'Ronda Empatada';
+        return (
+            <h3 className="text-xl lg:text-3xl font-cinzel text-white font-bold tracking-wider" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.8)' }}>
+              {winnerText}
+            </h3>
+        );
+    }
+    
+    return (
+        <div className="text-white font-mono text-sm lg:text-base w-full max-w-sm">
+            <h3 className="text-center text-xl lg:text-2xl font-cinzel text-yellow-300 font-bold tracking-wider mb-4">
+                Ronda Terminada
+            </h3>
+            <div className="grid grid-cols-[1fr_auto_auto] gap-x-4 text-left mb-2 border-b border-yellow-300/30 pb-2">
+                <span className="font-bold">Puntos</span>
+                <span className="font-bold text-center w-16">Jugador</span>
+                <span className="font-bold text-center w-16">IA</span>
+            </div>
+            <div className="space-y-2">
+                <div className="grid grid-cols-[1fr_auto_auto] gap-x-4 items-center text-left">
+                    <span>Flor</span>
+                    <span className="text-center w-16">{pointsData.flor.player}</span>
+                    <span className="text-center w-16">{pointsData.flor.ai}</span>
+                    <span className="col-start-1 col-span-3 text-xs text-gray-400 italic pl-2">({pointsData.flor.note})</span>
+                </div>
+                <div className="grid grid-cols-[1fr_auto_auto] gap-x-4 items-center text-left">
+                    <span>Envido</span>
+                    <span className="text-center w-16">{pointsData.envido.player}</span>
+                    <span className="text-center w-16">{pointsData.envido.ai}</span>
+                    <span className="col-start-1 col-span-3 text-xs text-gray-400 italic pl-2">({pointsData.envido.note})</span>
+                </div>
+                <div className="grid grid-cols-[1fr_auto_auto] gap-x-4 items-center text-left">
+                    <span>Truco</span>
+                    <span className="text-center w-16">{pointsData.truco.player}</span>
+                    <span className="text-center w-16">{pointsData.truco.ai}</span>
+                    <span className="col-start-1 col-span-3 text-xs text-gray-400 italic pl-2">({pointsData.truco.note})</span>
+                </div>
+            </div>
+            <div className="text-center mt-4 pt-2 border-t border-yellow-300/30 font-bold text-lg">
+                La partida va {playerScore} a {aiScore}
+            </div>
+             <p className="text-center text-xs text-yellow-200/80 italic mt-4 animate-pulse">
+                (Haz clic para continuar)
+            </p>
+        </div>
+    );
+  };
   
   return (
     <div className="relative w-full flex flex-row justify-around items-center space-x-2 lg:space-x-4 p-4 bg-black/20 rounded-2xl shadow-inner shadow-black/50 min-h-[280px]">
@@ -99,17 +147,15 @@ const GameBoard: React.FC<GameBoardProps> = ({ playerTricks, aiTricks, trickWinn
 
       {isRoundOver && (
         <div 
-          className="absolute inset-0 flex items-center justify-center z-30 rounded-2xl bg-black/50 cursor-pointer animate-fade-in-scale"
+          className="absolute inset-0 flex items-center justify-center z-30 rounded-2xl bg-black/70 cursor-pointer animate-fade-in-scale"
           onClick={handleDismiss}
           onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleDismiss()}
           role="button"
           tabIndex={0}
-          aria-label={`Round over. ${winnerText}. Click to continue.`}
+          aria-label={`Round over. Click to continue.`}
         >
-          <div className="text-center p-4 rounded-lg bg-yellow-400/20 border-2 border-yellow-300 shadow-2xl shadow-black">
-            <h3 className="text-xl lg:text-3xl font-cinzel text-white font-bold tracking-wider" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.8)' }}>
-              {winnerText}
-            </h3>
+          <div className="text-center p-4 lg:p-6 rounded-lg bg-yellow-400/30 border-2 border-yellow-300 shadow-2xl shadow-black">
+            {renderRoundSummary()}
           </div>
         </div>
       )}

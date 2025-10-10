@@ -174,9 +174,11 @@ export function useGameReducer(state: GameState, action: Action): GameState {
     case ActionType.CLEAR_CENTRAL_MESSAGE:
       return { ...state, centralMessage: null, isCentralMessagePersistent: false };
     
-    // Player Blurb
+    // Blurbs
     case ActionType.CLEAR_PLAYER_BLURB:
       return { ...state, playerBlurb: null };
+    case ActionType.CLEAR_AI_BLURB:
+      return { ...state, aiBlurb: null };
 
     // Local Storage & Import/Export Actions
     case ActionType.LOAD_IMPORTED_DATA:

@@ -77,8 +77,17 @@ export function handleResolveEnvidoAccept(state: GameState): GameState {
     const newRoundHistory = [...state.roundHistory];
     const currentRoundSummary = newRoundHistory.find(r => r.round === state.round);
     if (currentRoundSummary) {
-        if (winner === 'player') currentRoundSummary.pointsAwarded.player += state.envidoPointsOnOffer;
-        if (winner === 'ai') currentRoundSummary.pointsAwarded.ai += state.envidoPointsOnOffer;
+        if (!currentRoundSummary.pointsAwarded.by) { // For old saved games
+            currentRoundSummary.pointsAwarded.by = { flor: { player: 0, ai: 0, note: "" }, envido: { player: 0, ai: 0, note: "" }, truco: { player: 0, ai: 0, note: "" } };
+        }
+        if (winner === 'player') {
+            currentRoundSummary.pointsAwarded.player += state.envidoPointsOnOffer;
+            currentRoundSummary.pointsAwarded.by.envido.player = state.envidoPointsOnOffer;
+        } else {
+            currentRoundSummary.pointsAwarded.ai += state.envidoPointsOnOffer;
+            currentRoundSummary.pointsAwarded.by.envido.ai = state.envidoPointsOnOffer;
+        }
+        currentRoundSummary.pointsAwarded.by.envido.note = "Aceptado";
     }
 
     // Check for a game winner immediately after awarding points
@@ -218,8 +227,20 @@ export function handleResolveEnvidoDecline(state: GameState): GameState {
     const newRoundHistory = [...state.roundHistory];
     const currentRoundSummary = newRoundHistory.find(r => r.round === state.round);
     if (currentRoundSummary) {
-        if (caller === 'player') currentRoundSummary.pointsAwarded.player += points;
-        if (caller === 'ai') currentRoundSummary.pointsAwarded.ai += points;
+        if (!currentRoundSummary.pointsAwarded.by) {
+            currentRoundSummary.pointsAwarded.by = { flor: { player: 0, ai: 0, note: "" }, envido: { player: 0, ai: 0, note: "" }, truco: { player: 0, ai: 0, note: "" } };
+        }
+        const declinerName = state.currentTurn === 'player' ? 'Jugador' : 'IA';
+
+        if (caller === 'player') {
+            currentRoundSummary.pointsAwarded.player += points;
+            currentRoundSummary.pointsAwarded.by.envido.player = points;
+        }
+        if (caller === 'ai') {
+            currentRoundSummary.pointsAwarded.ai += points;
+            currentRoundSummary.pointsAwarded.by.envido.ai = points;
+        }
+        currentRoundSummary.pointsAwarded.by.envido.note = `${declinerName} no quiso`;
     }
 
     // Check for a game winner immediately after awarding points
@@ -307,9 +328,20 @@ export function handleResolveTrucoDecline(state: GameState): GameState {
     const newRoundHistory = [...state.roundHistory];
     const currentRoundSummary = newRoundHistory.find(r => r.round === state.round);
     if (currentRoundSummary) {
+        if (!currentRoundSummary.pointsAwarded.by) {
+            currentRoundSummary.pointsAwarded.by = { flor: { player: 0, ai: 0, note: "" }, envido: { player: 0, ai: 0, note: "" }, truco: { player: 0, ai: 0, note: "" } };
+        }
         currentRoundSummary.roundWinner = caller;
-        if (caller === 'player') currentRoundSummary.pointsAwarded.player += points;
-        if (caller === 'ai') currentRoundSummary.pointsAwarded.ai += points;
+        const declinerName = state.currentTurn === 'player' ? 'Jugador' : 'IA';
+        if (caller === 'player') {
+            currentRoundSummary.pointsAwarded.player += points;
+            currentRoundSummary.pointsAwarded.by.truco.player = points;
+        }
+        if (caller === 'ai') {
+            currentRoundSummary.pointsAwarded.ai += points;
+            currentRoundSummary.pointsAwarded.by.truco.ai = points;
+        }
+        currentRoundSummary.pointsAwarded.by.truco.note = `${declinerName} no quiso`;
         currentRoundSummary.playerTricks = state.playerTricks.map(c => c ? getCardCode(c) : null);
         currentRoundSummary.aiTricks = state.aiTricks.map(c => c ? getCardCode(c) : null);
     }
@@ -422,8 +454,17 @@ export function handleAcknowledgeFlor(state: GameState, action: { type: ActionTy
     const newRoundHistory = [...state.roundHistory];
     const currentRoundSummary = newRoundHistory.find(r => r.round === state.round);
     if (currentRoundSummary) {
-        if (florCaller === 'player') currentRoundSummary.pointsAwarded.player += points;
-        else currentRoundSummary.pointsAwarded.ai += points;
+        if (!currentRoundSummary.pointsAwarded.by) {
+            currentRoundSummary.pointsAwarded.by = { flor: { player: 0, ai: 0, note: "" }, envido: { player: 0, ai: 0, note: "" }, truco: { player: 0, ai: 0, note: "" } };
+        }
+        if (florCaller === 'player') {
+            currentRoundSummary.pointsAwarded.player += points;
+            currentRoundSummary.pointsAwarded.by.flor.player = points;
+        } else {
+            currentRoundSummary.pointsAwarded.ai += points;
+            currentRoundSummary.pointsAwarded.by.flor.ai = points;
+        }
+        currentRoundSummary.pointsAwarded.by.flor.note = "Aceptada";
     }
 
     if (newPlayerScore >= 15 || newAiScore >= 15) {
@@ -518,8 +559,17 @@ export function handleResolveFlorShowdown(state: GameState): GameState {
     const newRoundHistory = [...state.roundHistory];
     const currentRoundSummary = newRoundHistory.find(r => r.round === state.round);
     if (currentRoundSummary) {
-        if (winner === 'player') currentRoundSummary.pointsAwarded.player += points;
-        else currentRoundSummary.pointsAwarded.ai += points;
+        if (!currentRoundSummary.pointsAwarded.by) {
+            currentRoundSummary.pointsAwarded.by = { flor: { player: 0, ai: 0, note: "" }, envido: { player: 0, ai: 0, note: "" }, truco: { player: 0, ai: 0, note: "" } };
+        }
+        if (winner === 'player') {
+            currentRoundSummary.pointsAwarded.player += points;
+            currentRoundSummary.pointsAwarded.by.flor.player = points;
+        } else {
+            currentRoundSummary.pointsAwarded.ai += points;
+            currentRoundSummary.pointsAwarded.by.flor.ai = points;
+        }
+        currentRoundSummary.pointsAwarded.by.flor.note = "Contraflor aceptada";
     }
 
     if (newPlayerScore >= 15 || newAiScore >= 15) {
@@ -575,8 +625,18 @@ export function handleResolveContraflorDecline(state: GameState): GameState {
     const newRoundHistory = [...state.roundHistory];
     const currentRoundSummary = newRoundHistory.find(r => r.round === state.round);
     if (currentRoundSummary) {
-        if (winner === 'player') currentRoundSummary.pointsAwarded.player += points;
-        else currentRoundSummary.pointsAwarded.ai += points;
+        if (!currentRoundSummary.pointsAwarded.by) {
+            currentRoundSummary.pointsAwarded.by = { flor: { player: 0, ai: 0, note: "" }, envido: { player: 0, ai: 0, note: "" }, truco: { player: 0, ai: 0, note: "" } };
+        }
+        const declinerName = state.currentTurn === 'player' ? 'Jugador' : 'IA';
+        if (winner === 'player') {
+            currentRoundSummary.pointsAwarded.player += points;
+            currentRoundSummary.pointsAwarded.by.flor.player = points;
+        } else {
+            currentRoundSummary.pointsAwarded.ai += points;
+            currentRoundSummary.pointsAwarded.by.flor.ai = points;
+        }
+        currentRoundSummary.pointsAwarded.by.flor.note = `Contraflor (${declinerName} no quiso)`;
     }
 
     if (newPlayerScore >= 15 || newAiScore >= 15) {
