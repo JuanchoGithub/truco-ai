@@ -69,14 +69,67 @@ const Card: React.FC<CardProps> = ({ card, isFaceDown = false, isPlayable = fals
   
   if (isFaceDown) {
     return (
-      <div className={`${cardBaseClasses} bg-red-800 border-red-900 ${className}`}>
-        <div className="w-full h-full rounded-md border-4 border-red-600/50 flex items-center justify-center bg-red-900/50">
-           <div className={`text-yellow-300/50 ${isSmall ? 'w-10 h-10' : 'w-16 h-16 lg:w-24 lg:h-24'}`}>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12,2L1,9H4V14H2V16H4V21H6V16H18V21H20V16H22V14H20V9H23L12,2M12,5.69L15,8H9L12,5.69M6,14V9H18V14H6Z" />
-            </svg>
-           </div>
-        </div>
+      <div className={`${cardBaseClasses} bg-slate-900 border-slate-700 p-1 ${className}`}>
+        <svg width="100%" height="100%" viewBox="0 0 100 154" fill="none" xmlns="http://www.w3.org/2000/svg" className="rounded-md">
+          {/* Background pattern definition */}
+          <defs>
+            <pattern id="arg-pattern" patternUnits="userSpaceOnUse" width="8" height="8" patternTransform="rotate(45)">
+              <path d="M 0,4 l 8,0" stroke="#1e293b" strokeWidth="1"/>
+              <path d="M 4,0 l 0,8" stroke="#1e293b" strokeWidth="1"/>
+            </pattern>
+          </defs>
+
+          {/* Base and pattern fill */}
+          <rect width="100" height="154" rx="6" fill="#0f172a" />
+          <rect width="100" height="154" rx="6" fill="url(#arg-pattern)" />
+          
+          {/* Ornate Frame */}
+          <rect x="4" y="4" width="92" height="146" rx="3" stroke="#facc15" strokeOpacity="0.5" strokeWidth="1" />
+          <g stroke="#facc15" strokeWidth="1.5">
+            {/* Top-left corner */}
+            <path d="M 15,5 L 5,5 L 5,15" />
+            <path d="M 12,8 C 10,10 10,10 8,12" />
+            
+            {/* Top-right corner */}
+            <path d="M 85,5 L 95,5 L 95,15" />
+            <path d="M 88,8 C 90,10 90,10 92,12" />
+            
+            {/* Bottom-left corner */}
+            <path d="M 15,149 L 5,149 L 5,139" />
+            <path d="M 12,146 C 10,144 10,144 8,142" />
+            
+            {/* Bottom-right corner */}
+            <path d="M 85,149 L 95,149 L 95,139" />
+            <path d="M 88,146 C 90,144 90,144 92,142" />
+          </g>
+          
+          {/* Sol de Mayo */}
+          <g transform="translate(50 77)">
+            {/* Rays */}
+            <g fill="#fde047">
+              {[0, 45, 90, 135, 180, 225, 270, 315].map(angle => (
+                <g key={`rays-${angle}`} transform={`rotate(${angle})`}>
+                  {/* Straight Ray */}
+                  <path d="M -3, -25 l 6,0 l -3, -18 z" />
+                  {/* Wavy Ray */}
+                  <path d="M 0, -24 c 4,-3 2,-8 -2,-10 c -4,-2 -6,3 -2,6 c 4,3 2,8 -2,10" transform="rotate(22.5)" />
+                </g>
+              ))}
+            </g>
+
+            {/* Face */}
+            <circle r="22" fill="#fde047" stroke="#b45309" strokeWidth="1.5" />
+            <g stroke="#1e293b" strokeWidth="1.2" strokeLinecap="round" fill="none">
+              {/* Eyes */}
+              <path d="M -11, -5 C -9, -9 -5,-9 -3,-5" />
+              <path d="M 11, -5 C 9, -9 5,-9 3,-5" />
+              {/* Nose */}
+              <path d="M -2, -2 L 0,2 L 2,-2" />
+              {/* Mouth */}
+              <path d="M -7, 6 Q 0,10 7,6" />
+            </g>
+          </g>
+        </svg>
       </div>
     );
   }
