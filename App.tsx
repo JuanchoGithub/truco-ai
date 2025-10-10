@@ -514,7 +514,11 @@ const App: React.FC = () => {
       )}
       
       {state.winner && (
-        <GameOverModal winner={state.winner} onPlayAgain={() => dispatch({ type: ActionType.RESTART_GAME })} />
+        <GameOverModal 
+            winner={state.winner} 
+            onPlayAgain={() => dispatch({ type: ActionType.RESTART_GAME })}
+            reason={state.gameOverReason} 
+        />
       )}
 
       {gameMode === 'playing-with-help' && (

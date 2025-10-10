@@ -179,6 +179,7 @@ export interface GameState {
   gamePhase: GamePhase;
   isThinking: boolean;
   winner: Player | null;
+  gameOverReason: string | null;
   messageLog: string[];
   isDebugMode: boolean;
   aiReasoningLog: AiReasoningEntry[];

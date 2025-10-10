@@ -27,6 +27,7 @@ export const initialState: GameState = {
   gamePhase: 'initial',
   isThinking: false,
   winner: null,
+  gameOverReason: null,
   messageLog: ['¡Bienvenido a Truco AI!'],
   isDebugMode: false,
   aiReasoningLog: [{ round: 0, reasoning: 'La IA está esperando que comience el juego.' }],
