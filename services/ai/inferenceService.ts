@@ -135,13 +135,11 @@ export const updateProbsOnEnvido = (
  * This is used for Monte Carlo simulation in the truco strategy.
  * @param state The current game state.
  * @param reasoning An array of strings to log the AI's thought process, passed by reference.
- * @param numSamples The number of samples to generate and bucket.
  * @returns An object with `strong`, `medium`, and `weak` hands.
  */
 export const generateConstrainedOpponentHand = (
     state: GameState, 
-    reasoning: string[],
-    numSamples: number = 3
+    reasoning: string[]
 ): { strong: Card[]; medium: Card[]; weak: Card[] } => {
     const { playerEnvidoValue, initialPlayerHand, playerHand, playedCards, aiHand, playerHasFlor, currentTrick, mano, trickWinners, aiTricks, playerTricks, gamePhase, lastCaller, playerTrucoCallHistory } = state;
     
@@ -283,124 +281,88 @@ export const generateConstrainedOpponentHand = (
             }
         }
     }
-
-    const sampledHands: Card[][] = [];
+    
+    let allPossibleHands: Card[][] = [];
 
     if (validOpponentHands.length > 0) {
-        // 5. Behavioral Bias & Sampling
-        const highAggroActions = [ActionType.CALL_TRUCO, ActionType.CALL_RETRUCO, ActionType.CALL_VALE_CUATRO, ActionType.CALL_REAL_ENVIDO, ActionType.CALL_FALTA_ENVIDO];
-        const totalActions = state.playerActionHistory.length;
-        const aggressionScore = totalActions > 0 ? state.playerActionHistory.filter(a => highAggroActions.includes(a)).length / totalActions : 0;
-        const weightScale = 1 + aggressionScore;
-
-        if (aggressionScore > 0.1) {
-             reasoning.push(`- Inferencia de Comportamiento: El jugador es agresivo (score: ${aggressionScore.toFixed(2)}). Priorizando manos más fuertes.`);
-        }
-
-        if (validOpponentHands.length < numSamples && validOpponentHands.length > 0) {
-            reasoning.push(`- Inferencia de Relleno: Menos de ${numSamples} manos válidas (${validOpponentHands.length}). Rellenando con la mano de fuerza media.`);
-            const sortedValidHands = validOpponentHands
-                .map(hand => ({ hand, strength: calculateHandStrength(hand) }))
-                .sort((a, b) => a.strength - b.strength);
-            
-            const medianHand = sortedValidHands[Math.floor(sortedValidHands.length / 2)].hand;
-            
-            sampledHands.push(...validOpponentHands);
-            while (sampledHands.length < numSamples) {
-                sampledHands.push(medianHand);
-            }
-        } else {
-             for (let s = 0; s < numSamples; s++) {
-                let totalWeight = 0;
-                const weights = validOpponentHands.map(hand => {
-                    const handStrength = calculateHandStrength(hand);
-                    const weight = Math.pow(handStrength + 1, weightScale);
-                    totalWeight += weight;
-                    return weight;
-                });
-        
-                let random = Math.random() * totalWeight;
-                let pickedHand = validOpponentHands[validOpponentHands.length - 1]; // Fallback
-                for (let i = 0; i < validOpponentHands.length; i++) {
-                    random -= weights[i];
-                    if (random <= 0) {
-                        pickedHand = validOpponentHands[i];
-                        break;
-                    }
-                }
-                sampledHands.push(pickedHand);
-            }
-        }
+        allPossibleHands = validOpponentHands;
     } else {
-        // --- Fallback: No specific constraints met, generate from unseen ---
-        reasoning.push(`- Inferencia General: No hay información de envido/flor. Simulando desde ${unseenCards.length} cartas desconocidas.`);
-        
+        reasoning.push(`- Inferencia General: No hay información específica. Generando todas las combinaciones desde ${unseenCards.length} cartas desconocidas.`);
         if (unseenCards.length < cardsToGenerate) {
             reasoning.push(`- Error de Simulación: No hay suficientes cartas desconocidas para generar una mano.`);
             return { strong: [], medium: [], weak: [] };
         }
-
-        for (let s = 0; s < numSamples; s++) {
-            const pickedCards: Card[] = [];
-            const availableCards = [...unseenCards];
-            
-            const useUniformWeight = !state.opponentHandProbabilities || Object.keys(state.opponentHandProbabilities.suitDist).length === 0;
-            const weights = availableCards.map(c => {
-                if (useUniformWeight) return 1;
-                return (state.opponentHandProbabilities!.suitDist[c.suit] || 0) * (state.opponentHandProbabilities!.rankProbs[c.rank as Rank] || 0);
-            });
-
-            for (let i = 0; i < cardsToGenerate; i++) {
-                if (availableCards.length === 0) break;
-                
-                const totalWeight = weights.reduce((sum, w) => sum + w, 0);
-                if (totalWeight === 0) {
-                    const randomIndex = Math.floor(Math.random() * availableCards.length);
-                    pickedCards.push(availableCards[randomIndex]);
-                    availableCards.splice(randomIndex, 1);
-                    weights.splice(randomIndex, 1);
-                    continue;
-                }
-
-                let rand = Math.random() * totalWeight;
-                let pickedIndex = -1;
-                for (let j = 0; j < availableCards.length; j++) {
-                    rand -= weights[j];
-                    if (rand <= 0) {
-                        pickedIndex = j;
-                        break;
-                    }
-                }
-                if (pickedIndex === -1) pickedIndex = availableCards.length - 1;
-                
-                pickedCards.push(availableCards[pickedIndex]);
-                availableCards.splice(pickedIndex, 1);
-                weights.splice(pickedIndex, 1);
-            }
-            sampledHands.push(pickedCards);
-        }
+        allPossibleHands = combinations(unseenCards, cardsToGenerate);
     }
 
-    if (sampledHands.length < numSamples || numSamples === 0) {
+    if (allPossibleHands.length === 0) {
+        reasoning.push(`- Error de Simulación: No se pudieron generar manos de oponente.`);
         return { strong: [], medium: [], weak: [] };
     }
 
-    // --- BUCKETING ---
-    const strengthSortedSamples = sampledHands
+    // --- NEW STRATIFIED SAMPLING LOGIC ---
+
+    // 1. Sort all possible hands by strength (weakest to strongest)
+    const sortedHands = allPossibleHands
         .map(hand => ({ hand, strength: calculateHandStrength(hand) }))
-        .sort((a, b) => b.strength - a.strength);
-    
-    if (numSamples === 1) {
-        const hand = strengthSortedSamples[0].hand;
-        reasoning.push(`- Muestra de Mano Simulada (fuerza: ${strengthSortedSamples[0].strength}).`);
-        return { strong: hand, medium: hand, weak: hand };
+        .sort((a, b) => a.strength - b.strength)
+        .map(item => item.hand);
+
+    const totalHands = sortedHands.length;
+
+    // 2. Define strata (deciles)
+    const decileSize = Math.max(1, Math.ceil(totalHands / 10)); // Ensure decileSize is at least 1
+    const deciles: Card[][][] = [];
+    for (let i = 0; i < 10; i++) {
+        const start = i * decileSize;
+        const end = Math.min(start + decileSize, totalHands);
+        deciles.push(sortedHands.slice(start, end));
     }
 
-    reasoning.push(`- Muestras de Manos Simuladas (fuerza): [Fuerte: ${strengthSortedSamples[0].strength}, Media: ${strengthSortedSamples[1].strength}, Débil: ${strengthSortedSamples[2].strength}].`);
+    // 3. Sample from strata with fallbacks
+    let strongHand: Card[], mediumHand: Card[], weakHand: Card[];
+
+    // Strong hand (Decile 10, which is index 9)
+    const strongPool = deciles[9];
+    if (strongPool && strongPool.length > 0) {
+        strongHand = strongPool[Math.floor(Math.random() * strongPool.length)];
+    } else {
+        // Fallback: get the absolute strongest hand
+        strongHand = sortedHands[totalHands - 1];
+    }
+
+    // Medium hand (Deciles 4, 5, 6 -> indices 3, 4, 5)
+    const mediumPool = [...(deciles[3] || []), ...(deciles[4] || []), ...(deciles[5] || [])];
+    if (mediumPool.length > 0) {
+        mediumHand = mediumPool[Math.floor(Math.random() * mediumPool.length)];
+    } else {
+        // Fallback: get the median hand
+        mediumHand = sortedHands[Math.floor(totalHands / 2)];
+    }
+
+    // Weak hand (Deciles 1, 2 -> indices 0, 1)
+    const weakPool = [...(deciles[0] || []), ...(deciles[1] || [])];
+    if (weakPool.length > 0) {
+        weakHand = weakPool[Math.floor(Math.random() * weakPool.length)];
+    } else {
+        // Fallback: get the absolute weakest hand
+        weakHand = sortedHands[0];
+    }
+    
+    // Ensure hands are defined even in extreme edge cases (e.g., only 1 possible hand)
+    if (!strongHand) strongHand = sortedHands[totalHands-1];
+    if (!mediumHand) mediumHand = sortedHands[Math.floor(totalHands / 2)];
+    if (!weakHand) weakHand = sortedHands[0];
+    
+    // 4. Update reasoning log and return
+    const strongStrength = calculateHandStrength(strongHand);
+    const mediumStrength = calculateHandStrength(mediumHand);
+    const weakStrength = calculateHandStrength(weakHand);
+    reasoning.push(`- Muestras de Manos (Estratificado): [Fuerte: ${strongStrength}, Media: ${mediumStrength}, Débil: ${weakStrength}].`);
 
     return {
-        strong: strengthSortedSamples[0].hand,
-        medium: strengthSortedSamples[1].hand,
-        weak: strengthSortedSamples[2].hand,
+        strong: strongHand,
+        medium: mediumHand,
+        weak: weakHand,
     };
 };

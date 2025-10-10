@@ -104,7 +104,9 @@ export const generateSuggestionSummary = (move: AiMove, state: GameState): strin
     // avoiding any potential stale or incorrect data in roundHistory.
     const playerEnvidoPoints = getEnvidoValue(initialPlayerHand);
     const isResponding = gamePhase.includes('_called');
-    const alternativePlayText = getSafeCardPlayAlternative(state);
+    
+    // FIX: Only generate an alternative card play suggestion if the player is NOT in a response phase.
+    const alternativePlayText = !isResponding ? getSafeCardPlayAlternative(state) : "";
 
     if (isResponding) {
         // --- Specific logic for responding to AI calls ---
@@ -147,12 +149,12 @@ export const generateSuggestionSummary = (move: AiMove, state: GameState): strin
         if (action.type === ActionType.CALL_RETRUCO || action.type === ActionType.CALL_VALE_CUATRO) {
             const callType = action.type.replace('CALL_', '').replace('_', ' ');
             if (reasoning.includes("Mi mano es de élite") || reasoning.includes("La equidad es muy alta") || reasoning.includes("escalando agresivamente")) {
-                return `¡Nuestra mano es excelente! La IA cantó Truco, pero podemos redoblar la apuesta con '${callType}' porque tenemos muchas chances de ganar.${alternativePlayText}`;
+                return `¡Nuestra mano es excelente! La IA cantó Truco, pero podemos redoblar la apuesta con '${callType}' porque tenemos muchas chances de ganar.`;
             }
              if (reasoning.includes("farol de desesperación") || reasoning.includes("farol agresivo")) {
-                return `Estamos en una mala posición, pero podemos intentar un farol arriesgado. Sube la apuesta a '${callType}' para ver si logramos que la IA se retire.${alternativePlayText}`;
+                return `Estamos en una mala posición, pero podemos intentar un farol arriesgado. Sube la apuesta a '${callType}' para ver si logramos que la IA se retire.`;
             }
-            return `Tenemos una mano muy fuerte. Es un buen momento para responder al Truco de la IA con un '${callType}'.${alternativePlayText}`;
+            return `Tenemos una mano muy fuerte. Es un buen momento para responder al Truco de la IA con un '${callType}'.`;
         }
         
         if (action.type === ActionType.CALL_REAL_ENVIDO || action.type === ActionType.CALL_FALTA_ENVIDO || (action.type === ActionType.CALL_ENVIDO && isResponding)) {
@@ -163,7 +165,7 @@ export const generateSuggestionSummary = (move: AiMove, state: GameState): strin
             if (gamePhase === 'truco_called' && action.type === ActionType.CALL_ENVIDO) {
                 const isBluff = /farol|mano.*débil/i.test(reasoning);
                 if (isBluff) {
-                    return `La IA cantó Truco, pero podemos interrumpir con 'Envido Primero'. Aunque nuestros ${playerEnvidoPoints} puntos son bajos, es un buen farol.${alternativePlayText}`;
+                    return `La IA cantó Truco, pero podemos interrumpir con 'Envido Primero'. Aunque nuestros ${playerEnvidoPoints} puntos son bajos, es un buen farol.`;
                 }
                 const opponentCardPlayed = state.aiTricks[0];
                 const context = opponentCardPlayed ? `Después de que la IA jugara el ${getCardName(opponentCardPlayed)}, ` : "";
@@ -172,11 +174,11 @@ export const generateSuggestionSummary = (move: AiMove, state: GameState): strin
 
             // Case 2: Responding to ENVIDO with another Envido call
             if (reasoning.includes("Mi mano es mucho más fuerte")) {
-                return `¡Tenemos ${playerEnvidoPoints} puntos, ${strengthText}! La IA cree que tiene una buena mano, pero la nuestra es superior. Deberíamos redoblar la apuesta con '${callType}'.${alternativePlayText}`;
+                return `¡Tenemos ${playerEnvidoPoints} puntos, ${strengthText}! La IA cree que tiene una buena mano, pero la nuestra es superior. Deberíamos redoblar la apuesta con '${callType}'.`;
             }
             
             // Fallback for responding to Envido.
-            return `Tenemos ${playerEnvidoPoints} puntos (${strengthText}). La sugerencia es responder al 'Envido' de la IA subiendo la apuesta a '${callType}'.${alternativePlayText}`;
+            return `Tenemos ${playerEnvidoPoints} puntos (${strengthText}). La sugerencia es responder al 'Envido' de la IA subiendo la apuesta a '${callType}'.`;
         }
     }
 
