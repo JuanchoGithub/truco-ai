@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Card from './Card';
 import { Card as CardType, Suit } from '../types';
@@ -100,7 +99,10 @@ const Manual: React.FC<ManualProps> = ({ onExit }) => {
                     <span className="hidden sm:inline">Vistas:</span>
                     <ModeButton mode="fallback" currentMode={cardDisplayMode} setMode={setCardDisplayMode}>SVG</ModeButton>
                     <ModeButton mode="image" currentMode={cardDisplayMode} setMode={setCardDisplayMode}>Remoto</ModeButton>
-                    <ModeButton mode="local-image" currentMode={cardDisplayMode} setMode={setCardDisplayMode}>Local</ModeButton>
+                    <div className="flex items-center gap-1">
+                        <ModeButton mode="local-image" currentMode={cardDisplayMode} setMode={setCardDisplayMode}>Local</ModeButton>
+                        <span className="text-xs text-gray-400 hidden sm:inline cursor-help" title="Requiere que el archivo 'cartas.png' esté en la carpeta /assets/.">(?)</span>
+                    </div>
                 </div>
                 <button onClick={onExit} className="px-4 py-2 text-sm rounded-md border-2 bg-red-700/80 border-red-500 text-white transition-colors hover:bg-red-600/90 flex-shrink-0">Volver al Menú</button>
             </div>

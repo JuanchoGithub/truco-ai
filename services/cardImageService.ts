@@ -1,9 +1,8 @@
-
 import { Card, Suit, Rank } from '../types';
 import { getCardName } from './trucoLogic';
 
 const SPRITE_SHEET_URL_REMOTE = 'https://upload.wikimedia.org/wikipedia/commons/e/e0/Baraja_espa%C3%B1ola_completa.png';
-const SPRITE_SHEET_URL_LOCAL = '/cartas.png';
+const SPRITE_SHEET_URL_LOCAL = '/assets/cartas.png';
 const COLS = 12;
 const CARD_WIDTH = 208;
 const CARD_HEIGHT = 320;
@@ -77,7 +76,7 @@ function getSpriteSheet(mode: 'image' | 'local-image'): Promise<HTMLImageElement
             };
             img.onerror = (err) => {
                 console.error("Failed to load local card spritesheet.", err);
-                reject(new Error("Failed to load local card spritesheet from /cartas.png"));
+                reject(new Error("Failed to load local card spritesheet from /assets/cartas.png"));
             };
             img.src = SPRITE_SHEET_URL_LOCAL;
         });
