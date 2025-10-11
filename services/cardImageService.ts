@@ -1,14 +1,18 @@
+
 import { Card, Suit, Rank } from '../types';
 import { getCardName } from './trucoLogic';
 
-const SPRITE_SHEET_URL = 'https://upload.wikimedia.org/wikipedia/commons/e/e0/Baraja_espa%C3%B1ola_completa.png';
+const SPRITE_SHEET_URL_REMOTE = 'https://upload.wikimedia.org/wikipedia/commons/e/e0/Baraja_espa%C3%B1ola_completa.png';
+const SPRITE_SHEET_URL_LOCAL = './cartas.png';
 const COLS = 12;
 const CARD_WIDTH = 208;
 const CARD_HEIGHT = 320;
 const ROW_SPACING = 320;
 
-let spriteSheet: HTMLImageElement;
-let spriteSheetPromise: Promise<HTMLImageElement>;
+let remoteSpriteSheet: HTMLImageElement;
+let remoteSpriteSheetPromise: Promise<HTMLImageElement>;
+let localSpriteSheet: HTMLImageElement;
+let localSpriteSheetPromise: Promise<HTMLImageElement>;
 
 const suitToRow: Record<Suit, number> = {
     'oros': 0,
@@ -32,41 +36,66 @@ const rankToCol: Record<Rank, number> = {
     12: 11,
 };
 
-function getSpriteSheet(): Promise<HTMLImageElement> {
-    if (spriteSheet) {
-        return Promise.resolve(spriteSheet);
-    }
-    if (spriteSheetPromise) {
-        return spriteSheetPromise;
-    }
-    
-    spriteSheetPromise = new Promise((resolve, reject) => {
-        const img = new Image();
-        img.crossOrigin = "anonymous"; // Needed for drawing remote images to a canvas
-        img.onload = () => {
-            spriteSheet = img;
-            resolve(img);
-        };
-        img.onerror = (err) => {
-            console.error("Failed to load card spritesheet.", err);
-            reject(new Error("Failed to load card spritesheet."));
-        };
-        img.src = SPRITE_SHEET_URL;
-    });
+function getSpriteSheet(mode: 'image' | 'local-image'): Promise<HTMLImageElement> {
+    if (mode === 'image') {
+        if (remoteSpriteSheet) {
+            return Promise.resolve(remoteSpriteSheet);
+        }
+        if (remoteSpriteSheetPromise) {
+            return remoteSpriteSheetPromise;
+        }
+        
+        remoteSpriteSheetPromise = new Promise((resolve, reject) => {
+            const img = new Image();
+            img.crossOrigin = "anonymous"; // Needed for drawing remote images to a canvas
+            img.onload = () => {
+                remoteSpriteSheet = img;
+                resolve(img);
+            };
+            img.onerror = (err) => {
+                console.error("Failed to load remote card spritesheet.", err);
+                reject(new Error("Failed to load remote card spritesheet."));
+            };
+            img.src = SPRITE_SHEET_URL_REMOTE;
+        });
 
-    return spriteSheetPromise;
+        return remoteSpriteSheetPromise;
+    } else { // 'local-image'
+        if (localSpriteSheet) {
+            return Promise.resolve(localSpriteSheet);
+        }
+        if (localSpriteSheetPromise) {
+            return localSpriteSheetPromise;
+        }
+        
+        localSpriteSheetPromise = new Promise((resolve, reject) => {
+            const img = new Image();
+            // No crossOrigin for local files
+            img.onload = () => {
+                localSpriteSheet = img;
+                resolve(img);
+            };
+            img.onerror = (err) => {
+                console.error("Failed to load local card spritesheet.", err);
+                reject(new Error("Failed to load local card spritesheet from /cartas.png"));
+            };
+            img.src = SPRITE_SHEET_URL_LOCAL;
+        });
+
+        return localSpriteSheetPromise;
+    }
 }
 
 // Cache generated card images to avoid re-processing
 const canvasCache = new Map<string, string>();
 
-export async function getCardImageDataUrl(card: Card): Promise<string> {
-    const cacheKey = `${card.suit}-${card.rank}`;
+export async function getCardImageDataUrl(card: Card, mode: 'image' | 'local-image'): Promise<string> {
+    const cacheKey = `${mode}-${card.suit}-${card.rank}`;
     if (canvasCache.has(cacheKey)) {
         return canvasCache.get(cacheKey)!;
     }
 
-    const img = await getSpriteSheet();
+    const img = await getSpriteSheet(mode);
     
     const row = suitToRow[card.suit];
     const col = rankToCol[card.rank];

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import Card from './Card';
 import { Card as CardType, Suit } from '../types';
 
@@ -21,15 +21,15 @@ const Example: React.FC<{ title: string; children: React.ReactNode }> = ({ title
     </div>
 );
 
-const CardDisplay: React.FC<{ card: CardType, label?: string }> = ({ card, label }) => (
+const CardDisplay: React.FC<{ card: CardType, label?: string, displayMode: 'image' | 'local-image' | 'fallback' }> = ({ card, label, displayMode }) => (
     <div className="inline-flex flex-col items-center mx-1">
-        <Card card={card} size="small" />
+        <Card card={card} size="small" displayMode={displayMode} />
         {label && <span className="text-xs mt-1 text-yellow-200 text-center">{label}</span>}
     </div>
 );
 
 // New component for stacked/fanned cards
-const CardPileDisplay: React.FC<{ cards: CardType[], label: string }> = ({ cards, label }) => (
+const CardPileDisplay: React.FC<{ cards: CardType[], label: string, displayMode: 'image' | 'local-image' | 'fallback' }> = ({ cards, label, displayMode }) => (
     <div className="inline-flex flex-col items-center text-center mx-4 my-2" style={{ width: '160px' }}>
         <div className="relative h-[150px] w-full flex items-center justify-center">
             {cards.map((card, index) => {
@@ -45,7 +45,7 @@ const CardPileDisplay: React.FC<{ cards: CardType[], label: string }> = ({ cards
                             transform: `translateX(${translateX}px) translateY(${translateY}px) rotate(${rotation}deg)`
                         }}
                     >
-                        <Card card={card} size="small" />
+                        <Card card={card} size="small" displayMode={displayMode} />
                     </div>
                 );
             })}
@@ -54,8 +54,30 @@ const CardPileDisplay: React.FC<{ cards: CardType[], label: string }> = ({ cards
     </div>
 );
 
+const ModeButton: React.FC<{
+    mode: 'image' | 'local-image' | 'fallback';
+    currentMode: 'image' | 'local-image' | 'fallback';
+    setMode: (mode: 'image' | 'local-image' | 'fallback') => void;
+    children: React.ReactNode;
+}> = ({ mode, currentMode, setMode, children }) => {
+    const isActive = mode === currentMode;
+    return (
+        <button
+            onClick={() => setMode(mode)}
+            className={`px-3 py-1 text-xs rounded-md transition-colors ${
+                isActive
+                    ? 'bg-yellow-600 text-white font-bold'
+                    : 'bg-gray-600 text-gray-200 hover:bg-gray-500'
+            }`}
+        >
+            {children}
+        </button>
+    );
+};
+
 
 const Manual: React.FC<ManualProps> = ({ onExit }) => {
+    const [cardDisplayMode, setCardDisplayMode] = useState<'image' | 'fallback' | 'local-image'>('image');
     const SUITS: Suit[] = ['espadas', 'bastos', 'oros', 'copas'];
 
     const tres: CardType[] = SUITS.map(suit => ({ rank: 3, suit }));
@@ -71,34 +93,52 @@ const Manual: React.FC<ManualProps> = ({ onExit }) => {
 
   return (
     <div className="h-screen bg-green-900 text-white font-lora flex flex-col items-center p-2 lg:p-4" style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/felt.png')" }}>
-        <div className="w-full max-w-5xl flex justify-between items-center mb-4 flex-shrink-0 px-2">
+        <div className="w-full max-w-5xl flex justify-between items-center mb-4 flex-shrink-0 px-2 gap-4">
             <h1 className="text-3xl lg:text-4xl font-cinzel text-yellow-300" style={{ textShadow: '2px 2px 4px #000' }}>Manual del Truco</h1>
-            <button onClick={onExit} className="px-4 py-2 text-sm rounded-md border-2 bg-red-700/80 border-red-500 text-white transition-colors hover:bg-red-600/90">Volver al Menú</button>
+            <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 text-sm text-yellow-200">
+                    <span className="hidden sm:inline">Vistas:</span>
+                    <ModeButton mode="fallback" currentMode={cardDisplayMode} setMode={setCardDisplayMode}>SVG</ModeButton>
+                    <ModeButton mode="image" currentMode={cardDisplayMode} setMode={setCardDisplayMode}>Remoto</ModeButton>
+                    <ModeButton mode="local-image" currentMode={cardDisplayMode} setMode={setCardDisplayMode}>Local</ModeButton>
+                </div>
+                <button onClick={onExit} className="px-4 py-2 text-sm rounded-md border-2 bg-red-700/80 border-red-500 text-white transition-colors hover:bg-red-600/90 flex-shrink-0">Volver al Menú</button>
+            </div>
         </div>
         <div className="w-full max-w-5xl overflow-y-auto flex-grow p-2 lg:p-4 bg-black/40 rounded-lg border-2 border-yellow-900/50">
             <Section title="Objetivo del Juego">
                 <p>El Truco es un juego de cartas de origen español muy popular en Argentina. El objetivo es ser el primer jugador en alcanzar <strong>15 puntos</strong>. Los puntos se ganan a través de dos tipos de apuestas: el <strong>Envido</strong> y el <strong>Truco</strong>.</p>
             </Section>
 
+            <Section title="Diseño de las Cartas">
+                <p>Esta aplicación utiliza imágenes de una baraja española clásica. También puedes cambiar a una vista de estilo SVG más simple usando el interruptor en la parte superior. A continuación se muestra el reverso de la carta utilizado en el juego.</p>
+                <div className="flex justify-center mt-4">
+                    <div className="flex flex-col items-center">
+                        <Card isFaceDown={true} />
+                        <span className="text-xs mt-2 text-yellow-200">Reverso de la Carta</span>
+                    </div>
+                </div>
+            </Section>
+
             <Section title="Valor de las Cartas (Fuerza para el Truco)">
                 <p>En el Truco, las cartas no valen por su número, sino por su jerarquía. Esta es la lista de cartas de la más a la menos poderosa. ¡Aprendétela bien, es la clave para ganar!</p>
                 <div className="flex flex-wrap gap-2 justify-center bg-black/20 p-2 rounded-md">
-                    <CardDisplay card={{ rank: 1, suit: 'espadas' }} label="1. As de Espadas" />
-                    <CardDisplay card={{ rank: 1, suit: 'bastos' }} label="2. As de Bastos" />
-                    <CardDisplay card={{ rank: 7, suit: 'espadas' }} label="3. Siete de Espadas" />
-                    <CardDisplay card={{ rank: 7, suit: 'oros' }} label="4. Siete de Oros" />
+                    <CardDisplay card={{ rank: 1, suit: 'espadas' }} label="1. As de Espadas" displayMode={cardDisplayMode} />
+                    <CardDisplay card={{ rank: 1, suit: 'bastos' }} label="2. As de Bastos" displayMode={cardDisplayMode} />
+                    <CardDisplay card={{ rank: 7, suit: 'espadas' }} label="3. Siete de Espadas" displayMode={cardDisplayMode} />
+                    <CardDisplay card={{ rank: 7, suit: 'oros' }} label="4. Siete de Oros" displayMode={cardDisplayMode} />
                 </div>
                 <div className="flex flex-wrap justify-center mt-6">
-                    <CardPileDisplay cards={tres} label="5. Los Tres" />
-                    <CardPileDisplay cards={dos} label="6. Los Dos" />
-                    <CardPileDisplay cards={anchosFalsos} label="7. Ases Falsos" />
-                    <CardPileDisplay cards={reyes} label="8. Los Reyes (12)" />
-                    <CardPileDisplay cards={caballos} label="9. Los Caballos (11)" />
-                    <CardPileDisplay cards={sotas} label="10. Las Sotas (10)" />
-                    <CardPileDisplay cards={sietesFalsos} label="11. Sietes Falsos" />
-                    <CardPileDisplay cards={seis} label="12. Los Seis" />
-                    <CardPileDisplay cards={cincos} label="13. Los Cincos" />
-                    <CardPileDisplay cards={cuatros} label="14. Los Cuatros" />
+                    <CardPileDisplay cards={tres} label="5. Los Tres" displayMode={cardDisplayMode} />
+                    <CardPileDisplay cards={dos} label="6. Los Dos" displayMode={cardDisplayMode} />
+                    <CardPileDisplay cards={anchosFalsos} label="7. Ases Falsos" displayMode={cardDisplayMode} />
+                    <CardPileDisplay cards={reyes} label="8. Los Reyes (12)" displayMode={cardDisplayMode} />
+                    <CardPileDisplay cards={caballos} label="9. Los Caballos (11)" displayMode={cardDisplayMode} />
+                    <CardPileDisplay cards={sotas} label="10. Las Sotas (10)" displayMode={cardDisplayMode} />
+                    <CardPileDisplay cards={sietesFalsos} label="11. Sietes Falsos" displayMode={cardDisplayMode} />
+                    <CardPileDisplay cards={seis} label="12. Los Seis" displayMode={cardDisplayMode} />
+                    <CardPileDisplay cards={cincos} label="13. Los Cincos" displayMode={cardDisplayMode} />
+                    <CardPileDisplay cards={cuatros} label="14. Los Cuatros" displayMode={cardDisplayMode} />
                 </div>
             </Section>
 
@@ -116,17 +156,17 @@ const Manual: React.FC<ManualProps> = ({ onExit }) => {
                 <div className="space-y-3">
                     <Example title="Ejemplo 1: 31 de Envido">
                         <div className="flex gap-2">
-                            <CardDisplay card={{rank: 5, suit: 'oros'}} />
-                            <CardDisplay card={{rank: 6, suit: 'oros'}} />
-                            <CardDisplay card={{rank: 1, suit: 'espadas'}} />
+                            <CardDisplay card={{rank: 5, suit: 'oros'}} displayMode={cardDisplayMode} />
+                            <CardDisplay card={{rank: 6, suit: 'oros'}} displayMode={cardDisplayMode} />
+                            <CardDisplay card={{rank: 1, suit: 'espadas'}} displayMode={cardDisplayMode} />
                         </div>
                         <p className="mt-2 text-sm">El 5 de Oros y 6 de Oros suman 11. Más 20 por ser del mismo palo = <strong>31 puntos</strong>.</p>
                     </Example>
                     <Example title="Ejemplo 2: 7 de Envido">
                         <div className="flex gap-2">
-                            <CardDisplay card={{rank: 1, suit: 'espadas'}} />
-                            <CardDisplay card={{rank: 5, suit: 'oros'}} />
-                            <CardDisplay card={{rank: 7, suit: 'copas'}} />
+                            <CardDisplay card={{rank: 1, suit: 'espadas'}} displayMode={cardDisplayMode} />
+                            <CardDisplay card={{rank: 5, suit: 'oros'}} displayMode={cardDisplayMode} />
+                            <CardDisplay card={{rank: 7, suit: 'copas'}} displayMode={cardDisplayMode} />
                         </div>
                         <p className="mt-2 text-sm">Todas las cartas son de palos distintos. La más alta es el 7 = <strong>7 puntos</strong>.</p>
                     </Example>
@@ -144,9 +184,9 @@ const Manual: React.FC<ManualProps> = ({ onExit }) => {
                 </ul>
                 <Example title="Ejemplo de Flor">
                     <div className="flex gap-2">
-                        <CardDisplay card={{rank: 4, suit: 'espadas'}} />
-                        <CardDisplay card={{rank: 5, suit: 'espadas'}} />
-                        <CardDisplay card={{rank: 6, suit: 'espadas'}} />
+                        <CardDisplay card={{rank: 4, suit: 'espadas'}} displayMode={cardDisplayMode} />
+                        <CardDisplay card={{rank: 5, suit: 'espadas'}} displayMode={cardDisplayMode} />
+                        <CardDisplay card={{rank: 6, suit: 'espadas'}} displayMode={cardDisplayMode} />
                     </div>
                     <p className="mt-2 text-sm">Las tres cartas son de Espadas. Tenés <strong>Flor</strong>. Tus puntos son 4 + 5 + 6 + 20 = <strong>35 puntos</strong>.</p>
                 </Example>
@@ -171,17 +211,17 @@ const Manual: React.FC<ManualProps> = ({ onExit }) => {
                     <div>
                         <p className="text-center font-semibold mb-2">Tu Mano</p>
                         <div className="flex gap-2">
-                            <CardDisplay card={{ rank: 7, suit: 'oros' }} />
-                            <CardDisplay card={{ rank: 5, suit: 'bastos' }} />
-                            <CardDisplay card={{ rank: 4, suit: 'copas' }} />
+                            <CardDisplay card={{ rank: 7, suit: 'oros' }} displayMode={cardDisplayMode} />
+                            <CardDisplay card={{ rank: 5, suit: 'bastos' }} displayMode={cardDisplayMode} />
+                            <CardDisplay card={{ rank: 4, suit: 'copas' }} displayMode={cardDisplayMode} />
                         </div>
                     </div>
                     <div>
                         <p className="text-center font-semibold mb-2">Mano de la IA</p>
                         <div className="flex gap-2">
-                            <CardDisplay card={{ rank: 1, suit: 'espadas' }} />
-                            <CardDisplay card={{ rank: 2, suit: 'oros' }} />
-                            <CardDisplay card={{ rank: 3, suit: 'copas' }} />
+                            <CardDisplay card={{ rank: 1, suit: 'espadas' }} displayMode={cardDisplayMode} />
+                            <CardDisplay card={{ rank: 2, suit: 'oros' }} displayMode={cardDisplayMode} />
+                            <CardDisplay card={{ rank: 3, suit: 'copas' }} displayMode={cardDisplayMode} />
                         </div>
                     </div>
                 </div>
@@ -190,8 +230,8 @@ const Manual: React.FC<ManualProps> = ({ onExit }) => {
                 <p>Como sos mano, empezás jugando. Una estrategia común es jugar tu carta más fuerte para intentar ganar la primera mano.</p>
                 <Example title="Juego de la Primera Mano">
                     <ul className="list-disc list-inside space-y-2">
-                        <li><strong>Vos jugás:</strong> <div className="inline-block align-middle ml-2"><CardDisplay card={{ rank: 7, suit: 'oros' }} /></div>. Es una carta muy buena.</li>
-                        <li><strong>La IA responde:</strong> <div className="inline-block align-middle ml-2"><CardDisplay card={{ rank: 1, suit: 'espadas' }} /></div>. ¡Es la carta más poderosa del juego!</li>
+                        <li><strong>Vos jugás:</strong> <div className="inline-block align-middle ml-2"><CardDisplay card={{ rank: 7, suit: 'oros' }} displayMode={cardDisplayMode} /></div>. Es una carta muy buena.</li>
+                        <li><strong>La IA responde:</strong> <div className="inline-block align-middle ml-2"><CardDisplay card={{ rank: 1, suit: 'espadas' }} displayMode={cardDisplayMode} /></div>. ¡Es la carta más poderosa del juego!</li>
                         <li className="!mt-4"><strong>Resultado:</strong> La IA gana la primera mano y ahora le toca jugar primero en la segunda.</li>
                     </ul>
                 </Example>

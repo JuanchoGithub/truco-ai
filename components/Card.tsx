@@ -11,6 +11,7 @@ interface CardProps {
   onClick?: () => void;
   className?: string;
   size?: 'normal' | 'small';
+  displayMode?: 'image' | 'local-image' | 'fallback';
 }
 
 const SuitIcon: React.FC<{ suit: Suit; className?: string; style?: React.CSSProperties }> = ({ suit, className, style }) => {
@@ -30,36 +31,38 @@ const SuitIcon: React.FC<{ suit: Suit; className?: string; style?: React.CSSProp
     return <span className={`${color} ${className}`} style={{ ...style, ...goldFilter }}>{emoji}</span>;
 }
 
-const Card: React.FC<CardProps> = ({ card, isFaceDown = false, isPlayable = false, onClick, className = '', size = 'normal' }) => {
+const Card: React.FC<CardProps> = ({ card, isFaceDown = false, isPlayable = false, onClick, className = '', size = 'normal', displayMode = 'image' }) => {
   const [cardImageUrl, setCardImageUrl] = useState<string | null>(null);
   const [imageStatus, setImageStatus] = useState<'loading' | 'loaded' | 'error'>('loading');
 
   useEffect(() => {
-    if (!card || isFaceDown) {
+    if (displayMode === 'fallback' || !card || isFaceDown) {
         setCardImageUrl(null);
         setImageStatus('loading');
         return;
     }
 
-    let isMounted = true;
-    setImageStatus('loading');
-    
-    getCardImageDataUrl(card)
-      .then(url => {
-        if (isMounted) {
-          setCardImageUrl(url);
-          setImageStatus('loaded');
-        }
-      })
-      .catch(err => {
-        console.error(`Failed to load sprite for card ${getCardName(card)}:`, err);
-        if (isMounted) {
-          setImageStatus('error');
-        }
-      });
-      
-    return () => { isMounted = false; };
-  }, [card, isFaceDown]);
+    if (displayMode === 'image' || displayMode === 'local-image') {
+        let isMounted = true;
+        setImageStatus('loading');
+        
+        getCardImageDataUrl(card, displayMode)
+          .then(url => {
+            if (isMounted) {
+              setCardImageUrl(url);
+              setImageStatus('loaded');
+            }
+          })
+          .catch(err => {
+            console.error(`Failed to load sprite for card ${getCardName(card)}:`, err);
+            if (isMounted) {
+              setImageStatus('error');
+            }
+          });
+          
+        return () => { isMounted = false; };
+    }
+  }, [card, isFaceDown, displayMode]);
 
   const isSmall = size === 'small';
 
@@ -140,7 +143,9 @@ const Card: React.FC<CardProps> = ({ card, isFaceDown = false, isPlayable = fals
     );
   }
 
-  if (imageStatus === 'loaded' && cardImageUrl) {
+  const useImage = displayMode === 'image' || displayMode === 'local-image';
+
+  if (useImage && imageStatus === 'loaded' && cardImageUrl) {
     return (
       <div
         onClick={onClick}
@@ -152,7 +157,7 @@ const Card: React.FC<CardProps> = ({ card, isFaceDown = false, isPlayable = fals
     );
   }
   
-  if (imageStatus === 'loading') {
+  if (useImage && imageStatus === 'loading') {
     return (
       <div className={`${cardBaseClasses} bg-gray-200 border-gray-300 animate-pulse ${className}`} />
     );
