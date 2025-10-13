@@ -45,6 +45,16 @@
       "Estas cartas son malísimas, estoy lleno de pavor. Lo único que me salva es esta hermosa FLOR.",
       "Puede que no sea un tahúr, puede que no sepa el marcador. Pero hasta yo puedo entender la belleza de una FLOR."
     ],
+    "flor_ack_mine_worse": [
+      "Las mías son peores.",
+      "No llego, son buenas las tuyas.",
+      "Me ganaste, paso."
+    ],
+    "flor_ack_good": [
+      "Son buenas.",
+      "Te creo, son buenas.",
+      "A ver esas flores."
+    ],
     "contraflor": [
       "¿Crees que tu flor es gran cosa? Subo la apuesta. Tu FLOR es linda, pero te respondo: ¡CONTRAFLOR para la victoria!",
       "¿Una FLOR tenés? Qué espectáculo. ¡Pero mirá cómo crece mi jardín! Veo tu apuesta y la subo: ¡canto una poderosa CONTRAFLOR!",

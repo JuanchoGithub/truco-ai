@@ -1,13 +1,14 @@
 
-
 import { GameState, ActionType, AiMove, Action } from '../types';
 import { findBestCardToPlay } from './ai/playCardStrategy';
 import { getEnvidoResponse, getEnvidoCall, getFlorResponse, getFlorCallOrEnvidoCall } from './ai/envidoStrategy';
 import { getTrucoResponse, getTrucoCall } from './ai/trucoStrategy';
 import { getCardName, getEnvidoDetails, calculateHandStrength } from './trucoLogic';
 import { getRandomPhrase, PHRASE_KEYS } from './ai/phrases';
+import i18nService from './i18nService';
 
 export const getLocalAIMove = (state: GameState): AiMove => {
+    const { t } = i18nService;
     const { gamePhase, currentTurn, lastCaller, currentTrick, hasEnvidoBeenCalledThisRound, aiHasFlor, playerHasFlor, hasFlorBeenCalledThisRound, playerTricks, aiTricks, trickWinners, aiScore, playerScore } = state;
     let reasoning: string[] = [];
     let move: AiMove | null = null;
@@ -30,9 +31,10 @@ export const getLocalAIMove = (state: GameState): AiMove => {
         gamePressure = -scoreDiff / 15.0;
     }
     gamePressure = Math.max(-1.0, Math.min(1.0, gamePressure));
-    reasoning.push(`[Análisis Estratégico]`);
-    reasoning.push(`Presión de Juego: ${gamePressure.toFixed(2)} (${gamePressure > 0.5 ? 'Desesperado' : gamePressure < -0.5 ? 'Cauteloso' : 'Neutral'})`);
-    reasoning.push(`--------------------`);
+    reasoning.push(t('ai_logic.strategic_analysis'));
+    const pressureStatus = gamePressure > 0.5 ? t('ai_logic.statuses.desperate') : gamePressure < -0.5 ? t('ai_logic.statuses.cautious') : t('ai_logic.statuses.neutral');
+    reasoning.push(t('ai_logic.game_pressure', { pressure: gamePressure.toFixed(2), status: pressureStatus }));
+    reasoning.push(t('ai_logic.separator'));
 
 
     // Recap the previous trick if it's not the first trick
@@ -43,18 +45,19 @@ export const getLocalAIMove = (state: GameState): AiMove => {
         const winner = trickWinners[lastTrickIndex];
 
         if (playerCard && aiCard && winner) {
-            reasoning.push(`[Resumen Mano ${lastTrickIndex + 1}]`);
-            reasoning.push(`Jugador jugó: ${getCardName(playerCard)}`);
-            reasoning.push(`Yo jugué: ${getCardName(aiCard)}`);
-            reasoning.push(`Resultado: ${winner === 'tie' ? 'Empate' : `${winner.toUpperCase()} ganó`}`);
-            reasoning.push(`--------------------`);
+            const outcome = winner === 'tie' ? t('ai_logic.outcomes.tie') : t('ai_logic.outcomes.win', { winner: winner.toUpperCase() });
+            reasoning.push(t('ai_logic.trick_summary', { trickNumber: lastTrickIndex + 1 }));
+            reasoning.push(t('ai_logic.player_played', { cardName: getCardName(playerCard) }));
+            reasoning.push(t('ai_logic.ai_played', { cardName: getCardName(aiCard) }));
+            reasoning.push(t('ai_logic.result', { outcome }));
+            reasoning.push(t('ai_logic.separator'));
         }
     }
 
     // 1. MUST RESPOND to a player's call
     if (gamePhase.includes('_called') && currentTurn === 'ai' && lastCaller === 'player') {
-        reasoning.push(`[Lógica de Respuesta]`);
-        reasoning.push(`El jugador cantó ${gamePhase.replace('_called', '').toUpperCase()}. Debo responder.`);
+        reasoning.push(t('ai_logic.response_logic'));
+        reasoning.push(t('ai_logic.player_called', { call: gamePhase.replace('_called', '').toUpperCase() }));
 
         // Flor response logic
         if (gamePhase === 'flor_called' || gamePhase === 'contraflor_called') {
@@ -70,13 +73,13 @@ export const getLocalAIMove = (state: GameState): AiMove => {
                 const blurbText = getRandomPhrase(PHRASE_KEYS.FLOR);
                 return {
                     action: { type: ActionType.DECLARE_FLOR, payload: { blurbText } },
-                    reasoning: "[Lógica de Prioridad: Flor]\nEl jugador cantó TRUCO, pero mi Flor tiene prioridad. Debo declararla."
+                    reasoning: t('ai_logic.flor_priority_on_truco')
                 };
             }
             const envidoCallDecision = getEnvidoCall(state, gamePressure);
             if (envidoCallDecision) {
                  const blurbText = getRandomPhrase(PHRASE_KEYS.ENVIDO_PRIMERO);
-                 const updatedReasoning = `[Lógica de Envido Primero]\nEl jugador cantó TRUCO, pero invocaré la prioridad del Envido.\n` + envidoCallDecision.reasoning;
+                 const updatedReasoning = t('ai_logic.envido_primero_logic') + envidoCallDecision.reasoning;
                  // FIX: Preserve the original envido action type (Envido, Real Envido, Falta Envido)
                  // instead of hardcoding it to a simple Envido.
                  const originalAction = envidoCallDecision.action;
@@ -106,7 +109,7 @@ export const getLocalAIMove = (state: GameState): AiMove => {
                 const blurbText = getRandomPhrase(PHRASE_KEYS.FLOR);
                 return {
                     action: { type: ActionType.RESPOND_TO_ENVIDO_WITH_FLOR, payload: { blurbText } },
-                    reasoning: "[Lógica de Prioridad: Flor]\nEl jugador cantó Envido. Mi Flor lo anula y gana 3 puntos."
+                    reasoning: t('ai_logic.flor_priority_on_envido')
                 };
             }
             move = getEnvidoResponse(state, gamePressure, reasoning);
@@ -146,13 +149,9 @@ export const getLocalAIMove = (state: GameState): AiMove => {
                 const adjustedChance = baseChance + (opponentModel.trucoFoldRate * 0.1); 
 
                 if (Math.random() < adjustedChance && trucoMove) {
-                    const reasoningBait = `[Lógica Estratégica Superior: Trampa de Monstruo]\n` +
-                                    `Evaluación de Mano Completa:\n` +
-                                    `  - Puntos de Envido/Flor: ${aiEnvidoDetails.value} (Extremadamente Fuerte).\n` +
-                                    `  - Fuerza de Truco: ${handStrength} (Élite).\n` +
-                                    `Análisis: Mi mano es un "monstruo" en ambas fases. Cantar un Envido/Flor tan alto (que probablemente ganaría) alertaría al jugador de mis cartas altas, haciéndolo jugar el Truco con extrema cautela.\n` +
-                                    `Decisión Táctica: Sacrificaré la ganancia de puntos del Envido para ocultar mi fuerza y tender una trampa, con el objetivo de ganar más puntos en un Truco posterior.\n` +
-                                    `\n--- Procediendo con el plan de Truco ---\n` +
+                    const reasoningBait = t('ai_logic.monster_trap_title') + '\n' +
+                                    t('ai_logic.monster_trap_body', { envidoPoints: aiEnvidoDetails.value, trucoStrength: handStrength }) +
+                                    t('ai_logic.proceeding_with_truco') +
                                     trucoMove.reasoning;
                     return { ...trucoMove, reasoning: reasoningBait };
                 }
@@ -162,32 +161,28 @@ export const getLocalAIMove = (state: GameState): AiMove => {
             // Goal: Bait the player into calling Envido to win more points there, offsetting a likely Truco loss.
             else if (aiEnvidoDetails.value >= 29 && handStrength <= 11) {
                 let baitChance = 0.15; // Base 15% chance
-                let baitReasoning = `Mi Envido es fuerte (${aiEnvidoDetails.value}) pero mi Truco es débil (${handStrength}). Consideraré una jugada de cebo.`;
+                let baitReasoning = t('ai_logic.lopsided_bait_analysis', { envidoPoints: aiEnvidoDetails.value, trucoStrength: handStrength });
                 
                 if (opponentModel.envidoBehavior.pie.callThreshold < 27) { // Using 'pie' as a general proxy for player's aggression
                     baitChance += 0.20;
-                    baitReasoning += `\n- El jugador es agresivo con el Envido (umbral < 27), aumentando la probabilidad de que muerda el anzuelo. (+20%)`;
+                    baitReasoning += t('ai_logic.lopsided_bait_aggro');
                 }
                 
                 if (opponentModel.envidoBehavior.pie.foldRate < 0.35) {
                     baitChance += 0.15;
-                    baitReasoning += `\n- El jugador rara vez se retira del Envido, lo que significa que puedo extraer más valor si escalo. (+15%)`;
+                    baitReasoning += t('ai_logic.lopsided_bait_low_fold');
                 }
 
                 baitChance = Math.min(0.5, baitChance); // Cap at 50%
-                baitReasoning += `\n- Probabilidad final de cebo: ${(baitChance * 100).toFixed(0)}%.`;
+                baitReasoning += t('ai_logic.lopsided_bait_chance', { chance: (baitChance * 100).toFixed(0) });
 
                 if (Math.random() < baitChance) {
                     // If baiting, we DO NOT sing. We play a card instead and wait.
                     const cardToPlayResult = findBestCardToPlay(state);
-                    const reasoningLopsided = `[Lógica Estratégica Superior: Cebo de Envido]\n` +
-                                    `Evaluación de Mano Completa:\n` +
-                                    `  - Puntos de Envido/Flor: ${aiEnvidoDetails.value} (Fuerte).\n` +
-                                    `  - Fuerza de Truco: ${handStrength} (Débil).\n` +
-                                    `Análisis: Mi mano es desequilibrada. Probablemente perderé si se canta Truco. Mi mejor oportunidad es maximizar los puntos del Envido.\n` +
-                                    `Decisión Táctica: No cantaré mi Envido. En su lugar, jugaré una carta y esperaré a que el jugador cante Envido primero. Esto me permite contraatacar y potencialmente ganar más puntos, compensando mi debilidad en el Truco.\n` +
-                                    `\n[Análisis de Probabilidad de Cebo]\n${baitReasoning}` +
-                                    `\n\n--- Procediendo con una jugada de carta silenciosa ---\n` +
+                    const reasoningLopsided = t('ai_logic.envido_bait_title') + '\n' +
+                                    t('ai_logic.envido_bait_body', { envidoPoints: aiEnvidoDetails.value, trucoStrength: handStrength }) +
+                                    t('ai_logic.bait_probability_analysis', { baitReasoning }) +
+                                    t('ai_logic.proceeding_silent_play') +
                                     cardToPlayResult.reasoning.join('\n');
                     
                     return { 

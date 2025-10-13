@@ -14,6 +14,8 @@ export const PHRASE_KEYS = {
     TRICK_WIN: 'phrases.trick_win',
     TRICK_LOSE: 'phrases.trick_lose',
     FLOR: 'phrases.flor',
+    FLOR_ACK_MINE_WORSE: 'phrases.flor_ack_mine_worse',
+    FLOR_ACK_GOOD: 'phrases.flor_ack_good',
     CONTRAFLOR: 'phrases.contraflor',
     CONTRAFLOR_QUIERO: 'phrases.contraflor_quiero',
     CONTRAFLOR_NO_QUIERO: 'phrases.contraflor_no_quiero',

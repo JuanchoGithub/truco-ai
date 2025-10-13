@@ -1,3 +1,4 @@
+
 let translations: any = {};
 let currentLanguage = 'es-AR'; // default
 
@@ -9,10 +10,11 @@ function getNestedValue(obj: any, key: string): any {
 const i18nService = {
   async loadLanguage(lang: string): Promise<void> {
     try {
-      // Fetch both files concurrently
-      const [uiResponse, phrasesResponse] = await Promise.all([
+      // Fetch all files concurrently
+      const [uiResponse, phrasesResponse, aiLogicResponse] = await Promise.all([
         fetch(`/locales/${lang}/ui.json`),
         fetch(`/locales/${lang}/phrases.json`),
+        fetch(`/locales/${lang}/ai_logic.json`),
       ]);
 
       if (!uiResponse.ok) {
@@ -21,12 +23,16 @@ const i18nService = {
       if (!phrasesResponse.ok) {
         throw new Error(`Failed to load phrases language file for ${lang}`);
       }
+       if (!aiLogicResponse.ok) {
+        throw new Error(`Failed to load AI logic language file for ${lang}`);
+      }
 
       const uiTranslations = await uiResponse.json();
       const phrasesTranslations = await phrasesResponse.json();
+      const aiLogicTranslations = await aiLogicResponse.json();
 
       // Merge the two JSON objects
-      translations = { ...uiTranslations, ...phrasesTranslations };
+      translations = { ...uiTranslations, ...phrasesTranslations, ...aiLogicTranslations };
       currentLanguage = lang;
     } catch (error) {
       console.error(`[i18n] Error loading language ${lang}:`, error);

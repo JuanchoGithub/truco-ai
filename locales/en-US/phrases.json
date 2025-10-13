@@ -45,6 +45,16 @@
       "These cards are junk, I'm filled with dread. The only thing that's good instead, is this beautiful FLOR I have to spread!",
       "I may not be a gambling man, I may not know the score. But even I can understand the beauty of a FLOR!"
     ],
+    "flor_ack_mine_worse": [
+      "Mine are worse.",
+      "I can't beat that, yours are good.",
+      "You got me, I pass."
+    ],
+    "flor_ack_good": [
+      "They're good.",
+      "I believe you, they're good.",
+      "Let's see those flowers."
+    ],
     "contraflor": [
       "You think your flower is so grand? I'll raise the stakes across the land. Your FLOR is nice, but I'll counter, see? CONTRAFLOR for victory!",
       "A FLOR you have? That's quite a show. But watch as my own garden grows! I see your bet and raise it more, I call a mighty CONTRAFLOR!",

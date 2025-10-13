@@ -248,7 +248,7 @@ const Simulation: React.FC<{ onExit: () => void }> = ({ onExit }) => {
             </div>
 
             <div className="w-full max-w-6xl bg-black/40 p-4 rounded-lg border-2 border-cyan-800/50 flex-grow grid grid-cols-3 gap-4 overflow-hidden">
-                <div className="col-span-1 flex flex-col gap-4">
+                <div className="col-span-1 flex flex-col gap-4 overflow-y-auto pr-2">
                     <div className="bg-black/30 p-3 rounded-md">
                         <h2 className="text-xl font-bold text-cyan-200 mb-2">{t('simulation.scoreboard_title')}</h2>
                         <p>{t('common.ai')}: <span className="font-mono text-lg">{state.aiScore}</span></p>
@@ -260,7 +260,7 @@ const Simulation: React.FC<{ onExit: () => void }> = ({ onExit }) => {
                          <p>{t('simulation.turn')}: <span className="font-mono text-sm">{state.currentTurn?.toUpperCase() ?? t('common.na')}</span></p>
                          <p>{t('simulation.mano')}: <span className="font-mono text-sm">{state.mano.toUpperCase()}</span></p>
                     </div>
-                     <div className="bg-black/30 p-3 rounded-md flex-grow">
+                     <div className="bg-black/30 p-3 rounded-md">
                         <HandDisplay cards={state.initialAiHand} title={t('simulation.initial_hand_ai')} />
                         <hr className="my-4 border-cyan-700/50"/>
                         <HandDisplay cards={state.initialPlayerHand} title={t('simulation.initial_hand_randomizer')} />
