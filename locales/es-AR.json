@@ -101,8 +101,19 @@
     "round_over_tie": "Ronda Empatada"
   },
   "centralMessage": {
-    "tie_envido": "Empate en {{points}}. {{winner}} por ser mano.",
-    "envido_result": "Tus tantos: {{playerPoints}}. IA: {{aiPoints}}. ¡{{winner}}!"
+    "tie_envido": "Empate en {{points}}. Gana {{winnerName}} por ser mano.",
+    "envido_result": "Tus tantos: {{playerPoints}}. IA: {{aiPoints}}. ¡Gana {{winnerName}}!",
+    "flor_result": "Tus puntos: {{playerPoints}}. IA: {{aiPoints}}. ¡Gana {{winnerName}} la Flor!"
+  },
+  "log": {
+    "accept": "¡{{acceptor}} quiere!",
+    "decline": "{{decliner}} no quiere.",
+    "envido_showdown": "Jugador tiene {{playerPoints}}. La IA tiene {{aiPoints}}.",
+    "win_points": "{{winner}} gana {{points}} {{points, plural, one{punto} other{puntos}}}.",
+    "flor_win_points": "{{winner}} gana {{points}} puntos por la Flor.",
+    "accept_contraflor": "{{acceptor}}: \"¡Con Flor Quiero!\"",
+    "decline_contraflor": "{{decliner}}: \"Con Flor me achico.\"",
+    "flor_showdown_win": "{{winner}} gana {{points}} puntos."
   },
   "gameOverModal": {
     "win_title": "¡Ganaste!",
@@ -351,8 +362,8 @@
       "To challenge you would be a fool, my hand just doesn't have the tool. I'll give you points, I'll say no more, and with my FLOR, I'm out the door."
     ],
     "envido_primero": [
-      "Hold on! The envido comes first.", "Hold your horses... envido first.",
-      "One second, the points are worth it. Envido first.", "Not so fast. Before the war, the points. Envido first.",
+      "Hold on! The envido comes first.", "Hold your horses... envido goes first.",
+      "One second, the points are worth it. Envido goes first.", "Not so fast. Before the war, the points. Envido goes first.",
       "First things first... and the envido is first!"
     ],
     "post_envido_truco_reminder": [

@@ -1,25 +1,52 @@
 
+
 import React from 'react';
-import { Action, ActionType } from '../types';
+import { Action, ActionType, MessageObject } from '../types';
+import { useLocalization } from '../context/LocalizationContext';
 
 interface MessageLogProps {
-  messages: string[];
+  messages: (string | MessageObject)[];
   dispatch: React.Dispatch<Action>;
   isModal: boolean;
 }
 
 const MessageLog: React.FC<MessageLogProps> = ({ messages, dispatch, isModal }) => {
+  const { t } = useLocalization();
+
+  const renderMessage = (msg: string | MessageObject): string => {
+    if (typeof msg === 'string') return msg;
+    
+    const options = { ...msg.options };
+    // These keys might contain a Player type ('player' or 'ai') that needs to be translated.
+    const playerKeys: (keyof typeof options)[] = ['winner', 'winnerName', 'acceptor', 'acceptorName', 'decliner', 'declinerName'];
+
+    for (const key of playerKeys) {
+        if (options[key]) {
+            const value = options[key] as string;
+            if (value === 'player' || value === 'Jugador' || value === 'Player') {
+                options[key] = t('common.player');
+            } else if (value === 'ai' || value === 'IA') {
+                options[key] = t('common.ai');
+            }
+        }
+    }
+    return t(msg.key, options);
+  };
+
+
   const groupedLog: { [key: string]: string[] } = {};
-  let currentRound = 'Inicio del Juego';
+  let currentRound = t('logPanel.game_start');
   messages.forEach(msg => {
-    if (msg.startsWith('--- Ronda')) {
-      currentRound = msg.replace(/---/g, '').trim();
+    const messageString = renderMessage(msg);
+
+    if (messageString.startsWith('--- Ronda') || messageString.startsWith('--- Round')) {
+      currentRound = messageString.replace(/---/g, '').trim();
       groupedLog[currentRound] = [];
     } else {
       if (!groupedLog[currentRound]) {
         groupedLog[currentRound] = [];
       }
-      groupedLog[currentRound].push(msg);
+      groupedLog[currentRound].push(messageString);
     }
   });
 
@@ -35,7 +62,7 @@ const MessageLog: React.FC<MessageLogProps> = ({ messages, dispatch, isModal }) 
       <div className={containerClasses} style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/felt.png')"}}>
         <div className="p-4 border-b-2 border-yellow-400/30 flex justify-between items-center flex-shrink-0">
           <h2 className="text-xl lg:text-2xl font-bold text-yellow-300 font-cinzel tracking-widest" style={{ textShadow: '2px 2px 3px rgba(0,0,0,0.7)' }}>
-            Registro de Juego
+            {t('logPanel.game_log_title')}
           </h2>
           {isModal && (
             <button

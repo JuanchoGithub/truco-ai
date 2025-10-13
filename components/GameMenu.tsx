@@ -10,6 +10,7 @@ interface GameMenuProps {
     onToggleDebug: () => void;
     onShowData: () => void;
     onGoToMainMenu: () => void;
+    onOpenMenu?: () => void;
 }
 
 const GameMenu: React.FC<GameMenuProps> = ({
@@ -20,6 +21,7 @@ const GameMenu: React.FC<GameMenuProps> = ({
     onToggleDebug,
     onShowData,
     onGoToMainMenu,
+    onOpenMenu,
 }) => {
     const { t } = useLocalization();
     const [isOpen, setIsOpen] = useState(false);
@@ -57,12 +59,20 @@ const GameMenu: React.FC<GameMenuProps> = ({
         </button>
     );
 
+    const handleToggleMenu = () => {
+        const nextIsOpen = !isOpen;
+        setIsOpen(nextIsOpen);
+        if (nextIsOpen && onOpenMenu) {
+            onOpenMenu();
+        }
+    };
+
     return (
         <div className="relative inline-block text-left" ref={menuRef}>
             <div>
                 <button
                     type="button"
-                    onClick={() => setIsOpen(!isOpen)}
+                    onClick={handleToggleMenu}
                     className="px-3 py-1.5 text-xs lg:px-4 lg:py-2 lg:text-sm rounded-lg font-semibold text-yellow-200 bg-black/40 border-2 border-yellow-800/80 shadow-md hover:bg-black/60 hover:border-yellow-600 transition-colors flex items-center gap-2"
                     id="menu-button"
                     aria-expanded={isOpen}

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import i18nService from '../services/i18nService';
+import { speechService } from '../services/speechService';
 
 interface LocalizationContextType {
   t: (key: string, options?: { [key: string]: any }) => string;
@@ -25,6 +26,7 @@ export const LocalizationProvider: React.FC<{ children: ReactNode }> = ({ childr
     // Don't set isLoaded to false here, to avoid flicker on language change.
     // The loading screen will only show on initial load.
     await i18nService.loadLanguage(lang);
+    speechService.setLanguage(lang);
     setLanguageState(lang);
     localStorage.setItem('truco-lang', lang);
     setIsLoaded(true);

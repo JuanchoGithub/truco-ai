@@ -1,5 +1,6 @@
 
-import { GameState, ActionType, Player, GamePhase, Case, PlayerEnvidoActionEntry, PointNote } from '../../types';
+
+import { GameState, ActionType, Player, GamePhase, Case, PlayerEnvidoActionEntry, MessageObject } from '../../types';
 import { getEnvidoValue, getFlorValue, getCardCode } from '../../services/trucoLogic';
 import { updateProbsOnEnvido } from '../../services/ai/inferenceService';
 // Fix: Replaced direct phrase array imports with the PHRASE_KEYS object to match the refactored phrases service.
@@ -23,7 +24,9 @@ export function handleResolveEnvidoAccept(state: GameState): GameState {
 
     const playerEnvido = getEnvidoValue(state.initialPlayerHand);
     const aiEnvido = getEnvidoValue(state.initialAiHand);
-    let envidoMessage = `Jugador tiene ${playerEnvido}. La IA tiene ${aiEnvido}.`;
+    const newMessages: MessageObject[] = [
+        { key: 'log.envido_showdown', options: { playerPoints: playerEnvido, aiPoints: aiEnvido } }
+    ];
 
     let updatedProbs = state.opponentHandProbabilities;
     // If AI called and player accepted, we now know the player's envido value.
@@ -44,12 +47,12 @@ export function handleResolveEnvidoAccept(state: GameState): GameState {
     let newPlayerScore = state.playerScore;
     let newAiScore = state.aiScore;
     let playerCalledHighEnvido = state.playerCalledHighEnvido;
-    let centralMessageText: string;
+    let centralMessage: MessageObject;
     
     if (playerEnvido === aiEnvido) {
-        centralMessageText = `Empate en ${playerEnvido}. ${winner === 'player' ? 'Ganaste' : 'Gana la IA'} por ser mano.`;
+        centralMessage = { key: 'centralMessage.tie_envido', options: { points: playerEnvido, winner } };
     } else {
-        centralMessageText = `Tus tantos: ${playerEnvido}. IA: ${aiEnvido}. ${winner === 'player' ? '¡Ganaste!' : 'Gana la IA.'}`;
+        centralMessage = { key: 'centralMessage.envido_result', options: { playerPoints: playerEnvido, aiPoints: aiEnvido, winner } };
     }
     
     let finalBlurb;
@@ -69,13 +72,13 @@ export function handleResolveEnvidoAccept(state: GameState): GameState {
 
     if (winner === 'player') {
         newPlayerScore += state.envidoPointsOnOffer;
-        envidoMessage += ` Jugador gana ${state.envidoPointsOnOffer} ${state.envidoPointsOnOffer === 1 ? 'punto' : 'puntos'}.`;
+        newMessages.push({ key: 'log.win_points', options: { winner: 'player', points: state.envidoPointsOnOffer } });
         if (state.lastCaller === 'player' && playerEnvido >= 27) {
             playerCalledHighEnvido = true;
         }
     } else {
         newAiScore += state.envidoPointsOnOffer;
-        envidoMessage += ` La IA gana ${state.envidoPointsOnOffer} ${state.envidoPointsOnOffer === 1 ? 'punto' : 'puntos'}.`;
+        newMessages.push({ key: 'log.win_points', options: { winner: 'ai', points: state.envidoPointsOnOffer } });
     }
 
     const newRoundHistory = [...state.roundHistory];
@@ -97,17 +100,14 @@ export function handleResolveEnvidoAccept(state: GameState): GameState {
     // Check for a game winner immediately after awarding points
     if (newPlayerScore >= 15 || newAiScore >= 15) {
         const finalWinner = newPlayerScore >= 15 ? 'player' : 'ai';
-        const finalMessage = finalWinner === 'player'
-          ? "¡Ganaste el juego! La ronda terminó antes porque ya tenés los puntos para ganar."
-          : "¡Perdiste el juego! La ronda terminó antes porque la IA ya tiene los puntos para ganar.";
         return {
             ...state,
             playerScore: newPlayerScore,
             aiScore: newAiScore,
-            messageLog: [...state.messageLog, envidoMessage, finalMessage],
+            messageLog: [...state.messageLog, ...newMessages],
             winner: finalWinner,
             gamePhase: 'game_over',
-            gameOverReason: finalMessage,
+            gameOverReason: { key: finalWinner === 'player' ? 'game.game_over_by_points_win' : 'game.game_over_by_points_lose' },
             centralMessage: null,
             isCentralMessagePersistent: false,
             roundHistory: newRoundHistory
@@ -129,7 +129,7 @@ export function handleResolveEnvidoAccept(state: GameState): GameState {
         ...state,
         playerScore: newPlayerScore,
         aiScore: newAiScore,
-        messageLog: [...state.messageLog, envidoMessage],
+        messageLog: [...state.messageLog, ...newMessages],
         playerEnvidoFoldHistory: newEnvidoFoldHistory,
         playerCalledHighEnvido,
         opponentHandProbabilities: updatedProbs,
@@ -138,13 +138,13 @@ export function handleResolveEnvidoAccept(state: GameState): GameState {
         hasRealEnvidoBeenCalledThisSequence: false, // Reset for next round
         ...postEnvidoState,
         aiBlurb: finalBlurb,
-        centralMessage: centralMessageText,
+        centralMessage: centralMessage,
         isCentralMessagePersistent: true,
         roundHistory: newRoundHistory,
     };
 }
 
-function handleTrucoAccept(state: GameState, messageLog: string[]): GameState {
+function handleTrucoAccept(state: GameState, messageLog: (string | MessageObject)[]): GameState {
     // Game continues. The turn should be restored to whoever was about to play.
     // Accepting truco closes the window for envido calls for the rest of the round.
     return {
@@ -162,9 +162,8 @@ function handleTrucoAccept(state: GameState, messageLog: string[]): GameState {
 
 export function handleAccept(state: GameState, action: { type: ActionType.ACCEPT; payload?: { blurbText: string } }): GameState {
     const acceptor = state.currentTurn!;
-    const acceptorName = acceptor === 'player' ? 'Jugador' : 'IA';
     const isPlayer = acceptor === 'player';
-    const messageLog = [...state.messageLog, `¡${acceptorName} quiere!`];
+    const messageLog: (string | MessageObject)[] = [...state.messageLog, { key: 'log.accept', options: { acceptor } }];
 
     let newEnvidoHistory = state.playerEnvidoHistory;
     if (state.gamePhase.includes('envido') && isPlayer) {
@@ -223,8 +222,7 @@ export function handleResolveEnvidoDecline(state: GameState): GameState {
         finalBlurb = { text: reminderPhrase, isVisible: true };
     }
     
-    const winnerName = caller === 'player' ? 'Jugador' : 'IA';
-    const finalLogMessage = `${winnerName} gana ${points} ${points === 1 ? 'punto' : 'puntos'}.`;
+    const finalLogMessage: MessageObject = { key: 'log.win_points', options: { winner: caller, points } };
     const newPlayerScore = caller === 'player' ? state.playerScore + points : state.playerScore;
     const newAiScore = caller === 'ai' ? state.aiScore + points : state.aiScore;
 
@@ -254,17 +252,14 @@ export function handleResolveEnvidoDecline(state: GameState): GameState {
     // Check for a game winner immediately after awarding points
     if (newPlayerScore >= 15 || newAiScore >= 15) {
         const finalWinner = newPlayerScore >= 15 ? 'player' : 'ai';
-        const finalMessage = finalWinner === 'player'
-          ? "¡Ganaste el juego! La ronda terminó antes porque ya tenés los puntos para ganar."
-          : "¡Perdiste el juego! La ronda terminó antes porque la IA ya tiene los puntos para ganar.";
         return {
             ...state,
             playerScore: newPlayerScore,
             aiScore: newAiScore,
-            messageLog: [...state.messageLog, finalLogMessage, finalMessage],
+            messageLog: [...state.messageLog, finalLogMessage],
             winner: finalWinner,
             gamePhase: 'game_over',
-            gameOverReason: finalMessage,
+            gameOverReason: { key: finalWinner === 'player' ? 'game.game_over_by_points_win' : 'game.game_over_by_points_lose' },
             centralMessage: null,
             isCentralMessagePersistent: false,
             roundHistory: newRoundHistory,
@@ -326,8 +321,7 @@ export function handleResolveTrucoDecline(state: GameState): GameState {
     }
     
     const points = state.trucoLevel;
-    const winnerName = caller === 'player' ? 'Jugador' : 'IA';
-    const finalLogMessage = `${winnerName} gana ${points} ${points === 1 ? 'punto' : 'puntos'}.`;
+    const finalLogMessage: MessageObject = { key: 'log.win_points', options: { winner: caller, points } };
 
     const newPlayerScore = caller === 'player' ? state.playerScore + points : state.playerScore;
     const newAiScore = caller === 'ai' ? state.aiScore + points : state.aiScore;
@@ -359,15 +353,12 @@ export function handleResolveTrucoDecline(state: GameState): GameState {
     
     if (newPlayerScore >= 15 || newAiScore >= 15) {
         const finalWinner = newPlayerScore >= 15 ? 'player' : 'ai';
-        const finalMessage = finalWinner === 'player'
-          ? "¡Ganaste el juego! La ronda terminó antes porque ya tenés los puntos para ganar."
-          : "¡Perdiste el juego! La ronda terminó antes porque la IA ya tiene los puntos para ganar.";
         
         return {
             ...state,
             playerScore: newPlayerScore,
             aiScore: newAiScore,
-            messageLog: [...state.messageLog, finalLogMessage, finalMessage],
+            messageLog: [...state.messageLog, finalLogMessage],
             pendingTrucoCaller: null,
             playerActionHistory: [...state.playerActionHistory, ActionType.DECLINE],
             opponentModel: newOpponentModel,
@@ -375,7 +366,7 @@ export function handleResolveTrucoDecline(state: GameState): GameState {
             aiTrucoContext: null,
             winner: finalWinner,
             gamePhase: 'game_over',
-            gameOverReason: finalMessage,
+            gameOverReason: { key: finalWinner === 'player' ? 'game.game_over_by_points_win' : 'game.game_over_by_points_lose' },
             centralMessage: null,
             isCentralMessagePersistent: false,
             roundHistory: newRoundHistory,
@@ -401,9 +392,8 @@ export function handleResolveTrucoDecline(state: GameState): GameState {
 
 export function handleDecline(state: GameState, action: { type: ActionType.DECLINE; payload?: { blurbText: string } }): GameState {
     const decliner = state.currentTurn!;
-    const declinerName = decliner === 'player' ? 'Jugador' : 'IA';
     const isPlayer = decliner === 'player';
-    const messageLog = [...state.messageLog, `${declinerName} no quiere.`];
+    const messageLog: (string | MessageObject)[] = [...state.messageLog, { key: 'log.decline', options: { decliner } }];
 
     let newEnvidoHistory = state.playerEnvidoHistory;
     if (state.gamePhase.includes('envido') && isPlayer) {
@@ -453,7 +443,6 @@ export function handleAcknowledgeFlor(state: GameState, action: { type: ActionTy
     const acknowledger = state.currentTurn!;
     const isPlayer = acknowledger === 'player';
     const points = state.florPointsOnOffer;
-    const winnerName = florCaller === 'player' ? 'Jugador' : 'IA';
 
     let newPlayerScore = state.playerScore;
     let newAiScore = state.aiScore;
@@ -461,7 +450,7 @@ export function handleAcknowledgeFlor(state: GameState, action: { type: ActionTy
     if (florCaller === 'player') newPlayerScore += points;
     else newAiScore += points;
 
-    const finalLogMessage = `${winnerName} gana ${points} puntos por la Flor.`;
+    const finalLogMessage: MessageObject = { key: 'log.flor_win_points', options: { winner: florCaller, points } };
     const newRoundHistory = [...state.roundHistory];
     const currentRoundSummary = newRoundHistory.find(r => r.round === state.round);
     if (currentRoundSummary) {
@@ -480,18 +469,14 @@ export function handleAcknowledgeFlor(state: GameState, action: { type: ActionTy
 
     if (newPlayerScore >= 15 || newAiScore >= 15) {
         const finalWinner = newPlayerScore >= 15 ? 'player' : 'ai';
-        const finalMessage = finalWinner === 'player'
-          ? "¡Ganaste el juego! La ronda terminó antes porque ya tenés los puntos para ganar."
-          : "¡Perdiste el juego! La ronda terminó antes porque la IA ya tiene los puntos para ganar.";
-        
         return {
             ...state,
             playerScore: newPlayerScore,
             aiScore: newAiScore,
-            messageLog: [...state.messageLog, finalLogMessage, finalMessage],
+            messageLog: [...state.messageLog, finalLogMessage],
             winner: finalWinner,
             gamePhase: 'game_over',
-            gameOverReason: finalMessage,
+            gameOverReason: { key: finalWinner === 'player' ? 'game.game_over_by_points_win' : 'game.game_over_by_points_lose' },
             centralMessage: null,
             isCentralMessagePersistent: false,
             roundHistory: newRoundHistory,
@@ -526,7 +511,7 @@ export function handleAcceptContraflor(state: GameState, action: { type: ActionT
         ...state,
         gamePhase: 'FLOR_SHOWDOWN',
         florPointsOnOffer: 6,
-        messageLog: [...state.messageLog, `${acceptor === 'player' ? 'Jugador' : 'IA'}: "¡Con Flor Quiero!"`],
+        messageLog: [...state.messageLog, { key: 'log.accept_contraflor', options: { acceptor } }],
         playerBlurb: isPlayer ? { text: '¡Quiero!', isVisible: true } : null,
         aiBlurb: !isPlayer && action.payload?.blurbText ? { text: action.payload.blurbText, isVisible: true } : null,
         isThinking: false,
@@ -541,7 +526,7 @@ export function handleDeclineContraflor(state: GameState, action: { type: Action
         ...state,
         gamePhase: 'CONTRAFLOR_DECLINED',
         florPointsOnOffer: 4,
-        messageLog: [...state.messageLog, `${decliner === 'player' ? 'Jugador' : 'IA'}: "Con Flor me achico."`],
+        messageLog: [...state.messageLog, { key: 'log.decline_contraflor', options: { decliner } }],
         playerBlurb: isPlayer ? { text: 'Me achico', isVisible: true } : null,
         aiBlurb: !isPlayer && action.payload?.blurbText ? { text: action.payload.blurbText, isVisible: true } : null,
         isThinking: false,
@@ -564,8 +549,11 @@ export function handleResolveFlorShowdown(state: GameState): GameState {
     if (winner === 'player') newPlayerScore += points;
     else newAiScore += points;
 
-    const centralMessage = `Tus puntos: ${playerFlor}. IA: ${aiFlor}. ${winner === 'player' ? '¡Ganaste la Flor!' : 'Gana la IA.'}`;
-    const logMessage = `${centralMessage} ${winner === 'player' ? 'Jugador' : 'IA'} gana ${points} puntos.`;
+    const centralMessage: MessageObject = {
+        key: 'centralMessage.flor_result',
+        options: { playerPoints: playerFlor, aiPoints: aiFlor, winner }
+    };
+    const logMessage: MessageObject = { key: 'log.flor_showdown_win', options: { winner, points } };
 
     const newRoundHistory = [...state.roundHistory];
     const currentRoundSummary = newRoundHistory.find(r => r.round === state.round);
@@ -585,18 +573,14 @@ export function handleResolveFlorShowdown(state: GameState): GameState {
 
     if (newPlayerScore >= 15 || newAiScore >= 15) {
         const finalWinner = newPlayerScore >= 15 ? 'player' : 'ai';
-        const finalMessage = finalWinner === 'player'
-          ? "¡Ganaste el juego! La ronda terminó antes porque ya tenés los puntos para ganar."
-          : "¡Perdiste el juego! La ronda terminó antes porque la IA ya tiene los puntos para ganar.";
-        
         return {
             ...state,
             playerScore: newPlayerScore,
             aiScore: newAiScore,
-            messageLog: [...state.messageLog, logMessage, finalMessage],
+            messageLog: [...state.messageLog, logMessage],
             winner: finalWinner,
             gamePhase: 'game_over',
-            gameOverReason: finalMessage,
+            gameOverReason: { key: finalWinner === 'player' ? 'game.game_over_by_points_win' : 'game.game_over_by_points_lose' },
             centralMessage: null,
             isCentralMessagePersistent: false,
             roundHistory: newRoundHistory,
@@ -631,7 +615,7 @@ export function handleResolveContraflorDecline(state: GameState): GameState {
     if (winner === 'player') newPlayerScore += points;
     else newAiScore += points;
 
-    const finalLogMessage = `${winner === 'player' ? 'Jugador' : 'IA'} gana ${points} puntos.`;
+    const finalLogMessage: MessageObject = { key: 'log.win_points', options: { winner, points } };
 
     const newRoundHistory = [...state.roundHistory];
     const currentRoundSummary = newRoundHistory.find(r => r.round === state.round);
@@ -655,18 +639,15 @@ export function handleResolveContraflorDecline(state: GameState): GameState {
 
     if (newPlayerScore >= 15 || newAiScore >= 15) {
         const finalWinner = newPlayerScore >= 15 ? 'player' : 'ai';
-        const finalMessage = finalWinner === 'player'
-          ? "¡Ganaste el juego! La ronda terminó antes porque ya tenés los puntos para ganar."
-          : "¡Perdiste el juego! La ronda terminó antes porque la IA ya tiene los puntos para ganar.";
         
         return {
             ...state,
             playerScore: newPlayerScore,
             aiScore: newAiScore,
-            messageLog: [...state.messageLog, finalLogMessage, finalMessage],
+            messageLog: [...state.messageLog, finalLogMessage],
             winner: finalWinner,
             gamePhase: 'game_over',
-            gameOverReason: finalMessage,
+            gameOverReason: { key: finalWinner === 'player' ? 'game.game_over_by_points_win' : 'game.game_over_by_points_lose' },
             centralMessage: null,
             isCentralMessagePersistent: false,
             roundHistory: newRoundHistory,

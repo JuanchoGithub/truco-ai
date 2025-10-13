@@ -1,8 +1,9 @@
 
+
 import React, { useReducer, useEffect, useState, useRef } from 'react';
 import { useGameReducer, initialState } from './hooks/useGameReducer';
 import { getLocalAIMove } from './services/localAiService';
-import { ActionType, Action, GameState, AiMove } from './types';
+import { ActionType, Action, GameState, AiMove, MessageObject } from './types';
 import Scoreboard from './components/Scoreboard';
 import GameBoard from './components/GameBoard';
 import PlayerHand from './components/PlayerHand';
@@ -254,7 +255,15 @@ const App: React.FC = () => {
     const isPlaying = gameMode === 'playing' || gameMode === 'playing-with-help';
     if (!isPlaying) return;
     if (state.centralMessage) {
-        setLocalMessage(state.centralMessage);
+        const options = { ...state.centralMessage.options };
+        if (options.winnerName) {
+            options.winnerName = options.winnerName === 'player' ? t('common.you') : t('common.ai');
+        }
+        if (options.winner) {
+            options.winnerName = options.winner === 'player' ? t('common.you') : t('common.ai');
+        }
+        const translatedMessage = t(state.centralMessage.key, options);
+        setLocalMessage(translatedMessage);
         setIsMessageVisible(true);
 
         if (!state.isCentralMessagePersistent) {
@@ -270,7 +279,7 @@ const App: React.FC = () => {
             clearTimeout(messageTimers.current.clearTimerId);
         };
     }
-  }, [state.centralMessage, state.isCentralMessagePersistent, dispatch, gameMode]);
+  }, [state.centralMessage, state.isCentralMessagePersistent, dispatch, gameMode, t]);
 
   // Automatically clear the player's blurb after a short delay
   useEffect(() => {
@@ -364,6 +373,10 @@ const App: React.FC = () => {
     return <Simulation onExit={() => setGameMode('menu')} />;
   }
 
+  const translatedGameOverReason = state.gameOverReason 
+    ? t(state.gameOverReason.key, state.gameOverReason.options) 
+    : null;
+
 
   return (
     <div className="h-screen bg-green-900 text-white font-sans overflow-hidden" style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/felt.png')"}}>
@@ -390,6 +403,7 @@ const App: React.FC = () => {
                 onToggleDebug={() => dispatch({ type: ActionType.TOGGLE_DEBUG_MODE })}
                 onShowData={() => dispatch({ type: ActionType.TOGGLE_DATA_MODAL })}
                 onGoToMainMenu={() => setGameMode('menu')}
+                onOpenMenu={handleDismissSoundHint}
               />
               <SoundHint isVisible={showSoundHint} onDismiss={handleDismissSoundHint} />
           </div>
@@ -500,7 +514,7 @@ const App: React.FC = () => {
         <GameOverModal 
             winner={state.winner} 
             onPlayAgain={() => dispatch({ type: ActionType.RESTART_GAME })}
-            reason={state.gameOverReason} 
+            reason={translatedGameOverReason} 
         />
       )}
 

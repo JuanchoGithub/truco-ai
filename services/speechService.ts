@@ -2,6 +2,7 @@ class SpeechService {
   private synthesis: SpeechSynthesis | null = null;
   private voices: SpeechSynthesisVoice[] = [];
   private selectedVoice: SpeechSynthesisVoice | null = null;
+  private currentLang: string = 'es-AR'; // Default language
 
   constructor() {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
@@ -10,6 +11,11 @@ class SpeechService {
     } else {
       console.warn('Speech synthesis not supported in this browser.');
     }
+  }
+
+  public setLanguage(lang: string) {
+    this.currentLang = lang;
+    this.selectVoice(); // Re-select the voice when language changes
   }
 
   private loadVoices = () => {
@@ -31,14 +37,29 @@ class SpeechService {
   private selectVoice() {
     if (this.voices.length === 0) return;
 
-    // Priority: es-AR > es-MX > es-US > es-ES > any es-*
-    const voicePriority = [
-        (v: SpeechSynthesisVoice) => v.lang === 'es-AR', // Argentinian Spanish
-        (v: SpeechSynthesisVoice) => v.lang === 'es-MX', // Mexican Spanish
-        (v: SpeechSynthesisVoice) => v.lang === 'es-US', // US Spanish
-        (v: SpeechSynthesisVoice) => v.lang === 'es-ES', // Spain Spanish
-        (v: SpeechSynthesisVoice) => v.lang.startsWith('es-'), // Any other Spanish
-    ];
+    let voicePriority: ((v: SpeechSynthesisVoice) => boolean)[] = [];
+    const langPrefix = this.currentLang.split('-')[0]; // 'es' or 'en'
+
+    if (langPrefix === 'es') {
+        // Priority for Spanish: es-AR > es-MX > es-US > es-ES > any es-*
+        voicePriority = [
+            (v: SpeechSynthesisVoice) => v.lang === 'es-AR',
+            (v: SpeechSynthesisVoice) => v.lang === 'es-MX',
+            (v: SpeechSynthesisVoice) => v.lang === 'es-US',
+            (v: SpeechSynthesisVoice) => v.lang === 'es-ES',
+            (v: SpeechSynthesisVoice) => v.lang.startsWith('es-'),
+        ];
+    } else if (langPrefix === 'en') {
+        // Priority for English: en-US > en-GB > any en-*
+        voicePriority = [
+            (v: SpeechSynthesisVoice) => v.lang === 'en-US',
+            (v: SpeechSynthesisVoice) => v.lang === 'en-GB',
+            (v: SpeechSynthesisVoice) => v.lang.startsWith('en-'),
+        ];
+    }
+    
+    // Fallback to any voice of the correct language prefix if the specific priorities fail.
+    voicePriority.push((v: SpeechSynthesisVoice) => v.lang.startsWith(langPrefix));
 
     for (const condition of voicePriority) {
         const found = this.voices.find(condition);
@@ -47,6 +68,9 @@ class SpeechService {
             return;
         }
     }
+    
+    // If absolutely no voice is found for the language, reset to null
+    this.selectedVoice = null;
   }
 
   speak(text: string) {

@@ -1,3 +1,4 @@
+
 {
   "common": {
     "player": "Player",
@@ -100,8 +101,19 @@
     "round_over_tie": "Round Tied"
   },
   "centralMessage": {
-    "tie_envido": "Tie at {{points}}. {{winner}} wins for being hand.",
-    "envido_result": "Your points: {{playerPoints}}. AI: {{aiPoints}}. {{winner}}!"
+    "tie_envido": "Tie at {{points}}. {{winnerName}} wins for being hand.",
+    "envido_result": "Your points: {{playerPoints}}. AI: {{aiPoints}}. {{winnerName}} wins!",
+    "flor_result": "Your points: {{playerPoints}}. AI: {{aiPoints}}. {{winnerName}} wins the Flor!"
+  },
+  "log": {
+    "accept": "{{acceptor}} accepts!",
+    "decline": "{{decliner}} refuses.",
+    "envido_showdown": "Player has {{playerPoints}}. AI has {{aiPoints}}.",
+    "win_points": "{{winner}} wins {{points}} {{points, plural, one{point} other{points}}}.",
+    "flor_win_points": "{{winner}} wins {{points}} points for the Flor.",
+    "accept_contraflor": "{{acceptor}}: \"With Flor, I want it!\"",
+    "decline_contraflor": "{{decliner}}: \"With Flor, I fold.\"",
+    "flor_showdown_win": "{{winner}} wins {{points}} points."
   },
   "gameOverModal": {
     "win_title": "You Won!",

@@ -145,6 +145,11 @@ export interface PointNote {
     options?: { [key: string]: string | number };
 }
 
+export interface MessageObject {
+  key: string;
+  options?: { [key: string]: any };
+}
+
 export interface RoundSummary {
     round: number;
     mano: Player;
@@ -192,8 +197,8 @@ export interface GameState {
   gamePhase: GamePhase;
   isThinking: boolean;
   winner: Player | null;
-  gameOverReason: string | null;
-  messageLog: string[];
+  gameOverReason: MessageObject | null;
+  messageLog: (string | MessageObject)[];
   isDebugMode: boolean;
   aiReasoningLog: AiReasoningEntry[];
   isLogExpanded: boolean;
@@ -234,7 +239,7 @@ export interface GameState {
   lastRoundWinner: Player | 'tie' | null;
 
   // Central message for key events
-  centralMessage: string | null;
+  centralMessage: MessageObject | null;
   isCentralMessagePersistent: boolean;
 
   // Data Modal for user behavior
