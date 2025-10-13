@@ -1,58 +1,36 @@
 
+
 import React, { useRef } from 'react';
 // Fix: Imported `CardPlayStats` to use in type assertions.
 import { Action, ActionType, OpponentModel, Case, PlayerTrucoCallEntry, GameState, Card, Player, RoundSummary, PlayerCardPlayStatistics, CardCategory, CardPlayStats } from '../types';
 import { getCardName, decodeCardFromCode } from '../services/trucoLogic';
-
-interface DataModalProps {
-  // Pass the whole state for exporting
-  gameState: GameState;
-  dispatch: React.Dispatch<Action>;
-}
-
-const categoryDisplayNames: Record<CardCategory, string> = {
-    'ancho_espada': 'As de Espadas',
-    'ancho_basto': 'As de Bastos',
-    'siete_espada': 'Siete de Espadas',
-    'siete_oro': 'Siete de Oros',
-    'tres': 'Los Tres',
-    'dos': 'Los Dos',
-    'anchos_falsos': 'Anchos Falsos',
-    'reyes': 'Los Reyes',
-    'caballos': 'Los Caballos',
-    'sotas': 'Las Sotas',
-    'sietes_malos': 'Sietes Malos',
-    'seis': 'Los Seis',
-    'cincos': 'Los Cincos',
-    'cuatros': 'Los Cuatros',
-};
+import { useLocalization } from '../context/LocalizationContext';
 
 // New helper function to generate the AI's analysis of the player's style
-const generateProfileAnalysis = (state: GameState): React.ReactNode[] => {
+const generateProfileAnalysis = (state: GameState, t: (key: string) => string): React.ReactNode[] => {
     const insights: React.ReactNode[] = [];
-    const { opponentModel, roundHistory, playerTrucoCallHistory, playerCardPlayStats, playerEnvidoHistory } = state;
+    const { opponentModel, roundHistory, playerTrucoCallHistory, playerCardPlayStats } = state;
 
     if (roundHistory.length < 3) {
-        insights.push(<li key="nodata">Juega algunas rondas más para que la IA pueda generar un perfil detallado de tu estilo de juego.</li>);
+        insights.push(<li key="nodata">{t('dataModal.no_data_message')}</li>);
         return insights;
     }
 
     // Envido Analysis
-    // Fix: Calculate average Envido behavior from 'mano' and 'pie' contexts for a general profile.
     const callThreshold = (opponentModel.envidoBehavior.mano.callThreshold + opponentModel.envidoBehavior.pie.callThreshold) / 2;
     const foldRate = (opponentModel.envidoBehavior.mano.foldRate + opponentModel.envidoBehavior.pie.foldRate) / 2;
-    let envidoInsight = "Analizando tu estilo de Envido... ";
+    let envidoInsight = "";
     if (callThreshold > 28) {
-        envidoInsight += "Sos un jugador de Envido 'Puntual', tendés a cantar solo cuando tenés 29 o más, lo que te hace muy creíble. ";
+        envidoInsight += t('dataModal.envido_style_precise');
     } else if (callThreshold < 26) {
-        envidoInsight += "Mostrás agresividad en el Envido, a menudo cantando con 26 o más para presionar. ";
+        envidoInsight += t('dataModal.envido_style_aggressive');
     } else {
-        envidoInsight += "Tu umbral de Envido es equilibrado y difícil de predecir. ";
+        envidoInsight += t('dataModal.envido_style_balanced');
     }
     if (foldRate > 0.5) {
-        envidoInsight += "Además, sos cauteloso, prefiriendo no aceptar si no tenés un buen presentimiento.";
+        envidoInsight += t('dataModal.envido_style_cautious');
     } else if (foldRate < 0.3) {
-        envidoInsight += "Rara vez te retirás del Envido, demostrando que estás dispuesto a ver las cartas de la IA.";
+        envidoInsight += t('dataModal.envido_style_bold');
     }
     insights.push(<li key="envido">{envidoInsight}</li>);
     
@@ -61,15 +39,15 @@ const generateProfileAnalysis = (state: GameState): React.ReactNode[] => {
         ? playerTrucoCallHistory.reduce((sum, entry) => sum + entry.strength, 0) / playerTrucoCallHistory.length
         : 0;
     
-    let trucoInsight = "En el Truco, ";
+    let trucoInsight = t('dataModal.truco_style_title');
     if (playerTrucoCallHistory.length < 3) {
-        trucoInsight += "aún estoy recopilando datos sobre tu estilo de apuesta.";
+        trucoInsight += t('dataModal.truco_style_no_data');
     } else if (avgTrucoStrength > 28) {
-        trucoInsight += "sos extremadamente conservador, solo apostando con manos de élite. He aprendido a respetar mucho tus llamadas.";
+        trucoInsight += t('dataModal.truco_style_conservative');
     } else if (avgTrucoStrength < 22) {
-        trucoInsight += "sos un jugador agresivo, no dudás en cantar Truco para meter presión, incluso con manos modestas. Esto te hace peligroso pero vulnerable a un contraataque.";
+        trucoInsight += t('dataModal.truco_style_aggressive');
     } else {
-        trucoInsight += "mantienes un estilo balanceado, haciendo que tus intenciones sean difíciles de leer.";
+        trucoInsight += t('dataModal.truco_style_balanced');
     }
     insights.push(<li key="truco">{trucoInsight}</li>);
     
@@ -84,13 +62,13 @@ const generateProfileAnalysis = (state: GameState): React.ReactNode[] => {
 
     if (bluffs.attempts > 2) {
         const rate = bluffs.successes / bluffs.attempts;
-        let bluffInsight = "Tu juego de farol (bluff) ";
+        let bluffInsight = t('dataModal.bluff_style_title');
         if (rate > 0.6) {
-            bluffInsight += "es muy efectivo. He notado que tus apuestas sin cartas fuertes a menudo me hacen dudar y retirarme.";
+            bluffInsight += t('dataModal.bluff_style_effective');
         } else if (rate < 0.3) {
-            bluffInsight += "está siendo leído por mí. Parece que he detectado un patrón y no me estoy retirando ante tus apuestas arriesgadas.";
+            bluffInsight += t('dataModal.bluff_style_readable');
         } else {
-            bluffInsight += "es moderado, manteniéndome en un estado de incertidumbre.";
+            bluffInsight += t('dataModal.bluff_style_moderate');
         }
         insights.push(<li key="bluff">{bluffInsight}</li>);
     }
@@ -98,14 +76,15 @@ const generateProfileAnalysis = (state: GameState): React.ReactNode[] => {
     // Card Play Analysis
     const tresStats = playerCardPlayStats.tres;
     if (tresStats.plays > 2 && tresStats.asResponse > tresStats.asLead) {
-         insights.push(<li key="cards">Mostrás una tendencia a usar tus 'Tres' como cartas de respuesta, sugiriendo un estilo de contraataque en lugar de liderar con tu máxima fuerza.</li>);
+         insights.push(<li key="cards">{t('dataModal.card_play_style_threes')}</li>);
     }
 
     return insights;
 };
 
 
-const DataModal: React.FC<DataModalProps> = ({ gameState, dispatch }) => {
+const DataModal: React.FC<{ gameState: GameState, dispatch: React.Dispatch<Action> }> = ({ gameState, dispatch }) => {
+  const { t } = useLocalization();
   const { opponentModel, aiCases, playerTrucoCallHistory, playerCardPlayStats, roundHistory, playerEnvidoHistory } = gameState;
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -130,7 +109,7 @@ const DataModal: React.FC<DataModalProps> = ({ gameState, dispatch }) => {
   const totalCalls = envidoCalls.length;
   const manoCallRate = totalCalls > 0 ? (callsAsMano / totalCalls) * 100 : 0;
   
-  const profileAnalysis = generateProfileAnalysis(gameState);
+  const profileAnalysis = generateProfileAnalysis(gameState, t);
 
   const handleExport = () => {
     const dataToExport: Partial<GameState> = {
@@ -168,14 +147,14 @@ const DataModal: React.FC<DataModalProps> = ({ gameState, dispatch }) => {
           const importedData = JSON.parse(text);
           if (importedData.opponentModel && importedData.aiCases) {
             dispatch({ type: ActionType.LOAD_IMPORTED_DATA, payload: importedData });
-            alert("¡Perfil importado con éxito!");
+            alert(t('dataModal.import_success'));
           } else {
-            throw new Error("El archivo no tiene el formato esperado.");
+            throw new Error(t('dataModal.import_error_format'));
           }
         }
       } catch (error) {
         console.error("Error al importar el archivo:", error);
-        alert("Error: El archivo seleccionado no es un perfil válido.");
+        alert(t('dataModal.import_error'));
       }
     };
     reader.readAsText(file);
@@ -191,7 +170,7 @@ const DataModal: React.FC<DataModalProps> = ({ gameState, dispatch }) => {
       <div className="bg-stone-800/95 border-4 border-amber-700/50 rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
         <div className="p-4 border-b-2 border-amber-700/30 flex justify-between items-center flex-shrink-0">
           <h2 className="text-xl lg:text-2xl font-bold text-amber-300 font-cinzel tracking-widest" style={{ textShadow: '2px 2px 3px rgba(0,0,0,0.7)' }}>
-            Análisis de Comportamiento
+            {t('dataModal.title')}
           </h2>
           <button onClick={() => dispatch({ type: ActionType.TOGGLE_DATA_MODAL })} className="text-amber-200 text-2xl lg:text-3xl font-bold hover:text-white transition-colors">&times;</button>
         </div>
@@ -199,7 +178,7 @@ const DataModal: React.FC<DataModalProps> = ({ gameState, dispatch }) => {
           
           {/* Section: AI Style Analysis */}
           <div>
-            <h3 className="text-lg lg:text-xl font-bold text-amber-200 mb-2 border-b border-amber-200/20 pb-1">Análisis de Estilo por la IA</h3>
+            <h3 className="text-lg lg:text-xl font-bold text-amber-200 mb-2 border-b border-amber-200/20 pb-1">{t('dataModal.style_analysis_title')}</h3>
             <div className="bg-black/30 p-3 rounded-md space-y-2 text-sm">
                 <ul className="list-disc list-inside text-gray-300 italic space-y-1">
                     {profileAnalysis}
@@ -209,47 +188,45 @@ const DataModal: React.FC<DataModalProps> = ({ gameState, dispatch }) => {
           
           {/* Section: Behavioral Profile */}
           <div>
-            <h3 className="text-lg lg:text-xl font-bold text-amber-200 mb-2 border-b border-amber-200/20 pb-1">Perfil de Comportamiento</h3>
+            <h3 className="text-lg lg:text-xl font-bold text-amber-200 mb-2 border-b border-amber-200/20 pb-1">{t('dataModal.behavior_profile_title')}</h3>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 text-sm">
                 <div className="bg-black/30 p-3 rounded-md space-y-1">
-                    <p><span className="font-semibold text-white">Umbral de Truco (promedio):</span> {avgTrucoStrength > 0 ? avgTrucoStrength.toFixed(1) : 'N/A'}</p>
-                    <p><span className="font-semibold text-white">Éxito de Farol en Truco:</span> {liveBluffStats.attempts > 0 ? `${((liveBluffStats.successes / liveBluffStats.attempts) * 100).toFixed(0)}%` : 'N/A'} <span className="text-gray-400">({liveBluffStats.successes}/{liveBluffStats.attempts})</span></p>
-                    <p><span className="font-semibold text-white">Tasa de "Envido Primero":</span> {(opponentModel.playStyle.envidoPrimeroRate * 100).toFixed(0)}%</p>
+                    <p><span className="font-semibold text-white">{t('dataModal.truco_threshold')}:</span> {avgTrucoStrength > 0 ? avgTrucoStrength.toFixed(1) : t('common.na')}</p>
+                    <p><span className="font-semibold text-white">{t('dataModal.bluff_success')}:</span> {liveBluffStats.attempts > 0 ? `${((liveBluffStats.successes / liveBluffStats.attempts) * 100).toFixed(0)}%` : t('common.na')} <span className="text-gray-400">({liveBluffStats.successes}/{liveBluffStats.attempts})</span></p>
+                    <p><span className="font-semibold text-white">{t('dataModal.envido_primero_rate')}:</span> {(opponentModel.playStyle.envidoPrimeroRate * 100).toFixed(0)}%</p>
                 </div>
                 <div className="bg-black/30 p-3 rounded-md space-y-1">
-                     {/* Fix: Calculate and display average Envido behavior from 'mano' and 'pie' contexts. */}
-                     <p><span className="font-semibold text-white">Umbral de Envido (promedio):</span> ~{((opponentModel.envidoBehavior.mano.callThreshold + opponentModel.envidoBehavior.pie.callThreshold) / 2).toFixed(1)}</p>
-                     <p><span className="font-semibold text-white">Tasa de Abandono Envido (vs IA):</span> {(((opponentModel.envidoBehavior.mano.foldRate + opponentModel.envidoBehavior.pie.foldRate) / 2) * 100).toFixed(1)}%</p>
-                     <p><span className="font-semibold text-white">Preferencia Envido (Mano/Respuesta):</span> {totalCalls > 0 ? `${manoCallRate.toFixed(0)}% / ${(100 - manoCallRate).toFixed(0)}%` : 'N/A'}</p>
+                     <p><span className="font-semibold text-white">{t('dataModal.envido_threshold')}:</span> ~{((opponentModel.envidoBehavior.mano.callThreshold + opponentModel.envidoBehavior.pie.callThreshold) / 2).toFixed(1)}</p>
+                     <p><span className="font-semibold text-white">{t('dataModal.envido_fold_rate')}:</span> {(((opponentModel.envidoBehavior.mano.foldRate + opponentModel.envidoBehavior.pie.foldRate) / 2) * 100).toFixed(1)}%</p>
+                     <p><span className="font-semibold text-white">{t('dataModal.envido_preference')}:</span> {totalCalls > 0 ? `${manoCallRate.toFixed(0)}% / ${(100 - manoCallRate).toFixed(0)}%` : t('common.na')}</p>
                 </div>
             </div>
           </div>
 
           {/* Section: Card Play Patterns */}
           <div>
-            <h3 className="text-lg lg:text-xl font-bold text-amber-200 mb-2 border-b border-amber-200/20 pb-1">Patrones de Juego de Cartas</h3>
+            <h3 className="text-lg lg:text-xl font-bold text-amber-200 mb-2 border-b border-amber-200/20 pb-1">{t('dataModal.card_play_patterns_title')}</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs lg:text-sm">
                 <thead className="bg-black/40 text-amber-100">
                   <tr>
-                    <th className="p-2">Tipo de Carta</th>
-                    <th>Jugadas</th>
-                    <th>% Victoria</th>
-                    <th>Mano 1</th>
-                    <th>Mano 2</th>
-                    <th>Mano 3</th>
-                    <th>Liderando</th>
-                    <th>Respuesta</th>
+                    <th className="p-2">{t('dataModal.card_play_header_type')}</th>
+                    <th>{t('dataModal.card_play_header_plays')}</th>
+                    <th>{t('dataModal.card_play_header_win_rate')}</th>
+                    <th>{t('dataModal.card_play_header_trick1')}</th>
+                    <th>{t('dataModal.card_play_header_trick2')}</th>
+                    <th>{t('dataModal.card_play_header_trick3')}</th>
+                    <th>{t('dataModal.card_play_header_lead')}</th>
+                    <th>{t('dataModal.card_play_header_response')}</th>
                   </tr>
                 </thead>
                 <tbody className="bg-black/20">
-                  {/* Fix: Added type assertion to `Object.entries` to correctly type the stats object in the chain. */}
                   {(Object.entries(playerCardPlayStats) as [string, CardPlayStats][])
                     .filter(([, stats]) => stats.plays > 0)
                     .sort(([, a], [, b]) => b.plays - a.plays)
                     .map(([category, stats]) => (
                     <tr key={category} className="border-b border-stone-700">
-                      <td className="p-2 font-semibold">{categoryDisplayNames[category as CardCategory]}</td>
+                      <td className="p-2 font-semibold">{t(`dataModal.card_categories.${category}`)}</td>
                       <td>{stats.plays}</td>
                       <td>{stats.plays > 0 ? ((stats.wins / stats.plays) * 100).toFixed(0) : '0'}%</td>
                       <td>{stats.byTrick[0]}</td>
@@ -266,42 +243,45 @@ const DataModal: React.FC<DataModalProps> = ({ gameState, dispatch }) => {
 
           {/* Section: Round History */}
           <div>
-            <h3 className="text-lg lg:text-xl font-bold text-amber-200 mb-2 border-b border-amber-200/20 pb-1">Historial de Rondas</h3>
+            <h3 className="text-lg lg:text-xl font-bold text-amber-200 mb-2 border-b border-amber-200/20 pb-1">{t('dataModal.round_history_title')}</h3>
             <div className="space-y-2 max-h-64 overflow-y-auto pr-2">
-              {[...roundHistory].reverse().map(summary => (
-                <details key={summary.round} className="bg-black/30 p-2 rounded-md text-xs">
-                  <summary className="cursor-pointer font-semibold">
-                    Ronda {summary.round} - {summary.roundWinner ? `Ganador: ${summary.roundWinner.toUpperCase()}` : 'En curso...'} ({summary.pointsAwarded.player} - {summary.pointsAwarded.ai})
-                  </summary>
-                  <div className="mt-2 pl-4 border-l-2 border-amber-600/50 space-y-1">
-                    <p><span className="font-semibold">Fuerza / Envido:</span> Vos {summary.playerHandStrength} / {summary.playerEnvidoPoints} vs IA {summary.aiHandStrength} / {summary.aiEnvidoPoints}</p>
-                    <p><span className="font-semibold">Llamadas:</span> {summary.calls.join(', ') || 'Ninguna'}</p>
-                    <p><span className="font-semibold">Ganadores de Manos:</span> {summary.trickWinners.map((w, i) => `M${i+1}: ${w ? w.toUpperCase() : 'N/A'}`).join(' | ')}</p>
-                    {summary.playerTricks && summary.aiTricks && (
-                      <div>
-                        <span className="font-semibold">Cartas Jugadas:</span>
-                        <ul className="list-disc list-inside text-gray-300">
-                          {summary.playerTricks.map((pCardCode, i) => {
-                            const aCardCode = summary.aiTricks[i];
-                            if (!pCardCode && !aCardCode) return null;
-                            const playerCardName = pCardCode ? getCardName(decodeCardFromCode(pCardCode)) : '---';
-                            const aiCardName = aCardCode ? getCardName(decodeCardFromCode(aCardCode)) : '---';
-                            return <li key={i}>Mano {i+1}: Vos ({playerCardName}) vs IA ({aiCardName})</li>
-                          }).filter(Boolean)}
-                        </ul>
+              {[...roundHistory].reverse().map(summary => {
+                  const winnerStatus = summary.roundWinner ? t('dataModal.round_history_winner', { winner: t(`common.${summary.roundWinner}`)}) : t('dataModal.round_history_in_progress');
+                  return (
+                    <details key={summary.round} className="bg-black/30 p-2 rounded-md text-xs">
+                      <summary className="cursor-pointer font-semibold">
+                        {t('dataModal.round_history_summary', { round: summary.round, winnerStatus, playerScore: summary.pointsAwarded.player, aiScore: summary.pointsAwarded.ai })}
+                      </summary>
+                      <div className="mt-2 pl-4 border-l-2 border-amber-600/50 space-y-1">
+                        <p><span className="font-semibold">{t('dataModal.round_history_strength_envido')}:</span> {t('common.you')} {summary.playerHandStrength} / {summary.playerEnvidoPoints} vs {t('common.ai')} {summary.aiHandStrength} / {summary.aiEnvidoPoints}</p>
+                        <p><span className="font-semibold">{t('dataModal.round_history_calls')}:</span> {summary.calls.join(', ') || t('dataModal.round_history_calls_none')}</p>
+                        <p><span className="font-semibold">{t('dataModal.round_history_trick_winners')}:</span> {summary.trickWinners.map((w, i) => t('dataModal.round_history_trick_winner_pattern', { trick: i + 1, winner: w ? t(`common.${w}`) : t('common.na') })).join(' | ')}</p>
+                        {summary.playerTricks && summary.aiTricks && (
+                          <div>
+                            <span className="font-semibold">{t('dataModal.round_history_played_cards')}:</span>
+                            <ul className="list-disc list-inside text-gray-300">
+                              {summary.playerTricks.map((pCardCode, i) => {
+                                const aCardCode = summary.aiTricks[i];
+                                if (!pCardCode && !aCardCode) return null;
+                                const playerCardName = pCardCode ? getCardName(decodeCardFromCode(pCardCode)) : '---';
+                                const aiCardName = aCardCode ? getCardName(decodeCardFromCode(aCardCode)) : '---';
+                                return <li key={i}>{t('dataModal.round_history_played_cards_pattern', { trick: i + 1, playerCard: playerCardName, aiCard: aiCardName })}</li>
+                              }).filter(Boolean)}
+                            </ul>
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                </details>
-              ))}
+                    </details>
+                  )
+              })}
             </div>
           </div>
 
         </div>
         <div className="p-3 border-t-2 border-amber-700/30 flex-shrink-0 flex justify-end items-center gap-4">
           <input type="file" ref={fileInputRef} onChange={handleFileChange} accept=".json" style={{ display: 'none' }} />
-          <button onClick={handleImportClick} className="px-3 py-1.5 text-xs lg:text-sm rounded-lg font-semibold text-cyan-200 bg-black/40 border-2 border-cyan-800/80 shadow-md hover:bg-black/60 hover:border-cyan-600 transition-colors">Importar Perfil</button>
-          <button onClick={handleExport} className="px-3 py-1.5 text-xs lg:text-sm rounded-lg font-semibold text-yellow-200 bg-black/40 border-2 border-yellow-800/80 shadow-md hover:bg-black/60 hover:border-yellow-600 transition-colors">Exportar Perfil</button>
+          <button onClick={handleImportClick} className="px-3 py-1.5 text-xs lg:text-sm rounded-lg font-semibold text-cyan-200 bg-black/40 border-2 border-cyan-800/80 shadow-md hover:bg-black/60 hover:border-cyan-600 transition-colors">{t('dataModal.button_import')}</button>
+          <button onClick={handleExport} className="px-3 py-1.5 text-xs lg:text-sm rounded-lg font-semibold text-yellow-200 bg-black/40 border-2 border-yellow-800/80 shadow-md hover:bg-black/60 hover:border-yellow-600 transition-colors">{t('dataModal.button_export')}</button>
         </div>
       </div>
     </div>

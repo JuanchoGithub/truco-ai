@@ -318,7 +318,24 @@
     "copy_tooltip": "Copy table",
     "copy_button": "Copy",
     "copy_button_copied": "Copied!",
-    "copy_button_error": "Copy Error"
+    "copy_button_error": "Copy Error",
+    "simple_card_names": {
+      "as_de_espadas": "Ace of Swords",
+      "as_de_bastos": "Ace of Clubs",
+      "ancho_falso": "False Ace",
+      "siete_de_espadas": "Seven of Swords",
+      "siete_de_oros": "Seven of Coins",
+      "siete_falso": "False Seven",
+      "tres": "Three",
+      "dos": "Two",
+      "rey": "King",
+      "caballo": "Knight",
+      "sota": "Jack",
+      "seis": "Six",
+      "cinco": "Five",
+      "cuatro": "Four",
+      "default": "{{rank}} of {{suit}}"
+    }
   },
   "dataModal": {
     "title": "Behavior Analysis",
@@ -370,7 +387,23 @@
     "button_export": "Export Profile",
     "import_success": "Profile imported successfully!",
     "import_error": "Error: The selected file is not a valid profile.",
-    "import_error_format": "The file does not have the expected format."
+    "import_error_format": "The file does not have the expected format.",
+    "card_categories": {
+      "ancho_espada": "Ace of Swords",
+      "ancho_basto": "Ace of Clubs",
+      "siete_espada": "Seven of Swords",
+      "siete_oro": "Seven of Coins",
+      "tres": "Threes",
+      "dos": "Twos",
+      "anchos_falsos": "False Aces",
+      "reyes": "Kings",
+      "caballos": "Knights",
+      "sotas": "Jacks",
+      "sietes_malos": "False Sevens",
+      "seis": "Sixes",
+      "cincos": "Fives",
+      "cuatros": "Fours"
+    }
   },
   "manual": {
     "title": "Argentine Truco Manual",

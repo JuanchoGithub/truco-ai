@@ -318,7 +318,24 @@
     "copy_tooltip": "Copiar tabla",
     "copy_button": "Copiar",
     "copy_button_copied": "¡Copiado!",
-    "copy_button_error": "Error al copiar"
+    "copy_button_error": "Error al copiar",
+    "simple_card_names": {
+      "as_de_espadas": "As de Espadas",
+      "as_de_bastos": "As de Bastos",
+      "ancho_falso": "Ancho Falso",
+      "siete_de_espadas": "Siete de Espadas",
+      "siete_de_oros": "Siete de Oros",
+      "siete_falso": "Siete Falso",
+      "tres": "Tres",
+      "dos": "Dos",
+      "rey": "Rey",
+      "caballo": "Caballo",
+      "sota": "Sota",
+      "seis": "Seis",
+      "cinco": "Cinco",
+      "cuatro": "Cuatro",
+      "default": "{{rank}} de {{suit}}"
+    }
   },
   "dataModal": {
     "title": "Análisis de Comportamiento",
@@ -370,7 +387,23 @@
     "button_export": "Exportar Perfil",
     "import_success": "¡Perfil importado con éxito!",
     "import_error": "Error: El archivo seleccionado no es un perfil válido.",
-    "import_error_format": "El archivo no tiene el formato esperado."
+    "import_error_format": "El archivo no tiene el formato esperado.",
+    "card_categories": {
+      "ancho_espada": "As de Espadas",
+      "ancho_basto": "As de Bastos",
+      "siete_espada": "Siete de Espadas",
+      "siete_oro": "Siete de Oros",
+      "tres": "Los Tres",
+      "dos": "Los Dos",
+      "anchos_falsos": "Anchos Falsos",
+      "reyes": "Los Reyes",
+      "caballos": "Los Caballos",
+      "sotas": "Las Sotas",
+      "sietes_malos": "Sietes Malos",
+      "seis": "Los Seis",
+      "cincos": "Los Cincos",
+      "cuatros": "Los Cuatros"
+    }
   },
   "manual": {
     "title": "Argentine Truco Manual",

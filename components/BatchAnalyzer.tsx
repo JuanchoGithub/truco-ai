@@ -106,25 +106,25 @@ function generateHandsToAnalyze(): Card[][] {
 }
 
 
-const getSimpleCardName = (card: Card): string => {
+const getSimpleCardName = (card: Card, t: (key: string, options?: any) => string): string => {
     switch (card.rank) {
         case 1:
-            if (card.suit === 'espadas') return 'As de Espadas';
-            if (card.suit === 'bastos') return 'As de Bastos';
-            return 'Ancho Falso';
+            if (card.suit === 'espadas') return t('batchAnalyzer.simple_card_names.as_de_espadas');
+            if (card.suit === 'bastos') return t('batchAnalyzer.simple_card_names.as_de_bastos');
+            return t('batchAnalyzer.simple_card_names.ancho_falso');
         case 7:
-            if (card.suit === 'espadas') return 'Siete de Espadas';
-            if (card.suit === 'oros') return 'Siete de Oros';
-            return 'Siete Falso';
-        case 3: return 'Tres';
-        case 2: return 'Dos';
-        case 12: return 'Rey';
-        case 11: return 'Caballo';
-        case 10: return 'Sota';
-        case 6: return 'Seis';
-        case 5: return 'Cinco';
-        case 4: return 'Cuatro';
-        default: return `${card.rank} de ${card.suit}`;
+            if (card.suit === 'espadas') return t('batchAnalyzer.simple_card_names.siete_de_espadas');
+            if (card.suit === 'oros') return t('batchAnalyzer.simple_card_names.siete_de_oros');
+            return t('batchAnalyzer.simple_card_names.siete_falso');
+        case 3: return t('batchAnalyzer.simple_card_names.tres');
+        case 2: return t('batchAnalyzer.simple_card_names.dos');
+        case 12: return t('batchAnalyzer.simple_card_names.rey');
+        case 11: return t('batchAnalyzer.simple_card_names.caballo');
+        case 10: return t('batchAnalyzer.simple_card_names.sota');
+        case 6: return t('batchAnalyzer.simple_card_names.seis');
+        case 5: return t('batchAnalyzer.simple_card_names.cinco');
+        case 4: return t('batchAnalyzer.simple_card_names.cuatro');
+        default: return t('batchAnalyzer.simple_card_names.default', { rank: card.rank, suit: card.suit });
     }
 };
 
@@ -240,9 +240,9 @@ const BatchAnalyzer: React.FC<{ onExit: () => void }> = ({ onExit }) => {
 
     const handleCopy = () => {
         if (!sortedResults) return;
-        const header = "Mano\tValor Truco\tEvaluación IA";
+        const header = `${t('batchAnalyzer.header_hand')}\t${t('batchAnalyzer.header_truco_value')}\t${t('batchAnalyzer.header_ai_assessment')}`;
         const rows = sortedResults.map(result => {
-            const handText = result.hand.map(getSimpleCardName).join(', ');
+            const handText = result.hand.map(card => getSimpleCardName(card, t)).join(', ');
             const trucoValue = result.trucoValue;
             const aiAssessment = result.aiAssessment.toFixed(3);
             return `${handText}\t${trucoValue}\t${aiAssessment}`;
@@ -323,7 +323,7 @@ const BatchAnalyzer: React.FC<{ onExit: () => void }> = ({ onExit }) => {
                                                             {result.hand.map(card => <CardComponent key={`${card.rank}-${card.suit}`} card={card} size="small" />)}
                                                         </div>
                                                         <span className="text-gray-300 text-[11px] lg:text-xs pl-2">
-                                                            {result.hand.map(getSimpleCardName).join(', ')}
+                                                            {result.hand.map(card => getSimpleCardName(card, t)).join(', ')}
                                                         </span>
                                                     </div>
                                                 </td>
