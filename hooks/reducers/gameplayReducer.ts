@@ -1,8 +1,9 @@
 
-import { GameState, Action, ActionType, GamePhase, Case, OpponentModel, PlayerEnvidoActionEntry, PlayerPlayOrderEntry, RoundSummary, Card } from '../../types';
+
+import { GameState, Action, ActionType, GamePhase, Case, OpponentModel, PlayerEnvidoActionEntry, PlayerPlayOrderEntry, RoundSummary, Card, PointNote } from '../../types';
 import { createDeck, shuffleDeck, determineTrickWinner, determineRoundWinner, getCardName, hasFlor, getEnvidoValue, getCardHierarchy, calculateHandStrength, getCardCode, decodeCardFromCode } from '../../services/trucoLogic';
 import { initializeProbabilities, updateProbsOnPlay } from '../../services/ai/inferenceService';
-import { getRandomPhrase, TRICK_LOSE_PHRASES, TRICK_WIN_PHRASES } from '../../services/ai/phrases';
+import { getRandomPhrase, PHRASE_KEYS } from '../../services/ai/phrases';
 import { getCardCategory } from '../../services/cardAnalysis';
 
 function updateOpponentModelFromHistory(state: GameState): OpponentModel {
@@ -177,9 +178,9 @@ export function handleStartNewRound(state: GameState, action: { type: ActionType
           player: 0,
           ai: 0,
           by: {
-              flor: { player: 0, ai: 0, note: "No se cantó" },
-              envido: { player: 0, ai: 0, note: "No se cantó" },
-              truco: { player: 0, ai: 0, note: "" },
+              flor: { player: 0, ai: 0, note: { key: 'gameBoard.note_not_called' } },
+              envido: { player: 0, ai: 0, note: { key: 'gameBoard.note_not_called' } },
+              truco: { player: 0, ai: 0, note: { key: 'gameBoard.note_truco_simple' } },
           }
       },
       playerTrucoCall: null,
@@ -373,9 +374,9 @@ export function handlePlayCard(state: GameState, action: { type: ActionType.PLAY
     let trickOutcomeBlurb = null;
     if (Math.random() < 0.4) { // 40% chance to say something
         if (trickWinner === 'ai') {
-            trickOutcomeBlurb = { text: getRandomPhrase(TRICK_WIN_PHRASES), isVisible: true };
+            trickOutcomeBlurb = { text: getRandomPhrase(PHRASE_KEYS.TRICK_WIN), isVisible: true };
         } else if (trickWinner === 'player') {
-            trickOutcomeBlurb = { text: getRandomPhrase(TRICK_LOSE_PHRASES), isVisible: true };
+            trickOutcomeBlurb = { text: getRandomPhrase(PHRASE_KEYS.TRICK_LOSE), isVisible: true };
         }
     }
     
@@ -428,7 +429,7 @@ export function handlePlayCard(state: GameState, action: { type: ActionType.PLAY
       const currentRoundSummary = newRoundHistory.find(r => r.round === newState.round);
       if (currentRoundSummary) {
           if (!currentRoundSummary.pointsAwarded.by) {
-            currentRoundSummary.pointsAwarded.by = { flor: { player: 0, ai: 0, note: "" }, envido: { player: 0, ai: 0, note: "" }, truco: { player: 0, ai: 0, note: "" } };
+            currentRoundSummary.pointsAwarded.by = { flor: { player: 0, ai: 0, note: { key: 'gameBoard.note_not_called' } }, envido: { player: 0, ai: 0, note: { key: 'gameBoard.note_not_called' } }, truco: { player: 0, ai: 0, note: { key: 'gameBoard.note_truco_simple' } } };
           }
           currentRoundSummary.trickWinners = newTrickWinners;
           currentRoundSummary.roundWinner = roundWinner;
@@ -440,8 +441,8 @@ export function handlePlayCard(state: GameState, action: { type: ActionType.PLAY
               currentRoundSummary.pointsAwarded.ai += points;
               currentRoundSummary.pointsAwarded.by.truco.ai = points;
           }
-          const trucoLevels = ["Ronda simple", "Truco", "Retruco", "Vale Cuatro"];
-          currentRoundSummary.pointsAwarded.by.truco.note = trucoLevels[newState.trucoLevel];
+          const trucoLevelKeys = ["gameBoard.note_truco_simple", "gameBoard.note_truco_truco", "gameBoard.note_truco_retruco", "gameBoard.note_truco_vale_cuatro"];
+          currentRoundSummary.pointsAwarded.by.truco.note = { key: trucoLevelKeys[newState.trucoLevel] };
           currentRoundSummary.playerTricks = newPlayerTricks.map(c => c ? getCardCode(c) : null);
           currentRoundSummary.aiTricks = newAiTricks.map(c => c ? getCardCode(c) : null);
       }

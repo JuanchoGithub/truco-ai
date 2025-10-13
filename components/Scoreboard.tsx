@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useLocalization } from '../context/LocalizationContext';
 
 const TallyMarks: React.FC<{ score: number }> = ({ score }) => {
   const fullGroups = Math.floor(score / 5);
@@ -32,15 +33,16 @@ const TallyMarks: React.FC<{ score: number }> = ({ score }) => {
 
 
 const Scoreboard: React.FC<{ playerScore: number; aiScore: number; className?: string }> = ({ playerScore, aiScore, className = '' }) => {
+  const { t } = useLocalization();
   return (
     <div className={`bg-black/30 p-2 lg:p-4 rounded-lg shadow-xl border-2 border-yellow-700/30 w-40 lg:w-48 shadow-inner shadow-black/30 ${className}`}>
-      <h2 className="text-base lg:text-lg font-bold text-center mb-2 lg:mb-3 text-yellow-300 font-cinzel tracking-widest" style={{ textShadow: '2px 2px 3px rgba(0,0,0,0.7)' }}>Tantos</h2>
+      <h2 className="text-base lg:text-lg font-bold text-center mb-2 lg:mb-3 text-yellow-300 font-cinzel tracking-widest" style={{ textShadow: '2px 2px 3px rgba(0,0,0,0.7)' }}>{t('scoreboard.title')}</h2>
       <div className="flex justify-between items-center mb-1 lg:mb-2">
-        <span className="font-semibold text-amber-50 text-sm lg:text-base">Vos:</span>
+        <span className="font-semibold text-amber-50 text-sm lg:text-base">{t('common.you')}:</span>
         <TallyMarks score={playerScore} />
       </div>
       <div className="flex justify-between items-center">
-        <span className="font-semibold text-amber-50 text-sm lg:text-base">IA:</span>
+        <span className="font-semibold text-amber-50 text-sm lg:text-base">{t('common.ai')}:</span>
         <TallyMarks score={aiScore} />
       </div>
     </div>

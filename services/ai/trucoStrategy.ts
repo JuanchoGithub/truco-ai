@@ -1,6 +1,6 @@
 import { GameState, AiMove, ActionType, Card, Rank, Player, Action, AiTrucoContext } from '../../types';
 import { getCardHierarchy, getCardName, determineTrickWinner, determineRoundWinner, calculateHandStrength, getHandPercentile } from '../trucoLogic';
-import { getRandomPhrase, TRUCO_PHRASES, RETRUCO_PHRASES, VALE_CUATRO_PHRASES, QUIERO_PHRASES, NO_QUIERO_PHRASES } from './phrases';
+import { getRandomPhrase, PHRASE_KEYS } from './phrases';
 import { generateConstrainedOpponentHand } from './inferenceService';
 
 /**
@@ -190,7 +190,7 @@ export const getTrucoResponse = (state: GameState, gamePressure: number, reasoni
 
       if (trucoLevel < 3 && Math.random() < desperationBluffChance) {
           const escalateType = trucoLevel === 1 ? ActionType.CALL_RETRUCO : ActionType.CALL_VALE_CUATRO;
-          const phrases = trucoLevel === 1 ? RETRUCO_PHRASES : VALE_CUATRO_PHRASES;
+          const phrases = trucoLevel === 1 ? PHRASE_KEYS.RETRUCO : PHRASE_KEYS.VALE_CUATRO;
           const blurbText = getRandomPhrase(phrases);
           const trucoContext: AiTrucoContext = { strength: myStrength, isBluff: true };
           const decisionReason = `\nDecisión: No tengo nada que perder. Intentaré un farol de desesperación escalando a ${escalateType.replace('CALL_', '')}.`;
@@ -198,7 +198,7 @@ export const getTrucoResponse = (state: GameState, gamePressure: number, reasoni
       } else {
           // Otherwise, fold.
           const decisionReason = `\nDecisión: Las probabilidades son abrumadoramente negativas. Me retiro para minimizar pérdidas.`;
-          return { action: { type: ActionType.DECLINE, payload: { blurbText: getRandomPhrase(NO_QUIERO_PHRASES) } }, reasoning: [...reasoning, decisionReason].join('\n') };
+          return { action: { type: ActionType.DECLINE, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.NO_QUIERO) } }, reasoning: [...reasoning, decisionReason].join('\n') };
       }
   }
   
@@ -212,7 +212,7 @@ export const getTrucoResponse = (state: GameState, gamePressure: number, reasoni
       if (myPercentile >= 90) {
           if (Math.random() < 0.85 && trucoLevel < 3) { // 85% chance to escalate
             const escalateType = trucoLevel === 1 ? ActionType.CALL_RETRUCO : ActionType.CALL_VALE_CUATRO;
-            const phrases = trucoLevel === 1 ? RETRUCO_PHRASES : VALE_CUATRO_PHRASES;
+            const phrases = trucoLevel === 1 ? PHRASE_KEYS.RETRUCO : PHRASE_KEYS.VALE_CUATRO;
             const blurbText = getRandomPhrase(phrases);
             const trucoContext: AiTrucoContext = { strength: myStrength, isBluff: false };
             const decisionReason = `\nDecisión: Mi mano es de élite (percentil ${myPercentile}). Escalando agresivamente a ${escalateType.replace('CALL_', '')}.`;
@@ -224,14 +224,14 @@ export const getTrucoResponse = (state: GameState, gamePressure: number, reasoni
       if (myPercentile >= 50) {
           if (myPercentile >= 75 && Math.random() < 0.3 && trucoLevel < 3) { // 30% escalate chance for 75th+
              const escalateType = trucoLevel === 1 ? ActionType.CALL_RETRUCO : ActionType.CALL_VALE_CUATRO;
-             const phrases = trucoLevel === 1 ? RETRUCO_PHRASES : VALE_CUATRO_PHRASES;
+             const phrases = trucoLevel === 1 ? PHRASE_KEYS.RETRUCO : PHRASE_KEYS.VALE_CUATRO;
              const blurbText = getRandomPhrase(phrases);
              const trucoContext: AiTrucoContext = { strength: myStrength, isBluff: false };
              const decisionReason = `\nDecisión: Mi mano es fuerte (percentil ${myPercentile}). Probando una escalada.`;
              return { action: { type: escalateType, payload: { blurbText, trucoContext } }, reasoning: [...reasoning, decisionReason].join('\n') };
           }
           const decisionReason = `\nDecisión: Mi mano es sólida (percentil ${myPercentile}). Un truco temprano no me asusta. Aceptando.`;
-          return { action: { type: ActionType.ACCEPT, payload: { blurbText: getRandomPhrase(QUIERO_PHRASES) } }, reasoning: [...reasoning, decisionReason].join('\n') };
+          return { action: { type: ActionType.ACCEPT, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.QUIERO) } }, reasoning: [...reasoning, decisionReason].join('\n') };
       }
 
       // 3. Weaker Hands (< 50th percentile) -> Mostly fold, but with bluffing chances
@@ -239,19 +239,19 @@ export const getTrucoResponse = (state: GameState, gamePressure: number, reasoni
           const foldChance = 0.65 - (gamePressure * 0.3); // More desperate -> less likely to fold
           if (Math.random() < foldChance) {
               const decisionReason = `\nDecisión: Mi mano es débil (percentil ${myPercentile}). No vale la pena el riesgo contra un truco temprano. Rechazando.`;
-              return { action: { type: ActionType.DECLINE, payload: { blurbText: getRandomPhrase(NO_QUIERO_PHRASES) } }, reasoning: [...reasoning, decisionReason].join('\n') };
+              return { action: { type: ActionType.DECLINE, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.NO_QUIERO) } }, reasoning: [...reasoning, decisionReason].join('\n') };
           } else {
               // Remaining chance to do something else
               if (Math.random() < 0.15 && trucoLevel < 3) { // Small chance to bluff-escalate
                 const escalateType = trucoLevel === 1 ? ActionType.CALL_RETRUCO : ActionType.CALL_VALE_CUATRO;
-                const phrases = trucoLevel === 1 ? RETRUCO_PHRASES : VALE_CUATRO_PHRASES;
+                const phrases = trucoLevel === 1 ? PHRASE_KEYS.RETRUCO : PHRASE_KEYS.VALE_CUATRO;
                 const blurbText = getRandomPhrase(phrases);
                 const trucoContext: AiTrucoContext = { strength: myStrength, isBluff: true };
                 const decisionReason = `\nDecisión: Mi mano es débil, pero intentaré un farol agresivo para robar la mano. Escalando.`;
                 return { action: { type: escalateType, payload: { blurbText, trucoContext } }, reasoning: [...reasoning, decisionReason].join('\n') };
               }
               const decisionReason = `\nDecisión: Mi mano es débil, pero el oponente podría estar faroleando. Aceptando el desafío.`;
-              return { action: { type: ActionType.ACCEPT, payload: { blurbText: getRandomPhrase(QUIERO_PHRASES) } }, reasoning: [...reasoning, decisionReason].join('\n') };
+              return { action: { type: ActionType.ACCEPT, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.QUIERO) } }, reasoning: [...reasoning, decisionReason].join('\n') };
           }
       }
   }
@@ -291,7 +291,7 @@ export const getTrucoResponse = (state: GameState, gamePressure: number, reasoni
 
               if (Math.random() < escalationChance) {
                   const escalateType = trucoLevel === 1 ? ActionType.CALL_RETRUCO : ActionType.CALL_VALE_CUATRO;
-                  const phrases = trucoLevel === 1 ? RETRUCO_PHRASES : VALE_CUATRO_PHRASES;
+                  const phrases = trucoLevel === 1 ? PHRASE_KEYS.RETRUCO : PHRASE_KEYS.VALE_CUATRO;
                   const blurbText = getRandomPhrase(phrases);
                   const trucoContext: AiTrucoContext = { strength: myStrength, isBluff: false };
                   const decisionReason = `\nDecisión: Mi carta final es dominante y la inferencia es favorable. Escalando a ${escalateType.replace('CALL_', '')}.`;
@@ -331,13 +331,13 @@ export const getTrucoResponse = (state: GameState, gamePressure: number, reasoni
     const aggressive = Math.random() < 0.5;
     if (aggressive && trucoLevel < 3) {
       const escalateType = trucoLevel === 1 ? ActionType.CALL_RETRUCO : ActionType.CALL_VALE_CUATRO;
-      const phrases = trucoLevel === 1 ? RETRUCO_PHRASES : VALE_CUATRO_PHRASES;
+      const phrases = trucoLevel === 1 ? PHRASE_KEYS.RETRUCO : PHRASE_KEYS.VALE_CUATRO;
       const blurbText = getRandomPhrase(phrases);
       const trucoContext: AiTrucoContext = { strength: myStrength, isBluff: true };
       return { action: { type: escalateType, payload: { blurbText, trucoContext } }, reasoning: [...reasoning, 'Resultado: Subiendo la apuesta como farol.'].join('\n') };
     }
     const actionType = aggressive ? ActionType.ACCEPT : ActionType.DECLINE;
-    const blurbText = getRandomPhrase(aggressive ? QUIERO_PHRASES : NO_QUIERO_PHRASES);
+    const blurbText = getRandomPhrase(aggressive ? PHRASE_KEYS.QUIERO : PHRASE_KEYS.NO_QUIERO);
     return { action: { type: actionType, payload: { blurbText } }, 
              reasoning: [...reasoning, `Resultado: ${aggressive ? 'Aceptando.' : 'Rechazando.'}`].join('\n') };
   }
@@ -345,17 +345,17 @@ export const getTrucoResponse = (state: GameState, gamePressure: number, reasoni
 
   if (equity > 0.25 && trucoLevel < 3) {
     const escalateType = trucoLevel === 1 ? ActionType.CALL_RETRUCO : ActionType.CALL_VALE_CUATRO;
-    const phrases = trucoLevel === 1 ? RETRUCO_PHRASES : VALE_CUATRO_PHRASES;
+    const phrases = trucoLevel === 1 ? PHRASE_KEYS.RETRUCO : PHRASE_KEYS.VALE_CUATRO;
     const blurbText = getRandomPhrase(phrases);
     const decisionReason = `\nDecisión: La equidad es muy alta (${equity.toFixed(2)} > 0.25), indicando una fuerte ventaja. Escalando a ${escalateType.replace('CALL_', '')}.`;
     const trucoContext: AiTrucoContext = { strength: myStrength, isBluff: equity < 0 }; // Bluff if equity is negative but we escalate anyway
     return { action: { type: escalateType, payload: { blurbText, trucoContext } }, reasoning: [...reasoning, decisionReason].join('\n') };
   } else if (equity > -0.15) {
      const decisionReason = `\nDecisión: La equidad es aceptable (${equity.toFixed(2)} > -0.15). La recompensa potencial supera el riesgo. Aceptando.`;
-    return { action: { type: ActionType.ACCEPT, payload: { blurbText: getRandomPhrase(QUIERO_PHRASES) } }, reasoning: [...reasoning, decisionReason].join('\n') };
+    return { action: { type: ActionType.ACCEPT, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.QUIERO) } }, reasoning: [...reasoning, decisionReason].join('\n') };
   } else {
     const decisionReason = `\nDecisión: La equidad es muy baja (${equity.toFixed(2)}). El oponente probablemente tiene una mano más fuerte. Rechazando.`;
-    return { action: { type: ActionType.DECLINE, payload: { blurbText: getRandomPhrase(NO_QUIERO_PHRASES) } }, reasoning: [...reasoning, decisionReason].join('\n') };
+    return { action: { type: ActionType.DECLINE, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.NO_QUIERO) } }, reasoning: [...reasoning, decisionReason].join('\n') };
   }
 };
 
@@ -397,10 +397,10 @@ export const getTrucoCall = (state: GameState, gamePressure: number): AiMove | n
       }
 
       if (canWinForSure) {
-          let actionType: ActionType; let phrases: string[]; let callName: string;
-          if (trucoLevel === 0) { actionType = ActionType.CALL_TRUCO; phrases = TRUCO_PHRASES; callName = 'TRUCO';
-          } else if (trucoLevel === 1) { actionType = ActionType.CALL_RETRUCO; phrases = RETRUCO_PHRASES; callName = 'RETRUCO';
-          } else { actionType = ActionType.CALL_VALE_CUATRO; phrases = VALE_CUATRO_PHRASES; callName = 'VALE CUATRO'; }
+          let actionType: ActionType; let phrases: string; let callName: string;
+          if (trucoLevel === 0) { actionType = ActionType.CALL_TRUCO; phrases = PHRASE_KEYS.TRUCO; callName = 'TRUCO';
+          } else if (trucoLevel === 1) { actionType = ActionType.CALL_RETRUCO; phrases = PHRASE_KEYS.RETRUCO; callName = 'RETRUCO';
+          } else { actionType = ActionType.CALL_VALE_CUATRO; phrases = PHRASE_KEYS.VALE_CUATRO; callName = 'VALE CUATRO'; }
 
           const blurbText = getRandomPhrase(phrases);
           const trucoContext: AiTrucoContext = { strength: 1.0, isBluff: false }; // Strength is effectively 100%
@@ -443,10 +443,10 @@ export const getTrucoCall = (state: GameState, gamePressure: number): AiMove | n
         }
 
         if (winIsCertain && Math.random() < 0.85) {
-            let actionType: ActionType, phrases: string[];
-            if (trucoLevel === 0) { actionType = ActionType.CALL_TRUCO; phrases = TRUCO_PHRASES; } 
-            else if (trucoLevel === 1) { actionType = ActionType.CALL_RETRUCO; phrases = RETRUCO_PHRASES; } 
-            else { actionType = ActionType.CALL_VALE_CUATRO; phrases = VALE_CUATRO_PHRASES; }
+            let actionType: ActionType, phrases: string;
+            if (trucoLevel === 0) { actionType = ActionType.CALL_TRUCO; phrases = PHRASE_KEYS.TRUCO; } 
+            else if (trucoLevel === 1) { actionType = ActionType.CALL_RETRUCO; phrases = PHRASE_KEYS.RETRUCO; } 
+            else { actionType = ActionType.CALL_VALE_CUATRO; phrases = PHRASE_KEYS.VALE_CUATRO; }
             
             const blurbText = getRandomPhrase(phrases);
             const trucoContext: AiTrucoContext = { strength: 1.0, isBluff: false };
@@ -485,7 +485,7 @@ export const getTrucoCall = (state: GameState, gamePressure: number): AiMove | n
 
   if (currentTrick === 1 && trickWinners[0] === 'ai') {
     if (myStrength >= 0.6) {
-      const blurbText = getRandomPhrase(TRUCO_PHRASES);
+      const blurbText = getRandomPhrase(PHRASE_KEYS.TRUCO);
       const trucoContext: AiTrucoContext = { strength: myStrength, isBluff: false };
       return { action: { type: ActionType.CALL_TRUCO, payload: { blurbText, trucoContext } }, reasoning: [...reasonPrefix, `\nDecisión: Gané la mano 1 y la fuerza de mi mano es alta. Cantando TRUCO.`].join('\n') };
     }
@@ -495,7 +495,7 @@ export const getTrucoCall = (state: GameState, gamePressure: number): AiMove | n
   if (currentTrick === 1 && trickWinners[0] === 'tie' && myStrength < 0.5 && Math.random() < 0.2) {
       const ev = (foldRate * 1) + (1 - foldRate) * (myStrength * 2 - (1 - myStrength) * 2);
       if (ev > 0) {
-        const blurbText = getRandomPhrase(TRUCO_PHRASES);
+        const blurbText = getRandomPhrase(PHRASE_KEYS.TRUCO);
         const trucoContext: AiTrucoContext = { strength: myStrength, isBluff: true };
         return { action: { type: ActionType.CALL_TRUCO, payload: { blurbText, trucoContext } }, reasoning: [...reasonPrefix, `\nDecisión: Parda en la mano 1 y mano débil. El EV de un farol (${ev.toFixed(2)}) es positivo. Farolearé con TRUCO.`].join('\n') };
       }
@@ -514,7 +514,7 @@ export const getTrucoCall = (state: GameState, gamePressure: number): AiMove | n
   }
 
   if (decision && trucoContext) {
-    const blurbText = getRandomPhrase(TRUCO_PHRASES);
+    const blurbText = getRandomPhrase(PHRASE_KEYS.TRUCO);
     const action: Action = { type: ActionType.CALL_TRUCO, payload: { blurbText, trucoContext } };
     return { action, reasoning: [...reasonPrefix, `\n${decision}`].join('\n') };
   }

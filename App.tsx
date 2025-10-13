@@ -16,7 +16,7 @@ import CentralMessage from './components/CentralMessage';
 import { saveStateToStorage, loadStateFromStorage, clearStateFromStorage } from './services/storageService';
 import DataModal from './components/DataModal';
 import { getCardName } from './services/trucoLogic';
-import { getRandomPhrase, FLOR_PHRASES } from './services/ai/phrases';
+// Fix: Removed unused import causing an error.
 import MainMenu from './components/MainMenu';
 import Tutorial from './components/Tutorial';
 import Manual from './components/Manual';
@@ -26,10 +26,12 @@ import { speechService } from './services/speechService';
 import Simulation from './components/Simulation';
 import GameMenu from './components/GameMenu';
 import SoundHint from './components/SoundHint';
+import { useLocalization } from './context/LocalizationContext';
 
 type GameMode = 'menu' | 'playing' | 'tutorial' | 'playing-with-help' | 'manual' | 'simulation';
 
 const App: React.FC = () => {
+  const { t } = useLocalization();
   const [state, dispatch] = useReducer(useGameReducer, initialState);
   const [localMessage, setLocalMessage] = useState<string | null>(null);
   const [isMessageVisible, setIsMessageVisible] = useState(false);
@@ -399,7 +401,9 @@ const App: React.FC = () => {
             <div className="flex-shrink-0 flex flex-col items-center justify-start pt-1 lg:pt-2">
                 <div className="text-center">
                     <h1 className="text-3xl lg:text-4xl font-cinzel font-bold tracking-wider text-yellow-300" style={{ textShadow: '3px 3px 5px rgba(0,0,0,0.8)' }}>TRUCO</h1>
-                    <p className="text-xs lg:text-sm text-gray-200 tracking-widest">Ronda {state.round} | Mano: {state.mano === 'player' ? 'Vos' : 'IA'}</p>
+                    <p className="text-xs lg:text-sm text-gray-200 tracking-widest">
+                        {t('game.round_info', { round: state.round, player: state.mano === 'player' ? t('common.you') : t('common.ai') })}
+                    </p>
                 </div>
                 <div className="flex items-center">
                     <PlayerHand 
@@ -444,11 +448,11 @@ const App: React.FC = () => {
             <div className="flex-shrink-0 w-full z-20">
                 <div className="bg-black/40 border-2 border-yellow-900/50 shadow-lg rounded-lg p-2 flex justify-between lg:justify-center items-center gap-4">
                     <LogButton onClick={() => dispatch({ type: ActionType.TOGGLE_GAME_LOG_EXPAND })} className="lg:hidden">
-                      Registro
+                      {t('logPanel.game_log_button')}
                     </LogButton>
                     <ActionBar dispatch={dispatch} gameState={state} onPlayerAction={handlePlayerAction} />
                     <LogButton onClick={() => dispatch({ type: ActionType.TOGGLE_AI_LOG_EXPAND })} className="lg:hidden">
-                      Lógica IA
+                      {t('logPanel.ai_log_button')}
                     </LogButton>
                 </div>
             </div>
@@ -472,7 +476,7 @@ const App: React.FC = () => {
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
                 </svg>
-                <span>Lógica IA</span>
+                <span>{t('logPanel.ai_log_button')}</span>
               </button>
             </div>
           )}

@@ -1,7 +1,8 @@
 
+
 import { GameState, AiMove, ActionType } from '../../types';
 import { getEnvidoDetails, getFlorValue, hasFlor } from '../trucoLogic';
-import { ENVIDO_PHRASES, REAL_ENVIDO_PHRASES, FALTA_ENVIDO_PHRASES, FLOR_PHRASES, getRandomPhrase, QUIERO_PHRASES, NO_QUIERO_PHRASES, CONTRAFLOR_PHRASES, CONTRAFLOR_QUIERO_PHRASES, CONTRAFLOR_ACHICO_FRASES } from './phrases';
+import { getRandomPhrase, PHRASE_KEYS } from './phrases';
 
 // Helper for getEnvidoResponse: Estimates opponent's strength based on their call.
 const estimateOpponentStrengthOnCall = (state: GameState): number => {
@@ -47,17 +48,17 @@ export const getEnvidoResponse = (state: GameState, gamePressure: number, reason
     if (advantage > escalateAdvantageThreshold) {
         if (aiPointsToWin <= envidoPointsOnOffer + 3 && myEnvido >= 30) {
              reasoning.push(`\nDecisión: Tengo una ventaja enorme y estoy cerca de ganar. Voy con todo con FALTA ENVIDO.`);
-             const blurbText = getRandomPhrase(FALTA_ENVIDO_PHRASES);
+             const blurbText = getRandomPhrase(PHRASE_KEYS.FALTA_ENVIDO);
              return { action: { type: ActionType.CALL_FALTA_ENVIDO, payload: { blurbText } }, reasoning: reasoning.join('\n') };
         }
         if (!hasRealEnvidoBeenCalledThisSequence) {
              reasoning.push(`\nDecisión: Mi mano es mucho más fuerte. Subiré la apuesta con REAL ENVIDO.`);
-             const blurbText = getRandomPhrase(REAL_ENVIDO_PHRASES);
+             const blurbText = getRandomPhrase(PHRASE_KEYS.REAL_ENVIDO);
              return { action: { type: ActionType.CALL_REAL_ENVIDO, payload: { blurbText } }, reasoning: reasoning.join('\n') };
         }
         if (envidoPointsOnOffer === 2 && myEnvido >= 28) { // Only escalate with Envido-Envido if hand is strong
             reasoning.push(`\nDecisión: Mi mano es fuerte, pero no quiero arriesgar un Real Envido. Responderé con ENVIDO.`);
-            const blurbText = getRandomPhrase(ENVIDO_PHRASES);
+            const blurbText = getRandomPhrase(PHRASE_KEYS.ENVIDO);
             return { action: { type: ActionType.CALL_ENVIDO, payload: { blurbText } }, reasoning: reasoning.join('\n') };
         }
     } 
@@ -65,18 +66,18 @@ export const getEnvidoResponse = (state: GameState, gamePressure: number, reason
     // Positive or slightly negative advantage -> Accept
     if (advantage > acceptAdvantageThreshold) {
         reasoning.push(`\nDecisión: Las probabilidades están a mi favor, o son muy parejas. Voy a ACEPTAR.`);
-        return { action: { type: ActionType.ACCEPT, payload: { blurbText: getRandomPhrase(QUIERO_PHRASES) } }, reasoning: reasoning.join('\n') };
+        return { action: { type: ActionType.ACCEPT, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.QUIERO) } }, reasoning: reasoning.join('\n') };
     }
 
     // Low advantage -> Mostly Decline
     reasoning.push(`Mi mano parece más débil de lo que el jugador representa.`);
     if (myEnvido >= 23 && randomFactor < heroCallChance) {
          reasoning.push(`\nDecisión: Podría ser un farol. Tomaré el riesgo y voy a ACEPTAR (Prob. Hero Call: ${(heroCallChance * 100).toFixed(0)}%).`);
-         return { action: { type: ActionType.ACCEPT, payload: { blurbText: getRandomPhrase(QUIERO_PHRASES) } }, reasoning: reasoning.join('\n') };
+         return { action: { type: ActionType.ACCEPT, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.QUIERO) } }, reasoning: reasoning.join('\n') };
     }
     
     reasoning.push(`\nDecisión: El riesgo es muy alto. Voy a RECHAZAR.`);
-    return { action: { type: ActionType.DECLINE, payload: { blurbText: getRandomPhrase(NO_QUIERO_PHRASES) } }, reasoning: reasoning.join('\n') };
+    return { action: { type: ActionType.DECLINE, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.NO_QUIERO) } }, reasoning: reasoning.join('\n') };
 }
 
 export const getEnvidoCall = (state: GameState, gamePressure: number): AiMove | null => {
@@ -108,11 +109,11 @@ export const getEnvidoCall = (state: GameState, gamePressure: number): AiMove | 
     // High strength hand -> Escalate
     if (myEnvido >= 30) {
         if (aiPointsToWin <= 5 && randomFactor < 0.75) {
-            const blurbText = getRandomPhrase(FALTA_ENVIDO_PHRASES);
+            const blurbText = getRandomPhrase(PHRASE_KEYS.FALTA_ENVIDO);
             const reasoning = `\nDecisión: Con una mano poderosa (${myEnvido.toFixed(1)}) y la victoria a la vista, canto ¡FALTA ENVIDO!`;
             return { action: { type: ActionType.CALL_FALTA_ENVIDO, payload: { blurbText } }, reasoning: [...reasonPrefix, reasoning].join('\n') };
         } else {
-            const blurbText = getRandomPhrase(REAL_ENVIDO_PHRASES);
+            const blurbText = getRandomPhrase(PHRASE_KEYS.REAL_ENVIDO);
             const reasoning = `\nDecisión: Con ${myEnvido.toFixed(1)} puntos, tengo una mano dominante. Cantaré REAL ENVIDO para maximizar el valor.`;
             return { action: { type: ActionType.CALL_REAL_ENVIDO, payload: { blurbText } }, reasoning: [...reasonPrefix, reasoning].join('\n') };
         }
@@ -120,11 +121,11 @@ export const getEnvidoCall = (state: GameState, gamePressure: number): AiMove | 
     // Strong hand -> Standard call
     else if (isObjectivelyStrong || myEnvido >= dynamicCallThreshold) {
         if (playerPointsToWin <= 3 && myEnvido >= 28) {
-             const blurbText = getRandomPhrase(FALTA_ENVIDO_PHRASES);
+             const blurbText = getRandomPhrase(PHRASE_KEYS.FALTA_ENVIDO);
              const reasoning = `\nDecisión: El jugador está cerca de ganar. Un Falta Envido es una jugada defensiva fuerte con mi mano (${myEnvido.toFixed(1)}).`;
              return { action: { type: ActionType.CALL_FALTA_ENVIDO, payload: { blurbText } }, reasoning: [...reasonPrefix, reasoning].join('\n') };
         } else {
-            const blurbText = getRandomPhrase(ENVIDO_PHRASES);
+            const blurbText = getRandomPhrase(PHRASE_KEYS.ENVIDO);
             const reasoning = `\nDecisión: Mi envido de ${myEnvido.toFixed(1)} es fuerte y ${isObjectivelyStrong ? 'es objetivamente bueno.' : 'supera el umbral dinámico.'} Inciaré con ENVIDO.`;
             return { action: { type: ActionType.CALL_ENVIDO, payload: { blurbText } }, reasoning: [...reasonPrefix, reasoning].join('\n') };
         }
@@ -133,7 +134,7 @@ export const getEnvidoCall = (state: GameState, gamePressure: number): AiMove | 
     else if (myEnvido >= 23) {
         const marginalCallChance = 0.15;
         if (randomFactor < marginalCallChance) {
-            const blurbText = getRandomPhrase(ENVIDO_PHRASES);
+            const blurbText = getRandomPhrase(PHRASE_KEYS.ENVIDO);
             const reasoning = `\nDecisión: Mi mano es mediocre (${myEnvido.toFixed(1)}), pero vale la pena intentarlo. Cantando ENVIDO.`;
             return { action: { type: ActionType.CALL_ENVIDO, payload: { blurbText } }, reasoning: [...reasonPrefix, reasoning].join('\n') };
         }
@@ -145,7 +146,7 @@ export const getEnvidoCall = (state: GameState, gamePressure: number): AiMove | 
         const adjustedBluffChance = Math.min(0.4, baseBluffChance + (opponentContextualBehavior.foldRate * 0.3) + (gamePressure > 0 ? gamePressure * 0.15 : 0));
         
         if (randomFactor < adjustedBluffChance) {
-            const blurbText = getRandomPhrase(ENVIDO_PHRASES);
+            const blurbText = getRandomPhrase(PHRASE_KEYS.ENVIDO);
             reasonPrefix.push(`Mi probabilidad de farol ajustada es ${(adjustedBluffChance * 100).toFixed(0)}%.`);
             const reasoning = `\nDecisión: Mi mano es débil (${myEnvido.toFixed(1)}), pero siento una oportunidad. Farolearé y cantaré ENVIDO.`;
             return { action: { type: ActionType.CALL_ENVIDO, payload: { blurbText } }, reasoning: [...reasonPrefix, reasoning].join('\n') };
@@ -166,7 +167,7 @@ export const getFlorResponse = (state: GameState, reasoning: string[]): AiMove |
             // Simple strategy: if my Flor is very good, I escalate.
             if (myFlor >= 30) {
                  const decisionReason = `\nDecisión: Mi Flor es muy fuerte. Escalaré con ¡CONTRAFLOR AL RESTO!`;
-                 return { action: { type: ActionType.CALL_CONTRAFLOR, payload: { blurbText: getRandomPhrase(CONTRAFLOR_PHRASES) } }, reasoning: [...reasoning, decisionReason].join('\n') };
+                 return { action: { type: ActionType.CALL_CONTRAFLOR, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.CONTRAFLOR) } }, reasoning: [...reasoning, decisionReason].join('\n') };
             } else {
                  const decisionReason = `\nDecisión: Mi Flor no es lo suficientemente fuerte como para arriesgar una Contraflor. Aceptaré los puntos.`;
                  return { action: { type: ActionType.ACKNOWLEDGE_FLOR, payload: { blurbText: "Las mías son peores." } }, reasoning: [...reasoning, decisionReason].join('\n') };
@@ -198,10 +199,10 @@ export const getFlorResponse = (state: GameState, reasoning: string[]): AiMove |
 
         if (myFlor >= acceptanceThreshold) {
             const decisionReason = `\nDecisión: Mi Flor de ${myFlor} cumple con mi umbral de ${acceptanceThreshold}. Acepto el desafío. ¡CON FLOR QUIERO!`;
-            return { action: { type: ActionType.ACCEPT_CONTRAFLOR, payload: { blurbText: getRandomPhrase(CONTRAFLOR_QUIERO_PHRASES) } }, reasoning: [...reasoning, decisionReason].join('\n') };
+            return { action: { type: ActionType.ACCEPT_CONTRAFLOR, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.CONTRAFLOR_QUIERO) } }, reasoning: [...reasoning, decisionReason].join('\n') };
         } else {
             const decisionReason = `\nDecisión: El jugador debe tener una Flor increíble para cantar Contraflor. Mi mano (${myFlor}) no es suficiente para arriesgarme dadas las circunstancias. CON FLOR ME ACHICO.`;
-            return { action: { type: ActionType.DECLINE_CONTRAFLOR, payload: { blurbText: getRandomPhrase(CONTRAFLOR_ACHICO_FRASES) } }, reasoning: [...reasoning, decisionReason].join('\n') };
+            return { action: { type: ActionType.DECLINE_CONTRAFLOR, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.CONTRAFLOR_NO_QUIERO) } }, reasoning: [...reasoning, decisionReason].join('\n') };
         }
     }
 
@@ -226,7 +227,7 @@ export const getFlorCallOrEnvidoCall = (state: GameState, gamePressure: number):
         
         // Default to calling Flor
         const reasoning = `\nDecisión: Mi Flor de ${myFlor} es lo suficientemente buena. Cantaré ¡FLOR!`;
-        const blurbText = getRandomPhrase(FLOR_PHRASES);
+        const blurbText = getRandomPhrase(PHRASE_KEYS.FLOR);
         return { action: { type: ActionType.DECLARE_FLOR, payload: { blurbText, player: 'ai' } }, reasoning: [...reasonPrefix, reasoning].join('\n') };
     } else {
         // No Flor, proceed with normal Envido logic

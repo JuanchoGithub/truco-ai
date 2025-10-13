@@ -1,8 +1,9 @@
 
-import { GameState, ActionType, Player, GamePhase, Case, PlayerEnvidoActionEntry } from '../../types';
+import { GameState, ActionType, Player, GamePhase, Case, PlayerEnvidoActionEntry, PointNote } from '../../types';
 import { getEnvidoValue, getFlorValue, getCardCode } from '../../services/trucoLogic';
 import { updateProbsOnEnvido } from '../../services/ai/inferenceService';
-import { getRandomPhrase, ENVIDO_LOSE_PHRASES, ENVIDO_WIN_PHRASES, POST_ENVIDO_TRUCO_REMINDER_PHRASES } from '../../services/ai/phrases';
+// Fix: Replaced direct phrase array imports with the PHRASE_KEYS object to match the refactored phrases service.
+import { getRandomPhrase, PHRASE_KEYS } from '../../services/ai/phrases';
 import { handleStartNewRound } from './gameplayReducer';
 
 function updateRoundHistoryWithCall(state: GameState, callText: string): GameState {
@@ -53,13 +54,16 @@ export function handleResolveEnvidoAccept(state: GameState): GameState {
     
     let finalBlurb;
     if (state.pendingTrucoCaller === 'ai') {
-        const reminderPhrase = getRandomPhrase(POST_ENVIDO_TRUCO_REMINDER_PHRASES);
+        // Fix: Use PHRASE_KEYS to get the correct phrase key.
+        const reminderPhrase = getRandomPhrase(PHRASE_KEYS.POST_ENVIDO_TRUCO_REMINDER);
         finalBlurb = { text: reminderPhrase, isVisible: true };
     } else {
         if (winner === 'ai') {
-          finalBlurb = { text: getRandomPhrase(ENVIDO_WIN_PHRASES), isVisible: true };
+          // Fix: Use PHRASE_KEYS to get the correct phrase key.
+          finalBlurb = { text: getRandomPhrase(PHRASE_KEYS.ENVIDO_WIN), isVisible: true };
         } else {
-          finalBlurb = { text: getRandomPhrase(ENVIDO_LOSE_PHRASES), isVisible: true };
+          // Fix: Use PHRASE_KEYS to get the correct phrase key.
+          finalBlurb = { text: getRandomPhrase(PHRASE_KEYS.ENVIDO_LOSE), isVisible: true };
         }
     }
 
@@ -78,7 +82,7 @@ export function handleResolveEnvidoAccept(state: GameState): GameState {
     const currentRoundSummary = newRoundHistory.find(r => r.round === state.round);
     if (currentRoundSummary) {
         if (!currentRoundSummary.pointsAwarded.by) { // For old saved games
-            currentRoundSummary.pointsAwarded.by = { flor: { player: 0, ai: 0, note: "" }, envido: { player: 0, ai: 0, note: "" }, truco: { player: 0, ai: 0, note: "" } };
+            currentRoundSummary.pointsAwarded.by = { flor: { player: 0, ai: 0, note: { key: 'gameBoard.note_not_called' } }, envido: { player: 0, ai: 0, note: { key: 'gameBoard.note_not_called' } }, truco: { player: 0, ai: 0, note: { key: 'gameBoard.note_truco_simple' } } };
         }
         if (winner === 'player') {
             currentRoundSummary.pointsAwarded.player += state.envidoPointsOnOffer;
@@ -87,7 +91,7 @@ export function handleResolveEnvidoAccept(state: GameState): GameState {
             currentRoundSummary.pointsAwarded.ai += state.envidoPointsOnOffer;
             currentRoundSummary.pointsAwarded.by.envido.ai = state.envidoPointsOnOffer;
         }
-        currentRoundSummary.pointsAwarded.by.envido.note = "Aceptado";
+        currentRoundSummary.pointsAwarded.by.envido.note = { key: 'gameBoard.note_envido_accepted' };
     }
 
     // Check for a game winner immediately after awarding points
@@ -214,7 +218,8 @@ export function handleResolveEnvidoDecline(state: GameState): GameState {
 
     let finalBlurb = null;
     if (state.pendingTrucoCaller === 'ai') {
-        const reminderPhrase = getRandomPhrase(POST_ENVIDO_TRUCO_REMINDER_PHRASES);
+        // Fix: Use PHRASE_KEYS to get the correct phrase key.
+        const reminderPhrase = getRandomPhrase(PHRASE_KEYS.POST_ENVIDO_TRUCO_REMINDER);
         finalBlurb = { text: reminderPhrase, isVisible: true };
     }
     
@@ -228,9 +233,9 @@ export function handleResolveEnvidoDecline(state: GameState): GameState {
     const currentRoundSummary = newRoundHistory.find(r => r.round === state.round);
     if (currentRoundSummary) {
         if (!currentRoundSummary.pointsAwarded.by) {
-            currentRoundSummary.pointsAwarded.by = { flor: { player: 0, ai: 0, note: "" }, envido: { player: 0, ai: 0, note: "" }, truco: { player: 0, ai: 0, note: "" } };
+            currentRoundSummary.pointsAwarded.by = { flor: { player: 0, ai: 0, note: { key: 'gameBoard.note_not_called' } }, envido: { player: 0, ai: 0, note: { key: 'gameBoard.note_not_called' } }, truco: { player: 0, ai: 0, note: { key: 'gameBoard.note_truco_simple' } } };
         }
-        const declinerName = state.currentTurn === 'player' ? 'Jugador' : 'IA';
+        const declinerRole = state.currentTurn!;
 
         if (caller === 'player') {
             currentRoundSummary.pointsAwarded.player += points;
@@ -240,7 +245,10 @@ export function handleResolveEnvidoDecline(state: GameState): GameState {
             currentRoundSummary.pointsAwarded.ai += points;
             currentRoundSummary.pointsAwarded.by.envido.ai = points;
         }
-        currentRoundSummary.pointsAwarded.by.envido.note = `${declinerName} no quiso`;
+        currentRoundSummary.pointsAwarded.by.envido.note = {
+            key: "gameBoard.note_declined",
+            options: { decliner: declinerRole }
+        };
     }
 
     // Check for a game winner immediately after awarding points
@@ -329,10 +337,10 @@ export function handleResolveTrucoDecline(state: GameState): GameState {
     const currentRoundSummary = newRoundHistory.find(r => r.round === state.round);
     if (currentRoundSummary) {
         if (!currentRoundSummary.pointsAwarded.by) {
-            currentRoundSummary.pointsAwarded.by = { flor: { player: 0, ai: 0, note: "" }, envido: { player: 0, ai: 0, note: "" }, truco: { player: 0, ai: 0, note: "" } };
+            currentRoundSummary.pointsAwarded.by = { flor: { player: 0, ai: 0, note: { key: 'gameBoard.note_not_called' } }, envido: { player: 0, ai: 0, note: { key: 'gameBoard.note_not_called' } }, truco: { player: 0, ai: 0, note: { key: 'gameBoard.note_truco_simple' } } };
         }
         currentRoundSummary.roundWinner = caller;
-        const declinerName = state.currentTurn === 'player' ? 'Jugador' : 'IA';
+        const declinerRole = state.currentTurn!;
         if (caller === 'player') {
             currentRoundSummary.pointsAwarded.player += points;
             currentRoundSummary.pointsAwarded.by.truco.player = points;
@@ -341,7 +349,10 @@ export function handleResolveTrucoDecline(state: GameState): GameState {
             currentRoundSummary.pointsAwarded.ai += points;
             currentRoundSummary.pointsAwarded.by.truco.ai = points;
         }
-        currentRoundSummary.pointsAwarded.by.truco.note = `${declinerName} no quiso`;
+        currentRoundSummary.pointsAwarded.by.truco.note = {
+            key: "gameBoard.note_declined",
+            options: { decliner: declinerRole }
+        };
         currentRoundSummary.playerTricks = state.playerTricks.map(c => c ? getCardCode(c) : null);
         currentRoundSummary.aiTricks = state.aiTricks.map(c => c ? getCardCode(c) : null);
     }
@@ -455,7 +466,7 @@ export function handleAcknowledgeFlor(state: GameState, action: { type: ActionTy
     const currentRoundSummary = newRoundHistory.find(r => r.round === state.round);
     if (currentRoundSummary) {
         if (!currentRoundSummary.pointsAwarded.by) {
-            currentRoundSummary.pointsAwarded.by = { flor: { player: 0, ai: 0, note: "" }, envido: { player: 0, ai: 0, note: "" }, truco: { player: 0, ai: 0, note: "" } };
+            currentRoundSummary.pointsAwarded.by = { flor: { player: 0, ai: 0, note: { key: 'gameBoard.note_not_called' } }, envido: { player: 0, ai: 0, note: { key: 'gameBoard.note_not_called' } }, truco: { player: 0, ai: 0, note: { key: 'gameBoard.note_truco_simple' } } };
         }
         if (florCaller === 'player') {
             currentRoundSummary.pointsAwarded.player += points;
@@ -464,7 +475,7 @@ export function handleAcknowledgeFlor(state: GameState, action: { type: ActionTy
             currentRoundSummary.pointsAwarded.ai += points;
             currentRoundSummary.pointsAwarded.by.flor.ai = points;
         }
-        currentRoundSummary.pointsAwarded.by.flor.note = "Aceptada";
+        currentRoundSummary.pointsAwarded.by.flor.note = { key: 'gameBoard.note_flor_accepted' };
     }
 
     if (newPlayerScore >= 15 || newAiScore >= 15) {
@@ -560,7 +571,7 @@ export function handleResolveFlorShowdown(state: GameState): GameState {
     const currentRoundSummary = newRoundHistory.find(r => r.round === state.round);
     if (currentRoundSummary) {
         if (!currentRoundSummary.pointsAwarded.by) {
-            currentRoundSummary.pointsAwarded.by = { flor: { player: 0, ai: 0, note: "" }, envido: { player: 0, ai: 0, note: "" }, truco: { player: 0, ai: 0, note: "" } };
+            currentRoundSummary.pointsAwarded.by = { flor: { player: 0, ai: 0, note: { key: 'gameBoard.note_not_called' } }, envido: { player: 0, ai: 0, note: { key: 'gameBoard.note_not_called' } }, truco: { player: 0, ai: 0, note: { key: 'gameBoard.note_truco_simple' } } };
         }
         if (winner === 'player') {
             currentRoundSummary.pointsAwarded.player += points;
@@ -569,7 +580,7 @@ export function handleResolveFlorShowdown(state: GameState): GameState {
             currentRoundSummary.pointsAwarded.ai += points;
             currentRoundSummary.pointsAwarded.by.flor.ai = points;
         }
-        currentRoundSummary.pointsAwarded.by.flor.note = "Contraflor aceptada";
+        currentRoundSummary.pointsAwarded.by.flor.note = { key: 'gameBoard.note_contraflor_accepted' };
     }
 
     if (newPlayerScore >= 15 || newAiScore >= 15) {
@@ -626,9 +637,9 @@ export function handleResolveContraflorDecline(state: GameState): GameState {
     const currentRoundSummary = newRoundHistory.find(r => r.round === state.round);
     if (currentRoundSummary) {
         if (!currentRoundSummary.pointsAwarded.by) {
-            currentRoundSummary.pointsAwarded.by = { flor: { player: 0, ai: 0, note: "" }, envido: { player: 0, ai: 0, note: "" }, truco: { player: 0, ai: 0, note: "" } };
+            currentRoundSummary.pointsAwarded.by = { flor: { player: 0, ai: 0, note: { key: 'gameBoard.note_not_called' } }, envido: { player: 0, ai: 0, note: { key: 'gameBoard.note_not_called' } }, truco: { player: 0, ai: 0, note: { key: 'gameBoard.note_truco_simple' } } };
         }
-        const declinerName = state.currentTurn === 'player' ? 'Jugador' : 'IA';
+        const declinerRole = state.currentTurn!;
         if (winner === 'player') {
             currentRoundSummary.pointsAwarded.player += points;
             currentRoundSummary.pointsAwarded.by.flor.player = points;
@@ -636,7 +647,10 @@ export function handleResolveContraflorDecline(state: GameState): GameState {
             currentRoundSummary.pointsAwarded.ai += points;
             currentRoundSummary.pointsAwarded.by.flor.ai = points;
         }
-        currentRoundSummary.pointsAwarded.by.flor.note = `Contraflor (${declinerName} no quiso)`;
+        currentRoundSummary.pointsAwarded.by.flor.note = {
+            key: 'gameBoard.note_contraflor_declined',
+            options: { decliner: declinerRole }
+        };
     }
 
     if (newPlayerScore >= 15 || newAiScore >= 15) {

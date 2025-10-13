@@ -1,5 +1,5 @@
 {
   "name": "Truco AI",
-  "description": "A single-player web application for the Argentinian card game 'Truco'. Play against a strategic AI opponent powered by the Google Gemini API.",
+  "description": "A single-player web application for the Argentinian card game 'Truco'. Play against a strategic AI opponent powered by a pretty complex AI that makes it really fun to play.",
   "requestFramePermissions": []
 }

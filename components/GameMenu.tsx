@@ -1,5 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
+import { useLocalization } from '../context/LocalizationContext';
 
 interface GameMenuProps {
     gameMode: 'playing' | 'playing-with-help';
@@ -20,6 +21,7 @@ const GameMenu: React.FC<GameMenuProps> = ({
     onShowData,
     onGoToMainMenu,
 }) => {
+    const { t } = useLocalization();
     const [isOpen, setIsOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
 
@@ -37,8 +39,8 @@ const GameMenu: React.FC<GameMenuProps> = ({
     }, []);
 
     const soundLabel = gameMode === 'playing-with-help' 
-        ? 'Escuchar consejos de la IA' 
-        : 'Escuchar versos de la IA';
+        ? t('gameMenu.sound_on_advice')
+        : t('gameMenu.sound_on_verses');
 
     const MenuItem: React.FC<{ onClick: () => void; children: React.ReactNode; isActive?: boolean }> = ({ onClick, children, isActive }) => (
         <button
@@ -66,7 +68,7 @@ const GameMenu: React.FC<GameMenuProps> = ({
                     aria-expanded={isOpen}
                     aria-haspopup="true"
                 >
-                    MENÚ
+                    {t('gameMenu.menu')}
                      <svg className={`-mr-1 h-5 w-5 transform transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                         <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                     </svg>
@@ -82,9 +84,9 @@ const GameMenu: React.FC<GameMenuProps> = ({
                     style={{ animation: 'fadeIn 0.15s ease-out forwards' }}
                 >
                     <div className="py-1" role="none">
-                        <MenuItem onClick={onGoToMainMenu}>Menu Principal</MenuItem>
-                        <MenuItem onClick={onShowData}>Ver Datos</MenuItem>
-                        <MenuItem onClick={onToggleDebug} isActive={isDebugMode}>Ver Cartas de la IA</MenuItem>
+                        <MenuItem onClick={onGoToMainMenu}>{t('gameMenu.main_menu')}</MenuItem>
+                        <MenuItem onClick={onShowData}>{t('gameMenu.view_data')}</MenuItem>
+                        <MenuItem onClick={onToggleDebug} isActive={isDebugMode}>{t('gameMenu.view_ai_cards')}</MenuItem>
                         <MenuItem onClick={onToggleSound} isActive={isSoundEnabled}>{soundLabel}</MenuItem>
                     </div>
                 </div>

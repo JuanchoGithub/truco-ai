@@ -140,6 +140,11 @@ export interface CardPlayStats {
 
 export type PlayerCardPlayStatistics = Record<CardCategory, CardPlayStats>;
 
+export interface PointNote {
+    key: string;
+    options?: { [key: string]: string | number };
+}
+
 export interface RoundSummary {
     round: number;
     mano: Player;
@@ -158,9 +163,9 @@ export interface RoundSummary {
         player: number;
         ai: number;
         by?: {
-            flor: { player: number; ai: number; note: string };
-            envido: { player: number; ai: number; note: string };
-            truco: { player: number; ai: number; note: string };
+            flor: { player: number; ai: number; note: PointNote };
+            envido: { player: number; ai: number; note: PointNote };
+            truco: { player: number; ai: number; note: PointNote };
         }
     };
     playerTrucoCall: {

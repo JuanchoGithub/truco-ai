@@ -1,0 +1,396 @@
+{
+  "common": {
+    "player": "Player",
+    "ai": "AI",
+    "you": "You",
+    "randomizer": "Randomizer",
+    "round": "Round",
+    "hand": "Hand",
+    "of": "of",
+    "card_ranks": {
+      "1": "Ace", "2": "2", "3": "3", "4": "4", "5": "5", "6": "6", "7": "7",
+      "10": "Jack", "11": "Knight", "12": "King"
+    },
+    "card_suits": {
+      "espadas": "Swords", "bastos": "Clubs", "oros": "Coins", "copas": "Cups"
+    },
+    "card_name_pattern": "{{rank}} of {{suit}}",
+    "close": "Close",
+    "cancel": "Cancel",
+    "loading": "Loading...",
+    "na": "N/A"
+  },
+  "mainMenu": {
+    "title": "TRUCO AI",
+    "subtitle": "A card game challenge against a strategic AI.",
+    "play_normal": "Play Against AI",
+    "play_with_help": "Play with Assistant",
+    "learn": "Learn to Play",
+    "manual": "Truco Manual",
+    "simulate": "Simulation Mode (AI vs AI)"
+  },
+  "continueGameModal": {
+    "title": "Saved Game Found",
+    "message": "We found a saved game. Would you like to continue or start a new one?",
+    "continue": "Continue Game",
+    "new_game": "New Game"
+  },
+  "game": {
+    "ai_thinking": "AI is thinking...",
+    "mano_is": "Hand: {{player}}",
+    "new_game_log": "--- New Game ---",
+    "new_game_started": "A new game has begun. {{player}} is hand.",
+    "new_round_log": "--- Round {{round}} ---",
+    "you_are_mano": "You are hand.",
+    "ai_is_mano": "The AI is hand.",
+    "player_plays_card": "{{player}} plays {{cardName}}",
+    "trick_winner": "Winner of trick {{trickNumber}}: {{winner}}",
+    "round_winner_points": "Winner of the round: {{winner}}. Wins {{points}} {{points, plural, one{point} other{points}}}.",
+    "round_winner": "Winner of the round: {{winner}}",
+    "tie": "TIE",
+    "error_ai": "An error occurred with the AI. The AI forfeits its turn.",
+    "session_restored": "--- Session Restored ---",
+    "profile_imported": "--- Profile Imported ---",
+    "game_over_by_points_win": "You won the game! The round ended early because you have enough points to win.",
+    "game_over_by_points_lose": "You lost the game! The round ended early because the AI has enough points to win.",
+    "round_info": "Round {{round}} | Hand: {{player}}"
+  },
+  "actionBar": {
+    "next_round": "Next Round",
+    "quiero": "Accept",
+    "no_quiero": "Refuse",
+    "envido_primero": "Envido Goes First",
+    "retruco": "Retruco",
+    "vale_cuatro": "Vale Cuatro",
+    "envido": "Envido",
+    "real_envido": "Real Envido",
+    "falta_envido": "Falta Envido",
+    "truco": "Truco",
+    "flor": "FLOR!",
+    "flor_ack": "OK (Yours are good)",
+    "flor_ack_mine_worse": "Mine are worse.",
+    "flor_ack_good": "They're good.",
+    "contraflor": "Contraflor!",
+    "contraflor_quiero": "With Flor, I Want it!",
+    "contraflor_no_quiero": "With Flor, I Fold"
+  },
+  "gameBoard": {
+    "ai_cards": "AI's Cards",
+    "player_cards": "Your Played Cards",
+    "empty_pile": "Empty Pile",
+    "round_over_title": "Round Over",
+    "points_summary_title": "Points",
+    "score_is": "The score is {{playerScore}} to {{aiScore}}",
+    "click_to_continue": "(Click to continue)",
+    "flor": "Flor",
+    "envido": "Envido",
+    "truco": "Truco",
+    "note_not_called": "Not called",
+    "note_flor_accepted": "Accepted",
+    "note_envido_accepted": "Accepted",
+    "note_declined": "{{decliner}} declined",
+    "note_truco_simple": "Simple Round",
+    "note_truco_truco": "Truco",
+    "note_truco_retruco": "Retruco",
+    "note_truco_vale_cuatro": "Vale Cuatro",
+    "note_contraflor_accepted": "Contraflor accepted",
+    "note_contraflor_declined": "Contraflor ({{decliner}} declined)",
+    "round_over_win": "You Won the Round",
+    "round_over_lose": "You Lost the Round",
+    "round_over_tie": "Round Tied"
+  },
+  "centralMessage": {
+    "tie_envido": "Tie at {{points}}. {{winner}} wins for being hand.",
+    "envido_result": "Your points: {{playerPoints}}. AI: {{aiPoints}}. {{winner}}!"
+  },
+  "gameOverModal": {
+    "win_title": "You Won!",
+    "lose_title": "You Lost!",
+    "win_reason": "Congratulations, you are the Truco champion!",
+    "lose_reason": "Better luck next time!",
+    "play_again": "Play Again"
+  },
+  "logPanel": {
+    "game_log_title": "Game Log",
+    "ai_log_title": "AI Logic",
+    "hide_ai_log": "Hide AI Logic",
+    "game_start": "Game Start",
+    "game_log_button": "Log",
+    "ai_log_button": "AI Logic"
+  },
+  "gameMenu": {
+    "menu": "MENU",
+    "main_menu": "Main Menu",
+    "view_data": "View Data",
+    "view_ai_cards": "View AI's Cards",
+    "sound_on_advice": "Listen to AI's advice",
+    "sound_on_verses": "Listen to AI's verses"
+  },
+  "soundHint": {
+    "activate_voice": "Activate the AI voice here"
+  },
+  "scoreboard": {
+    "title": "Score"
+  },
+  "assistantPanel": {
+    "title": "AI Assistant",
+    "show_logic": "Show Detailed Logic",
+    "hide_logic": "Hide Logic"
+  },
+  "suggestion": {
+    "play_card": "Play the {{cardName}}.",
+    "play_card_reason": "The best move is to play the {{cardName}} {{reason}}.",
+    "consider_move": "Consider the next move.",
+    "reason": {
+      "secure_hand": "to secure the trick.",
+      "see_opponent": "to see what the AI plays without risking a good card.",
+      "win_round_cheap": "to win the round as cheaply as possible.",
+      "discard_low": "because we can't win this trick, it's better to save the others.",
+      "parda_y_canto": "to tie, hide our strongest card, and then call Truco.",
+      "default": "according to the AI's strategy."
+    },
+    "respond_quiero_envido_good": "We have {{points}} points. The AI called, but our chances of winning are good. We should accept with 'I want it'.",
+    "respond_quiero_envido_bluff": "We have {{points}} points. It's risky, but the AI might be bluffing. We can say 'I want it' to see their cards.",
+    "respond_quiero_envido_default": "The AI challenges us, and we have {{points}} points. The recommendation is to accept.",
+    "respond_quiero_truco_solid": "Our hand is good enough to compete. We should accept the Truco challenge with 'I want it'.",
+    "respond_quiero_truco_bluff": "Even though our hand isn't great, the AI could be lying. Accept with 'I want it' to call their bluff.",
+    "respond_quiero_truco_default": "The AI raised the bet. The suggestion is to accept the challenge.",
+    "respond_no_quiero_envido_risk": "We have {{points}} points, but the AI called strongly, and they likely have more. The safest move is to fold.",
+    "respond_no_quiero_envido_default": "Our {{points}} envido points probably aren't enough. It's better to fold to avoid losing points.",
+    "respond_no_quiero_truco_weak": "Our hand is too weak for this challenge. The best play is to fold with 'I don't want it' to minimize point loss.",
+    "respond_no_quiero_truco_default": "The AI raised the bet and we don't have the cards to compete. It's better to fold.",
+    "respond_escalate_truco_strong": "Our hand is excellent! The AI called Truco, but we can raise the bet to '{{call}}' because we have a great chance of winning.",
+    "respond_escalate_truco_bluff": "We're in a bad spot, but we can try a risky bluff. Raise the bet to '{{call}}' to see if we can make the AI fold.",
+    "respond_escalate_truco_default": "We have a very strong hand. This is a good time to respond to the AI's Truco with a '{{call}}'.",
+    "respond_envido_primero_bluff": "The AI called Truco, but we can interrupt with '{{call}}'. Even though our {{points}} points are low, it's a good bluff.",
+    "respond_envido_primero": "{{context}}the AI called Truco. We have {{points}} for envido ({{strengthText}}), so we should interrupt with '{{call}}' to claim those points.",
+    "respond_envido_primero_context": "After the AI played the {{cardName}}, ",
+    "respond_escalate_envido": "We have {{points}} points, {{strengthText}}! The AI thinks it has a good hand, but ours is superior. We should raise the bet with '{{call}}'.",
+    "respond_escalate_envido_default": "We have {{points}} points ({{strengthText}}). The suggestion is to respond to the AI's 'Envido' by raising to '{{call}}'.",
+    "envido_strength_excellent": "an excellent score",
+    "envido_strength_good": "a good score",
+    "envido_strength_decent": "a decent score",
+    "envido_strength_low": "a low score",
+    "proactive_truco_bluff": "Our hand is weak, but we can try a bluff by calling '{{call}}'.{{alternative}}",
+    "proactive_truco_strong": "We have a very strong hand! It's the perfect time to call '{{call}}' and increase the round's value.{{alternative}}",
+    "proactive_truco_parda": "Key play! First trick was a tie. Win this, and you win the round. Calling 'Truco' is a risk-free move: if they fold, you get 1 point. If they accept, you win 2!",
+    "proactive_envido_bluff": "We only have {{points}} envido points, which is low. However, {{opponentInfo}} We can try a bluff by calling '{{call}}'.{{alternative}}",
+    "proactive_envido_bluff_opponent_info": "the AI has a {{rate}}% chance of folding.",
+    "proactive_envido_bluff_opponent_info_default": "the AI might fold.",
+    "proactive_envido_strong": "We have {{points}} for envido! That's {{strengthText}}, we should call '{{call}}'.",
+    "safe_play_alternative": " If you're not feeling bold, the safest play is to throw the {{cardName}}."
+  },
+  "tutorial": {
+    "exit": "Exit Tutorial",
+    "next": "Next",
+    "start_playing": "Start Playing!",
+    "step1_title": "Step 1: The Power of Cards",
+    "step1_message": "Each card has a value. The 'Ace of Swords' is the strongest. Here you have a 'Seven of Coins', a very powerful card.",
+    "step1_extra_message": "There are only {{count}} cards more powerful than your {{cardName}}:",
+    "step2_title": "Step 2: The Envido",
+    "step2_message": "When you have two cards of the same suit, you can call 'Envido'. You add their values and then add 20. Face cards (10, 11, 12) are worth 0. Look, the 5 of Coins is 5 and the Knight of Coins is 0, so you have 25 for envido! Call it!",
+    "step3_title": "Step 3: The Truco",
+    "step3_message": "Wow, what a hand! You have the 'Ace of Swords' and the 'Seven of Swords', two of the most powerful cards. It's a perfect time to call 'Truco' from the start and bet stronger.",
+    "step4_title": "Let's Play!",
+    "step4_message": "That's the basics! You learned about card values, the Envido, and the Truco. Now you're ready to challenge the AI. Good luck!"
+  },
+  "simulation": {
+    "title": "Simulation Mode",
+    "button_simulating": "Simulating...",
+    "button_restart": "Restart",
+    "button_simulate_round": "Simulate Round",
+    "button_batch_analyzer": "Hand Analyzer",
+    "button_copy": "Copy Text",
+    "button_copied": "Copied!",
+    "button_copy_error": "Error",
+    "button_exit": "Back to Menu",
+    "scoreboard_title": "Scoreboard",
+    "round_status_title": "Round {{round}} Status",
+    "phase": "Phase",
+    "turn": "Turn",
+    "initial_hand_ai": "AI Initial Hand",
+    "initial_hand_randomizer": "Randomizer Initial Hand",
+    "log_start_message": "Click \"Simulate Round\" to begin.",
+    "log_new_simulation": "--- START OF SIMULATION ---",
+    "log_round_start": "--- ROUND {{round}} ---",
+    "log_ai_hand": "AI Hand: {{hand}}",
+    "log_randomizer_hand": "Randomizer Hand: {{hand}}",
+    "log_mano": "Hand (starts): {{player}}",
+    "log_resolving": "...Resolving {{phase}}...",
+    "log_game_winner_ai": "--- AI WINS THE GAME ---",
+    "log_game_winner_randomizer": "--- RANDOMIZER WINS THE GAME ---",
+    "log_round_end": "--- END OF ROUND {{round}} ---",
+    "log_round_end_winner": "Winner: {{winner}}",
+    "log_round_end_score": "Score: AI {{aiScore}} - Randomizer {{playerScore}}",
+    "log_ai_logic": "[AI Logic]:\n{{reasoning}}",
+    "log_randomizer_logic": "[Randomizer Logic]:\n{{reasoning}}"
+  },
+  "batchAnalyzer": {
+    "title": "AI Hand Analyzer",
+    "description": "This tool analyzes {{count}} strategically distinct hand combinations (including pairs and three-of-a-kinds) to evaluate how the AI values each one. The \"AI Assessment\" is a metric from 0.0 to 1.0 based on complex simulations, not just card value.",
+    "button_analyze": "Analyze Combinations",
+    "loading": "Analyzing... {{progress}}%",
+    "header_hand": "Hand",
+    "header_truco_value": "Truco Value",
+    "header_ai_assessment": "AI Assessment",
+    "copy_tooltip": "Copy table",
+    "copy_button": "Copy",
+    "copy_button_copied": "Copied!",
+    "copy_button_error": "Copy Error"
+  },
+  "dataModal": {
+    "title": "Behavior Analysis",
+    "style_analysis_title": "AI's Style Analysis",
+    "no_data_message": "Play a few more rounds so the AI can generate a detailed profile of your play style.",
+    "envido_style_precise": "You're a 'Precise' Envido player, tending to call only with 29 or more, which makes you very credible. ",
+    "envido_style_aggressive": "You show aggression in Envido, often calling with 26 or more to apply pressure. ",
+    "envido_style_balanced": "Your Envido threshold is balanced and hard to predict. ",
+    "envido_style_cautious": "Additionally, you're cautious, preferring not to accept if you don't have a good feeling.",
+    "envido_style_bold": "You rarely fold from an Envido, showing you're willing to see the AI's cards.",
+    "truco_style_title": "In Truco, ",
+    "truco_style_no_data": "I'm still gathering data on your betting style.",
+    "truco_style_conservative": "you're extremely conservative, only betting with elite hands. I've learned to respect your calls greatly.",
+    "truco_style_aggressive": "you're an aggressive player, not hesitating to call Truco to apply pressure, even with modest hands. This makes you dangerous but vulnerable to a counter-attack.",
+    "truco_style_balanced": "you maintain a balanced style, making your intentions hard to read.",
+    "bluff_style_title": "Your bluffing game ",
+    "bluff_style_effective": "is very effective. I've noticed your bets without strong cards often make me hesitate and fold.",
+    "bluff_style_readable": "is being read by me. It seems I've detected a pattern and I'm not folding to your risky bets.",
+    "bluff_style_moderate": "is moderate, keeping me in a state of uncertainty.",
+    "card_play_style_threes": "You show a tendency to use your 'Threes' as response cards, suggesting a counter-attacking style rather than leading with your maximum strength.",
+    "behavior_profile_title": "Behavioral Profile",
+    "truco_threshold": "Truco Threshold (avg)",
+    "bluff_success": "Truco Bluff Success",
+    "envido_primero_rate": "\"Envido Primero\" Rate",
+    "envido_threshold": "Envido Threshold (avg)",
+    "envido_fold_rate": "Envido Fold Rate (vs AI)",
+    "envido_preference": "Envido Preference (Lead/Reply)",
+    "card_play_patterns_title": "Card Play Patterns",
+    "card_play_header_type": "Card Type",
+    "card_play_header_plays": "Plays",
+    "card_play_header_win_rate": "Win %",
+    "card_play_header_trick1": "Trick 1",
+    "card_play_header_trick2": "Trick 2",
+    "card_play_header_trick3": "Trick 3",
+    "card_play_header_lead": "Leading",
+    "card_play_header_response": "Responding",
+    "round_history_title": "Round History",
+    "round_history_summary": "Round {{round}} - {{winnerStatus}} ({{playerScore}} - {{aiScore}})",
+    "round_history_winner": "Winner: {{winner}}",
+    "round_history_in_progress": "In progress...",
+    "round_history_strength_envido": "Strength / Envido",
+    "round_history_calls": "Calls",
+    "round_history_calls_none": "None",
+    "round_history_trick_winners": "Trick Winners",
+    "round_history_trick_winner_pattern": "T{{trick}}: {{winner}}",
+    "round_history_played_cards": "Played Cards",
+    "round_history_played_cards_pattern": "Trick {{trick}}: You ({{playerCard}}) vs AI ({{aiCard}})",
+    "button_import": "Import Profile",
+    "button_export": "Export Profile",
+    "import_success": "Profile imported successfully!",
+    "import_error": "Error: The selected file is not a valid profile.",
+    "import_error_format": "The file does not have the expected format."
+  },
+  "phrases": {
+    "quiero": [
+      "I'm in! Let's see those cards.", "Alright, I'll bite. I want it!", "Challenge accepted. I want it!",
+      "I'll take that bet, let the cards decide!", "Of course I want it! Bring it on.", "I'll risk it. I'm in!",
+      "Let's see... Yes, I want it!", "Yes, I want it. No fear.", "Going for it. I'm in!", "Accepted... I want it!"
+    ],
+    "no_quiero": [
+      "No thanks. My cards won't even get me to the corner store.", "I'll pass. I think you're bluffing.",
+      "Hmm, doesn't feel right. I'll pass this time.", "Are you kidding me? I don't want it, buddy.",
+      "I'd rather be a coward for a moment than a fool for a lifetime. I'm out.", "That's enough. Save that bravado for the next round.",
+      "No way, I don't believe you. But I'll pass.", "Better not. I have a bad feeling about this.",
+      "I pass. Show me what you had, let's see if I regret it.", "Nope, can't win with this. I pass.",
+      "I'll let you have this one. I don't want it.", "You seem too confident. I'm out, just in case.",
+      "I'll pass. You play.", "I'm not risking it. My cards are fit for a game of Go Fish.",
+      "Better pass. I don't want to just give you the points.", "I don't want it. You look way too calm, and I don't like it.",
+      "I'll pass. But I'm watching you.", "You know what? No. I don't want it.",
+      "My gut says no. And I listen to my gut. I pass.", "I don't want it. This hand is done for.",
+      "I'll pass. Save your poison for another time.", "Not right now. Let me see what you do.",
+      "No thanks. I'm not running a charity today.", "I'll pass. Smells like a trap.",
+      "Too much risk. I don't want it.", "No, let it be. Let's see how the hand plays out.",
+      "I concede the points. I'm out.", "I don't trust your face. I pass.",
+      "I'll pass. My cards need a therapist.", "I don't want it. And for the record, it's strategy, not fear."
+    ],
+    "envido_win": [
+      "My points are the law.", "I won the points.", "I won the envido! Tallying up...",
+      "These points are mine.", "Better luck with the envido next time."
+    ],
+    "envido_lose": [
+      "Yours are good. Well played.", "Your points are better. Congrats.", "They're good. You beat me on the points.",
+      "I admit, they're good.", "You won fair and square. They're good."
+    ],
+    "trick_win": [
+      "This trick is mine!", "That's how it's done!", "One step closer to victory.",
+      "I win this trick.", "Take that! So you learn."
+    ],
+    "trick_lose": [
+      "Well played.", "You got me.", "Good card.", "This one's yours, but the round isn't over.", "Hmm, didn't see that coming."
+    ],
+    "flor": [
+      "The garden in my hand has bloomed. I have FLOR!", "A scent of victory in the air... FLOR!",
+      "With these three of a kind, I declare FLOR!", "It's not luck, it's botany. FLOR!",
+      "Things are looking up... for me. FLOR!", "Three of the same color, what a treasure! FLOR!",
+      "I saw a little bird today, it flew right past my door. It looked at me and seemed to say, 'You're gonna get a FLOR!'",
+      "These cards are junk, I'm filled with dread. The only thing that's good instead, is this beautiful FLOR I have to spread!",
+      "I may not be a gambling man, I may not know the score. But even I can understand the beauty of a FLOR!"
+    ],
+    "contraflor": [
+      "You think your flower is so grand? I'll raise the stakes across the land. Your FLOR is nice, but I'll counter, see? CONTRAFLOR for victory!",
+      "A FLOR you have? That's quite a show. But watch as my own garden grows! I see your bet and raise it more, I call a mighty CONTRAFLOR!",
+      "A lovely FLOR, it's true, you've shown, but seeds of doubt I've also sown. Prepare yourself for a bigger fight, CONTRAFLOR with all my might!"
+    ],
+    "contraflor_quiero": [
+      "You challenge me, the stakes are high, but with this FLOR, I'll reach the sky. Your Contraflor I gladly meet, for my own hand is just as sweet. WITH FLOR, I WANT IT!",
+      "You think you've got the winning hand? The best laid plans are built on sand. I'll see your bet, I'll play along, because my FLOR is just as strong. WITH FLOR, I'M IN!"
+    ],
+    "contraflor_no_quiero": [
+      "Your confidence, it shines so bright, I fear my FLOR can't win this fight. A bigger prize you might have won, so with my FLOR, I have to run. WITH FLOR, I FOLD.",
+      "To challenge you would be a fool, my hand just doesn't have the tool. I'll give you points, I'll say no more, and with my FLOR, I'm out the door."
+    ],
+    "envido_primero": [
+      "Hold on! The envido comes first.", "Hold your horses... envido goes first.",
+      "One second, the points are worth it. Envido goes first.", "Not so fast. Before the war, the points. Envido goes first.",
+      "First things first... and the envido is first!"
+    ],
+    "post_envido_truco_reminder": [
+      "Alright, we settled the points. Now... what about that truco I called?",
+      "Envido is done. But I'll remind you that the truco is still on the table.",
+      "Okay, envido's over. Let's get back to what's important: TRUCO!",
+      "The envido is settled. Now, to the matter at hand, do you accept the truco?",
+      "Envido's finished. Now, let's talk truco.", "Okay, chapter closed on envido. And the truco? I'm waiting.",
+      "Let's put the points aside for a moment. I asked you... TRUCO?"
+    ],
+    "envido": [
+      "I see your cards, I see your face, I'll call ENVIDO, just in case.",
+      "My points are high, a lovely sum, I'll call ENVIDO, has your time come?",
+      "Whether you're bluffing, I can't tell, but I'll call ENVIDO, wish me well."
+    ],
+    "real_envido": [
+      "My points are strong, a mighty three, I'll raise the stakes with REAL ENVIDO, you see?",
+      "Don't be shy, let's make a deal, I'm calling out an ENVIDO that's REAL.",
+      "Your envido's fine, but mine's a blast, this REAL ENVIDO is built to last!"
+    ],
+    "falta_envido": [
+      "Let's end the game, let's make it fast, this FALTA ENVIDO is the die I cast.",
+      "For all the points, for all the glory, my FALTA ENVIDO tells the story.",
+      "I'm close to winning, you're far behind, FALTA ENVIDO is what you'll find!"
+    ],
+    "truco": [
+      "The round is mine, I'll make it so, I'm calling TRUCO, watch me go!",
+      "I like my chances, I like my hand, I'm calling TRUCO across the land.",
+      "To win the round, the points to seize, I'm calling TRUCO with the greatest of ease."
+    ],
+    "retruco": [
+      "Your Truco's bold, I must admit, but I'll RETRUCO, I'll never quit.",
+      "You want to play? Let's raise the bet! With this RETRUCO, you'll break a sweat.",
+      "I see your Truco, and I'll raise you more, RETRUCO's called, now what's in store?"
+    ],
+    "vale_cuatro": [
+      "For all the glory, for all the fame, VALE CUATRO is the name of the game!",
+      "The final bet, the ultimate prize, VALE CUATRO, before your very eyes.",
+      "You've come this far, but now you'll fall, VALE CUATRO, I'm risking it all!"
+    ]
+  }
+}

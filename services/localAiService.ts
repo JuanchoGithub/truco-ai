@@ -5,7 +5,7 @@ import { findBestCardToPlay } from './ai/playCardStrategy';
 import { getEnvidoResponse, getEnvidoCall, getFlorResponse, getFlorCallOrEnvidoCall } from './ai/envidoStrategy';
 import { getTrucoResponse, getTrucoCall } from './ai/trucoStrategy';
 import { getCardName, getEnvidoDetails, calculateHandStrength } from './trucoLogic';
-import { getRandomPhrase, FLOR_PHRASES, ENVIDO_PRIMERO_PHRASES, QUIERO_PHRASES, NO_QUIERO_PHRASES } from './ai/phrases';
+import { getRandomPhrase, PHRASE_KEYS } from './ai/phrases';
 
 export const getLocalAIMove = (state: GameState): AiMove => {
     const { gamePhase, currentTurn, lastCaller, currentTrick, hasEnvidoBeenCalledThisRound, aiHasFlor, playerHasFlor, hasFlorBeenCalledThisRound, playerTricks, aiTricks, trickWinners, aiScore, playerScore } = state;
@@ -67,7 +67,7 @@ export const getLocalAIMove = (state: GameState): AiMove => {
         if (canCallEnvidoPrimero) {
             // If AI has flor, it must respond with flor.
             if (aiHasFlor) {
-                const blurbText = getRandomPhrase(FLOR_PHRASES);
+                const blurbText = getRandomPhrase(PHRASE_KEYS.FLOR);
                 return {
                     action: { type: ActionType.DECLARE_FLOR, payload: { blurbText } },
                     reasoning: "[Lógica de Prioridad: Flor]\nEl jugador cantó TRUCO, pero mi Flor tiene prioridad. Debo declararla."
@@ -75,7 +75,7 @@ export const getLocalAIMove = (state: GameState): AiMove => {
             }
             const envidoCallDecision = getEnvidoCall(state, gamePressure);
             if (envidoCallDecision) {
-                 const blurbText = getRandomPhrase(ENVIDO_PRIMERO_PHRASES);
+                 const blurbText = getRandomPhrase(PHRASE_KEYS.ENVIDO_PRIMERO);
                  const updatedReasoning = `[Lógica de Envido Primero]\nEl jugador cantó TRUCO, pero invocaré la prioridad del Envido.\n` + envidoCallDecision.reasoning;
                  // FIX: Preserve the original envido action type (Envido, Real Envido, Falta Envido)
                  // instead of hardcoding it to a simple Envido.
@@ -103,7 +103,7 @@ export const getLocalAIMove = (state: GameState): AiMove => {
         if (gamePhase === 'envido_called') {
             // Check for Flor response to Envido
             if (aiHasFlor) {
-                const blurbText = getRandomPhrase(FLOR_PHRASES);
+                const blurbText = getRandomPhrase(PHRASE_KEYS.FLOR);
                 return {
                     action: { type: ActionType.RESPOND_TO_ENVIDO_WITH_FLOR, payload: { blurbText } },
                     reasoning: "[Lógica de Prioridad: Flor]\nEl jugador cantó Envido. Mi Flor lo anula y gana 3 puntos."
