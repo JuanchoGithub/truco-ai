@@ -1,8 +1,10 @@
 
 
+
 import { AiMove, GameState, ActionType, Card } from '../types';
 import { getCardName, getEnvidoValue } from './trucoLogic';
 import { findBestCardToPlay } from './ai/playCardStrategy';
+import i18nService from './i18nService';
 
 function createMirroredState(currentState: GameState): GameState {
     const mirroredTrickWinners = currentState.trickWinners.map(winner => {
@@ -42,41 +44,34 @@ export const getSimpleSuggestionText = (move: AiMove, playerHand: Card[]): strin
     switch (action.type) {
         case ActionType.PLAY_CARD:
             const cardIndex = action.payload.cardIndex;
-            // The suggestion is generated from a mirrored state, so the `cardIndex` corresponds to the player's actual hand.
             if (playerHand[cardIndex]) {
-                return `Jugar el ${getCardName(playerHand[cardIndex])}.`;
+                return i18nService.t('suggestion.play_card', { cardName: getCardName(playerHand[cardIndex]) });
             }
-            return "Jugar una carta.";
-        case ActionType.CALL_ENVIDO: return "Cantar 'Envido'.";
-        case ActionType.CALL_REAL_ENVIDO: return "Cantar 'Real Envido'.";
-        case ActionType.CALL_FALTA_ENVIDO: return "Cantar 'Falta Envido'.";
-        case ActionType.DECLARE_FLOR: return "Cantar 'Flor'.";
-        case ActionType.CALL_TRUCO: return "Cantar 'Truco'.";
-        case ActionType.CALL_RETRUCO: return "Cantar 'Retruco'.";
-        case ActionType.CALL_VALE_CUATRO: return "Cantar 'Vale Cuatro'.";
-        case ActionType.ACCEPT: return "Decir 'Quiero'.";
-        case ActionType.DECLINE: return "Decir 'No Quiero'.";
-        case ActionType.RESPOND_TO_ENVIDO_WITH_FLOR: return "Responder con 'Flor'.";
-        case ActionType.ACKNOWLEDGE_FLOR: return "Reconocer la flor ('Son buenas').";
-        case ActionType.CALL_CONTRAFLOR: return "Cantar 'Contraflor'.";
-        case ActionType.ACCEPT_CONTRAFLOR: return "Aceptar con 'Con Flor Quiero'.";
-        case ActionType.DECLINE_CONTRAFLOR: return "Rechazar con 'Con Flor me achico'.";
-        default: return "Considerar el siguiente movimiento.";
+            return i18nService.t('suggestion.play_card', { cardName: 'a card' });
+        case ActionType.CALL_ENVIDO: return i18nService.t('actionBar.envido');
+        case ActionType.CALL_REAL_ENVIDO: return i18nService.t('actionBar.real_envido');
+        case ActionType.CALL_FALTA_ENVIDO: return i18nService.t('actionBar.falta_envido');
+        case ActionType.DECLARE_FLOR: return i18nService.t('actionBar.flor');
+        case ActionType.CALL_TRUCO: return i18nService.t('actionBar.truco');
+        case ActionType.CALL_RETRUCO: return i18nService.t('actionBar.retruco');
+        case ActionType.CALL_VALE_CUATRO: return i18nService.t('actionBar.vale_cuatro');
+        case ActionType.ACCEPT: return i18nService.t('actionBar.quiero');
+        case ActionType.DECLINE: return i18nService.t('actionBar.no_quiero');
+        case ActionType.RESPOND_TO_ENVIDO_WITH_FLOR: return i18nService.t('actionBar.flor');
+        case ActionType.ACKNOWLEDGE_FLOR: return i18nService.t('actionBar.flor_ack');
+        case ActionType.CALL_CONTRAFLOR: return i18nService.t('actionBar.contraflor');
+        case ActionType.ACCEPT_CONTRAFLOR: return i18nService.t('actionBar.contraflor_quiero');
+        case ActionType.DECLINE_CONTRAFLOR: return i18nService.t('actionBar.contraflor_no_quiero');
+        default: return i18nService.t('suggestion.consider_move');
     }
 };
 
-const summarizeHand = (hand: Card[]): string => {
-    if (hand.length === 0) return "No nos quedan cartas.";
-    if (hand.length === 1) return `Nuestra última carta es el ${getCardName(hand[0])}.`;
-    return `Nos quedan: ${hand.map(getCardName).join(' y ')}.`;
-}
-
 // New helper function to describe envido strength
 function getEnvidoStrengthText(points: number): string {
-    if (points >= 30) return "un puntaje excelente";
-    if (points >= 27) return "un buen puntaje";
-    if (points >= 24) return "un puntaje decente";
-    return "un puntaje bajo";
+    if (points >= 30) return i18nService.t('suggestion.envido_strength_excellent');
+    if (points >= 27) return i18nService.t('suggestion.envido_strength_good');
+    if (points >= 24) return i18nService.t('suggestion.envido_strength_decent');
+    return i18nService.t('suggestion.envido_strength_low');
 }
 
 // New helper to create a safe card play alternative text
@@ -86,7 +81,7 @@ function getSafeCardPlayAlternative(state: GameState): string {
         const safePlay = findBestCardToPlay(mirroredStateForSafePlay);
         const cardToPlay = state.playerHand[safePlay.index];
         if (cardToPlay) {
-            return ` Si no te animás, la jugada más segura es tirar el ${getCardName(cardToPlay)}.`;
+            return i18nService.t('suggestion.safe_play_alternative', { cardName: getCardName(cardToPlay) });
         }
         return "";
     } catch (error) {
@@ -98,158 +93,141 @@ function getSafeCardPlayAlternative(state: GameState): string {
 // This function generates a more conversational, strategic summary.
 export const generateSuggestionSummary = (move: AiMove, state: GameState): string => {
     const { action, reasoning } = move;
-    const { playerHand, gamePhase, round, roundHistory, initialPlayerHand } = state;
+    const { playerHand, gamePhase, initialPlayerHand } = state;
 
-    // FIX: Calculate envido points directly from the player's initial hand to ensure accuracy for the assistant,
-    // avoiding any potential stale or incorrect data in roundHistory.
     const playerEnvidoPoints = getEnvidoValue(initialPlayerHand);
     const isResponding = gamePhase.includes('_called');
     
-    // FIX: Only generate an alternative card play suggestion if the player is NOT in a response phase.
     const alternativePlayText = !isResponding ? getSafeCardPlayAlternative(state) : "";
 
     if (isResponding) {
-        // --- Specific logic for responding to AI calls ---
         if (action.type === ActionType.ACCEPT) {
             if (gamePhase.includes('envido')) {
                 if (reasoning.includes("Las probabilidades están a mi favor")) {
-                    return `Tenemos ${playerEnvidoPoints} puntos. La IA cantó, pero nuestras chances de ganar son buenas. Deberíamos aceptar con 'Quiero'.`;
+                    return i18nService.t('suggestion.respond_quiero_envido_good', { points: playerEnvidoPoints });
                 }
                 if (reasoning.includes("podría ser un farol")) {
-                    return `Tenemos ${playerEnvidoPoints} puntos. Es arriesgado, pero la IA podría estar de farol. Podemos 'Querer' para ver sus cartas.`;
+                    return i18nService.t('suggestion.respond_quiero_envido_bluff', { points: playerEnvidoPoints });
                 }
-                return `La IA nos desafía, y nosotros tenemos ${playerEnvidoPoints} puntos. La recomendación es aceptar con 'Quiero'.`;
+                return i18nService.t('suggestion.respond_quiero_envido_default', { points: playerEnvidoPoints });
             }
             if (gamePhase.includes('truco')) {
                  if (reasoning.includes("Mi mano es sólida") || reasoning.includes("La equidad es aceptable")) {
-                    return `Nuestra mano es lo suficientemente buena como para competir. Deberíamos aceptar el desafío del Truco con 'Quiero'.`;
+                    return i18nService.t('suggestion.respond_quiero_truco_solid');
                 }
                 if (reasoning.includes("oponente podría estar faroleando")) {
-                    return `Aunque nuestra mano no es ideal, la IA podría estar mintiendo. Acepta con 'Quiero' para no dejar que nos intimide.`;
+                    return i18nService.t('suggestion.respond_quiero_truco_bluff');
                 }
-                return `La IA subió la apuesta. La sugerencia es aceptar el desafío con 'Quiero'.`;
+                return i18nService.t('suggestion.respond_quiero_truco_default');
             }
         }
 
         if (action.type === ActionType.DECLINE) {
             if (gamePhase.includes('envido')) {
                 if (reasoning.includes("El riesgo es muy alto") || reasoning.includes("Mi mano parece más débil")) {
-                    return `Tenemos ${playerEnvidoPoints} puntos, pero la IA cantó fuerte, y es probable que tengan más. Lo más seguro es retirarse con 'No Quiero'.`;
+                    return i18nService.t('suggestion.respond_no_quiero_envido_risk', { points: playerEnvidoPoints });
                 }
-                return `Nuestros ${playerEnvidoPoints} puntos de envido probablemente no son suficientes. Es mejor decir 'No Quiero' para no perder puntos.`;
+                return i18nService.t('suggestion.respond_no_quiero_envido_default', { points: playerEnvidoPoints });
             }
             if (gamePhase.includes('truco')) {
                 if (reasoning.includes("La equidad es muy baja") || reasoning.includes("Mi mano es débil") || reasoning.includes("casi nula")) {
-                    return `Nuestra mano es demasiado débil para este desafío. La mejor jugada es retirarse con 'No Quiero' para minimizar la pérdida de puntos.`;
+                    return i18nService.t('suggestion.respond_no_quiero_truco_weak');
                 }
-                return `La IA subió la apuesta y no tenemos cartas para competir. Es mejor decir 'No Quiero'.`;
+                return i18nService.t('suggestion.respond_no_quiero_truco_default');
             }
         }
 
         if (action.type === ActionType.CALL_RETRUCO || action.type === ActionType.CALL_VALE_CUATRO) {
             const callType = action.type.replace('CALL_', '').replace('_', ' ');
             if (reasoning.includes("Mi mano es de élite") || reasoning.includes("La equidad es muy alta") || reasoning.includes("escalando agresivamente")) {
-                return `¡Nuestra mano es excelente! La IA cantó Truco, pero podemos redoblar la apuesta con '${callType}' porque tenemos muchas chances de ganar.`;
+                return i18nService.t('suggestion.respond_escalate_truco_strong', { call: callType });
             }
              if (reasoning.includes("farol de desesperación") || reasoning.includes("farol agresivo")) {
-                return `Estamos en una mala posición, pero podemos intentar un farol arriesgado. Sube la apuesta a '${callType}' para ver si logramos que la IA se retire.`;
+                return i18nService.t('suggestion.respond_escalate_truco_bluff', { call: callType });
             }
-            return `Tenemos una mano muy fuerte. Es un buen momento para responder al Truco de la IA con un '${callType}'.`;
+            return i18nService.t('suggestion.respond_escalate_truco_default', { call: callType });
         }
         
         if (action.type === ActionType.CALL_REAL_ENVIDO || action.type === ActionType.CALL_FALTA_ENVIDO || (action.type === ActionType.CALL_ENVIDO && isResponding)) {
             const callType = action.type.replace('CALL_', '').replace('_', ' ');
             const strengthText = getEnvidoStrengthText(playerEnvidoPoints);
 
-            // Case 1: Responding to TRUCO with Envido Primero
             if (gamePhase === 'truco_called' && (action.type === ActionType.CALL_ENVIDO || action.type === ActionType.CALL_REAL_ENVIDO || action.type === ActionType.CALL_FALTA_ENVIDO)) {
                 const isBluff = /farol|mano.*débil/i.test(reasoning);
                 if (isBluff) {
-                    return `La IA cantó Truco, pero podemos interrumpir con '${callType}'. Aunque nuestros ${playerEnvidoPoints} puntos son bajos, es un buen farol.`;
+                    return i18nService.t('suggestion.respond_envido_primero_bluff', { call: callType, points: playerEnvidoPoints });
                 }
                 const opponentCardPlayed = state.aiTricks[0];
-                const context = opponentCardPlayed ? `Después de que la IA jugara el ${getCardName(opponentCardPlayed)}, ` : "";
-                return `${context}la IA cantó Truco. Tenemos ${playerEnvidoPoints} de envido (${strengthText}), así que deberíamos interrumpir con '${callType}' para reclamar esos puntos.`;
+                const context = opponentCardPlayed ? i18nService.t('suggestion.respond_envido_primero_context', { cardName: getCardName(opponentCardPlayed) }) : "";
+                return i18nService.t('suggestion.respond_envido_primero', { context, points: playerEnvidoPoints, strengthText, call: callType });
             }
 
-            // Case 2: Responding to ENVIDO with another Envido call
             if (reasoning.includes("Mi mano es mucho más fuerte")) {
-                return `¡Tenemos ${playerEnvidoPoints} puntos, ${strengthText}! La IA cree que tiene una buena mano, pero la nuestra es superior. Deberíamos redoblar la apuesta con '${callType}'.`;
+                return i18nService.t('suggestion.respond_escalate_envido', { points: playerEnvidoPoints, strengthText, call: callType });
             }
             
-            // Fallback for responding to Envido.
-            return `Tenemos ${playerEnvidoPoints} puntos (${strengthText}). La sugerencia es responder al 'Envido' de la IA subiendo la apuesta a '${callType}'.`;
+            return i18nService.t('suggestion.respond_escalate_envido_default', { points: playerEnvidoPoints, strengthText, call: callType });
         }
     }
 
-    // --- Logic for proactive moves ---
-
-    // --- Truco call ---
     if (action.type === ActionType.CALL_TRUCO || action.type === ActionType.CALL_RETRUCO || action.type === ActionType.CALL_VALE_CUATRO) {
         if (reasoning.includes("Parda y Gano")) {
-            return "¡Jugada clave! La primera mano fue empate. Si ganas esta, ganas la ronda. Cantar 'Truco' es una jugada sin riesgo: si se retiran, ganas 1 punto. Si aceptan, ¡ganas 2!";
+            return i18nService.t('suggestion.proactive_truco_parda');
         }
 
         let isBluff = false;
-        // Check for the explicit bluff flag in the action payload first for reliability
         if ('payload' in action && action.payload && 'trucoContext' in action.payload && action.payload.trucoContext) {
             isBluff = action.payload.trucoContext.isBluff;
         } else {
-            // Fallback to reasoning string if context is missing for some reason
             isBluff = /farol|bluff|mano.*débil/i.test(reasoning);
         }
 
         const callType = action.type.replace('CALL_', '').replace('_',' ');
 
         if (isBluff) {
-            return `Nuestra mano es débil, pero podemos intentar un farol cantando '${callType}'.${alternativePlayText}`;
+            return i18nService.t('suggestion.proactive_truco_bluff', { call: callType, alternative: alternativePlayText });
         } else {
-            return `¡Tenemos una mano muy fuerte! Es el momento ideal para cantar '${callType}' y aumentar el valor de la ronda.${alternativePlayText}`;
+            return i18nService.t('suggestion.proactive_truco_strong', { call: callType, alternative: alternativePlayText });
         }
     }
 
-    // --- Envido call ---
     if (action.type === ActionType.CALL_ENVIDO || action.type === ActionType.CALL_REAL_ENVIDO || action.type === ActionType.CALL_FALTA_ENVIDO) {
         const callType = action.type.replace('CALL_', '').replace('_', ' ');
-        
         const isBluff = /farol|mano.*débil/i.test(reasoning);
 
         if (isBluff) {
              const foldRateMatch = reasoning.match(/tasa de abandono.* ([\d\.]+)%/);
-             let opponentInfo = "la IA podría retirarse.";
+             let opponentInfo = i18nService.t('suggestion.proactive_envido_bluff_opponent_info_default');
              if (foldRateMatch && foldRateMatch[1]) {
-                 opponentInfo = `la IA tiene una probabilidad de retirarse del ${foldRateMatch[1]}%.`;
+                 opponentInfo = i18nService.t('suggestion.proactive_envido_bluff_opponent_info', { rate: foldRateMatch[1] });
              }
-             return `Tenemos solo ${playerEnvidoPoints} puntos de envido, que es bajo. Sin embargo, ${opponentInfo} Podemos intentar un farol (bluff) cantando '${callType}'.${alternativePlayText}`;
+             return i18nService.t('suggestion.proactive_envido_bluff', { points: playerEnvidoPoints, opponentInfo, call: callType, alternative: alternativePlayText });
         }
         const strengthText = getEnvidoStrengthText(playerEnvidoPoints);
-        return `¡Tenemos ${playerEnvidoPoints} de envido! Es ${strengthText}, deberíamos cantar '${callType}'.${alternativePlayText}`;
+        return i18nService.t('suggestion.proactive_envido_strong', { points: playerEnvidoPoints, strengthText, call: callType });
     }
 
-    // --- Playing a card ---
     if (action.type === ActionType.PLAY_CARD) {
         const cardIndex = action.payload.cardIndex;
         const card = playerHand[cardIndex];
         if (!card) return getSimpleSuggestionText(move, playerHand);
 
-        let strategicReason = "";
+        let reasonKey = "default";
         if (reasoning.includes("carta más alta")) {
-            strategicReason = "para asegurar la mano.";
+            reasonKey = "secure_hand";
         } else if (reasoning.includes("carta más baja para ver qué tiene")) {
-            strategicReason = "para ver qué juega la IA sin arriesgar una carta buena.";
+            reasonKey = "see_opponent";
         } else if (reasoning.includes("carta ganadora de ronda más débil")) {
-            strategicReason = "para ganar la ronda gastando lo mínimo.";
+            reasonKey = "win_round_cheap";
         } else if (reasoning.includes("Descartaré mi carta más baja")) {
-            strategicReason = "porque no podemos ganar esta mano y es mejor guardar las otras.";
+            reasonKey = "discard_low";
         } else if (reasoning.includes("Parda y Canto")) {
-            strategicReason = "para empatar, ocultar nuestra carta más fuerte y poder cantar Truco después.";
-        } else {
-            strategicReason = "según la estrategia de la IA.";
+            reasonKey = "parda_y_canto";
         }
         
-        return `La mejor jugada es tirar el ${getCardName(card)} ${strategicReason}`;
+        const strategicReason = i18nService.t(`suggestion.reason.${reasonKey}`);
+        return i18nService.t('suggestion.play_card_reason', { cardName: getCardName(card), reason: strategicReason });
     }
     
-    // Fallback for actions not yet covered (like flor, which is self-explanatory)
     return getSimpleSuggestionText(move, playerHand);
 };

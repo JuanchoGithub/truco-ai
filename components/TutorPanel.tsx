@@ -9,7 +9,7 @@ interface TutorPanelProps {
 
 const TutorPanel: React.FC<TutorPanelProps> = ({ title, message, extraContent }) => {
   return (
-    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[calc(50%+80px)] w-[90%] max-w-2xl p-4 bg-black/80 border-2 border-green-400 rounded-lg shadow-lg shadow-green-500/30 font-vt323 text-green-200 text-lg lg:text-xl text-center z-30 animate-fade-in-scale">
+    <div className="relative w-[90%] max-w-2xl p-4 my-4 bg-black/80 border-2 border-green-400 rounded-lg shadow-lg shadow-green-500/30 font-vt323 text-green-200 text-lg lg:text-xl text-center z-30 animate-fade-in-scale">
         <div className="absolute top-[-20px] left-10 w-16 h-16 rounded-full bg-green-900 border-2 border-green-400 flex items-center justify-center text-3xl">
           🤖
         </div>

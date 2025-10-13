@@ -147,7 +147,9 @@
   "assistantPanel": {
     "title": "AI Assistant",
     "show_logic": "Show Detailed Logic",
-    "hide_logic": "Hide Logic"
+    "hide_logic": "Hide Logic",
+    "open_aria_label": "Open AI Assistant",
+    "close_aria_label": "Close AI Assistant"
   },
   "suggestion": {
     "play_card": "Play the {{cardName}}.",
@@ -195,16 +197,57 @@
   "tutorial": {
     "exit": "Exit Tutorial",
     "next": "Next",
+    "previous": "Previous",
     "start_playing": "Start Playing!",
-    "step1_title": "Step 1: The Power of Cards",
-    "step1_message": "Each card has a value. The 'Ace of Swords' is the strongest. Here you have a 'Seven of Coins', a very powerful card.",
-    "step1_extra_message": "There are only {{count}} cards more powerful than your {{cardName}}:",
-    "step2_title": "Step 2: The Envido",
-    "step2_message": "When you have two cards of the same suit, you can call 'Envido'. You add their values and then add 20. Face cards (10, 11, 12) are worth 0. Look, the 5 of Coins is 5 and the Knight of Coins is 0, so you have 25 for envido! Call it!",
-    "step3_title": "Step 3: The Truco",
-    "step3_message": "Wow, what a hand! You have the 'Ace of Swords' and the 'Seven of Swords', two of the most powerful cards. It's a perfect time to call 'Truco' from the start and bet stronger.",
-    "step4_title": "Let's Play!",
-    "step4_message": "That's the basics! You learned about card values, the Envido, and the Truco. Now you're ready to challenge the AI. Good luck!"
+    "feedback_correct": "Correct!",
+    "feedback_try_again": "Try again. Think about the hierarchy!",
+    "feedback_wrong_action": "That's not the action we're looking for right now. Try again!",
+    "feedback_well_done": "Well Done!",
+    "step0": {
+      "title": "Welcome to Truco!",
+      "message": "I'll teach you the basics. The goal is to be the first to reach 15 points. Let's start with the most important thing: the cards!"
+    },
+    "step1": {
+      "title": "Card Hierarchy",
+      "message": "In Truco, a card's power isn't its number. There's a special hierarchy. These are the 4 most powerful cards in the game. Memorize them!"
+    },
+    "step2": {
+      "title": "Hierarchy Quiz (1/3)",
+      "message": "The 7 of Swords and 7 of Coins are powerful cards, but one is stronger than the other! Which one do you think is more powerful?",
+      "success": "Correct! The 7 of Swords is stronger than the 7 of Coins. Let's move on!"
+    },
+    "step3": {
+      "title": "Hierarchy Quiz (2/3)",
+      "message": "Now for the common numbers. In Truco, all 3s are stronger than all 2s. Which of these cards wins?",
+      "success": "Exactly! Any 3 beats any 2. Easy!"
+    },
+    "step4": {
+      "title": "Hierarchy Quiz (3/3)",
+      "message": "Watch out for the 'false aces' (Ace of Coins and Cups). They are weaker than the 3s and 2s. Which of these cards is stronger?",
+      "success": "Perfect! Any 2 is stronger than the 'false aces'. You've mastered the basics of the hierarchy!"
+    },
+    "step5": {
+      "title": "The Envido: Betting for Points",
+      "message": "If you have 2 cards of the same suit, you can call 'Envido'. You add their values and then add 20. Face cards (10, 11, 12) are worth 0. Here, you have 5 + 6 + 20 = 31 points!"
+    },
+    "step6": {
+      "title": "Time to Call Envido!",
+      "message": "You have 7 + 6 + 20 = 33 points! That's an excellent Envido! The 'Envido' button is highlighted. Click it to call.",
+      "success": "Perfect! That's how you call Envido to win points."
+    },
+    "step7": {
+      "title": "The Truco: Betting on the Round",
+      "message": "The 'Truco' is a bet on who will win the round (2 out of 3 tricks). You can raise the bet with 'Retruco' and 'Vale Cuatro'. It's all about cunning and deception."
+    },
+    "step8": {
+      "title": "Time to Call Truco!",
+      "message": "What a hand! You have the Ace of Swords and the Ace of Clubs, the two strongest cards. It's a perfect hand to call 'Truco' and apply pressure! Click the button.",
+      "success": "Excellent! That's how you use Truco to bet on the round."
+    },
+    "step9": {
+      "title": "You're Ready!",
+      "message": "You've learned the card hierarchy, the Envido, and the Truco. You are now ready for your first match. Good luck!"
+    }
   },
   "simulation": {
     "title": "Simulation Mode",

@@ -1,86 +1,144 @@
 import React from 'react';
-import { Card, Action } from '../types';
-import { getCardHierarchy, getCardName } from './trucoLogic';
-import CardComponent from '../components/Card';
-
-const HierarchyDisplay: React.FC<{ card: Card }> = ({ card }) => {
-    // A representative sample of cards for hierarchy display, not the full deck
-    const allCards: Card[] = [
-        { rank: 1, suit: 'espadas' }, { rank: 1, suit: 'bastos' },
-        { rank: 7, suit: 'espadas' }, { rank: 7, suit: 'oros' },
-        { rank: 3, suit: 'bastos' }, { rank: 2, suit: 'bastos' },
-        { rank: 1, suit: 'oros' }, { rank: 12, suit: 'bastos' },
-    ];
-    
-    const cardValue = getCardHierarchy(card);
-    const strongerCards = allCards.filter(c => getCardHierarchy(c) > cardValue);
-
-    return React.createElement(
-        'div',
-        null,
-        React.createElement(
-            'p',
-            { className: "text-sm mb-2 text-yellow-200" },
-            `Hay solo ${strongerCards.length} cartas más poderosas que tu ${getCardName(card)}:`
-        ),
-        React.createElement(
-            'div',
-            { className: "flex gap-2 justify-center flex-wrap" },
-            strongerCards.map(c => React.createElement(CardComponent, { key: `${c.rank}-${c.suit}`, card: c, size: "small" }))
-        )
-    );
-};
-
+import { Card, Action, ActionType, GameState } from '../types';
+import { getCardHierarchy } from './trucoLogic';
 
 export interface TutorialStep {
-  title: string;
-  tutorMessage: string;
-  playerHand: Card[];
-  aiHand: Card[];
-  playerTricks?: (Card | null)[];
-  aiTricks?: (Card | null)[];
-  trickWinners?: ('player' | 'ai' | 'tie' | null)[];
-  currentTrick?: number;
-  highlightedAction?: 'envido' | 'truco' | 'play_card';
+  titleKey: string;
+  tutorMessageKey: string;
+  type: 'intro' | 'hierarchy_intro' | 'hierarchy_quiz' | 'envido_intro' | 'envido_practice' | 'truco_intro' | 'truco_practice' | 'conclusion';
+  // State setup
+  playerHand?: Card[];
+  aiHand?: Card[];
+  // For quizzes
+  quizOptions?: {
+    cards: [Card, Card];
+    correct: 0 | 1; // index of the correct card
+  };
+  // For practice
+  highlightedAction?: ActionType;
   validateAction?: (action: Action) => boolean;
-  nextStepOnSuccess?: boolean;
-  extraContent?: React.ReactNode;
+  successMessageKey?: string;
+  isFinalStep?: boolean;
 }
 
-const hand_hierarchy: Card[] = [{rank: 7, suit: 'oros'}, {rank: 5, suit: 'copas'}, {rank: 11, suit: 'bastos'}];
-const hand_envido: Card[] = [{rank: 11, suit: 'oros'}, {rank: 5, suit: 'oros'}, {rank: 4, suit: 'copas'}];
-const hand_truco: Card[] = [{rank: 1, suit: 'espadas'}, {rank: 7, suit: 'espadas'}, {rank: 4, suit: 'copas'}];
-
-export const tutorialScenarios: TutorialStep[] = [
-    {
-        title: "Paso 1: El Poder de las Cartas",
-        tutorMessage: "Cada carta tiene un valor. El 'Ancho de Espadas' es la más fuerte. Aquí tenés un 'Siete de Oros', una carta muy poderosa.",
-        playerHand: hand_hierarchy,
-        aiHand: [{rank: 4, suit: 'bastos'}, {rank: 5, suit: 'oros'}, {rank: 6, suit: 'espadas'}],
-        extraContent: React.createElement(HierarchyDisplay, { card: hand_hierarchy[0] }),
+export const tutorialSteps: TutorialStep[] = [
+  {
+    type: 'intro',
+    titleKey: 'tutorial.step0.title',
+    tutorMessageKey: 'tutorial.step0.message',
+    playerHand: [],
+    aiHand: [],
+  },
+  {
+    type: 'hierarchy_intro',
+    titleKey: 'tutorial.step1.title',
+    tutorMessageKey: 'tutorial.step1.message',
+    playerHand: [],
+    aiHand: [],
+  },
+  {
+    type: 'hierarchy_quiz',
+    titleKey: 'tutorial.step2.title',
+    tutorMessageKey: 'tutorial.step2.message',
+    quizOptions: {
+      cards: [
+        { rank: 7, suit: 'espadas' },
+        { rank: 7, suit: 'oros' },
+      ],
+      correct: 0,
     },
-    {
-        title: "Paso 2: El Envido",
-        tutorMessage: "Cuando tenés dos cartas del mismo palo, podés cantar 'Envido'. Se suman sus valores y se le agregan 20. Las figuras (10, 11, 12) valen 0. Fijate, el 5 de Oros vale 5 y el Caballo de Oros vale 0, ¡así que tenés 25 de envido! ¡Cantalo!",
-        playerHand: hand_envido,
-        aiHand: [{rank: 4, suit: 'bastos'}, {rank: 3, suit: 'oros'}, {rank: 10, suit: 'espadas'}],
-        highlightedAction: 'envido',
-        validateAction: (action) => action.type === 'CALL_ENVIDO' || action.type === 'CALL_REAL_ENVIDO' || action.type === 'CALL_FALTA_ENVIDO',
-        nextStepOnSuccess: true,
+    successMessageKey: 'tutorial.step2.success',
+  },
+  {
+    type: 'hierarchy_quiz',
+    titleKey: 'tutorial.step3.title',
+    tutorMessageKey: 'tutorial.step3.message',
+    quizOptions: {
+      cards: [
+        { rank: 2, suit: 'bastos' },
+        { rank: 3, suit: 'copas' },
+      ],
+      correct: 1,
     },
-    {
-        title: "Paso 3: El Truco",
-        tutorMessage: "¡Wow, qué mano! Tenés el 'Ancho de Espadas' y el 'Siete de Espadas', dos de las cartas más poderosas. Es un momento perfecto para cantar 'Truco' desde el inicio y apostar más fuerte.",
-        playerHand: hand_truco,
-        aiHand: [{rank: 4, suit: 'bastos'}, {rank: 5, suit: 'oros'}, {rank: 6, suit: 'espadas'}],
-        highlightedAction: 'truco',
-        validateAction: (action) => action.type === 'CALL_TRUCO',
-        nextStepOnSuccess: true,
+    successMessageKey: 'tutorial.step3.success',
+  },
+  {
+    type: 'hierarchy_quiz',
+    titleKey: 'tutorial.step4.title',
+    tutorMessageKey: 'tutorial.step4.message',
+    quizOptions: {
+      cards: [
+        { rank: 1, suit: 'oros' }, // Ancho falso (value 8)
+        { rank: 2, suit: 'espadas' }, // Dos (value 9)
+      ],
+      correct: 1,
     },
-    {
-        title: "¡A Jugar!",
-        tutorMessage: "¡Eso es lo básico! Aprendiste sobre el valor de las cartas, el Envido y el Truco. Ahora estás listo para desafiar a la IA. ¡Buena suerte!",
-        playerHand: [],
-        aiHand: [],
-    }
+    successMessageKey: 'tutorial.step4.success',
+  },
+  {
+    type: 'envido_intro',
+    titleKey: 'tutorial.step5.title',
+    tutorMessageKey: 'tutorial.step5.message',
+    playerHand: [
+        { rank: 5, suit: 'oros' },
+        { rank: 6, suit: 'oros' },
+        { rank: 2, suit: 'bastos' },
+    ],
+    aiHand: [
+        { rank: 4, suit: 'copas' },
+        { rank: 1, suit: 'espadas' },
+        { rank: 11, suit: 'bastos' },
+    ],
+  },
+  {
+    type: 'envido_practice',
+    titleKey: 'tutorial.step6.title',
+    tutorMessageKey: 'tutorial.step6.message',
+    playerHand: [
+        { rank: 7, suit: 'espadas' },
+        { rank: 6, suit: 'espadas' },
+        { rank: 4, suit: 'copas' },
+    ],
+    aiHand: [
+        { rank: 1, suit: 'bastos' },
+        { rank: 2, suit: 'oros' },
+        { rank: 5, suit: 'copas' },
+    ],
+    highlightedAction: ActionType.CALL_ENVIDO,
+    validateAction: (action) => action.type === ActionType.CALL_ENVIDO || action.type === ActionType.CALL_REAL_ENVIDO,
+    successMessageKey: 'tutorial.step6.success',
+  },
+  {
+    type: 'truco_intro',
+    titleKey: 'tutorial.step7.title',
+    tutorMessageKey: 'tutorial.step7.message',
+    playerHand: [],
+    aiHand: [],
+  },
+  {
+    type: 'truco_practice',
+    titleKey: 'tutorial.step8.title',
+    tutorMessageKey: 'tutorial.step8.message',
+    playerHand: [
+        { rank: 1, suit: 'espadas' },
+        { rank: 1, suit: 'bastos' },
+        { rank: 5, suit: 'oros' },
+    ],
+    aiHand: [
+        { rank: 7, suit: 'oros' },
+        { rank: 2, suit: 'copas' },
+        { rank: 4, suit: 'bastos' },
+    ],
+    highlightedAction: ActionType.CALL_TRUCO,
+    validateAction: (action) => action.type === ActionType.CALL_TRUCO,
+    successMessageKey: 'tutorial.step8.success',
+  },
+  {
+    type: 'conclusion',
+    titleKey: 'tutorial.step9.title',
+    tutorMessageKey: 'tutorial.step9.message',
+    playerHand: [],
+    aiHand: [],
+    isFinalStep: true,
+  },
 ];

@@ -147,7 +147,9 @@
   "assistantPanel": {
     "title": "Asistente de IA",
     "show_logic": "Ver Lógica Detallada",
-    "hide_logic": "Ocultar Lógica"
+    "hide_logic": "Ocultar Lógica",
+    "open_aria_label": "Abrir Asistente de IA",
+    "close_aria_label": "Cerrar Asistente de IA"
   },
   "suggestion": {
     "play_card": "Jugar el {{cardName}}.",
@@ -195,16 +197,57 @@
   "tutorial": {
     "exit": "Salir del Tutorial",
     "next": "Siguiente",
+    "previous": "Anterior",
     "start_playing": "¡Empezar a Jugar!",
-    "step1_title": "Paso 1: El Poder de las Cartas",
-    "step1_message": "Cada carta tiene un valor. El 'Ancho de Espadas' es la más fuerte. Aquí tenés un 'Siete de Oros', una carta muy poderosa.",
-    "step1_extra_message": "Hay solo {{count}} cartas más poderosas que tu {{cardName}}:",
-    "step2_title": "Paso 2: El Envido",
-    "step2_message": "Cuando tenés dos cartas del mismo palo, podés cantar 'Envido'. Se suman sus valores y se le agregan 20. Las figuras (10, 11, 12) valen 0. Fijate, el 5 de Oros vale 5 y el Caballo de Oros vale 0, ¡así que tenés 25 de envido! ¡Cantalo!",
-    "step3_title": "Paso 3: El Truco",
-    "step3_message": "¡Wow, qué mano! Tenés el 'Ancho de Espadas' y el 'Siete de Espadas', dos de las cartas más poderosas. Es un momento perfecto para cantar 'Truco' desde el inicio y apostar más fuerte.",
-    "step4_title": "¡A Jugar!",
-    "step4_message": "¡Eso es lo básico! Aprendiste sobre el valor de las cartas, el Envido y el Truco. Ahora estás listo para desafiar a la IA. ¡Buena suerte!"
+    "feedback_correct": "¡Correcto!",
+    "feedback_try_again": "Inténtalo de nuevo. ¡Piensa en la jerarquía!",
+    "feedback_wrong_action": "Esa no es la acción que buscamos ahora. ¡Prueba otra vez!",
+    "feedback_well_done": "¡Bien Hecho!",
+    "step0": {
+      "title": "¡Bienvenido al Truco!",
+      "message": "Te enseñaré lo básico. El objetivo es ser el primero en llegar a 15 puntos. ¡Empecemos con lo más importante: las cartas!"
+    },
+    "step1": {
+      "title": "La Jerarquía de Cartas",
+      "message": "En el Truco, el poder de una carta no es su número. Hay una jerarquía especial. Estas son las 4 cartas más poderosas del juego. ¡Memorízalas!"
+    },
+    "step2": {
+      "title": "Prueba de Jerarquía (1/3)",
+      "message": "El 7 de Espadas y el 7 de Oros son cartas \"bravas\", ¡pero una es más fuerte que la otra! ¿Cuál crees que es la más poderosa?",
+      "success": "¡Correcto! El 7 de Espadas es más fuerte que el 7 de Oros. ¡Vamos con la siguiente!"
+    },
+    "step3": {
+      "title": "Prueba de Jerarquía (2/3)",
+      "message": "Ahora, los números comunes. En el Truco, todos los 3 son más fuertes que todos los 2. ¿Cuál de estas cartas gana?",
+      "success": "¡Exacto! Cualquier 3 le gana a cualquier 2. ¡Fácil!"
+    },
+    "step4": {
+      "title": "Prueba de Jerarquía (3/3)",
+      "message": "Cuidado con los \"anchos falsos\" (As de Oros y Copas). Son más débiles que los 3 y los 2. ¿Cuál de estas cartas es más fuerte?",
+      "success": "¡Perfecto! Cualquier 2 es más fuerte que los \"anchos falsos\". ¡Ya dominas lo básico de la jerarquía!"
+    },
+    "step5": {
+      "title": "El Envido: Apostar por Puntos",
+      "message": "Si tienes 2 cartas del mismo palo, puedes cantar \"Envido\". Sumas sus valores y le agregas 20. Las figuras (10, 11, 12) valen 0. ¡Aquí, tienes 5 + 6 + 20 = 31 puntos!"
+    },
+    "step6": {
+      "title": "¡A Cantar Envido!",
+      "message": "¡Tienes 7 + 6 + 20 = 33 puntos! ¡Es un Envido excelente! El botón de \"Envido\" está resaltado. Haz clic para cantar.",
+      "success": "¡Perfecto! Así se canta el Envido para ganar puntos."
+    },
+    "step7": {
+      "title": "El Truco: Apostar por la Ronda",
+      "message": "El \"Truco\" es una apuesta sobre quién ganará la ronda (2 de 3 manos). Puedes subir la apuesta con \"Retruco\" y \"Vale Cuatro\". Se trata de astucia y engaño."
+    },
+    "step8": {
+      "title": "¡A Cantar Truco!",
+      "message": "¡Menuda mano! Tienes el As de Espadas y el As de Bastos, las dos cartas más fuertes. ¡Es una mano perfecta para cantar \"Truco\" y meter presión! Haz clic en el botón.",
+      "success": "¡Excelente! Así se usa el Truco para apostar por la ronda."
+    },
+    "step9": {
+      "title": "¡Estás Listo!",
+      "message": "Has aprendido la jerarquía de cartas, el Envido y el Truco. Ya estás preparado para tu primera partida. ¡Mucha suerte!"
+    }
   },
   "simulation": {
     "title": "Modo Simulación",
