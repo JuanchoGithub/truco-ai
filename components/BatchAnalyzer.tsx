@@ -1,11 +1,10 @@
-
-
 import React, { useState, useMemo } from 'react';
 import { Card, GameState, Suit, Rank } from '../types';
 import { calculateHandStrength, getCardHierarchy } from '../services/trucoLogic';
 import { calculateTrucoStrength } from '../services/ai/trucoStrategy';
 import { initialState } from '../hooks/useGameReducer';
 import CardComponent from './Card';
+import { useLocalization } from '../context/LocalizationContext';
 
 interface AnalysisResult {
   hand: Card[];
@@ -152,11 +151,12 @@ const CopyIcon = () => (
 
 
 const BatchAnalyzer: React.FC<{ onExit: () => void }> = ({ onExit }) => {
+    const { t } = useLocalization();
     const [analysisResults, setAnalysisResults] = useState<AnalysisResult[] | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [progress, setProgress] = useState(0);
     const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: 'asc' | 'desc' } | null>({ key: 'aiAssessment', direction: 'desc' });
-    const [copyStatus, setCopyStatus] = useState('Copiar');
+    const [copyStatus, setCopyStatus] = useState(t('batchAnalyzer.copy_button'));
 
     const totalCombinations = useMemo(() => generateHandsToAnalyze().length, []);
 
@@ -250,12 +250,12 @@ const BatchAnalyzer: React.FC<{ onExit: () => void }> = ({ onExit }) => {
         const tsvContent = [header, ...rows].join('\n');
 
         navigator.clipboard.writeText(tsvContent).then(() => {
-            setCopyStatus('¡Copiado!');
-            setTimeout(() => setCopyStatus('Copiar'), 2000);
+            setCopyStatus(t('batchAnalyzer.copy_button_copied'));
+            setTimeout(() => setCopyStatus(t('batchAnalyzer.copy_button')), 2000);
         }).catch(err => {
             console.error('Failed to copy: ', err);
-            setCopyStatus('Error al copiar');
-            setTimeout(() => setCopyStatus('Copiar'), 2000);
+            setCopyStatus(t('batchAnalyzer.copy_button_error'));
+            setTimeout(() => setCopyStatus(t('batchAnalyzer.copy_button')), 2000);
         });
     };
 
@@ -264,20 +264,20 @@ const BatchAnalyzer: React.FC<{ onExit: () => void }> = ({ onExit }) => {
             <div className="bg-stone-800/95 border-4 border-amber-700/50 rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
                 <div className="p-4 border-b-2 border-amber-700/30 flex justify-between items-center flex-shrink-0">
                     <h2 className="text-xl lg:text-2xl font-bold text-amber-300 font-cinzel tracking-widest">
-                        Análisis de Manos por IA
+                        {t('batchAnalyzer.title')}
                     </h2>
                     <button onClick={onExit} className="text-amber-200 text-2xl lg:text-3xl font-bold hover:text-white transition-colors">&times;</button>
                 </div>
 
                 <div className="p-4 lg:p-6 flex-grow overflow-y-auto text-amber-50 space-y-4">
                     <p className="text-sm text-gray-300">
-                        Esta herramienta analiza <strong>{totalCombinations} combinaciones</strong> de manos estratégicamente distintas (incluyendo pares y tríos) para evaluar cómo la IA valora cada una. La "Evaluación IA" es una métrica de 0.0 a 1.0 basada en simulaciones complejas, no solo en el valor de las cartas.
+                        {t('batchAnalyzer.description', { count: totalCombinations })}
                     </p>
                     
                     {!isLoading && !analysisResults && (
                         <div className="text-center py-8">
                              <button onClick={runAnalysis} disabled={isLoading} className="px-6 py-3 rounded-lg font-bold text-white bg-green-600 border-b-4 border-green-800 hover:bg-green-500 disabled:bg-gray-500 disabled:border-gray-700 transition-colors text-lg">
-                                Analizar Combinaciones
+                                {t('batchAnalyzer.button_analyze')}
                             </button>
                         </div>
                     )}
@@ -285,7 +285,7 @@ const BatchAnalyzer: React.FC<{ onExit: () => void }> = ({ onExit }) => {
                     {isLoading && (
                         <div className="w-full bg-gray-700 rounded-full h-4 my-4">
                             <div className="bg-green-500 h-4 rounded-full" style={{ width: `${progress}%`, transition: 'width 0.1s' }}></div>
-                            <p className="text-center text-xs mt-1">Analizando... {progress}%</p>
+                            <p className="text-center text-xs mt-1">{t('batchAnalyzer.loading', { progress })}</p>
                         </div>
                     )}
 
@@ -296,7 +296,7 @@ const BatchAnalyzer: React.FC<{ onExit: () => void }> = ({ onExit }) => {
                                     <button
                                         onClick={handleCopy}
                                         className="p-2 rounded-md text-gray-300 bg-black/40 border border-amber-700/80 hover:bg-black/60 hover:text-white transition-colors"
-                                        aria-label="Copiar tabla"
+                                        aria-label={t('batchAnalyzer.copy_tooltip')}
                                     >
                                         <CopyIcon />
                                     </button>
@@ -309,9 +309,9 @@ const BatchAnalyzer: React.FC<{ onExit: () => void }> = ({ onExit }) => {
                                 <table className="w-full text-left text-xs lg:text-sm">
                                     <thead className="bg-black/40 text-amber-100">
                                         <tr>
-                                            <SortableHeader sortKey="hand" title="Mano" sortConfig={sortConfig} requestSort={() => requestSort('trucoValue')} />
-                                            <SortableHeader sortKey="trucoValue" title="Valor Truco" sortConfig={sortConfig} requestSort={requestSort} />
-                                            <SortableHeader sortKey="aiAssessment" title="Evaluación IA" sortConfig={sortConfig} requestSort={requestSort} />
+                                            <SortableHeader sortKey="hand" title={t('batchAnalyzer.header_hand')} sortConfig={sortConfig} requestSort={() => requestSort('trucoValue')} />
+                                            <SortableHeader sortKey="trucoValue" title={t('batchAnalyzer.header_truco_value')} sortConfig={sortConfig} requestSort={requestSort} />
+                                            <SortableHeader sortKey="aiAssessment" title={t('batchAnalyzer.header_ai_assessment')} sortConfig={sortConfig} requestSort={requestSort} />
                                         </tr>
                                     </thead>
                                     <tbody className="bg-black/20">
