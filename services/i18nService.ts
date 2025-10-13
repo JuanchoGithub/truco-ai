@@ -11,19 +11,19 @@ const i18nService = {
     try {
       let uiPromise, phrasesPromise, aiLogicPromise;
 
-      // Use fetch with root-relative paths. This is robust for deployment environments
-      // like Vercel, as it treats the JSON files as static assets.
+      // Use fetch with paths relative to the document root. This is more robust for deployment environments
+      // like Vercel, as it correctly resolves paths even if the app is in a subdirectory.
       switch (lang) {
         case 'en-US':
-          uiPromise = fetch('/locales/en-US/ui.json').then(res => res.json());
-          phrasesPromise = fetch('/locales/en-US/phrases.json').then(res => res.json());
-          aiLogicPromise = fetch('/locales/en-US/ai_logic.json').then(res => res.json());
+          uiPromise = fetch('locales/en-US/ui.json').then(res => res.json());
+          phrasesPromise = fetch('locales/en-US/phrases.json').then(res => res.json());
+          aiLogicPromise = fetch('locales/en-US/ai_logic.json').then(res => res.json());
           break;
         case 'es-AR':
         default:
-          uiPromise = fetch('/locales/es-AR/ui.json').then(res => res.json());
-          phrasesPromise = fetch('/locales/es-AR/phrases.json').then(res => res.json());
-          aiLogicPromise = fetch('/locales/es-AR/ai_logic.json').then(res => res.json());
+          uiPromise = fetch('locales/es-AR/ui.json').then(res => res.json());
+          phrasesPromise = fetch('locales/es-AR/phrases.json').then(res => res.json());
+          aiLogicPromise = fetch('locales/es-AR/ai_logic.json').then(res => res.json());
           lang = 'es-AR'; // Ensure lang is set to the fallback for consistency
           break;
       }
