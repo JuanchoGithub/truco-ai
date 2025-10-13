@@ -330,7 +330,7 @@ export type Action =
   | { type: ActionType.ACCEPT; payload?: { blurbText: string } }
   | { type: ActionType.DECLINE; payload?: { blurbText: string } }
   | { type: ActionType.AI_THINKING; payload: boolean }
-  | { type: ActionType.ADD_MESSAGE; payload: string }
+  | { type: ActionType.ADD_MESSAGE; payload: string | MessageObject }
   | { type: ActionType.UPDATE_OPPONENT_PROBS; payload: OpponentHandProbabilities }
   | { type: ActionType.RESOLVE_ENVIDO_ACCEPT }
   | { type: ActionType.RESOLVE_ENVIDO_DECLINE }

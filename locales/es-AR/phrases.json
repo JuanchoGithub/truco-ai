@@ -1,0 +1,105 @@
+{
+  "phrases": {
+    "quiero": [
+      "¡Quiero!", "Dale, ¡a ver esas cartas!", "Desafío aceptado. ¡Quiero!",
+      "Acepto la apuesta, ¡que hablen las cartas!", "¡Obvio que quiero! ¡Venga!", "Me la juego. ¡Quiero!",
+      "A ver... Sí, ¡quiero!", "Sí, quiero. Sin miedo.", "¡Voy! ¡Quiero!", "Aceptado... ¡Quiero!"
+    ],
+    "no_quiero": [
+      "No, gracias. Con esto no llego ni a la esquina.", "Paso. Me parece que vas de farol.",
+      "Mmm, no me cierra. Paso esta vez.", "¿Me estás cargando? No quiero, amigo.",
+      "Prefiero ser cobarde un rato que gil toda la vida. Me voy al mazo.", "Hasta acá llegué. Guardate esa guapeza para la próxima.",
+      "Ni loco, no te creo. Pero paso.", "Mejor no. Mala espina.",
+      "Paso. Mostrame qué tenías, a ver si me arrepiento.", "No, con esto no se puede. Paso.",
+      "Te la dejo. No quiero.", "Tenés cara de póker. Me voy, por las dudas.",
+      "Paso. Vos jugá.", "No me arriesgo. Mis cartas son para jugar a la casita robada.",
+      "Mejor pasar. No te voy a regalar los puntos.", "No quiero. Estás demasiado tranquilo y no me gusta.",
+      "Paso. Pero te estoy mirando.", "¿Sabés qué? No. No quiero.",
+      "La pálida. Y yo le hago caso. Paso.", "No quiero. Esta mano está muerta.",
+      "Paso. Guardate el veneno para otro.", "Ahora no. Dejame ver qué hacés.",
+      "No, gracias. No estoy para beneficencia hoy.", "Paso. Huele a trampa.",
+      "Mucho riesgo. No quiero.", "No, dejá. A ver cómo sigue la mano.",
+      "Te concedo los puntos. Me voy.", "No me fío de tu cara. Paso.",
+      "Paso. Mis cartas necesitan un psicólogo.", "No quiero. Y que conste que es estrategia, no miedo."
+    ],
+    "envido_win": [
+      "Mis tantos son ley.", "Los puntos son míos.", "¡Gané el envido! A sumar...",
+      "Estos tantos me los quedo yo.", "Mejor suerte con el envido la próxima."
+    ],
+    "envido_lose": [
+      "Son buenas las tuyas. Bien jugado.", "Tus tantos son mejores. Felicitaciones.", "Son buenas. Me ganaste en los tantos.",
+      "Lo admito, son buenas.", "Ganaste bien. Son buenas."
+    ],
+    "trick_win": [
+      "¡Esta mano es mía!", "¡Así se hace!", "Un paso más cerca de la victoria.",
+      "Gano esta mano.", "¡Tomá! Para que aprendas."
+    ],
+    "trick_lose": [
+      "Bien jugado.", "Me ganaste.", "Buena carta.", "Esta es tuya, pero la ronda no terminó.", "Mmm, no la vi venir."
+    ],
+    "flor": [
+      "En mi mano floreció el jardín. ¡Tengo FLOR!", "Aroma a victoria en el aire... ¡FLOR!",
+      "Con estas tres del mismo palo, canto ¡FLOR!", "No es suerte, es botánica. ¡FLOR!",
+      "La cosa viene bien... para mí. ¡FLOR!", "Tres del mismo color, ¡qué tesoro! ¡FLOR!",
+      "Hoy vi un pajarito, por mi puerta pasó. Me miró y me dijo: '¡vas a ligar una FLOR!'",
+      "Estas cartas son malísimas, estoy lleno de pavor. Lo único que me salva es esta hermosa FLOR.",
+      "Puede que no sea un tahúr, puede que no sepa el marcador. Pero hasta yo puedo entender la belleza de una FLOR."
+    ],
+    "contraflor": [
+      "¿Crees que tu flor es gran cosa? Subo la apuesta. Tu FLOR es linda, pero te respondo: ¡CONTRAFLOR para la victoria!",
+      "¿Una FLOR tenés? Qué espectáculo. ¡Pero mirá cómo crece mi jardín! Veo tu apuesta y la subo: ¡canto una poderosa CONTRAFLOR!",
+      "Una linda FLOR, es verdad, mostraste, pero semillas de duda también sembraste. Prepárate para una pelea mayor, ¡CONTRAFLOR con todo mi vigor!"
+    ],
+    "contraflor_quiero": [
+      "Me desafiás, la apuesta es alta, pero con esta FLOR, al cielo se salta. Tu Contraflor con gusto acepto, porque mi mano es igual de dulce. ¡CON FLOR QUIERO!",
+      "¿Crees que tenés la mano ganadora? Los mejores planes se construyen sobre arena. Veo tu apuesta, te sigo el juego, porque mi FLOR es igual de fuerte. ¡CON FLOR, ME LA JUEGO!"
+    ],
+    "contraflor_no_quiero": [
+      "Tu confianza brilla tanto que temo que mi FLOR no pueda ganar esta pelea. Un premio mayor podrías haber ganado, así que con mi FLOR, tengo que correr. CON FLOR ME ACHICO.",
+      "Desafiarte sería de tontos, mi mano no tiene las herramientas. Te doy los puntos, no digo más, y con mi FLOR, me voy por la puerta de atrás."
+    ],
+    "envido_primero": [
+      "¡Pará un poco! El envido está primero.", "Frená el carro... primero el envido.",
+      "Un segundo, que los tantos valen. Primero el envido.", "No tan rápido. Antes de la guerra, los puntos. El envido primero.",
+      "Lo primero es lo primero... y el envido está primero."
+    ],
+    "post_envido_truco_reminder": [
+      "Bueno, arreglamos los tantos. Ahora... ¿qué me decís de ese truco que te canté?",
+      "El envido ya está. Pero te recuerdo que el truco sigue en la mesa.",
+      "Listo el envido. Volvamos a lo importante: ¡TRUCO!",
+      "Terminó el envido. Ahora, al grano, ¿querés o no querés el truco?",
+      "Fin del envido. Ahora, hablemos de truco.", "Bueno, capítulo cerrado el envido. ¿Y el truco? Estoy esperando.",
+      "Dejemos los tantos de lado un momento. Te pregunté... ¿TRUCO?"
+    ],
+    "envido": [
+      "Veo tus cartas, veo tu cara, canto ENVIDO, por si acaso.",
+      "Mis tantos son altos, una linda suma, canto ENVIDO, ¿llegó tu hora?",
+      "Si vas de farol, no lo sé, pero canto ENVIDO, deséame suerte."
+    ],
+    "real_envido": [
+      "Mis tantos son fuertes, un poderoso tres, subo la apuesta con REAL ENVIDO, ¿ves?",
+      "No te achiques, hagamos un trato, estoy cantando un ENVIDO que es REAL.",
+      "Tu envido está bien, pero el mío es una bomba, ¡este REAL ENVIDO está hecho para durar!"
+    ],
+    "falta_envido": [
+      "Terminemos el partido, hagámoslo rápido, este FALTA ENVIDO es el dado que lanzo.",
+      "Por todos los puntos, por toda la gloria, mi FALTA ENVIDO cuenta la historia.",
+      "Estoy cerca de ganar, vos estás lejos, ¡FALTA ENVIDO es lo que encontrarás!"
+    ],
+    "truco": [
+      "La ronda es mía, así será, canto TRUCO, ¡mirame!",
+      "Me gustan mis chances, me gusta mi mano, canto TRUCO por todo el llano.",
+      "Para ganar la ronda, los puntos agarrar, canto TRUCO con la mayor facilidad."
+    ],
+    "retruco": [
+      "Tu Truco es audaz, debo admitir, pero yo RETRUCO, nunca voy a desistir.",
+      "¿Querés jugar? ¡Subamos la apuesta! Con este RETRUCO, vas a transpirar.",
+      "Veo tu Truco, y te subo más, RETRUCO está cantado, ¿qué pasará?"
+    ],
+    "vale_cuatro": [
+      "¡Por toda la gloria, por toda la fama, VALE CUATRO es el nombre del juego!",
+      "La apuesta final, el premio supremo, ¡VALE CUATRO, ante tus propios ojos!",
+      "Llegaste lejos, pero ahora caerás, ¡VALE CUATRO, me la juego toda!"
+    ]
+  }
+}

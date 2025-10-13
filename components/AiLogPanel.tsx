@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { AiReasoningEntry, Action, ActionType } from '../types';
+import { useLocalization } from '../context/LocalizationContext';
 
 interface AiLogPanelProps {
   log: AiReasoningEntry[];
@@ -9,6 +10,7 @@ interface AiLogPanelProps {
 }
 
 const AiLogPanel: React.FC<AiLogPanelProps> = ({ log, dispatch, isModal }) => {
+  const { t } = useLocalization();
   const groupedLog: { [key: number]: string[] } = log.reduce((acc, entry) => {
     if (!acc[entry.round]) {
       acc[entry.round] = [];
@@ -29,12 +31,12 @@ const AiLogPanel: React.FC<AiLogPanelProps> = ({ log, dispatch, isModal }) => {
       <div className={containerClasses}>
         <div className="p-4 border-b-2 border-cyan-400/30 flex justify-between items-center flex-shrink-0">
           <h2 className="text-xl lg:text-2xl font-bold text-cyan-300 font-cinzel tracking-widest" style={{ textShadow: '2px 2px 3px rgba(0,0,0,0.7)' }}>
-            Lógica de la IA
+            {t('logPanel.ai_log_title')}
           </h2>
           <button
             onClick={() => dispatch({ type: ActionType.TOGGLE_AI_LOG_EXPAND })}
             className="text-cyan-200 font-bold hover:text-white transition-colors p-1 rounded-md hover:bg-white/10"
-            aria-label={isModal ? "Cerrar" : "Ocultar Lógica de la IA"}
+            aria-label={isModal ? t('common.close') : t('logPanel.hide_ai_log')}
           >
             {isModal ? (
               <span className="text-2xl lg:text-3xl">&times;</span>
@@ -53,7 +55,7 @@ const AiLogPanel: React.FC<AiLogPanelProps> = ({ log, dispatch, isModal }) => {
             return (
             <div key={`round-${roundNumber}`} className="mb-4">
               <h3 className="text-base lg:text-lg font-bold text-yellow-300 border-b border-yellow-300/30 mb-2 pb-1">
-                Ronda {roundNumber}
+                {t('common.round')} {roundNumber}
               </h3>
               <div className="space-y-2">
                   {groupedLog[roundNumber].map((reasoning, index) => (

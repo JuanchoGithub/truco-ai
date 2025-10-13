@@ -1,6 +1,6 @@
 
 
-import { GameState, Action, ActionType, GamePhase, Case, OpponentModel, PlayerEnvidoActionEntry, PlayerPlayOrderEntry, RoundSummary, Card, PointNote } from '../../types';
+import { GameState, Action, ActionType, GamePhase, Case, OpponentModel, PlayerEnvidoActionEntry, PlayerPlayOrderEntry, RoundSummary, Card, PointNote, MessageObject } from '../../types';
 import { createDeck, shuffleDeck, determineTrickWinner, determineRoundWinner, getCardName, hasFlor, getEnvidoValue, getCardHierarchy, calculateHandStrength, getCardCode, decodeCardFromCode } from '../../services/trucoLogic';
 import { initializeProbabilities, updateProbsOnPlay } from '../../services/ai/inferenceService';
 import { getRandomPhrase, PHRASE_KEYS } from '../../services/ai/phrases';
@@ -123,7 +123,7 @@ export function handleRestartGame(initialState: GameState, state: GameState): Ga
     mano: newMano,
     currentTurn: newMano,
     winner: null,
-    messageLog: [...state.messageLog, `--- Nuevo Juego ---`, `Un nuevo juego ha comenzado. ${newMano === 'player' ? 'Eres' : 'La IA es'} mano.`],
+    messageLog: [...state.messageLog, { key: 'game.new_game_log' }, { key: 'game.new_game_started', options: { player: newMano } }],
     aiReasoningLog: [{ round: 0, reasoning: 'La IA se está preparando para la nueva partida.' }],
   };
 
@@ -186,9 +186,10 @@ export function handleStartNewRound(state: GameState, action: { type: ActionType
       playerTrucoCall: null,
   };
   
+  const manoMessageKey = newMano === 'player' ? 'game.you_are_mano' : 'game.ai_is_mano';
   const initialMessage = state.round === 0 
     ? state.messageLog // Use the message from handleRestartGame
-    : [...state.messageLog, `--- Ronda ${state.round + 1} ---`, `${newMano === 'player' ? 'Eres' : 'La IA es'} mano.`];
+    : [...state.messageLog, { key: 'game.new_round_log', options: { round: state.round + 1 } }, { key: manoMessageKey }];
 
 
   return {
@@ -331,7 +332,7 @@ export function handlePlayCard(state: GameState, action: { type: ActionType.PLAY
       updatedProbs = updateProbsOnPlay(updatedProbs, cardPlayed, newPlayerHand.length);
     }
       
-    const messageLog = [...newState.messageLog, `${player === 'player' ? 'Jugador' : 'IA'} juega ${getCardName(cardPlayed)}`];
+    const messageLog: (string | MessageObject)[] = [...newState.messageLog, { key: 'game.player_plays_card', options: { player, cardName: getCardName(cardPlayed) } }];
     const isTrickComplete = newPlayerTricks[newState.currentTrick] !== null && newAiTricks[newState.currentTrick] !== null;
 
     if (!isTrickComplete) {
@@ -368,8 +369,7 @@ export function handlePlayCard(state: GameState, action: { type: ActionType.PLAY
         }
     }
     
-    const winnerNameTrick = trickWinner === 'player' ? 'JUGADOR' : trickWinner === 'ai' ? 'IA' : 'EMPATE';
-    const trickMessageLog = [...messageLog, `Ganador de la mano ${newState.currentTrick + 1}: ${winnerNameTrick}`];
+    const trickMessageLog = [...messageLog, { key: 'game.trick_winner', options: { trickNumber: newState.currentTrick + 1, winner: trickWinner } }];
     
     let trickOutcomeBlurb = null;
     if (Math.random() < 0.4) { // 40% chance to say something
@@ -421,8 +421,7 @@ export function handlePlayCard(state: GameState, action: { type: ActionType.PLAY
         };
       }
       
-      const winnerNameRound = roundWinner === 'player' ? 'JUGADOR' : roundWinner === 'ai' ? 'IA' : 'EMPATE';
-      const roundMessageLog = [...trickMessageLog, `Ganador de la ronda: ${winnerNameRound}. Gana ${points} ${points === 1 ? 'punto' : 'puntos'}.`];
+      const roundMessageLog = [...trickMessageLog, { key: 'game.round_winner_points', options: { winner: roundWinner, points } }];
       
       // Finalize the round history
       const newRoundHistory = [...newState.roundHistory];

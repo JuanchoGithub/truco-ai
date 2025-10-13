@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Card as CardType, Suit } from '../types';
 import { getCardImageDataUrl } from '../services/cardImageService';
 import { getCardName } from '../services/trucoLogic';
+import { useLocalization } from '../context/LocalizationContext';
 
 interface CardProps {
   card?: CardType;
@@ -32,6 +33,7 @@ const SuitIcon: React.FC<{ suit: Suit; className?: string; style?: React.CSSProp
 }
 
 const Card: React.FC<CardProps> = ({ card, isFaceDown = false, isPlayable = false, onClick, className = '', size = 'normal', displayMode = 'image' }) => {
+  const { t } = useLocalization();
   const [cardImageUrl, setCardImageUrl] = useState<string | null>(null);
   const [imageStatus, setImageStatus] = useState<'loading' | 'loaded' | 'error'>('loading');
 
@@ -166,12 +168,13 @@ const Card: React.FC<CardProps> = ({ card, isFaceDown = false, isPlayable = fals
   // --- Fallback to original emoji card on error ---
   let rankDisplay: string | number | undefined;
   if (card) {
-      switch (card.rank) {
-          case 1: rankDisplay = 'As'; break;
-          case 10: rankDisplay = 'Sota'; break;
-          case 11: rankDisplay = 'Caballo'; break;
-          case 12: rankDisplay = 'Rey'; break;
-          default: rankDisplay = card.rank;
+      const rankKey = `common.card_ranks.${card.rank}`;
+      const translatedRank = t(rankKey);
+      // Fallback if key doesn't exist
+      if (translatedRank === rankKey) {
+          rankDisplay = card.rank;
+      } else {
+          rankDisplay = translatedRank;
       }
   }
 

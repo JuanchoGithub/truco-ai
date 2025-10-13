@@ -119,8 +119,7 @@ const App: React.FC = () => {
             }, 700);
         } catch(error) {
             console.error("Error getting AI move from local AI:", error);
-            const errorMsg = "Ocurrió un error con la IA. La IA pierde su turno.";
-            dispatch({ type: ActionType.ADD_MESSAGE, payload: errorMsg });
+            dispatch({ type: ActionType.ADD_MESSAGE, payload: { key: 'game.error_ai' } });
             dispatch({ type: ActionType.ADD_AI_REASONING_LOG, payload: { round: state.round, reasoning: `Error IA Local: ${error}` } });
             dispatch({ type: ActionType.AI_THINKING, payload: false });
         }
@@ -485,7 +484,7 @@ const App: React.FC = () => {
               <button 
                 onClick={() => dispatch({ type: ActionType.TOGGLE_AI_LOG_EXPAND })}
                 className="px-3 py-1.5 text-xs lg:px-4 lg:py-2 lg:text-sm rounded-lg font-semibold text-cyan-200 bg-black/40 border-2 border-cyan-800/80 shadow-md hover:bg-black/60 hover:border-cyan-600 transition-colors flex items-center gap-2"
-                aria-label="Mostrar Lógica de la IA"
+                aria-label={t('game.show_ai_logic_aria')}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />

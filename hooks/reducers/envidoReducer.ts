@@ -32,11 +32,12 @@ export function handleCallEnvido(state: GameState, action: { type: ActionType.CA
     newEnvidoHistory = [...filteredHistory, entry];
   }
 
-  const message = isEscalation
-    ? `${caller === 'player' ? 'Jugador' : 'IA'} canta ¡ENVIDO! de nuevo.`
+  const messageKey = isEscalation
+    ? 'log.call_envido_again'
     : state.pendingTrucoCaller !== null
-    ? `${caller === 'player' ? 'Jugador' : 'IA'}: "¡El envido está primero!"`
-    : `${caller === 'player' ? 'Jugador' : 'IA'} canta ¡ENVIDO!`;
+    ? 'log.call_envido_primero'
+    : 'log.call_envido';
+  const message = { key: messageKey, options: { caller } };
 
   const updatedState = updateRoundHistoryWithCall(state, `${caller}: Envido`);
 
@@ -55,7 +56,7 @@ export function handleCallEnvido(state: GameState, action: { type: ActionType.CA
     previousEnvidoPoints: previousPoints,
     playerEnvidoHistory: newEnvidoHistory,
     messageLog: [...state.messageLog, message],
-    playerBlurb: isPlayer ? { text: '¡Envido!', isVisible: true } : null,
+    playerBlurb: isPlayer ? { text: 'actionBar.envido', isVisible: true } : null,
     aiBlurb: !isPlayer && action.payload?.blurbText ? { text: action.payload.blurbText, isVisible: true } : null,
     isThinking: caller === 'ai' ? false : state.isThinking,
   };
@@ -98,10 +99,10 @@ export function handleCallRealEnvido(state: GameState, action: { type: ActionTyp
     previousEnvidoPoints: previousPoints,
     hasRealEnvidoBeenCalledThisSequence: true,
     playerEnvidoHistory: newEnvidoHistory,
-    messageLog: [...state.messageLog, `${caller === 'player' ? 'Jugador' : 'IA'} sube a ¡REAL ENVIDO!`],
+    messageLog: [...state.messageLog, { key: 'log.call_real_envido', options: { caller } }],
     playerEnvidoFoldHistory: newFoldHistory,
     hasEnvidoBeenCalledThisRound: true,
-    playerBlurb: isPlayer ? { text: '¡Real Envido!', isVisible: true } : null,
+    playerBlurb: isPlayer ? { text: 'actionBar.real_envido', isVisible: true } : null,
     aiBlurb: !isPlayer && action.payload?.blurbText ? { text: action.payload.blurbText, isVisible: true } : null,
     isThinking: caller === 'ai' ? false : state.isThinking,
   };
@@ -146,10 +147,10 @@ export function handleCallFaltaEnvido(state: GameState, action: { type: ActionTy
     envidoPointsOnOffer: faltaPoints,
     previousEnvidoPoints: previousPoints,
     playerEnvidoHistory: newEnvidoHistory,
-    messageLog: [...state.messageLog, `${caller === 'player' ? 'Jugador' : 'IA'} canta ¡FALTA ENVIDO!`],
+    messageLog: [...state.messageLog, { key: 'log.call_falta_envido', options: { caller } }],
     playerEnvidoFoldHistory: newFoldHistory,
     hasEnvidoBeenCalledThisRound: true,
-    playerBlurb: isPlayer ? { text: '¡Falta Envido!', isVisible: true } : null,
+    playerBlurb: isPlayer ? { text: 'actionBar.falta_envido', isVisible: true } : null,
     aiBlurb: !isPlayer && action.payload?.blurbText ? { text: action.payload.blurbText, isVisible: true } : null,
     isThinking: caller === 'ai' ? false : state.isThinking,
   };
@@ -171,8 +172,8 @@ export function handleDeclareFlor(state: GameState, action: { type: ActionType.D
     hasFlorBeenCalledThisRound: true,
     hasEnvidoBeenCalledThisRound: true, // Flor cancels any envido for the round
     florPointsOnOffer: 3,
-    messageLog: [...state.messageLog, `${caller === 'player' ? 'Jugador' : 'IA'} canta ¡FLOR!`],
-    playerBlurb: isPlayer ? { text: '¡Flor!', isVisible: true } : null,
+    messageLog: [...state.messageLog, { key: 'log.declare_flor', options: { caller } }],
+    playerBlurb: isPlayer ? { text: 'actionBar.flor', isVisible: true } : null,
     aiBlurb: !isPlayer && action.payload?.blurbText
       ? { text: action.payload.blurbText, isVisible: true }
       : state.aiBlurb,
@@ -197,8 +198,8 @@ export function handleRespondToEnvidoWithFlor(state: GameState, action: { type: 
     hasEnvidoBeenCalledThisRound: true,
     florPointsOnOffer: 3,
     envidoPointsOnOffer: 0, // Envido is cancelled
-    messageLog: [...state.messageLog, `${caller === 'player' ? 'Jugador' : 'IA'} responde al Envido con ¡FLOR!`],
-    playerBlurb: isPlayer ? { text: '¡Flor!', isVisible: true } : null,
+    messageLog: [...state.messageLog, { key: 'log.respond_envido_with_flor', options: { caller } }],
+    playerBlurb: isPlayer ? { text: 'actionBar.flor', isVisible: true } : null,
     aiBlurb: !isPlayer && action.payload?.blurbText ? { text: action.payload.blurbText, isVisible: true } : null,
     isThinking: caller === 'ai' ? false : state.isThinking,
   };
@@ -217,8 +218,8 @@ export function handleCallContraflor(state: GameState, action: { type: ActionTyp
     lastCaller: caller,
     currentTurn: opponent,
     turnBeforeInterrupt: state.turnBeforeInterrupt,
-    messageLog: [...state.messageLog, `${caller === 'player' ? 'Jugador' : 'IA'} canta ¡CONTRAFLOR AL RESTO!`],
-    playerBlurb: isPlayer ? { text: '¡Contraflor!', isVisible: true } : null,
+    messageLog: [...state.messageLog, { key: 'log.call_contraflor', options: { caller } }],
+    playerBlurb: isPlayer ? { text: 'actionBar.contraflor', isVisible: true } : null,
     aiBlurb: !isPlayer && action.payload?.blurbText ? { text: action.payload.blurbText, isVisible: true } : null,
     isThinking: caller === 'ai' ? false : state.isThinking,
   };

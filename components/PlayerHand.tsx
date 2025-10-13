@@ -1,7 +1,9 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { Card as CardType } from '../types';
 import Card from './Card';
+import { useLocalization } from '../context/LocalizationContext';
 
 interface PlayerHandProps {
   cards: CardType[];
@@ -14,6 +16,7 @@ interface PlayerHandProps {
 }
 
 const PlayerHand: React.FC<PlayerHandProps> = ({ cards, playerType, onCardPlay, isMyTurn = false, isThinking = false, isDebugMode = false, className = '' }) => {
+  const { t } = useLocalization();
   const [hoveredCardIndex, setHoveredCardIndex] = useState<number | null>(null);
   
   // Responsive spacing for player cards to look better on mobile
@@ -81,7 +84,7 @@ const PlayerHand: React.FC<PlayerHandProps> = ({ cards, playerType, onCardPlay, 
   return (
     <div className="flex flex-col items-center justify-center relative w-full py-2 lg:py-4 min-h-[140px] lg:min-h-[156px]">
       {isThinking && (
-        <div className="absolute -top-1 lg:-top-2 text-base animate-pulse z-30" style={{ textShadow: '2px 2px 3px rgba(0,0,0,0.7)' }}>IA está pensando...</div>
+        <div className="absolute -top-1 lg:-top-2 text-base animate-pulse z-30" style={{ textShadow: '2px 2px 3px rgba(0,0,0,0.7)' }}>{t('game.ai_thinking')}</div>
       )}
       <div className={`flex justify-center ${handSpacingClasses}`}>
         {cards.map((card, index) => (

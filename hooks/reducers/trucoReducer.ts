@@ -12,7 +12,6 @@ function updateRoundHistoryWithCall(state: GameState, callText: string): GameSta
 
 export function handleCallTruco(state: GameState, action: { type: ActionType.CALL_TRUCO, payload?: { blurbText: string, trucoContext?: AiTrucoContext } }): GameState {
   const isEnvidoPossible = state.currentTrick === 0 && state.playerTricks[0] === null && state.aiTricks[0] === null;
-  const callerName = state.currentTurn === 'player' ? 'Jugador' : 'IA';
   const caller = state.currentTurn!;
   const isPlayer = caller === 'player';
   
@@ -55,16 +54,15 @@ export function handleCallTruco(state: GameState, action: { type: ActionType.CAL
     turnBeforeInterrupt: state.currentTurn,
     trucoLevel: 1,
     pendingTrucoCaller: isEnvidoPossible ? state.currentTurn : null,
-    messageLog: [...state.messageLog, `${callerName} canta ¡TRUCO!`],
+    messageLog: [...state.messageLog, { key: 'log.call_truco', options: { caller } }],
     aiTrucoContext: action.payload?.trucoContext || null,
-    playerBlurb: isPlayer ? { text: '¡Truco!', isVisible: true } : null,
+    playerBlurb: isPlayer ? { text: 'actionBar.truco', isVisible: true } : null,
     aiBlurb: !isPlayer && action.payload?.blurbText ? { text: action.payload.blurbText, isVisible: true } : null,
     isThinking: caller === 'ai' ? false : state.isThinking,
   };
 }
 
 export function handleCallRetruco(state: GameState, action: { type: ActionType.CALL_RETRUCO, payload?: { blurbText: string, trucoContext?: AiTrucoContext } }): GameState {
-   const callerName = state.currentTurn === 'player' ? 'Jugador' : 'IA';
    const caller = state.currentTurn!;
    const isPlayer = caller === 'player';
    const updatedState = updateRoundHistoryWithCall(state, `${caller}: Retruco`);
@@ -76,16 +74,15 @@ export function handleCallRetruco(state: GameState, action: { type: ActionType.C
       turnBeforeInterrupt: state.turnBeforeInterrupt || state.currentTurn,
       trucoLevel: 2,
       pendingTrucoCaller: null,
-      messageLog: [...state.messageLog, `${callerName} canta ¡RETRUCO!`],
+      messageLog: [...state.messageLog, { key: 'log.call_retruco', options: { caller } }],
       aiTrucoContext: action.payload?.trucoContext || null,
-      playerBlurb: isPlayer ? { text: '¡Retruco!', isVisible: true } : null,
+      playerBlurb: isPlayer ? { text: 'actionBar.retruco', isVisible: true } : null,
       aiBlurb: !isPlayer && action.payload?.blurbText ? { text: action.payload.blurbText, isVisible: true } : null,
       isThinking: caller === 'ai' ? false : state.isThinking,
     };
 }
 
 export function handleCallValeCuatro(state: GameState, action: { type: ActionType.CALL_VALE_CUATRO, payload?: { blurbText: string, trucoContext?: AiTrucoContext } }): GameState {
-   const callerName = state.currentTurn === 'player' ? 'Jugador' : 'IA';
    const caller = state.currentTurn!;
    const isPlayer = caller === 'player';
    const updatedState = updateRoundHistoryWithCall(state, `${caller}: Vale Cuatro`);
@@ -97,9 +94,9 @@ export function handleCallValeCuatro(state: GameState, action: { type: ActionTyp
       turnBeforeInterrupt: state.turnBeforeInterrupt || state.currentTurn,
       trucoLevel: 3,
       pendingTrucoCaller: null,
-      messageLog: [...state.messageLog, `${callerName} canta ¡VALE CUATRO!`],
+      messageLog: [...state.messageLog, { key: 'log.call_vale_cuatro', options: { caller } }],
       aiTrucoContext: action.payload?.trucoContext || null,
-      playerBlurb: isPlayer ? { text: '¡Vale Cuatro!', isVisible: true } : null,
+      playerBlurb: isPlayer ? { text: 'actionBar.vale_cuatro', isVisible: true } : null,
       aiBlurb: !isPlayer && action.payload?.blurbText ? { text: action.payload.blurbText, isVisible: true } : null,
       isThinking: caller === 'ai' ? false : state.isThinking,
     };
@@ -107,7 +104,7 @@ export function handleCallValeCuatro(state: GameState, action: { type: ActionTyp
 
 export function handleCallFaltaTruco(state: GameState, action: { type: ActionType.CALL_FALTA_TRUCO }): GameState {
    // Falta Truco escalates the game to the highest stakes, functionally similar to Vale Cuatro in this point system.
-   const callerName = state.currentTurn === 'player' ? 'Jugador' : 'IA';
+   const caller = state.currentTurn!;
    return { 
       ...state, 
       gamePhase: 'vale_cuatro_called', 
@@ -116,6 +113,6 @@ export function handleCallFaltaTruco(state: GameState, action: { type: ActionTyp
       turnBeforeInterrupt: state.turnBeforeInterrupt || state.currentTurn,
       trucoLevel: 3,
       pendingTrucoCaller: null,
-      messageLog: [...state.messageLog, `${callerName} canta ¡FALTA TRUCO!`],
+      messageLog: [...state.messageLog, { key: 'log.call_falta_truco', options: { caller } }],
     };
 }

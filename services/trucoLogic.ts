@@ -1,4 +1,5 @@
 import { Card, Suit, Rank, Player } from '../types';
+import i18nService from './i18nService';
 
 const SUITS: Suit[] = ['espadas', 'bastos', 'oros', 'copas'];
 const RANKS: Rank[] = [1, 2, 3, 4, 5, 6, 7, 10, 11, 12];
@@ -35,16 +36,16 @@ export const decodeCardFromCode = (code: string): Card => {
 };
 
 export const getCardName = (card: Card): string => {
-  let rankName: string;
-  switch (card.rank) {
-    case 1: rankName = 'As'; break;
-    case 10: rankName = 'Sota'; break;
-    case 11: rankName = 'Caballo'; break;
-    case 12: rankName = 'Rey'; break;
-    default: rankName = String(card.rank);
+  const rankKey = `common.card_ranks.${card.rank}`;
+  let rankName = i18nService.t(rankKey);
+  // The service returns the key if not found. Check for this and fallback.
+  if (rankName === rankKey) {
+      rankName = String(card.rank);
   }
-  const suitName = card.suit.charAt(0).toUpperCase() + card.suit.slice(1);
-  return `${rankName} de ${suitName}`;
+
+  const suitName = i18nService.t(`common.card_suits.${card.suit}`);
+  
+  return i18nService.t('common.card_name_pattern', { rank: rankName, suit: suitName });
 };
 
 export const createDeck = (): Card[] => {

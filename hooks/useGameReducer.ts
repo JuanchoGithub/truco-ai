@@ -1,6 +1,6 @@
 // Fix: Moved the game reducer logic from the misnamed types.ts to its correct location here.
 // This file now contains the full, correct reducer implementation for the game.
-import { GameState, Action, ActionType, AiTrucoContext } from '../types';
+import { GameState, Action, ActionType, AiTrucoContext, MessageObject } from '../types';
 import { handleRestartGame, handleStartNewRound, handlePlayCard } from './reducers/gameplayReducer';
 // Fix: Corrected typo in function name from 'handleCallFalfaEnvido' to 'handleCallFaltaEnvido'.
 import { handleCallEnvido, handleCallRealEnvido, handleCallFaltaEnvido, handleDeclareFlor, handleRespondToEnvidoWithFlor, handleCallContraflor } from './reducers/envidoReducer';
@@ -28,7 +28,7 @@ export const initialState: GameState = {
   isThinking: false,
   winner: null,
   gameOverReason: null,
-  messageLog: ['¡Bienvenido a Truco AI!'],
+  messageLog: [{ key: 'log.welcome' }],
   isDebugMode: false,
   aiReasoningLog: [{ round: 0, reasoning: 'La IA está esperando que comience el juego.' }],
   isLogExpanded: false,

@@ -18,7 +18,7 @@ const MessageLog: React.FC<MessageLogProps> = ({ messages, dispatch, isModal }) 
     
     const options = { ...msg.options };
     // These keys might contain a Player type ('player' or 'ai') that needs to be translated.
-    const playerKeys: (keyof typeof options)[] = ['winner', 'winnerName', 'acceptor', 'acceptorName', 'decliner', 'declinerName'];
+    const playerKeys: (keyof typeof options)[] = ['winner', 'winnerName', 'acceptor', 'acceptorName', 'decliner', 'declinerName', 'caller', 'player'];
 
     for (const key of playerKeys) {
         if (options[key]) {
@@ -27,6 +27,8 @@ const MessageLog: React.FC<MessageLogProps> = ({ messages, dispatch, isModal }) 
                 options[key] = t('common.player');
             } else if (value === 'ai' || value === 'IA') {
                 options[key] = t('common.ai');
+            } else if (value === 'tie') {
+                options[key] = t('game.tie');
             }
         }
     }

@@ -1,0 +1,105 @@
+{
+  "phrases": {
+    "quiero": [
+      "I'm in! Let's see those cards.", "Alright, I'll bite. I want it!", "Challenge accepted. I want it!",
+      "I'll take that bet, let the cards decide!", "Of course I want it! Bring it on.", "I'll risk it. I'm in!",
+      "Let's see... Yes, I want it!", "Yes, I want it. No fear.", "Going for it. I'm in!", "Accepted... I want it!"
+    ],
+    "no_quiero": [
+      "No thanks. My cards won't even get me to the corner store.", "I'll pass. I think you're bluffing.",
+      "Hmm, doesn't feel right. I'll pass this time.", "Are you kidding me? I don't want it, buddy.",
+      "I'd rather be a coward for a moment than a fool for a lifetime. I'm out.", "That's enough. Save that bravado for the next round.",
+      "No way, I don't believe you. But I'll pass.", "Better not. I have a bad feeling about this.",
+      "I pass. Show me what you had, let's see if I regret it.", "Nope, can't win with this. I pass.",
+      "I'll let you have this one. I don't want it.", "You seem too confident. I'm out, just in case.",
+      "I'll pass. You play.", "I'm not risking it. My cards are fit for a game of Go Fish.",
+      "Better pass. I don't want to just give you the points.", "I don't want it. You look way too calm, and I don't like it.",
+      "I'll pass. But I'm watching you.", "You know what? No. I don't want it.",
+      "My gut says no. And I listen to my gut. I pass.", "I don't want it. This hand is done for.",
+      "I'll pass. Save your poison for another time.", "Not right now. Let me see what you do.",
+      "No thanks. I'm not running a charity today.", "I'll pass. Smells like a trap.",
+      "Too much risk. I don't want it.", "No, let it be. Let's see how the hand plays out.",
+      "I concede the points. I'm out.", "I don't trust your face. I pass.",
+      "I'll pass. My cards need a therapist.", "I don't want it. And for the record, it's strategy, not fear."
+    ],
+    "envido_win": [
+      "My points are the law.", "I won the points.", "I won the envido! Tallying up...",
+      "These points are mine.", "Better luck with the envido next time."
+    ],
+    "envido_lose": [
+      "Yours are good. Well played.", "Your points are better. Congrats.", "They're good. You beat me on the points.",
+      "I admit, they're good.", "You won fair and square. They're good."
+    ],
+    "trick_win": [
+      "This trick is mine!", "That's how it's done!", "One step closer to victory.",
+      "I win this trick.", "Take that! So you learn."
+    ],
+    "trick_lose": [
+      "Well played.", "You got me.", "Good card.", "This one's yours, but the round isn't over.", "Hmm, didn't see that coming."
+    ],
+    "flor": [
+      "The garden in my hand has bloomed. I have FLOR!", "A scent of victory in the air... FLOR!",
+      "With these three of a kind, I declare FLOR!", "It's not luck, it's botany. FLOR!",
+      "Things are looking up... for me. FLOR!", "Three of the same color, what a treasure! FLOR!",
+      "I saw a little bird today, it flew right past my door. It looked at me and seemed to say, 'You're gonna get a FLOR!'",
+      "These cards are junk, I'm filled with dread. The only thing that's good instead, is this beautiful FLOR I have to spread!",
+      "I may not be a gambling man, I may not know the score. But even I can understand the beauty of a FLOR!"
+    ],
+    "contraflor": [
+      "You think your flower is so grand? I'll raise the stakes across the land. Your FLOR is nice, but I'll counter, see? CONTRAFLOR for victory!",
+      "A FLOR you have? That's quite a show. But watch as my own garden grows! I see your bet and raise it more, I call a mighty CONTRAFLOR!",
+      "A lovely FLOR, it's true, you've shown, but seeds of doubt I've also sown. Prepare yourself for a bigger fight, CONTRAFLOR with all my might!"
+    ],
+    "contraflor_quiero": [
+      "You challenge me, the stakes are high, but with this FLOR, I'll reach the sky. Your Contraflor I gladly meet, for my own hand is just as sweet. WITH FLOR, I WANT IT!",
+      "You think you've got the winning hand? The best laid plans are built on sand. I'll see your bet, I'll play along, because my FLOR is just as strong. WITH FLOR, I'M IN!"
+    ],
+    "contraflor_no_quiero": [
+      "Your confidence, it shines so bright, I fear my FLOR can't win this fight. A bigger prize you might have won, so with my FLOR, I have to run. WITH FLOR, I FOLD.",
+      "To challenge you would be a fool, my hand just doesn't have the tool. I'll give you points, I'll say no more, and with my FLOR, I'm out the door."
+    ],
+    "envido_primero": [
+      "Hold on! The envido comes first.", "Hold your horses... envido goes first.",
+      "One second, the points are worth it. Envido goes first.", "Not so fast. Before the war, the points. Envido goes first.",
+      "First things first... and the envido is first!"
+    ],
+    "post_envido_truco_reminder": [
+      "Alright, we settled the points. Now... what about that truco I called?",
+      "Envido is done. But I'll remind you that the truco is still on the table.",
+      "Okay, envido's over. Let's get back to what's important: TRUCO!",
+      "The envido is settled. Now, to the matter at hand, do you accept the truco?",
+      "Envido's finished. Now, let's talk truco.", "Okay, chapter closed on envido. And the truco? I'm waiting.",
+      "Let's put the points aside for a moment. I asked you... TRUCO?"
+    ],
+    "envido": [
+      "I see your cards, I see your face, I'll call ENVIDO, just in case.",
+      "My points are high, a lovely sum, I'll call ENVIDO, has your time come?",
+      "Whether you're bluffing, I can't tell, but I'll call ENVIDO, wish me well."
+    ],
+    "real_envido": [
+      "My points are strong, a mighty three, I'll raise the stakes with REAL ENVIDO, you see?",
+      "Don't be shy, let's make a deal, I'm calling out an ENVIDO that's REAL.",
+      "Your envido's fine, but mine's a blast, this REAL ENVIDO is built to last!"
+    ],
+    "falta_envido": [
+      "Let's end the game, let's make it fast, this FALTA ENVIDO is the die I cast.",
+      "For all the points, for all the glory, my FALTA ENVIDO tells the story.",
+      "I'm close to winning, you're far behind, FALTA ENVIDO is what you'll find!"
+    ],
+    "truco": [
+      "The round is mine, I'll make it so, I'm calling TRUCO, watch me go!",
+      "I like my chances, I like my hand, I'm calling TRUCO across the land.",
+      "To win the round, the points to seize, I'm calling TRUCO with the greatest of ease."
+    ],
+    "retruco": [
+      "Your Truco's bold, I must admit, but I'll RETRUCO, I'll never quit.",
+      "You want to play? Let's raise the bet! With this RETRUCO, you'll break a sweat.",
+      "I see your Truco, and I'll raise you more, RETRUCO's called, now what's in store?"
+    ],
+    "vale_cuatro": [
+      "For all the glory, for all the fame, VALE CUATRO is the name of the game!",
+      "The final bet, the ultimate prize, VALE CUATRO, before your very eyes.",
+      "You've come this far, but now you'll fall, VALE CUATRO, I'm risking it all!"
+    ]
+  }
+}

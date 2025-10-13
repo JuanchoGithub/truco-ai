@@ -181,7 +181,7 @@ export function handleAccept(state: GameState, action: { type: ActionType.ACCEPT
     const newState = {
       ...updatedStateWithCall,
       playerEnvidoHistory: newEnvidoHistory,
-      playerBlurb: isPlayer ? { text: '¡Quiero!', isVisible: true } : null,
+      playerBlurb: isPlayer ? { text: 'actionBar.quiero', isVisible: true } : null,
       aiBlurb: !isPlayer && action.payload?.blurbText 
         ? { text: action.payload.blurbText, isVisible: true } 
         : null,
@@ -411,7 +411,7 @@ export function handleDecline(state: GameState, action: { type: ActionType.DECLI
     const newState = {
       ...updatedStateWithCall,
       playerEnvidoHistory: newEnvidoHistory,
-      playerBlurb: isPlayer ? { text: 'No Quiero', isVisible: true } : null,
+      playerBlurb: isPlayer ? { text: 'actionBar.no_quiero', isVisible: true } : null,
       aiBlurb: !isPlayer && action.payload?.blurbText 
         ? { text: action.payload.blurbText, isVisible: true } 
         : null,
@@ -497,7 +497,7 @@ export function handleAcknowledgeFlor(state: GameState, action: { type: ActionTy
         turnBeforeInterrupt: null,
         lastCaller: null,
         roundHistory: newRoundHistory,
-        playerBlurb: isPlayer ? { text: 'Son Buenas', isVisible: true } : null,
+        playerBlurb: isPlayer ? { text: 'actionBar.flor_ack_good', isVisible: true } : null,
         aiBlurb: !isPlayer && action.payload?.blurbText ? { text: action.payload.blurbText, isVisible: true } : null,
         isThinking: false,
     };
@@ -512,7 +512,7 @@ export function handleAcceptContraflor(state: GameState, action: { type: ActionT
         gamePhase: 'FLOR_SHOWDOWN',
         florPointsOnOffer: 6,
         messageLog: [...state.messageLog, { key: 'log.accept_contraflor', options: { acceptor } }],
-        playerBlurb: isPlayer ? { text: '¡Quiero!', isVisible: true } : null,
+        playerBlurb: isPlayer ? { text: 'actionBar.contraflor_quiero', isVisible: true } : null,
         aiBlurb: !isPlayer && action.payload?.blurbText ? { text: action.payload.blurbText, isVisible: true } : null,
         isThinking: false,
     };
@@ -527,7 +527,7 @@ export function handleDeclineContraflor(state: GameState, action: { type: Action
         gamePhase: 'CONTRAFLOR_DECLINED',
         florPointsOnOffer: 4,
         messageLog: [...state.messageLog, { key: 'log.decline_contraflor', options: { decliner } }],
-        playerBlurb: isPlayer ? { text: 'Me achico', isVisible: true } : null,
+        playerBlurb: isPlayer ? { text: 'actionBar.contraflor_no_quiero', isVisible: true } : null,
         aiBlurb: !isPlayer && action.payload?.blurbText ? { text: action.payload.blurbText, isVisible: true } : null,
         isThinking: false,
     };
