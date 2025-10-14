@@ -345,7 +345,32 @@
       "retruco_called": "Retruco Cantado",
       "flor_called": "Flor Cantada"
     },
-    "regenerate_hands_tooltip": "Carga un escenario predefinido para usar esta función."
+    "regenerate_hands_tooltip": "Carga un escenario predefinido para usar esta función.",
+    "describe_button": "Describir",
+    "describe_button_aria": "Describir escenarios predefinidos",
+    "descriptions": {
+      "title": "Descripción de Escenarios",
+      "parda_y_gano": {
+        "title": "Oportunidad de 'Parda y Gano'",
+        "description": "Este escenario clásico pone a prueba la habilidad de la IA para reconocer una victoria garantizada. La primera mano fue un empate ('parda'). Según las reglas del Truco, el ganador de la segunda mano ahora gana la ronda entera. La IA está configurada para jugar primero en esta mano decisiva y se le da una mano que puede vencer a cualquier carta restante que el oponente pueda tener. La prueba es ver si la IA identifica correctamente esta oportunidad de alto valor y sin riesgo, y escala la apuesta cantando 'Truco' antes de jugar su carta ganadora."
+      },
+      "do_or_die": {
+        "title": "Respuesta de Truco a Todo o Nada",
+        "description": "Esta es una prueba de presión de final de partida. Al oponente le falta un punto para ganar (14 puntos) y ha cantado 'Truco'. Si la IA se retira ('No Quiero'), concede 1 punto y pierde la partida. Si la IA acepta ('Quiero') y pierde la mano, concede 2 puntos y también pierde la partida. A la IA se le da una mano muy débil. La jugada estratégica correcta es siempre aceptar ('Quiero'), porque retirarse es una derrota garantizada, mientras que aceptar proporciona una pequeña, aunque no nula, posibilidad de ganar si el oponente cometió un error o está de farol. Este escenario prueba la lógica de final de juego de la IA."
+      },
+      "lopsided_bait": {
+        "title": "Engaño con Envido y Mano Desequilibrada",
+        "description": "Esto prueba una táctica de engaño avanzada. A la IA se le da una mano 'desequilibrada': puntos muy altos para el Envido (ej. 31+) pero cartas muy débiles para el Truco. La jugada estándar sería cantar Envido inmediatamente. Sin embargo, la estrategia avanzada es 'cebar' al oponente jugando una carta en silencio. El objetivo es hacer que el oponente piense que la IA tiene un Envido débil, animándolo a cantarlo él mismo. Esto permite a la IA contraatacar con 'Real Envido' o 'Falta Envido', maximizando sus puntos en la única fase que puede ganar, mientras evita una probable derrota en la fase de Truco. Esto prueba la lógica de cebo estratégico de la IA."
+      },
+      "envido_primero": {
+        "title": "Respuesta de 'Envido Primero'",
+        "description": "Este escenario prueba la comprensión de la IA sobre las prioridades de las reglas. El oponente ha cantado 'Truco' en la primera mano. Sin embargo, la oportunidad de cantar Envido todavía está abierta. A la IA se le da una mano excelente para el Envido (ej. 33 puntos). La jugada correcta no es responder directamente al canto de Truco, sino interrumpir el flujo del juego cantando 'Envido Primero'. Esto obliga a que la apuesta de Envido se resuelva antes de que continúe la apuesta de Truco. Esto prueba el conocimiento de las reglas de la IA y su capacidad para priorizar oportunidades de sumar puntos."
+      },
+      "flor_vs_envido": {
+        "title": "Respuesta de Flor vs. Envido",
+        "description": "Otra prueba de prioridad de reglas. El oponente ha cantado 'Envido'. La IA, sin embargo, ha recibido una 'Flor' (tres cartas del mismo palo). Según las reglas, la Flor vence y anula cualquier apuesta de Envido. La IA no debe responder al canto de Envido (ej., aceptando o escalando). En su lugar, debe declarar su 'Flor', lo que automáticamente gana 3 puntos y cancela la secuencia de Envido. Esto prueba el conocimiento de la IA sobre la prioridad absoluta de la Flor."
+      }
+    }
   },
   "card_picker": {
     "title": "Seleccionar una Carta",

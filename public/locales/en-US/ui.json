@@ -345,7 +345,32 @@
       "retruco_called": "Retruco Called",
       "flor_called": "Flor Called"
     },
-    "regenerate_hands_tooltip": "Load a predefined scenario to use this feature."
+    "regenerate_hands_tooltip": "Load a predefined scenario to use this feature.",
+    "describe_button": "Describe",
+    "describe_button_aria": "Describe predefined scenarios",
+    "descriptions": {
+      "title": "Scenario Descriptions",
+      "parda_y_gano": {
+        "title": "'Parda y Gano' (Tie and Win) Opportunity",
+        "description": "This classic scenario tests the AI's ability to recognize a guaranteed win. The first trick was a tie ('parda'). According to Truco rules, the winner of the second trick now wins the entire round. The AI is set up to be the first to play in this decisive second trick and is given a hand that can beat any possible remaining card the opponent might have. The test is to see if the AI correctly identifies this risk-free, high-value opportunity and escalates the bet by calling 'Truco' before playing its winning card."
+      },
+      "do_or_die": {
+        "title": "Do-or-Die Truco Response",
+        "description": "This is an endgame pressure test. The opponent is one point away from winning the game (14 points) and has called 'Truco'. If the AI folds ('No Quiero'), it concedes 1 point and loses the game. If the AI accepts ('Quiero') and loses the trick, it concedes 2 points and also loses the game. The AI is given a very weak hand. The correct strategic play is to always accept ('Quiero'), because folding is a guaranteed loss, whereas accepting provides a slim, non-zero chance of winning if the opponent made a mistake or is bluffing. This scenario tests the AI's endgame logic."
+      },
+      "lopsided_bait": {
+        "title": "Lopsided Hand Envido Bait",
+        "description": "This tests an advanced deceptive tactic. The AI is given a 'lopsided' hand: very high points for Envido (e.g., 31+) but very weak cards for Truco. The standard play would be to call Envido immediately. However, the advanced strategy is to 'bait' the opponent by playing a card silently. The goal is to make the opponent think the AI has a weak Envido, encouraging them to call it themselves. This allows the AI to then counter-escalate with 'Real Envido' or 'Falta Envido', maximizing its points in the only phase it can win, while avoiding a likely loss in the Truco phase. This tests the AI's strategic baiting logic."
+      },
+      "envido_primero": {
+        "title": "'Envido Primero' (Envido Goes First) Response",
+        "description": "This scenario tests the AI's understanding of rule priorities. The opponent has called 'Truco' in the first trick. However, the opportunity to call Envido is still open. The AI is given an excellent hand for Envido (e.g., 33 points). The correct play is not to respond to the Truco call directly, but to interrupt the flow of the game by calling 'Envido Primero'. This forces the Envido bet to be resolved before the Truco bet continues. This tests the AI's rule knowledge and ability to prioritize point-scoring opportunities."
+      },
+      "flor_vs_envido": {
+        "title": "Flor vs. Envido Response",
+        "description": "Another rule priority test. The opponent has called 'Envido'. The AI, however, has been dealt a 'Flor' (three cards of the same suit). According to the rules, Flor beats and nullifies any Envido bet. The AI should not respond to the Envido call (e.g., by accepting or escalating). Instead, it must declare its 'Flor', which automatically wins 3 points and cancels the Envido sequence. This tests the AI's knowledge of the absolute priority of Flor."
+      }
+    }
   },
   "card_picker": {
     "title": "Select a Card",

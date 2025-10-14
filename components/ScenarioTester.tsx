@@ -94,6 +94,32 @@ const CardPickerModal: React.FC<{
     );
 };
 
+const ScenarioDescriptionsModal: React.FC<{ onExit: () => void }> = ({ onExit }) => {
+    const { t } = useLocalization();
+    return (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4">
+            <div className="bg-stone-800/95 border-4 border-indigo-700/50 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+                <div className="p-4 border-b-2 border-indigo-700/30 flex justify-between items-center">
+                    <h2 className="text-xl font-bold text-indigo-300 font-cinzel">{t('scenario_tester.descriptions.title')}</h2>
+                    <button onClick={onExit} className="text-indigo-200 text-2xl font-bold">&times;</button>
+                </div>
+                <div className="p-6 flex-grow overflow-y-auto space-y-6 text-gray-200">
+                    {predefinedScenarios.map(scenario => {
+                        const scenarioKey = scenario.nameKey.split('.').pop();
+                        if (!scenarioKey) return null;
+                        return (
+                            <div key={scenario.nameKey}>
+                                <h3 className="text-lg font-bold text-yellow-300">{t(`scenario_tester.descriptions.${scenarioKey}.title`)}</h3>
+                                <p className="mt-1 text-sm text-gray-300 whitespace-pre-wrap">{t(`scenario_tester.descriptions.${scenarioKey}.description`)}</p>
+                            </div>
+                        )
+                    })}
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const ScenarioTester: React.FC<{ onExit: () => void }> = ({ onExit }) => {
     const { t } = useLocalization();
 
@@ -120,6 +146,7 @@ const ScenarioTester: React.FC<{ onExit: () => void }> = ({ onExit }) => {
     const [pickerState, setPickerState] = useState<{ open: boolean, hand: 'ai' | 'opponent', index: number }>({ open: false, hand: 'ai', index: 0 });
     const [testResult, setTestResult] = useState<AiMove | null>(null);
     const [selectedScenario, setSelectedScenario] = useState<PredefinedScenario | null>(null);
+    const [isDescriptionVisible, setIsDescriptionVisible] = useState(false);
 
     const availableCards = useMemo(() => {
         const selected = [...aiHand, ...opponentHand].filter(c => c !== null);
@@ -235,7 +262,16 @@ const ScenarioTester: React.FC<{ onExit: () => void }> = ({ onExit }) => {
                 <div className={`flex-grow p-4 lg:p-6 gap-6 overflow-y-auto ${isWideLayout ? 'grid grid-cols-[1fr_2fr]' : 'flex flex-col'}`}>
                     {/* Setup Panel */}
                     <div className="space-y-4 flex flex-col">
-                        <h3 className="text-lg font-bold text-indigo-200">{t('scenario_tester.setup')}</h3>
+                         <div className="flex items-center gap-2">
+                            <h3 className="text-lg font-bold text-indigo-200">{t('scenario_tester.setup')}</h3>
+                             <button 
+                                onClick={() => setIsDescriptionVisible(true)}
+                                className="px-3 py-1 text-xs rounded-md font-semibold text-indigo-200 bg-black/40 border border-indigo-500/80 hover:bg-indigo-900/60 transition-colors"
+                                aria-label={t('scenario_tester.describe_button_aria')}
+                            >
+                                {t('scenario_tester.describe_button')}
+                            </button>
+                        </div>
                         <select onChange={handleLoadScenario} className="w-full p-2 bg-gray-900 border border-gray-600 rounded-md text-white">
                             <option>{t('scenario_tester.select_scenario')}</option>
                             {predefinedScenarios.map(s => <option key={s.nameKey}>{t(s.nameKey)}</option>)}
@@ -308,6 +344,7 @@ const ScenarioTester: React.FC<{ onExit: () => void }> = ({ onExit }) => {
                 </div>
 
                 {pickerState.open && <CardPickerModal availableCards={availableCards} onSelect={handleCardSelect} onExit={() => setPickerState({ ...pickerState, open: false })} />}
+                {isDescriptionVisible && <ScenarioDescriptionsModal onExit={() => setIsDescriptionVisible(false)} />}
             </div>
         </div>
     );
