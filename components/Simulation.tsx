@@ -7,6 +7,7 @@ import CardComponent from './Card';
 import { getCardName } from '../services/trucoLogic';
 import BatchAnalyzer from './BatchAnalyzer';
 import { useLocalization } from '../context/LocalizationContext';
+import ScenarioTester from './ScenarioTester';
 
 // A simple card row display
 const HandDisplay: React.FC<{ cards: CardType[], title: string }> = ({ cards, title }) => (
@@ -52,6 +53,7 @@ const Simulation: React.FC<{ onExit: () => void }> = ({ onExit }) => {
     const eventLogRef = useRef<HTMLDivElement>(null);
     const previousRoundRef = useRef<number>(0);
     const [showAnalyzer, setShowAnalyzer] = useState(false);
+    const [showTester, setShowTester] = useState(false);
 
     // Auto-scroll the event log
     useEffect(() => {
@@ -176,6 +178,8 @@ const Simulation: React.FC<{ onExit: () => void }> = ({ onExit }) => {
             const actionDesc = getActionDescription(move.action, state, t);
             // Reformat reasoning for better display in the log
             const formattedReasoning = move.reasoning
+                .map(r => typeof r === 'string' ? r : t(r.key, r.options))
+                .join('\n')
                 .split('\n')
                 .map(line => `  ${line}`) // Indent each line
                 .join('\n');
@@ -237,6 +241,9 @@ const Simulation: React.FC<{ onExit: () => void }> = ({ onExit }) => {
                     <button onClick={handleNextRound} disabled={isRoundInProgress} className="px-4 py-2 rounded-lg font-bold text-white bg-green-600 border-b-4 border-green-800 hover:bg-green-500 disabled:bg-gray-500 disabled:border-gray-700 transition-colors">
                         {isRoundInProgress ? t('simulation.button_simulating') : (state.winner ? t('simulation.button_restart') : t('simulation.button_simulate_round'))}
                     </button>
+                    <button onClick={() => setShowTester(true)} className="px-4 py-2 rounded-lg font-bold text-white bg-indigo-600 border-b-4 border-indigo-800 hover:bg-indigo-500 transition-colors">
+                        {t('simulation.button_scenario_tester')}
+                    </button>
                     <button onClick={() => setShowAnalyzer(true)} className="px-4 py-2 rounded-lg font-bold text-white bg-purple-600 border-b-4 border-purple-800 hover:bg-purple-500 transition-colors">
                         {t('simulation.button_batch_analyzer')}
                     </button>
@@ -280,6 +287,7 @@ const Simulation: React.FC<{ onExit: () => void }> = ({ onExit }) => {
                 </div>
             </div>
             {showAnalyzer && <BatchAnalyzer onExit={() => setShowAnalyzer(false)} />}
+            {showTester && <ScenarioTester onExit={() => setShowTester(false)} />}
         </div>
     );
 };
