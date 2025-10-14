@@ -30,7 +30,7 @@ export const initialState: GameState = {
   gameOverReason: null,
   messageLog: [{ key: 'log.welcome' }],
   isDebugMode: false,
-  aiReasoningLog: [{ round: 0, reasoning: 'La IA está esperando que comience el juego.' }],
+  aiReasoningLog: [{ round: 0, reasoning: [{ key: 'ai_logic.initial_state' }] }],
   isLogExpanded: false,
   isGameLogExpanded: false,
   lastCaller: null,
@@ -38,6 +38,7 @@ export const initialState: GameState = {
   pendingTrucoCaller: null,
   hasEnvidoBeenCalledThisRound: false,
   hasRealEnvidoBeenCalledThisSequence: false,
+  hasFaltaEnvidoBeenCalledThisSequence: false,
   hasFlorBeenCalledThisRound: false,
   playerHasFlor: false,
   aiHasFlor: false,
@@ -219,8 +220,8 @@ export function useGameReducer(state: GameState, action: Action): GameState {
             
             // Set a message indicating session restoration or import
             messageLog: action.type === ActionType.LOAD_PERSISTED_STATE
-              ? [...(loadedState.messageLog || []), '--- Sesión Restaurada ---']
-              : ['--- Perfil Importado ---'],
+              ? [...(loadedState.messageLog || []), { key: 'game.session_restored', type: 'round_separator' }]
+              : [{ key: 'game.profile_imported', type: 'round_separator' }],
 
             // Continue the game by setting the correct mano for the *next* round
             mano: loadedState.mano || 'player',

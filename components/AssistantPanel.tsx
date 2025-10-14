@@ -1,8 +1,9 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { AiMove, Card } from '../types';
+import { AiMove, Card, MessageObject } from '../types';
 import { getSimpleSuggestionText } from '../services/suggestionService';
 import { useLocalization } from '../context/LocalizationContext';
+import { getCardName } from '../services/trucoLogic';
 
 interface AssistantPanelProps {
   suggestion: AiMove | null;
@@ -45,6 +46,30 @@ const AssistantPanel: React.FC<AssistantPanelProps> = ({ suggestion, playerHand 
 
   const suggestionText = currentSuggestion.summary || getSimpleSuggestionText(currentSuggestion, playerHand);
 
+  // Fix: Process the reasoning array into a displayable string.
+  const reasoningText = Array.isArray(currentSuggestion.reasoning)
+    ? currentSuggestion.reasoning.map(r => {
+        if (typeof r === 'string') return r;
+        
+        const options: { [key: string]: any } = { ...r.options };
+
+        // Handle card objects, arrays of cards, and suits
+        for (const key in options) {
+            if (options[key] && typeof options[key] === 'object') {
+                if (Array.isArray(options[key])) { // Handle hand: Card[]
+                    options[key] = options[key].map((c: any) => getCardName(c)).join(', ');
+                } else if ('rank' in options[key] && 'suit' in options[key]) { // Handle card: Card
+                    options[key] = getCardName(options[key] as Card);
+                }
+            } else if (key === 'suit' && typeof options[key] === 'string') {
+                options[key] = t(`common.card_suits.${options[key]}`);
+            }
+        }
+        
+        return t(r.key, options || {});
+      }).join('\n')
+    : String(currentSuggestion.reasoning || '');
+
   if (!isExpanded) {
     return (
       <button
@@ -84,7 +109,7 @@ const AssistantPanel: React.FC<AssistantPanelProps> = ({ suggestion, playerHand 
         {showLogic && (
           <div className="mt-2 p-2 bg-black/50 rounded max-h-48 overflow-y-auto">
             <pre className="text-xs text-gray-300 whitespace-pre-wrap font-mono">
-              {currentSuggestion.reasoning}
+              {reasoningText}
             </pre>
           </div>
         )}

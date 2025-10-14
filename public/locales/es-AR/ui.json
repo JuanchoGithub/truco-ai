@@ -671,5 +671,14 @@
         "li4_text": " The maximum bet, worth the points the leader needs to win the game."
       }
     }
+  },
+  "cardImageService": {
+    "errors": {
+      "remote_load_failed": "Failed to load remote card spritesheet.",
+      "local_load_failed": "Failed to load local card spritesheet.",
+      "local_load_failed_path": "Failed to load local card spritesheet from /assets/cartas.png",
+      "invalid_card": "Invalid card for spritesheet: {{cardName}}",
+      "no_canvas_context": "Could not get canvas context"
+    }
   }
 }

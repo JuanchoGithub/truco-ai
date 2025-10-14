@@ -68,7 +68,7 @@ const CardPile: React.FC<CardPileProps> = ({ cards, trickWinners, owner, label }
 
 
 const GameBoard: React.FC<GameBoardProps> = ({ gameState, dispatch }) => {
-  const { t } = useLocalization();
+  const { t, translatePlayerName } = useLocalization();
   const { playerTricks, aiTricks, trickWinners, lastRoundWinner, gamePhase, round, roundHistory, playerScore, aiScore } = gameState;
   const isRoundOver = gamePhase === 'round_end' && lastRoundWinner;
 
@@ -96,9 +96,9 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState, dispatch }) => {
     
     const renderNote = (note: PointNote) => {
         if (!note || !note.key) return null;
-        let finalOptions = note.options;
+        let finalOptions = { ...note.options };
         if (note.options?.decliner) {
-            const declinerName = t(`common.${note.options.decliner}`);
+            const declinerName = translatePlayerName(note.options.decliner as string);
             finalOptions = { ...note.options, decliner: declinerName };
         }
         return `(${t(note.key, finalOptions)})`;

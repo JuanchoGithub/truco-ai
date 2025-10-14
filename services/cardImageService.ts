@@ -1,5 +1,6 @@
 import { Card, Suit, Rank } from '../types';
 import { getCardName } from './trucoLogic';
+import i18nService from './i18nService';
 
 const SPRITE_SHEET_URL_REMOTE = 'https://upload.wikimedia.org/wikipedia/commons/e/e0/Baraja_espa%C3%B1ola_completa.png';
 const SPRITE_SHEET_URL_LOCAL = '/cartas.png';
@@ -52,8 +53,8 @@ function getSpriteSheet(mode: 'image' | 'local-image'): Promise<HTMLImageElement
                 resolve(img);
             };
             img.onerror = (err) => {
-                console.error("Failed to load remote card spritesheet.", err);
-                reject(new Error("Failed to load remote card spritesheet."));
+                console.error(i18nService.t('cardImageService.errors.remote_load_failed'), err);
+                reject(new Error(i18nService.t('cardImageService.errors.remote_load_failed')));
             };
             img.src = SPRITE_SHEET_URL_REMOTE;
         });
@@ -75,8 +76,8 @@ function getSpriteSheet(mode: 'image' | 'local-image'): Promise<HTMLImageElement
                 resolve(img);
             };
             img.onerror = (err) => {
-                console.error("Failed to load local card spritesheet.", err);
-                reject(new Error("Failed to load local card spritesheet from /assets/cartas.png"));
+                console.error(i18nService.t('cardImageService.errors.local_load_failed'), err);
+                reject(new Error(i18nService.t('cardImageService.errors.local_load_failed_path')));
             };
             img.src = SPRITE_SHEET_URL_LOCAL;
         });
@@ -100,7 +101,7 @@ export async function getCardImageDataUrl(card: Card, mode: 'image' | 'local-ima
     const col = rankToCol[card.rank];
 
     if (row === undefined || col === undefined) {
-        throw new Error(`Invalid card for spritesheet: ${getCardName(card)}`);
+        throw new Error(i18nService.t('cardImageService.errors.invalid_card', { cardName: getCardName(card) }));
     }
 
     const x = col * CARD_WIDTH;
@@ -112,7 +113,7 @@ export async function getCardImageDataUrl(card: Card, mode: 'image' | 'local-ima
     const ctx = canvas.getContext('2d');
 
     if (!ctx) {
-        throw new Error("Could not get canvas context");
+        throw new Error(i18nService.t('cardImageService.errors.no_canvas_context'));
     }
 
     ctx.drawImage(img, x, y, CARD_WIDTH, CARD_HEIGHT, 0, 0, canvas.width, canvas.height);

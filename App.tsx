@@ -32,7 +32,7 @@ import { useLocalization } from './context/LocalizationContext';
 type GameMode = 'menu' | 'playing' | 'tutorial' | 'playing-with-help' | 'manual' | 'simulation';
 
 const App: React.FC = () => {
-  const { t } = useLocalization();
+  const { t, translatePlayerName } = useLocalization();
   const [state, dispatch] = useReducer(useGameReducer, initialState);
   const [localMessage, setLocalMessage] = useState<string | null>(null);
   const [isMessageVisible, setIsMessageVisible] = useState(false);
@@ -106,7 +106,11 @@ const App: React.FC = () => {
         dispatch({ type: ActionType.AI_THINKING, payload: true });
         
         const aiHandString = state.aiHand.map(getCardName).join(', ');
-        const initialReasoning = `Es mi turno. Fase: ${state.gamePhase}.\nMi mano: [${aiHandString}].\nConsultando IA...`;
+        const initialReasoning: MessageObject[] = [
+            { key: 'ai_logic.turn_info', options: { gamePhase: state.gamePhase } },
+            { key: 'ai_logic.hand_info', options: { hand: aiHandString } },
+            { key: 'ai_logic.consulting' }
+        ];
         dispatch({ type: ActionType.ADD_AI_REASONING_LOG, payload: { round: state.round, reasoning: initialReasoning } });
 
         try {
@@ -120,7 +124,7 @@ const App: React.FC = () => {
         } catch(error) {
             console.error("Error getting AI move from local AI:", error);
             dispatch({ type: ActionType.ADD_MESSAGE, payload: { key: 'game.error_ai' } });
-            dispatch({ type: ActionType.ADD_AI_REASONING_LOG, payload: { round: state.round, reasoning: `Error IA Local: ${error}` } });
+            dispatch({ type: ActionType.ADD_AI_REASONING_LOG, payload: { round: state.round, reasoning: [`Error IA Local: ${error}`] } });
             dispatch({ type: ActionType.AI_THINKING, payload: false });
         }
       };
@@ -256,10 +260,10 @@ const App: React.FC = () => {
     if (state.centralMessage) {
         const options = { ...state.centralMessage.options };
         if (options.winnerName) {
-            options.winnerName = options.winnerName === 'player' ? t('common.you') : t('common.ai');
+            options.winnerName = translatePlayerName(options.winnerName);
         }
         if (options.winner) {
-            options.winnerName = options.winner === 'player' ? t('common.you') : t('common.ai');
+            options.winnerName = translatePlayerName(options.winner);
         }
         const translatedMessage = t(state.centralMessage.key, options);
         setLocalMessage(translatedMessage);
@@ -278,7 +282,7 @@ const App: React.FC = () => {
             clearTimeout(messageTimers.current.clearTimerId);
         };
     }
-  }, [state.centralMessage, state.isCentralMessagePersistent, dispatch, gameMode, t]);
+  }, [state.centralMessage, state.isCentralMessagePersistent, dispatch, gameMode, t, translatePlayerName]);
 
   // Automatically clear the player's blurb after a short delay
   useEffect(() => {
@@ -415,7 +419,7 @@ const App: React.FC = () => {
                 <div className="text-center">
                     <h1 className="text-3xl lg:text-4xl font-cinzel font-bold tracking-wider text-yellow-300" style={{ textShadow: '3px 3px 5px rgba(0,0,0,0.8)' }}>TRUCO</h1>
                     <p className="text-xs lg:text-sm text-gray-200 tracking-widest">
-                        {t('game.round_info', { round: state.round, player: state.mano === 'player' ? t('common.you') : t('common.ai') })}
+                        {t('game.round_info', { round: state.round, player: translatePlayerName(state.mano) })}
                     </p>
                 </div>
                 <div className="flex items-center">

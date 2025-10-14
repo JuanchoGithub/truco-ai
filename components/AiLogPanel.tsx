@@ -1,7 +1,8 @@
 
 import React from 'react';
-import { AiReasoningEntry, Action, ActionType } from '../types';
+import { AiReasoningEntry, Action, ActionType, MessageObject, Card } from '../types';
 import { useLocalization } from '../context/LocalizationContext';
+import { getCardName } from '../services/trucoLogic';
 
 interface AiLogPanelProps {
   log: AiReasoningEntry[];
@@ -11,13 +12,46 @@ interface AiLogPanelProps {
 
 const AiLogPanel: React.FC<AiLogPanelProps> = ({ log, dispatch, isModal }) => {
   const { t } = useLocalization();
-  const groupedLog: { [key: number]: string[] } = log.reduce((acc, entry) => {
+  const groupedLog: { [key: number]: (string | MessageObject)[][] } = log.reduce((acc, entry) => {
     if (!acc[entry.round]) {
       acc[entry.round] = [];
     }
     acc[entry.round].push(entry.reasoning);
     return acc;
-  }, {} as { [key: number]: string[] });
+  }, {} as { [key: number]: (string | MessageObject)[][] });
+
+  const renderReasoning = (reasoningArray: (string | MessageObject)[]): string => {
+    return reasoningArray.map(reason => {
+        if (typeof reason === 'string') return reason;
+
+        const options: { [key: string]: any } = { ...reason.options };
+
+        // Handle nested translations for specific keys
+        if (options.statusKey) {
+            options.status = t(`ai_logic.statuses.${options.statusKey}`);
+        }
+        
+        // Handle player names or other identifiers that need translation within options
+        if (options.player) {
+            options.player = options.player === 'ai' ? t('common.ai') : t('common.player');
+        }
+
+        // Handle card objects, arrays of cards, and suits
+        for (const key in options) {
+            if (options[key] && typeof options[key] === 'object') {
+                if (Array.isArray(options[key])) { // Handle hand: Card[]
+                    options[key] = options[key].map((c: any) => getCardName(c)).join(', ');
+                } else if ('rank' in options[key] && 'suit' in options[key]) { // Handle card: Card
+                    options[key] = getCardName(options[key] as Card);
+                }
+            } else if (key === 'suit' && typeof options[key] === 'string') {
+                options[key] = t(`common.card_suits.${options[key]}`);
+            }
+        }
+
+        return t(reason.key, options);
+    }).join('\n');
+  };
 
   const wrapperClasses = isModal
     ? "fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
@@ -61,7 +95,7 @@ const AiLogPanel: React.FC<AiLogPanelProps> = ({ log, dispatch, isModal }) => {
                   {groupedLog[roundNumber].map((reasoning, index) => (
                       <div key={index} className="bg-black/30 p-2 rounded-md">
                           <p className="text-xs lg:text-sm text-cyan-100 whitespace-pre-wrap font-mono">
-                              {reasoning}
+                              {renderReasoning(reasoning)}
                           </p>
                       </div>
                   ))}

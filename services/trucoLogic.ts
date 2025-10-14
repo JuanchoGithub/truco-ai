@@ -1,4 +1,5 @@
-import { Card, Suit, Rank, Player } from '../types';
+
+import { Card, Suit, Rank, Player, MessageObject } from '../types';
 import i18nService from './i18nService';
 
 const SUITS: Suit[] = ['espadas', 'bastos', 'oros', 'copas'];
@@ -132,9 +133,25 @@ export const getEnvidoValue = (hand: Card[]): number => {
   return maxEnvido;
 };
 
+// Helper to find the suit that forms the basis of the Envido points.
+export const getEnvidoSuit = (hand: Card[]): Suit | null => {
+  if (hand.length < 2) return null;
+  const suitCounts: Partial<Record<Suit, number>> = {};
+  hand.forEach(card => {
+    suitCounts[card.suit] = (suitCounts[card.suit] || 0) + 1;
+  });
+  // Explicitly check in order of suits to be deterministic if there are multiple pairs (not possible with 3 cards)
+  for (const suit of (['espadas', 'bastos', 'oros', 'copas'] as Suit[])) {
+    if (suitCounts[suit]! >= 2) {
+      return suit;
+    }
+  }
+  return null;
+};
+
 export interface EnvidoDetails {
   value: number;
-  reasoning: string;
+  reasoning: MessageObject[];
 }
 
 export const getEnvidoDetails = (hand: Card[]): EnvidoDetails => {
@@ -171,7 +188,11 @@ export const getEnvidoDetails = (hand: Card[]): EnvidoDetails => {
     const card1 = sortedCards[0];
     const card2 = sortedCards[1];
     
-    const reasoning = `[Cálculo de Envido]\n- Tengo múltiples cartas de '${bestSuit}'. Usando ${getCardName(card1)} y ${getCardName(card2)}.\n- Mis puntos son 20 + ${card1.value} + ${card2.value} = ${maxEnvido}.`;
+    const reasoning: MessageObject[] = [
+        { key: 'ai_logic.envido_calc.header' },
+        { key: 'ai_logic.envido_calc.multiple_cards', options: { suit: bestSuit, card1, card2 } },
+        { key: 'ai_logic.envido_calc.points_multiple', options: { value1: card1.value, value2: card2.value, total: maxEnvido } }
+    ];
     return { value: maxEnvido, reasoning };
   }
   
@@ -179,7 +200,10 @@ export const getEnvidoDetails = (hand: Card[]): EnvidoDetails => {
   const sortedHand = valueCards.sort((a,b) => b.value - a.value);
   const highestCard = sortedHand[0];
 
-  const reasoning = `[Cálculo de Envido]\n- Mis cartas son de diferentes palos. Mi carta más alta es ${getCardName(highestCard)}, dándome ${highestCard.value} puntos.`;
+  const reasoning: MessageObject[] = [
+      { key: 'ai_logic.envido_calc.header' },
+      { key: 'ai_logic.envido_calc.single_card', options: { card: highestCard, value: highestCard.value } }
+  ];
   return { value: highestCard.value, reasoning };
 };
 

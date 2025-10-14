@@ -1,6 +1,3 @@
-
-
-
 import { AiMove, GameState, ActionType, Card } from '../types';
 import { getCardName, getEnvidoValue } from './trucoLogic';
 import { findBestCardToPlay } from './ai/playCardStrategy';
@@ -92,142 +89,91 @@ function getSafeCardPlayAlternative(state: GameState): string {
 
 // This function generates a more conversational, strategic summary.
 export const generateSuggestionSummary = (move: AiMove, state: GameState): string => {
-    const { action, reasoning } = move;
+    const { t } = i18nService;
+    const { action, reasonKey } = move;
     const { playerHand, gamePhase, initialPlayerHand } = state;
 
     const playerEnvidoPoints = getEnvidoValue(initialPlayerHand);
     const isResponding = gamePhase.includes('_called');
     
     const alternativePlayText = !isResponding ? getSafeCardPlayAlternative(state) : "";
+    const callType = action.type.replace('CALL_', '').replace('_', ' ');
 
-    if (isResponding) {
-        if (action.type === ActionType.ACCEPT) {
-            if (gamePhase.includes('envido')) {
-                if (reasoning.includes("Las probabilidades están a mi favor")) {
-                    return i18nService.t('suggestion.respond_quiero_envido_good', { points: playerEnvidoPoints });
-                }
-                if (reasoning.includes("podría ser un farol")) {
-                    return i18nService.t('suggestion.respond_quiero_envido_bluff', { points: playerEnvidoPoints });
-                }
-                return i18nService.t('suggestion.respond_quiero_envido_default', { points: playerEnvidoPoints });
-            }
-            if (gamePhase.includes('truco')) {
-                 if (reasoning.includes("Mi mano es sólida") || reasoning.includes("La equidad es aceptable")) {
-                    return i18nService.t('suggestion.respond_quiero_truco_solid');
-                }
-                if (reasoning.includes("oponente podría estar faroleando")) {
-                    return i18nService.t('suggestion.respond_quiero_truco_bluff');
-                }
-                return i18nService.t('suggestion.respond_quiero_truco_default');
-            }
-        }
-
-        if (action.type === ActionType.DECLINE) {
-            if (gamePhase.includes('envido')) {
-                if (reasoning.includes("El riesgo es muy alto") || reasoning.includes("Mi mano parece más débil")) {
-                    return i18nService.t('suggestion.respond_no_quiero_envido_risk', { points: playerEnvidoPoints });
-                }
-                return i18nService.t('suggestion.respond_no_quiero_envido_default', { points: playerEnvidoPoints });
-            }
-            if (gamePhase.includes('truco')) {
-                if (reasoning.includes("La equidad es muy baja") || reasoning.includes("Mi mano es débil") || reasoning.includes("casi nula")) {
-                    return i18nService.t('suggestion.respond_no_quiero_truco_weak');
-                }
-                return i18nService.t('suggestion.respond_no_quiero_truco_default');
-            }
-        }
-
-        if (action.type === ActionType.CALL_RETRUCO || action.type === ActionType.CALL_VALE_CUATRO) {
-            const callType = action.type.replace('CALL_', '').replace('_', ' ');
-            if (reasoning.includes("Mi mano es de élite") || reasoning.includes("La equidad es muy alta") || reasoning.includes("escalando agresivamente")) {
-                return i18nService.t('suggestion.respond_escalate_truco_strong', { call: callType });
-            }
-             if (reasoning.includes("farol de desesperación") || reasoning.includes("farol agresivo")) {
-                return i18nService.t('suggestion.respond_escalate_truco_bluff', { call: callType });
-            }
-            return i18nService.t('suggestion.respond_escalate_truco_default', { call: callType });
-        }
+    switch (reasonKey) {
+        // --- RESPONSES ---
+        case 'accept_envido_good_odds':
+            return t('suggestion.respond_quiero_envido_good', { points: playerEnvidoPoints });
+        case 'accept_envido_hero_call':
+            return t('suggestion.respond_quiero_envido_bluff', { points: playerEnvidoPoints });
+        case 'decline_envido_weak':
+            return t('suggestion.respond_no_quiero_envido_risk', { points: playerEnvidoPoints });
         
-        if (action.type === ActionType.CALL_REAL_ENVIDO || action.type === ActionType.CALL_FALTA_ENVIDO || (action.type === ActionType.CALL_ENVIDO && isResponding)) {
-            const callType = action.type.replace('CALL_', '').replace('_', ' ');
-            const strengthText = getEnvidoStrengthText(playerEnvidoPoints);
+        case 'accept_truco_solid':
+        case 'accept_truco_decent_equity':
+            return t('suggestion.respond_quiero_truco_solid');
+        case 'accept_truco_bluff_call':
+            return t('suggestion.respond_quiero_truco_bluff');
+        
+        case 'decline_truco_weak':
+        case 'decline_truco_low_equity':
+        case 'decline_truco_certain_loss':
+            return t('suggestion.respond_no_quiero_truco_weak');
 
-            if (gamePhase === 'truco_called' && (action.type === ActionType.CALL_ENVIDO || action.type === ActionType.CALL_REAL_ENVIDO || action.type === ActionType.CALL_FALTA_ENVIDO)) {
-                const isBluff = /farol|mano.*débil/i.test(reasoning);
-                if (isBluff) {
-                    return i18nService.t('suggestion.respond_envido_primero_bluff', { call: callType, points: playerEnvidoPoints });
-                }
-                const opponentCardPlayed = state.aiTricks[0];
-                const context = opponentCardPlayed ? i18nService.t('suggestion.respond_envido_primero_context', { cardName: getCardName(opponentCardPlayed) }) : "";
-                return i18nService.t('suggestion.respond_envido_primero', { context, points: playerEnvidoPoints, strengthText, call: callType });
-            }
+        case 'escalate_truco_elite':
+        case 'escalate_truco_strong':
+        case 'escalate_truco_high_equity':
+        case 'escalate_truco_dominant_card':
+            return t('suggestion.respond_escalate_truco_strong', { call: callType });
+        case 'escalate_truco_desperation_bluff':
+        case 'escalate_truco_weak_bluff':
+        case 'escalate_truco_mixed_bluff':
+             return t('suggestion.respond_escalate_truco_bluff', { call: callType });
+        
+        case 'escalate_real_stronger':
+        case 'escalate_envido_strong':
+        case 'escalate_falta_win_game':
+            return t('suggestion.respond_escalate_envido', { points: playerEnvidoPoints, strengthText: getEnvidoStrengthText(playerEnvidoPoints), call: callType });
 
-            if (reasoning.includes("Mi mano es mucho más fuerte")) {
-                return i18nService.t('suggestion.respond_escalate_envido', { points: playerEnvidoPoints, strengthText, call: callType });
+        // --- PROACTIVE CALLS ---
+        case 'call_truco_parda_y_gano':
+            return t('suggestion.proactive_truco_parda');
+        case 'call_truco_bluff':
+            return t('suggestion.proactive_truco_bluff', { call: callType, alternative: alternativePlayText });
+        case 'call_truco_value':
+        case 'call_truco_won_trick1':
+        case 'call_truco_certain_win':
+            return t('suggestion.proactive_truco_strong', { call: callType, alternative: alternativePlayText });
+
+        case 'call_envido_bluff':
+             // The reasoning for bluffing is complex, so we just provide a simpler text
+             return t('suggestion.proactive_envido_bluff', { points: playerEnvidoPoints, opponentInfo: '', call: callType, alternative: alternativePlayText });
+        case 'call_envido_strong':
+        case 'call_real_dominant':
+        case 'call_falta_defensive':
+        case 'call_falta_win_game':
+            return t('suggestion.proactive_envido_strong', { points: playerEnvidoPoints, strengthText: getEnvidoStrengthText(playerEnvidoPoints), call: callType });
+        
+        // --- CARD PLAYS ---
+        case 'secure_hand':
+        case 'see_opponent':
+        case 'win_round_cheap':
+        case 'discard_low':
+        case 'parda_y_canto': {
+            // FIX: Add type guard to ensure action is PLAY_CARD before accessing payload.
+            if (action.type !== ActionType.PLAY_CARD) {
+                // This case should not be reached if reasonKeys are correctly assigned, but it acts as a type guard.
+                return getSimpleSuggestionText(move, playerHand);
             }
+            const cardIndex = action.payload.cardIndex;
+            const card = playerHand[cardIndex];
+            if (!card) return getSimpleSuggestionText(move, playerHand);
             
-            return i18nService.t('suggestion.respond_escalate_envido_default', { points: playerEnvidoPoints, strengthText, call: callType });
-        }
-    }
-
-    if (action.type === ActionType.CALL_TRUCO || action.type === ActionType.CALL_RETRUCO || action.type === ActionType.CALL_VALE_CUATRO) {
-        if (reasoning.includes("Parda y Gano")) {
-            return i18nService.t('suggestion.proactive_truco_parda');
-        }
-
-        let isBluff = false;
-        if ('payload' in action && action.payload && 'trucoContext' in action.payload && action.payload.trucoContext) {
-            isBluff = action.payload.trucoContext.isBluff;
-        } else {
-            isBluff = /farol|bluff|mano.*débil/i.test(reasoning);
-        }
-
-        const callType = action.type.replace('CALL_', '').replace('_',' ');
-
-        if (isBluff) {
-            return i18nService.t('suggestion.proactive_truco_bluff', { call: callType, alternative: alternativePlayText });
-        } else {
-            return i18nService.t('suggestion.proactive_truco_strong', { call: callType, alternative: alternativePlayText });
-        }
-    }
-
-    if (action.type === ActionType.CALL_ENVIDO || action.type === ActionType.CALL_REAL_ENVIDO || action.type === ActionType.CALL_FALTA_ENVIDO) {
-        const callType = action.type.replace('CALL_', '').replace('_', ' ');
-        const isBluff = /farol|mano.*débil/i.test(reasoning);
-
-        if (isBluff) {
-             const foldRateMatch = reasoning.match(/tasa de abandono.* ([\d\.]+)%/);
-             let opponentInfo = i18nService.t('suggestion.proactive_envido_bluff_opponent_info_default');
-             if (foldRateMatch && foldRateMatch[1]) {
-                 opponentInfo = i18nService.t('suggestion.proactive_envido_bluff_opponent_info', { rate: foldRateMatch[1] });
-             }
-             return i18nService.t('suggestion.proactive_envido_bluff', { points: playerEnvidoPoints, opponentInfo, call: callType, alternative: alternativePlayText });
-        }
-        const strengthText = getEnvidoStrengthText(playerEnvidoPoints);
-        return i18nService.t('suggestion.proactive_envido_strong', { points: playerEnvidoPoints, strengthText, call: callType });
-    }
-
-    if (action.type === ActionType.PLAY_CARD) {
-        const cardIndex = action.payload.cardIndex;
-        const card = playerHand[cardIndex];
-        if (!card) return getSimpleSuggestionText(move, playerHand);
-
-        let reasonKey = "default";
-        if (reasoning.includes("carta más alta")) {
-            reasonKey = "secure_hand";
-        } else if (reasoning.includes("carta más baja para ver qué tiene")) {
-            reasonKey = "see_opponent";
-        } else if (reasoning.includes("carta ganadora de ronda más débil")) {
-            reasonKey = "win_round_cheap";
-        } else if (reasoning.includes("Descartaré mi carta más baja")) {
-            reasonKey = "discard_low";
-        } else if (reasoning.includes("Parda y Canto")) {
-            reasonKey = "parda_y_canto";
+            const strategicReason = t(`suggestion.reason.${reasonKey}`);
+            return t('suggestion.play_card_reason', { cardName: getCardName(card), reason: strategicReason });
         }
         
-        const strategicReason = i18nService.t(`suggestion.reason.${reasonKey}`);
-        return i18nService.t('suggestion.play_card_reason', { cardName: getCardName(card), reason: strategicReason });
+        // Default fallback for any unhandled reasonKey
+        default:
+            return getSimpleSuggestionText(move, playerHand);
     }
-    
-    return getSimpleSuggestionText(move, playerHand);
 };

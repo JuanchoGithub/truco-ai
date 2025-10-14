@@ -51,7 +51,7 @@ export function handleCallTruco(state: GameState, action: { type: ActionType.CAL
     gamePhase: 'truco_called', 
     lastCaller: state.currentTurn, 
     currentTurn: state.currentTurn === 'player' ? 'ai' : 'player',
-    turnBeforeInterrupt: state.currentTurn,
+    turnBeforeInterrupt: state.turnBeforeInterrupt || state.currentTurn,
     trucoLevel: 1,
     pendingTrucoCaller: isEnvidoPossible ? state.currentTurn : null,
     messageLog: [...state.messageLog, { key: 'log.call_truco', options: { caller } }],

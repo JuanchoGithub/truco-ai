@@ -7,6 +7,7 @@ interface LocalizationContextType {
   setLanguage: (lang: string) => Promise<void>;
   language: string;
   isLoaded: boolean;
+  translatePlayerName: (player: string) => string;
 }
 
 const defaultContextValue: LocalizationContextType = {
@@ -14,6 +15,7 @@ const defaultContextValue: LocalizationContextType = {
   setLanguage: async () => {},
   language: 'es-AR',
   isLoaded: false,
+  translatePlayerName: (player) => player,
 };
 
 const LocalizationContext = createContext<LocalizationContextType>(defaultContextValue);
@@ -21,6 +23,19 @@ const LocalizationContext = createContext<LocalizationContextType>(defaultContex
 export const LocalizationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [language, setLanguageState] = useState<string>('es-AR');
   const [isLoaded, setIsLoaded] = useState(false);
+
+  const t = useCallback((key: string, options?: { [key: string]: any }): string => {
+      return i18nService.t(key, options);
+  }, [language]); // Dependency on `language` ensures `t` is fresh when language changes.
+
+  const translatePlayerName = useCallback((player: string): string => {
+    if (player === 'player') return t('common.you');
+    if (player === 'ai') return t('common.ai');
+    if (player === 'tie') return t('game.tie');
+    if (player === 'Jugador') return t('common.you'); // Legacy fallback
+    if (player === 'IA') return t('common.ai'); // Legacy fallback
+    return player;
+  }, [t]);
 
   const setLanguage = useCallback(async (lang: string) => {
     // Don't set isLoaded to false here, to avoid flicker on language change.
@@ -40,11 +55,8 @@ export const LocalizationProvider: React.FC<{ children: ReactNode }> = ({ childr
     setLanguage(initialLang);
   }, [setLanguage]);
 
-  const t = useCallback((key: string, options?: { [key: string]: any }): string => {
-      return i18nService.t(key, options);
-  }, [language]); // Dependency on `language` ensures `t` is fresh when language changes.
 
-  const value = { t, setLanguage, language, isLoaded };
+  const value = { t, setLanguage, language, isLoaded, translatePlayerName };
 
   if (!isLoaded) {
     return (

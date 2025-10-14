@@ -1,3 +1,4 @@
+
 import { GameState, AiMove, Action, ActionType, Card } from '../types';
 
 // Fix: The original function incorrectly added a `payload` object to every action,
@@ -7,7 +8,7 @@ import { GameState, AiMove, Action, ActionType, Card } from '../types';
 function createMove(type: ActionType, payload?: any): AiMove {
     return {
         action: (payload !== undefined ? { type, payload } : { type }) as Action,
-        reasoning: `Randomizer chose ${type}`
+        reasoning: [{ key: 'ai_logic.randomizer_logic.chose', options: { type } }]
     };
 }
 
@@ -99,7 +100,8 @@ export const getRandomizerMove = (state: GameState): AiMove => {
         }
         // This can happen if the AI is waiting for a response to an action, which is a valid state.
         // Returning a "NO_OP" ensures the simulation doesn't crash if it tries to get a move.
-        return { action: { type: "NO_OP" as any }, reasoning: "No valid actions for Randomizer this turn." };
+        // Fix: Changed reasoning from a string to an array of strings.
+        return { action: { type: "NO_OP" as any }, reasoning: [{ key: 'ai_logic.randomizer_logic.no_op' }] };
     }
 
     const randomIndex = Math.floor(Math.random() * validActions.length);

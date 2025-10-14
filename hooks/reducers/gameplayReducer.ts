@@ -123,8 +123,8 @@ export function handleRestartGame(initialState: GameState, state: GameState): Ga
     mano: newMano,
     currentTurn: newMano,
     winner: null,
-    messageLog: [...state.messageLog, { key: 'game.new_game_log' }, { key: 'game.new_game_started', options: { player: newMano } }],
-    aiReasoningLog: [{ round: 0, reasoning: 'La IA se está preparando para la nueva partida.' }],
+    messageLog: [...state.messageLog, { key: 'game.new_game_log', type: 'round_separator' }, { key: 'game.new_game_started', options: { player: newMano } }],
+    aiReasoningLog: [{ round: 0, reasoning: [{ key: 'ai_logic.initial_state' }] }],
   };
 
   // By calling handleStartNewRound immediately, we ensure a seamless transition
@@ -189,7 +189,7 @@ export function handleStartNewRound(state: GameState, action: { type: ActionType
   const manoMessageKey = newMano === 'player' ? 'game.you_are_mano' : 'game.ai_is_mano';
   const initialMessage = state.round === 0 
     ? state.messageLog // Use the message from handleRestartGame
-    : [...state.messageLog, { key: 'game.new_round_log', options: { round: state.round + 1 } }, { key: manoMessageKey }];
+    : [...state.messageLog, { key: 'game.new_round_log', type: 'round_separator', options: { round: state.round + 1 } }, { key: manoMessageKey }];
 
 
   return {
@@ -215,6 +215,7 @@ export function handleStartNewRound(state: GameState, action: { type: ActionType
     pendingTrucoCaller: null,
     hasEnvidoBeenCalledThisRound: false,
     hasRealEnvidoBeenCalledThisSequence: false,
+    hasFaltaEnvidoBeenCalledThisSequence: false,
     hasFlorBeenCalledThisRound: false,
     envidoPointsOnOffer: 0,
     previousEnvidoPoints: 0,

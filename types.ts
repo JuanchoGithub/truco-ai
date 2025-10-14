@@ -34,7 +34,7 @@ export type GamePhase =
 
 export interface AiReasoningEntry {
   round: number;
-  reasoning: string;
+  reasoning: (string | MessageObject)[];
 }
 
 // New types for AI learning
@@ -148,6 +148,7 @@ export interface PointNote {
 export interface MessageObject {
   key: string;
   options?: { [key: string]: any };
+  type?: string;
 }
 
 export interface RoundSummary {
@@ -208,6 +209,7 @@ export interface GameState {
   pendingTrucoCaller: Player | null;
   hasEnvidoBeenCalledThisRound: boolean;
   hasRealEnvidoBeenCalledThisSequence: boolean;
+  hasFaltaEnvidoBeenCalledThisSequence: boolean;
   hasFlorBeenCalledThisRound: boolean;
   playerHasFlor: boolean;
   aiHasFlor: boolean;
@@ -258,8 +260,9 @@ export interface GameState {
 
 export interface AiMove {
   action: Action;
-  reasoning: string;
+  reasoning: (string | MessageObject)[];
   summary?: string;
+  reasonKey?: string;
 }
 
 export enum ActionType {

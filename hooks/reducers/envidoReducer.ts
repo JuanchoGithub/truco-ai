@@ -12,10 +12,19 @@ function updateRoundHistoryWithCall(state: GameState, callText: string): GameSta
 };
 
 export function handleCallEnvido(state: GameState, action: { type: ActionType.CALL_ENVIDO; payload?: { blurbText: string } }): GameState {
+  const isEscalation = state.gamePhase === 'envido_called';
+
+  // Guard against illegal escalations.
+  // You can only escalate with "Envido" (making it Envido-Envido) if the current bet is a simple Envido (2 points).
+  // You cannot call "Envido" on top of a "Real Envido" or "Falta Envido".
+  if (isEscalation && (state.envidoPointsOnOffer > 2 || state.hasRealEnvidoBeenCalledThisSequence)) {
+    console.error("Illegal action: Attempted to call Envido on top of a higher bet.");
+    return state;
+  }
+
   const caller = state.currentTurn!;
   const opponent = caller === 'player' ? 'ai' : 'player';
   const isPlayer = caller === 'player';
-  const isEscalation = state.gamePhase === 'envido_called';
   const previousPoints = isEscalation ? state.envidoPointsOnOffer : 0;
   const newPoints = isEscalation ? state.envidoPointsOnOffer + 2 : 2;
 
@@ -50,7 +59,7 @@ export function handleCallEnvido(state: GameState, action: { type: ActionType.CA
     gamePhase: 'envido_called', 
     lastCaller: caller, 
     currentTurn: opponent,
-    turnBeforeInterrupt: state.pendingTrucoCaller !== null ? state.turnBeforeInterrupt : caller,
+    turnBeforeInterrupt: state.turnBeforeInterrupt || caller,
     hasEnvidoBeenCalledThisRound: true,
     envidoPointsOnOffer: newPoints,
     previousEnvidoPoints: previousPoints,
@@ -63,6 +72,12 @@ export function handleCallEnvido(state: GameState, action: { type: ActionType.CA
 }
 
 export function handleCallRealEnvido(state: GameState, action: { type: ActionType.CALL_REAL_ENVIDO, payload?: { blurbText: string } }): GameState {
+  // Guard against illegal escalations. Cannot call Real Envido if Real or Falta has already been called.
+  if (state.hasRealEnvidoBeenCalledThisSequence) {
+    console.error("Illegal action: Attempted to call Real Envido when it or Falta Envido has already been called in this sequence.");
+    return state;
+  }
+
   const caller = state.currentTurn!;
   const opponent = caller === 'player' ? 'ai' : 'player';
   const isPlayer = caller === 'player';
@@ -109,6 +124,12 @@ export function handleCallRealEnvido(state: GameState, action: { type: ActionTyp
 }
 
 export function handleCallFaltaEnvido(state: GameState, action: { type: ActionType.CALL_FALTA_ENVIDO, payload?: { blurbText: string } }): GameState {
+  // Guard against illegal escalations. Falta Envido is the highest bid.
+  if (state.hasFaltaEnvidoBeenCalledThisSequence) {
+    console.error("Illegal action: Attempted to call Falta Envido when it has already been called in this sequence.");
+    return state;
+  }
+
   const caller = state.currentTurn!;
   const opponent = caller === 'player' ? 'ai' : 'player';
   const isPlayer = caller === 'player';
@@ -146,6 +167,8 @@ export function handleCallFaltaEnvido(state: GameState, action: { type: ActionTy
     turnBeforeInterrupt: state.turnBeforeInterrupt || caller,
     envidoPointsOnOffer: faltaPoints,
     previousEnvidoPoints: previousPoints,
+    hasRealEnvidoBeenCalledThisSequence: true,
+    hasFaltaEnvidoBeenCalledThisSequence: true,
     playerEnvidoHistory: newEnvidoHistory,
     messageLog: [...state.messageLog, { key: 'log.call_falta_envido', options: { caller } }],
     playerEnvidoFoldHistory: newFoldHistory,

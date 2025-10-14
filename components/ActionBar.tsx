@@ -24,7 +24,7 @@ const ActionButton: React.FC<{ onClick: () => void; disabled?: boolean; children
 
 const ActionBar: React.FC<ActionBarProps> = ({ dispatch, gameState, onPlayerAction }) => {
     const { t } = useLocalization();
-    const { gamePhase, currentTurn, lastCaller, trucoLevel, hasEnvidoBeenCalledThisRound, playerTricks, aiTricks, currentTrick, playerHasFlor, aiHasFlor, hasFlorBeenCalledThisRound, envidoPointsOnOffer, hasRealEnvidoBeenCalledThisSequence } = gameState;
+    const { gamePhase, currentTurn, lastCaller, trucoLevel, hasEnvidoBeenCalledThisRound, playerTricks, aiTricks, currentTrick, playerHasFlor, aiHasFlor, hasFlorBeenCalledThisRound, envidoPointsOnOffer, hasRealEnvidoBeenCalledThisSequence, hasFaltaEnvidoBeenCalledThisSequence } = gameState;
     const isPlayerTurn = currentTurn === 'player';
 
     // --- Button Visibility Logic ---
@@ -116,9 +116,9 @@ const ActionBar: React.FC<ActionBarProps> = ({ dispatch, gameState, onPlayerActi
             {gamePhase === 'truco_called' && <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_RETRUCO })}>{t('actionBar.retruco')}</ActionButton>}
             {gamePhase === 'retruco_called' && <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_VALE_CUATRO })}>{t('actionBar.vale_cuatro')}</ActionButton>}
             
-            {gamePhase === 'envido_called' && envidoPointsOnOffer === 2 && <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_ENVIDO })} className="!from-blue-600 !to-blue-700 !border-blue-900 hover:!from-blue-500 hover:!to-blue-600">{t('actionBar.envido')}</ActionButton>}
-            {gamePhase === 'envido_called' && !hasRealEnvidoBeenCalledThisSequence && <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_REAL_ENVIDO })} className="!from-sky-600 !to-sky-700 !border-sky-900 hover:!from-sky-500 hover:!to-sky-600">{t('actionBar.real_envido')}</ActionButton>}
-            {gamePhase === 'envido_called' && <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_FALTA_ENVIDO })} className="!from-indigo-600 !to-indigo-700 !border-indigo-900 hover:!from-indigo-500 hover:!to-indigo-600">{t('actionBar.falta_envido')}</ActionButton>}
+            {gamePhase === 'envido_called' && envidoPointsOnOffer === 2 && !hasFaltaEnvidoBeenCalledThisSequence && <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_ENVIDO })} className="!from-blue-600 !to-blue-700 !border-blue-900 hover:!from-blue-500 hover:!to-blue-600">{t('actionBar.envido')}</ActionButton>}
+            {gamePhase === 'envido_called' && !hasRealEnvidoBeenCalledThisSequence && !hasFaltaEnvidoBeenCalledThisSequence && <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_REAL_ENVIDO })} className="!from-sky-600 !to-sky-700 !border-sky-900 hover:!from-sky-500 hover:!to-sky-600">{t('actionBar.real_envido')}</ActionButton>}
+            {gamePhase === 'envido_called' && !hasFaltaEnvidoBeenCalledThisSequence && <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_FALTA_ENVIDO })} className="!from-indigo-600 !to-indigo-700 !border-indigo-900 hover:!from-indigo-500 hover:!to-indigo-600">{t('actionBar.falta_envido')}</ActionButton>}
           </>
         )
     }

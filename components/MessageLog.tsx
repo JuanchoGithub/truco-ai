@@ -11,7 +11,7 @@ interface MessageLogProps {
 }
 
 const MessageLog: React.FC<MessageLogProps> = ({ messages, dispatch, isModal }) => {
-  const { t } = useLocalization();
+  const { t, translatePlayerName } = useLocalization();
 
   const renderMessage = (msg: string | MessageObject): string => {
     if (typeof msg === 'string') return msg;
@@ -22,14 +22,7 @@ const MessageLog: React.FC<MessageLogProps> = ({ messages, dispatch, isModal }) 
 
     for (const key of playerKeys) {
         if (options[key]) {
-            const value = options[key] as string;
-            if (value === 'player' || value === 'Jugador' || value === 'Player') {
-                options[key] = t('common.player');
-            } else if (value === 'ai' || value === 'IA') {
-                options[key] = t('common.ai');
-            } else if (value === 'tie') {
-                options[key] = t('game.tie');
-            }
+            options[key] = translatePlayerName(options[key] as string);
         }
     }
     return t(msg.key, options);
@@ -39,9 +32,10 @@ const MessageLog: React.FC<MessageLogProps> = ({ messages, dispatch, isModal }) 
   const groupedLog: { [key: string]: string[] } = {};
   let currentRound = t('logPanel.game_start');
   messages.forEach(msg => {
+    const isSeparator = typeof msg === 'object' && msg.type === 'round_separator';
     const messageString = renderMessage(msg);
 
-    if (messageString.startsWith('--- Ronda') || messageString.startsWith('--- Round')) {
+    if (isSeparator) {
       currentRound = messageString.replace(/---/g, '').trim();
       groupedLog[currentRound] = [];
     } else {

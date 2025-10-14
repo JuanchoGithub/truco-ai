@@ -1,5 +1,6 @@
-import { GameState, Card, Suit, Rank, OpponentHandProbabilities, ActionType, Player } from '../../types';
+import { GameState, Card, Suit, Rank, OpponentHandProbabilities, ActionType, Player, MessageObject } from '../types';
 import { createDeck, getEnvidoValue, getCardHierarchy, calculateHandStrength } from '../trucoLogic';
+import i18nService from '../i18nService';
 
 const FULL_DECK = createDeck();
 const ALL_SUITS: Suit[] = ['espadas', 'bastos', 'oros', 'copas'];
@@ -92,7 +93,8 @@ export const updateProbsOnPlay = (
         return { suitDist: {}, rankProbs: {}, unseenCards: newUnseenCards };
     }
 
-    const possibleHands = combinations(newUnseenCards, opponentHandSize);
+    // FIX: Explicitly cast the result of combinations to Card[][] to resolve a chain of type inference errors.
+    const possibleHands = combinations(newUnseenCards, opponentHandSize) as Card[][];
     const { suitDist, rankProbs } = calculateProbabilitiesFromHands(possibleHands, opponentHandSize);
 
     return {
@@ -112,15 +114,24 @@ export const updateProbsOnEnvido = (
     isOpponentMano: boolean
 ): OpponentHandProbabilities => {
     const k = 3; // Envido is declared with a full hand of 3
-    const possibleHands = combinations(currentProbs.unseenCards, k);
+    // FIX: Explicitly cast the result of combinations to Card[][] to resolve a chain of type inference errors, similar to updateProbsOnPlay.
+    const possibleHands = combinations(currentProbs.unseenCards, k) as Card[][];
     
     const validHands = possibleHands.filter(hand => getEnvidoValue(hand) === envidoValue);
     if (validHands.length === 0) return currentProbs; // No change if no hands match
 
     const { suitDist, rankProbs } = calculateProbabilitiesFromHands(validHands, k);
 
-    // Filter unseen to only include cards that appear in at least one valid hand
-    const validUnseenCards = Array.from(new Set(validHands.flat().map(c => JSON.stringify(c)))).map(s => JSON.parse(s));
+    // FIX: Replaced error-prone JSON stringify/parse method with a type-safe Map to find unique cards.
+    // This resolves an error where the resulting array was not correctly typed as Card[].
+    const uniqueCards = new Map<string, Card>();
+    // FIX: The type assertion was moved to the `combinations` call to fix type inference at the source.
+    for (const hand of validHands) {
+        for (const card of hand) {
+            uniqueCards.set(`${card.rank}-${card.suit}`, card);
+        }
+    }
+    const validUnseenCards = Array.from(uniqueCards.values());
 
     return {
         suitDist,
@@ -138,9 +149,10 @@ export const updateProbsOnEnvido = (
  */
 export const generateConstrainedOpponentHand = (
     state: GameState, 
-    reasoning: string[],
+    reasoning: (string | MessageObject)[],
     numSamples: { strong: number; medium: number; weak: number }
 ): { strong: Card[][]; medium: Card[][]; weak: Card[][] } => {
+    const { t } = i18nService;
     const { playerEnvidoValue, initialPlayerHand, playerHand, playedCards, aiHand, playerHasFlor, currentTrick, mano, hasEnvidoBeenCalledThisRound, playerTricks, gamePhase, lastCaller, playerTrucoCallHistory } = state;
     
     const cardsToGenerate = playerHand.length;
@@ -159,9 +171,9 @@ export const generateConstrainedOpponentHand = (
 
     // 1. Flor Constraint (strongest)
     if (playerHasFlor) {
-        reasoning.push('- Inferencia de Flor: La mano del jugador es de un solo palo.');
+        reasoning.push(t('ai_logic.inference_flor'));
         if (playerPlayedCards.length > 1 && !playerPlayedCards.every(c => c.suit === playerPlayedCards[0].suit)) {
-            reasoning.push('- Contradicción en Flor: Cartas jugadas de palos mixtos. Ignorando Flor.');
+            reasoning.push(t('ai_logic.inference_flor_contradiction'));
         } else {
             const florSuit = playerPlayedCards.length > 0 ? playerPlayedCards[0].suit : null;
             const suitsToTest = florSuit ? [florSuit] : ALL_SUITS;
@@ -181,14 +193,14 @@ export const generateConstrainedOpponentHand = (
                 }
             }
             if (validOpponentHands.length > 0) {
-                reasoning.push(`- Hipótesis de Flor: ${validOpponentHands.length} manos posibles.`);
+                reasoning.push(t('ai_logic.inference_flor_hypothesis', { count: validOpponentHands.length }));
             }
         }
     }
     
     // 2. Envido Constraint (if no valid flor hands were found)
     if (validOpponentHands.length === 0 && playerEnvidoValue !== null) {
-        reasoning.push(`- Inferencia de Envido: El jugador declaró ${playerEnvidoValue} puntos.`);
+        reasoning.push(t('ai_logic.inference_envido', { points: playerEnvidoValue }));
         const cardsToFind = 3 - playerPlayedCards.length;
         if (cardsToFind > 0) {
             const possibleRemainders = combinations(unseenCards, cardsToFind);
@@ -200,7 +212,7 @@ export const generateConstrainedOpponentHand = (
             }
         }
         if (validOpponentHands.length > 0) {
-            reasoning.push(`- Hipótesis de Envido: ${validOpponentHands.length} manos posibles.`);
+            reasoning.push(t('ai_logic.inference_envido_hypothesis', { count: validOpponentHands.length }));
         }
     }
 
@@ -217,7 +229,12 @@ export const generateConstrainedOpponentHand = (
             const stdDev = Math.sqrt(relevantHistory.map(entry => Math.pow(entry.strength - mean, 2)).reduce((a, b) => a + b) / relevantHistory.length);
             
             const strengthRange = { min: Math.max(0, avgStrength - stdDev * 1.5), max: avgStrength + stdDev * 1.5 };
-            reasoning.push(`- Inferencia de Comportamiento (Truco): El jugador cantó Truco. Basado en su historial (fuerza prom: ${avgStrength.toFixed(1)} ± ${stdDev.toFixed(1)}), su mano probable tiene una fuerza entre ${strengthRange.min.toFixed(0)} y ${strengthRange.max.toFixed(0)}.`);
+            reasoning.push(t('ai_logic.inference_truco_behavioral', {
+                avgStrength: avgStrength.toFixed(1),
+                stdDev: stdDev.toFixed(1),
+                min: strengthRange.min.toFixed(0),
+                max: strengthRange.max.toFixed(0)
+            }));
 
             const possibleRemainders = combinations(unseenCards, cardsToGenerate);
             const behaviorallyValidHands = [];
@@ -230,13 +247,13 @@ export const generateConstrainedOpponentHand = (
             }
             if (behaviorallyValidHands.length > 0) {
                 validOpponentHands = behaviorallyValidHands;
-                reasoning.push(`- Hipótesis de Truco: ${validOpponentHands.length} manos posibles que coinciden con el perfil de Truco del jugador.`);
+                reasoning.push(t('ai_logic.inference_truco_hypothesis', { count: validOpponentHands.length }));
             } else {
-                reasoning.push(`- Hipótesis de Truco Fallida: Ninguna mano posible coincide. Puede ser un comportamiento atípico. Volviendo a la inferencia general.`);
+                reasoning.push(t('ai_logic.inference_truco_hypothesis_failed'));
             }
         } else {
             // Fallback to general strategy for early truco calls if no history
-            reasoning.push(`- Inferencia de Comportamiento (Truco Temprano): El jugador cantó Truco en la primera mano sin historial previo. Asumo que tienen una mano por encima del promedio (percentil >50).`);
+            reasoning.push(t('ai_logic.inference_truco_early'));
     
             const possibleRemainders = combinations(unseenCards, cardsToGenerate);
             const behaviorallyValidHands = [];
@@ -251,9 +268,9 @@ export const generateConstrainedOpponentHand = (
             
             if (behaviorallyValidHands.length > 0) {
                 validOpponentHands = behaviorallyValidHands;
-                reasoning.push(`- Hipótesis de Truco Temprano: ${validOpponentHands.length} manos posibles que coinciden con un perfil de Truco fuerte.`);
+                reasoning.push(t('ai_logic.inference_truco_early_hypothesis', { count: validOpponentHands.length }));
             } else {
-                reasoning.push(`- Hipótesis de Truco Temprano Fallida: Ninguna mano fuerte posible. Puede ser un farol. Volviendo a la inferencia general.`);
+                reasoning.push(t('ai_logic.inference_truco_early_hypothesis_failed'));
             }
         }
     }
@@ -263,9 +280,9 @@ export const generateConstrainedOpponentHand = (
     if (validOpponentHands.length > 0) {
         allPossibleHands = validOpponentHands;
     } else {
-        reasoning.push(`- Inferencia General: No hay información específica. Generando todas las combinaciones desde ${unseenCards.length} cartas desconocidas.`);
+        reasoning.push(t('ai_logic.inference_general', { count: unseenCards.length }));
         if (unseenCards.length < cardsToGenerate) {
-            reasoning.push(`- Error de Simulación: No hay suficientes cartas desconocidas para generar una mano.`);
+            reasoning.push(t('ai_logic.inference_error_not_enough_cards'));
             return { strong: [], medium: [], weak: [] };
         }
         allPossibleHands = combinations(unseenCards, cardsToGenerate);
@@ -280,10 +297,10 @@ export const generateConstrainedOpponentHand = (
         playerTricks[0] !== null; // Player has played a card in trick 1 without calling envido
 
     if (validOpponentHands.length === 0 && envidoOpportunityPassed) {
-        reasoning.push(`- Inferencia de Envido (Pasivo): El jugador jugó una carta sin cantar Envido.`);
+        reasoning.push(t('ai_logic.inference_envido_passive'));
         const playerContext = mano === 'player' ? 'mano' : 'pie';
         const callThreshold = state.opponentModel.envidoBehavior[playerContext].callThreshold;
-        reasoning.push(`  - Su umbral de canto aprendido es ~${callThreshold.toFixed(0)}. Es poco probable que tengan más que eso.`);
+        reasoning.push(t('ai_logic.inference_envido_passive_threshold', { threshold: callThreshold.toFixed(0) }));
         
         const filteredHands = allPossibleHands.filter(hand => {
             const fullHand = [...playerPlayedCards, ...hand];
@@ -302,16 +319,20 @@ export const generateConstrainedOpponentHand = (
 
         // Only apply the filter if it doesn't drastically reduce the sample size, which could lead to bias.
         if (filteredHands.length > Math.min(10, allPossibleHands.length * 0.1)) {
-            reasoning.push(`  - Reduciendo la probabilidad de manos con Envido > ${callThreshold.toFixed(0)}. Manos posibles: ${allPossibleHands.length} -> ${filteredHands.length}.`);
+            reasoning.push(t('ai_logic.inference_envido_passive_filter', {
+                threshold: callThreshold.toFixed(0),
+                before: allPossibleHands.length,
+                after: filteredHands.length
+            }));
             allPossibleHands = filteredHands;
         } else {
-            reasoning.push(`  - El filtro de Envido pasivo no fue efectivo o resultó en muy pocas manos. Se mantiene el set de manos original para evitar sesgos.`);
+            reasoning.push(t('ai_logic.inference_envido_passive_filter_failed'));
         }
     }
 
 
     if (allPossibleHands.length === 0) {
-        reasoning.push(`- Error de Simulación: No se pudieron generar manos de oponente.`);
+        reasoning.push(t('ai_logic.inference_error_no_hands'));
         return { strong: [], medium: [], weak: [] };
     }
 
@@ -371,7 +392,11 @@ export const generateConstrainedOpponentHand = (
     }
     
     // 4. Update reasoning log and return
-    reasoning.push(`- Muestras de Manos (Estratificado): [Fuerte: ${strongSamples.length}, Media: ${mediumSamples.length}, Débil: ${weakSamples.length}].`);
+    reasoning.push(t('ai_logic.inference_stratified_samples', {
+        strong: strongSamples.length,
+        medium: mediumSamples.length,
+        weak: weakSamples.length
+    }));
 
     return {
         strong: strongSamples,
