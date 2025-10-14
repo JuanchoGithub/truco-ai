@@ -324,6 +324,7 @@
     "opponent_hand": "Mano del Oponente",
     "clear": "Limpiar",
     "run_test": "Ejecutar Test",
+    "regenerate_hands": "Regenerar Manos",
     "result": "Resultado",
     "chosen_action": "Acción Elegida",
     "reasoning": "Razonamiento",
@@ -343,7 +344,8 @@
       "truco_called": "Truco Cantado",
       "retruco_called": "Retruco Cantado",
       "flor_called": "Flor Cantada"
-    }
+    },
+    "regenerate_hands_tooltip": "Carga un escenario predefinido para usar esta función."
   },
   "card_picker": {
     "title": "Seleccionar una Carta",

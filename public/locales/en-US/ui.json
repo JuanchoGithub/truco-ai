@@ -324,6 +324,7 @@
     "opponent_hand": "Opponent Hand",
     "clear": "Clear",
     "run_test": "Run Test",
+    "regenerate_hands": "Regenerate Hands",
     "result": "Result",
     "chosen_action": "Chosen Action",
     "reasoning": "Reasoning",
@@ -343,7 +344,8 @@
       "truco_called": "Truco Called",
       "retruco_called": "Retruco Called",
       "flor_called": "Flor Called"
-    }
+    },
+    "regenerate_hands_tooltip": "Load a predefined scenario to use this feature."
   },
   "card_picker": {
     "title": "Select a Card",
