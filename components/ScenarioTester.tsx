@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card, GameState, AiMove, Player, GamePhase, MessageObject, Action, ActionType } from '../types';
 import { createDeck, getCardName, decodeCardFromCode } from '../services/trucoLogic';
 import { initialState } from '../hooks/useGameReducer';
@@ -96,6 +96,16 @@ const CardPickerModal: React.FC<{
 
 const ScenarioTester: React.FC<{ onExit: () => void }> = ({ onExit }) => {
     const { t } = useLocalization();
+
+    const [isWideLayout, setIsWideLayout] = useState(window.innerWidth / window.innerHeight > 1);
+
+    useEffect(() => {
+        const handleResize = () => {
+            setIsWideLayout(window.innerWidth / window.innerHeight > 1);
+        };
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
     
     // Scenario state
     const [aiHand, setAiHand] = useState<(Card | null)[]>([null, null, null]);
@@ -222,9 +232,9 @@ const ScenarioTester: React.FC<{ onExit: () => void }> = ({ onExit }) => {
                     <h2 className="text-xl lg:text-2xl font-bold text-indigo-300 font-cinzel tracking-widest">{t('scenario_tester.title')}</h2>
                     <button onClick={onExit} className="text-indigo-200 text-2xl lg:text-3xl font-bold">&times;</button>
                 </div>
-                <div className="flex-grow p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-3 gap-6 overflow-y-auto">
+                <div className={`flex-grow p-4 lg:p-6 gap-6 overflow-y-auto ${isWideLayout ? 'grid grid-cols-[1fr_2fr]' : 'flex flex-col'}`}>
                     {/* Setup Panel */}
-                    <div className="space-y-4 lg:col-span-1 flex flex-col">
+                    <div className="space-y-4 flex flex-col">
                         <h3 className="text-lg font-bold text-indigo-200">{t('scenario_tester.setup')}</h3>
                         <select onChange={handleLoadScenario} className="w-full p-2 bg-gray-900 border border-gray-600 rounded-md text-white">
                             <option>{t('scenario_tester.select_scenario')}</option>
@@ -262,43 +272,23 @@ const ScenarioTester: React.FC<{ onExit: () => void }> = ({ onExit }) => {
                         </div>
 
                         <div className="flex flex-row gap-6 items-start justify-around mt-4">
-                            <div className="w-1/2">
+                            <div className="w-full">
                                 <div className="flex justify-between items-center mb-1"><label className="font-semibold">{t('scenario_tester.ai_hand')}</label><button onClick={() => handleClearHand('ai')} className="text-xs text-red-400">{t('scenario_tester.clear')}</button></div>
-                                <div className="flex justify-center -space-x-7 min-h-[124px] items-center">
+                                <div className="flex justify-center -space-x-[66%] min-h-[124px] items-center">
                                   {aiHand.map((c, i) => <button key={i} onClick={() => handleOpenPicker('ai', i)} className="transition-transform duration-200 ease-out hover:-translate-y-4 hover:z-20"><CardComponent card={c || undefined} size="small" /></button>)}
                                 </div>
                             </div>
-                            <div className="w-1/2">
+                            <div className="w-full">
                                 <div className="flex justify-between items-center mb-1"><label className="font-semibold">{t('scenario_tester.opponent_hand')}</label><button onClick={() => handleClearHand('opponent')} className="text-xs text-red-400">{t('scenario_tester.clear')}</button></div>
-                                <div className="flex justify-center -space-x-7 min-h-[124px] items-center">
+                                <div className="flex justify-center -space-x-[66%] min-h-[124px] items-center">
                                   {opponentHand.map((c, i) => <button key={i} onClick={() => handleOpenPicker('opponent', i)} className="transition-transform duration-200 ease-out hover:-translate-y-4 hover:z-20"><CardComponent card={c || undefined} size="small" /></button>)}
                                 </div>
                             </div>
                         </div>
-                        {/* On small screens, the result panel is below */}
-                         <div className="block lg:hidden mt-4">
-                            <div className="bg-black/40 p-4 rounded-lg border border-indigo-500/50 flex flex-col min-h-[300px]">
-                                <h3 className="text-lg font-bold text-indigo-200 mb-2">{t('scenario_tester.result')}</h3>
-                                {testResult ? (
-                                    <div className="flex-grow flex flex-col gap-4 overflow-hidden">
-                                        <div>
-                                            <h4 className="font-semibold text-gray-300">{t('scenario_tester.chosen_action')}</h4>
-                                            <p className="p-2 bg-black/50 rounded-md font-mono text-lg text-yellow-300">{actionDesc}</p>
-                                        </div>
-                                        <div className="flex-grow flex flex-col overflow-hidden">
-                                            <h4 className="font-semibold text-gray-300">{t('scenario_tester.reasoning')}</h4>
-                                            <pre className="p-2 bg-black/50 rounded-md text-xs text-cyan-200 whitespace-pre-wrap font-mono flex-grow overflow-y-auto">{reasoningDesc}</pre>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="flex items-center justify-center h-full text-gray-400">{t('scenario_tester.no_result')}</div>
-                                )}
-                            </div>
-                        </div>
                     </div>
 
-                    {/* Result Panel (only on large screens) */}
-                    <div className="bg-black/40 p-4 rounded-lg border border-indigo-500/50 flex-col lg:col-span-2 hidden lg:flex">
+                    {/* Result Panel */}
+                    <div className="bg-black/40 p-4 rounded-lg border border-indigo-500/50 flex flex-col min-h-[300px]">
                         <h3 className="text-lg font-bold text-indigo-200 mb-2">{t('scenario_tester.result')}</h3>
                         {testResult ? (
                             <div className="flex-grow flex flex-col gap-4 overflow-hidden">
