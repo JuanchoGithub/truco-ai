@@ -5,82 +5,7 @@ import React, { useRef } from 'react';
 import { Action, ActionType, OpponentModel, Case, PlayerTrucoCallEntry, GameState, Card, Player, RoundSummary, PlayerCardPlayStatistics, CardCategory, CardPlayStats } from '../types';
 import { getCardName, decodeCardFromCode } from '../services/trucoLogic';
 import { useLocalization } from '../context/LocalizationContext';
-
-// New helper function to generate the AI's analysis of the player's style
-const generateProfileAnalysis = (state: GameState, t: (key: string) => string): React.ReactNode[] => {
-    const insights: React.ReactNode[] = [];
-    const { opponentModel, roundHistory, playerTrucoCallHistory, playerCardPlayStats } = state;
-
-    if (roundHistory.length < 3) {
-        insights.push(<li key="nodata">{t('dataModal.no_data_message')}</li>);
-        return insights;
-    }
-
-    // Envido Analysis
-    const callThreshold = (opponentModel.envidoBehavior.mano.callThreshold + opponentModel.envidoBehavior.pie.callThreshold) / 2;
-    const foldRate = (opponentModel.envidoBehavior.mano.foldRate + opponentModel.envidoBehavior.pie.foldRate) / 2;
-    let envidoInsight = "";
-    if (callThreshold > 28) {
-        envidoInsight += t('dataModal.envido_style_precise');
-    } else if (callThreshold < 26) {
-        envidoInsight += t('dataModal.envido_style_aggressive');
-    } else {
-        envidoInsight += t('dataModal.envido_style_balanced');
-    }
-    if (foldRate > 0.5) {
-        envidoInsight += t('dataModal.envido_style_cautious');
-    } else if (foldRate < 0.3) {
-        envidoInsight += t('dataModal.envido_style_bold');
-    }
-    insights.push(<li key="envido">{envidoInsight}</li>);
-    
-    // Truco Analysis
-    const avgTrucoStrength = playerTrucoCallHistory.length > 0
-        ? playerTrucoCallHistory.reduce((sum, entry) => sum + entry.strength, 0) / playerTrucoCallHistory.length
-        : 0;
-    
-    let trucoInsight = t('dataModal.truco_style_title');
-    if (playerTrucoCallHistory.length < 3) {
-        trucoInsight += t('dataModal.truco_style_no_data');
-    } else if (avgTrucoStrength > 28) {
-        trucoInsight += t('dataModal.truco_style_conservative');
-    } else if (avgTrucoStrength < 22) {
-        trucoInsight += t('dataModal.truco_style_aggressive');
-    } else {
-        trucoInsight += t('dataModal.truco_style_balanced');
-    }
-    insights.push(<li key="truco">{trucoInsight}</li>);
-    
-    // Bluff Analysis
-    const bluffs = roundHistory.reduce((acc, r) => {
-        if (r.playerTrucoCall?.isBluff) {
-            acc.attempts++;
-            if (r.roundWinner === 'player') acc.successes++;
-        }
-        return acc;
-    }, { attempts: 0, successes: 0 });
-
-    if (bluffs.attempts > 2) {
-        const rate = bluffs.successes / bluffs.attempts;
-        let bluffInsight = t('dataModal.bluff_style_title');
-        if (rate > 0.6) {
-            bluffInsight += t('dataModal.bluff_style_effective');
-        } else if (rate < 0.3) {
-            bluffInsight += t('dataModal.bluff_style_readable');
-        } else {
-            bluffInsight += t('dataModal.bluff_style_moderate');
-        }
-        insights.push(<li key="bluff">{bluffInsight}</li>);
-    }
-    
-    // Card Play Analysis
-    const tresStats = playerCardPlayStats.tres;
-    if (tresStats.plays > 2 && tresStats.asResponse > tresStats.asLead) {
-         insights.push(<li key="cards">{t('dataModal.card_play_style_threes')}</li>);
-    }
-
-    return insights;
-};
+import { generateProfileAnalysis } from '../services/profileAnalysisService';
 
 
 const DataModal: React.FC<{ gameState: GameState, dispatch: React.Dispatch<Action> }> = ({ gameState, dispatch }) => {
@@ -109,7 +34,7 @@ const DataModal: React.FC<{ gameState: GameState, dispatch: React.Dispatch<Actio
   const totalCalls = envidoCalls.length;
   const manoCallRate = totalCalls > 0 ? (callsAsMano / totalCalls) * 100 : 0;
   
-  const profileAnalysis = generateProfileAnalysis(gameState, t);
+  const profileAnalysis = generateProfileAnalysis(gameState);
 
   const handleExport = () => {
     const dataToExport: Partial<GameState> = {
@@ -176,13 +101,22 @@ const DataModal: React.FC<{ gameState: GameState, dispatch: React.Dispatch<Actio
         </div>
         <div className="p-4 lg:p-6 flex-grow overflow-y-auto text-amber-50 space-y-6">
           
-          {/* Section: AI Style Analysis */}
+          {/* Section: AI Personality Profile of You */}
           <div>
             <h3 className="text-lg lg:text-xl font-bold text-amber-200 mb-2 border-b border-amber-200/20 pb-1">{t('dataModal.style_analysis_title')}</h3>
-            <div className="bg-black/30 p-3 rounded-md space-y-2 text-sm">
-                <ul className="list-disc list-inside text-gray-300 italic space-y-1">
-                    {profileAnalysis}
-                </ul>
+            <div className="bg-black/30 p-4 rounded-md space-y-4">
+              {profileAnalysis.map((obs, index) => (
+                <div key={index}>
+                  <p className="font-bold text-white">{t(obs.titleKey)}</p>
+                  <div className="w-full bg-gray-700 rounded-full h-2.5 my-1" title={`${t('dataModal.confidence_level')}: ${(obs.confidence * 100).toFixed(0)}%`}>
+                    <div 
+                      className="bg-gradient-to-r from-yellow-500 to-amber-400 h-2.5 rounded-full transition-all duration-500" 
+                      style={{ width: `${Math.max(5, obs.confidence * 100)}%` }}
+                    ></div>
+                  </div>
+                  <p className="text-gray-300 italic text-sm">{t(obs.descriptionKey)}</p>
+                </div>
+              ))}
             </div>
           </div>
           

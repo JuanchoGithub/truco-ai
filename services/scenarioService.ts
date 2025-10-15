@@ -333,11 +333,12 @@ export const predefinedScenarios: PredefinedScenario[] = [
         baseState: { 
             aiScore: 11, 
             playerScore: 10, 
-            gamePhase: 'truco_called', 
+            gamePhase: 'trick_1', 
             mano: 'ai', 
             currentTurn: 'ai',
             trucoLevel: 1,
-            lastCaller: 'player'
+            lastCaller: 'player',
+            hasEnvidoBeenCalledThisRound: true
         },
         generateHands: () => generateHands({ cardComposition: [{ minHierarchy: 14, maxHierarchy: 14 }, { minHierarchy: 2, maxHierarchy: 2 }, { minHierarchy: 1, maxHierarchy: 1 }], mustNotHaveFlor: true }, { mustNotHaveFlor: true })
     },
@@ -368,7 +369,14 @@ export const predefinedScenarios: PredefinedScenario[] = [
     },
     {
         nameKey: 'scenario_tester.scenario_names.probe_false_deplete',
-        baseState: { aiScore: 1, playerScore: 0, gamePhase: 'retruco_called', trucoLevel: 2, lastCaller: 'player', currentTurn: 'ai' },
+        baseState: { 
+            aiScore: 1, 
+            playerScore: 0, 
+            gamePhase: 'retruco_called', 
+            trucoLevel: 2, 
+            lastCaller: 'player', 
+            currentTurn: 'ai' 
+        },
         generateHands: () => generateHands({ cardComposition: [{ minHierarchy: 13, maxHierarchy: 13 }, { minHierarchy: 7, maxHierarchy: 7 }, { minHierarchy: 1, maxHierarchy: 1 }], mustNotHaveFlor: true }, { mustNotHaveFlor: true })
     },
     {

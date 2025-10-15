@@ -126,7 +126,7 @@
       "mid_game_figure_low": "Mid-Game Figure Low",
       "late_false_ace_chain": "Late False Ace Chain",
       "parda_false_7": "Parda False 7",
-      "banter_low_glimpse": "Banter Low Glimpse",
+      "banter_low_glimpse": "Feint with a Strong Hand",
       "ancho_deplete_post_tie": "Ancho Deplete Post-Tie",
       "dual_false_bait": "Dual False Bait",
       "mid_low_signal_mask": "Mid-Low Signal Mask",
@@ -180,6 +180,10 @@
       "endgame_pressure_truco": {
         "title": "Endgame Pressure: The 'Truco' to Win",
         "description": "This scenario recreates a high-stakes endgame. The AI is at 14 points (one away from victory), and the opponent is close behind at 13. It is the AI's turn to act. A simple round win would give the AI the game. The test is to see how the AI behaves under this immense pressure. Will it play conservatively, or will it take a risk and call 'Truco' immediately, attempting to force the opponent to fold and secure an instant victory? This scenario demonstrates the AI's 'Game Pressure' system and its willingness to make calculated gambles to close out a match."
+      },
+      "banter_low_glimpse": {
+        "title": "Feint with a Strong Hand",
+        "description": "The AI has a very strong hand (e.g., Ace of Spades, a 5, a 4) and it's its turn to play during an already accepted 'Truco'. This scenario tests the AI's 'feint' tactic. Instead of playing its strongest card (the Ace) and potentially scaring the opponent away, the AI should opt to play its weakest card (the 4) as bait. The goal is to hide its true strength, encourage the opponent to escalate the bet to 'Retruco', and then win the round with its remaining high cards."
       },
       "dual_brava_probe": {
         "title": "Dual Brava Mid-Low Probe",
@@ -236,10 +240,6 @@
       "parda_false_7": {
         "title": "Parda False 7",
         "description": "AI has 7♦, 7♣, 3♠ after a tie. Tests leading with the deceptive 7♣ (false 7) to bait a raise."
-      },
-      "banter_low_glimpse": {
-        "title": "Banter Low Glimpse",
-        "description": "AI has 1♠, 5♠, 4♣ during Truco. Tests leading with 5♠ after showing 4♣ to feign a trash hand."
       },
       "ancho_deplete_post_tie": {
         "title": "Ancho Deplete Post-Tie",
