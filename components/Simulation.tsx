@@ -656,7 +656,8 @@ const ManualSimulator: React.FC = () => {
 
     const sortedSimulationResults = useMemo(() => {
         if (!simulationResults) return null;
-        return Object.entries(simulationResults).sort((a, b) => b[1] - a[1]);
+        // Fix: Added explicit Number casting to prevent potential type errors during arithmetic operation.
+        return Object.entries(simulationResults).sort((a, b) => Number(b[1]) - Number(a[1]));
     }, [simulationResults]);
     const totalSimsRun = sortedSimulationResults ? sortedSimulationResults.reduce((sum, [, count]) => sum + count, 0) : 0;
 

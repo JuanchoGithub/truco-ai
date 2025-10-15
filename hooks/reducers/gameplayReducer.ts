@@ -229,7 +229,7 @@ export function handleStartNewRound(state: GameState, action: { type: ActionType
     playerEnvidoValue: null,
     aiEnvidoValue: null,
     playerActionHistory: [],
-    aiTrucoContext: null, // <-- BUG FIX: Ensure truco context is cleared
+    aiDecisionContext: null, // Clear decision context for new round
     aiBlurb: null,
     playerBlurb: null,
     lastRoundWinner: null,
@@ -393,33 +393,20 @@ export function handlePlayCard(state: GameState, action: { type: ActionType.PLAY
       if (roundWinner === 'player') newPlayerScore += points;
       else if (roundWinner === 'ai') newAiScore += points;
       
-      let newOpponentModel = newState.opponentModel;
       let newAiCases = newState.aiCases;
       
-      if (newState.aiTrucoContext) {
+      if (newState.aiDecisionContext) {
         const outcome = roundWinner === 'ai' ? 'win' : 'loss';
-        const newCase: Case = {
-            ...newState.aiTrucoContext,
-            outcome,
-            opponentFoldRateAtTimeOfCall: newState.opponentModel.trucoFoldRate,
-        };
-        newAiCases = [...newState.aiCases, newCase];
+        const { deceptionType } = newState.aiDecisionContext;
 
-        const decay = 0.9;
-        // FIX: Corrected typo from 'trucoFoldrate' to 'trucoFoldRate'.
-        const newFoldRate = newState.opponentModel.trucoFoldRate * decay;
-        
-        let newBluffSuccessRate = newState.opponentModel.bluffSuccessRate;
-        if (newState.aiTrucoContext.isBluff) {
-            const bluffReward = roundWinner === 'ai' ? 1 : 0; // 1 if AI wins (bluff "succeeds")
-            newBluffSuccessRate = newState.opponentModel.bluffSuccessRate * decay + (1 - decay) * bluffReward;
+        // Simplified Active Learning: only retain deceptive plays or a small fraction of normal plays.
+        if (deceptionType !== 'none' || Math.random() < 0.1) {
+            const newCase: Case = {
+                ...newState.aiDecisionContext,
+                outcome,
+            };
+            newAiCases = [...newState.aiCases, newCase];
         }
-
-        newOpponentModel = {
-            ...newOpponentModel,
-            trucoFoldRate: Math.max(0.05, newFoldRate),
-            bluffSuccessRate: newBluffSuccessRate,
-        };
       }
       
       const roundMessageLog = [...trickMessageLog, { key: 'game.round_winner_points', options: { winner: roundWinner, points } }];
@@ -459,9 +446,8 @@ export function handlePlayCard(state: GameState, action: { type: ActionType.PLAY
         messageLog: roundMessageLog,
         playedCards: newPlayedCards,
         opponentHandProbabilities: updatedProbs,
-        opponentModel: newOpponentModel,
         aiCases: newAiCases,
-        aiTrucoContext: null,
+        aiDecisionContext: null,
         lastRoundWinner: roundWinner,
         aiBlurb: trickOutcomeBlurb,
         playerBlurb: null,

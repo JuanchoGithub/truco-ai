@@ -1,4 +1,3 @@
-
 {
   "ai_logic": {
     "initial_state": "The AI is waiting for the game to start.",
@@ -37,6 +36,19 @@
     "envido_bait_body": "Full Hand Evaluation:\n  - Envido/Flor Points: {{envidoPoints}} (Strong).\n  - Truco Strength: {{trucoStrength}} (Weak).\nAnalysis: My hand is lopsided. I will likely lose if Truco is called. My best chance is to maximize Envido points.\nTactical Decision: I will not call my Envido. Instead, I will play a card and wait for the player to call Envido first. This allows me to counter-attack and potentially win more points, compensating for my weakness in Truco.",
     "bait_probability_analysis": "\n[Bait Probability Analysis]\n{{baitReasoning}}",
     "proceeding_silent_play": "\n\n--- Proceeding with a silent card play ---\n",
+    "feint_tactic_title": "[Advanced Tactic: Feint]",
+    "feint_tactic_active_truco": "Feint Tactic: Truco is already active (level {{trucoLevel}}). My hand is very strong ({{strength}}% win prob). A bait play is optimal.",
+    "feint_tactic_body": "My hand is extremely strong ({{strength}}% strength). Calling TRUCO now is the standard play, but it might scare the opponent away.",
+    "feint_tactic_opponent_aggro": "Opponent is aggressive (fold rate of {{rate}}%). Increasing feint probability.",
+    "feint_tactic_probability": "Instead, I will consider a feint to incite a bluff or Truco call from the opponent. Probability of attempting feint: {{probability}}%.",
+    "feint_tactic_decision": "Decision: Feint chosen. Playing my weakest card, {{cardName}}, as bait.",
+    "feint_tactic_skipped": "Considered a feint, but decided that a direct value bet is better in this situation.",
+    "post_envido_bait_title": "[Advanced Tactic: Post-Envido Bait]",
+    "post_envido_bait_body": "My Truco hand is very strong (strength {{strength}}). Instead of calling Truco immediately after the Envido, which might scare the opponent, I will consider a bait play.",
+    "post_envido_bait_opponent_aggro": "The opponent is aggressive, making a bait more effective. Increasing probability.",
+    "post_envido_bait_chance": "Probability of attempting bait: {{probability}}%.",
+    "post_envido_bait_decision": "Decision: Bait chosen. Playing my weakest card, {{cardName}}, to hide my strength.",
+    "post_envido_bait_skipped": "Considered a post-envido bait, but a direct value bet is preferable now.",
     "envido_call_logic": "[Logic: Call Envido]",
     "mano_bonus": "I am hand, which gives me an advantage in ties.",
     "opponent_model_context": "\n[Opponent Model ({{context}})]: Player's call threshold: ~{{threshold}}. My pressure-adjusted threshold: {{dynamicThreshold}}.",
@@ -211,6 +223,16 @@
     "randomizer_logic": {
       "chose": "Randomizer chose {{type}}",
       "no_op": "No valid actions for Randomizer this turn."
+    },
+    "post_parda_bait_check": "[Advanced Tactic: Post-Tie Bait]\n- The first trick was a tie, making this trick decisive.\n- My hand has a large power gap between my cards.",
+    "decision_post_parda_bait": "\nDecision: Playing my weaker card ({{weakCard}}) as bait to hide my {{strongCard}} and incite a Truco call.",
+    "post_parda_bait_skip": "Skipping post-tie bait. Playing standard to secure the trick.",
+    "cbr_logic": {
+      "checking": "[CBR Logic] Searching case base...",
+      "found_similar": "Found {{count}} similar cases (max similarity: {{similarity}}%).",
+      "no_similar_fallback": "No sufficiently similar cases found (similarity < 98%). Falling back to rule-based logic.",
+      "reusing_action": "Reusing most successful action from past cases: '{{action}}' ({{winRate}}% win rate).",
+      "action_cluster_analysis": "Action cluster analysis: {{action}} had a {{winRate}}% historical win rate."
     }
   }
 }

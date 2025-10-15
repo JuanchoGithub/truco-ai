@@ -1,3 +1,4 @@
+
 import { GameState, Card, Suit } from '../../types';
 import { getCardHierarchy, getCardName, getEnvidoValue, determineTrickWinner, determineRoundWinner, getEnvidoDetails, hasFlor, getEnvidoSuit } from '../trucoLogic';
 import i18nService from '../i18nService';
@@ -141,6 +142,32 @@ export const findBestCardToPlay = (state: GameState): PlayCardResult => {
                     reasoning.push(t('ai_logic.decision_play_highest_lost_trick1', { cardName: getCardName(aiHand[cardIndex]) }));
                     return { index: cardIndex, reasoning, reasonKey: 'secure_hand' };
                 } else { // Tied first trick
+                    // --- NEW: Post-Parda Baiting Tactic ---
+                    const sortedHand = [...aiHand].sort((a, b) => getCardHierarchy(b) - getCardHierarchy(a));
+                    const strongestCard = sortedHand[0];
+                    const weakestCard = sortedHand[1];
+
+                    // Condition: Hand has a huge power gap (e.g., Ace + weak card)
+                    if (getCardHierarchy(strongestCard) - getCardHierarchy(weakestCard) >= 8) {
+                        let baitChance = 0.75; // High chance to try this tactic
+                        if (trucoLevel > 0) {
+                            baitChance = 0.25; // Less likely to bait if stakes are already high
+                        }
+                        
+                        reasoning.push(t('ai_logic.post_parda_bait_check'));
+                        
+                        if (Math.random() < baitChance) {
+                            cardIndex = findCardIndexByValue(aiHand, 'min');
+                            reasoning.push(t('ai_logic.decision_post_parda_bait', { 
+                                weakCard: getCardName(weakestCard), 
+                                strongCard: getCardName(strongestCard) 
+                            }));
+                            return { index: cardIndex, reasoning, reasonKey: 'see_opponent' };
+                        } else {
+                             reasoning.push(t('ai_logic.post_parda_bait_skip'));
+                        }
+                    }
+                    
                     cardIndex = findCardIndexByValue(aiHand, 'max');
                     reasoning.push(t('ai_logic.decision_play_highest_tied_trick1', { cardName: getCardName(aiHand[cardIndex]) }));
                     return { index: cardIndex, reasoning, reasonKey: 'secure_hand' };

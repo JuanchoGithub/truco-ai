@@ -293,31 +293,20 @@ export function handleResolveEnvidoDecline(state: GameState): GameState {
 
 export function handleResolveTrucoDecline(state: GameState): GameState {
     const caller = state.lastCaller!;
-    let newOpponentModel = state.opponentModel;
     let newAiCases = state.aiCases;
 
-    if (caller === 'ai' && state.aiTrucoContext) {
-        const newCase: Case = {
-            ...state.aiTrucoContext,
-            outcome: 'win',
-            opponentFoldRateAtTimeOfCall: state.opponentModel.trucoFoldRate,
-        };
-        newAiCases = [...state.aiCases, newCase];
+    if (caller === 'ai' && state.aiDecisionContext) {
+        // Player declined, so the AI's action was successful.
+        const outcome = 'win';
+        const { deceptionType } = state.aiDecisionContext;
 
-        const decay = 0.9;
-        const newFoldRate = state.opponentModel.trucoFoldRate * decay + (1 - decay) * 1;
-        
-        let newBluffSuccessRate = state.opponentModel.bluffSuccessRate;
-        if (state.aiTrucoContext.isBluff) {
-            const outcome = 1; // FIX: Player folding to a bluff is a success for the AI.
-            newBluffSuccessRate = state.opponentModel.bluffSuccessRate * decay + (1 - decay) * outcome;
+        if (deceptionType !== 'none' || Math.random() < 0.1) {
+            const newCase: Case = {
+                ...state.aiDecisionContext,
+                outcome,
+            };
+            newAiCases = [...state.aiCases, newCase];
         }
-
-        newOpponentModel = {
-            ...newOpponentModel,
-            trucoFoldRate: Math.min(0.95, newFoldRate),
-            bluffSuccessRate: newBluffSuccessRate
-        };
     }
     
     const points = state.trucoLevel;
@@ -361,9 +350,8 @@ export function handleResolveTrucoDecline(state: GameState): GameState {
             messageLog: [...state.messageLog, finalLogMessage],
             pendingTrucoCaller: null,
             playerActionHistory: [...state.playerActionHistory, ActionType.DECLINE],
-            opponentModel: newOpponentModel,
             aiCases: newAiCases,
-            aiTrucoContext: null,
+            aiDecisionContext: null,
             winner: finalWinner,
             gamePhase: 'game_over',
             gameOverReason: { key: finalWinner === 'player' ? 'game.game_over_by_points_win' : 'game.game_over_by_points_lose' },
@@ -380,9 +368,8 @@ export function handleResolveTrucoDecline(state: GameState): GameState {
         messageLog: [...state.messageLog, finalLogMessage],
         pendingTrucoCaller: null,
         playerActionHistory: [...state.playerActionHistory, ActionType.DECLINE],
-        opponentModel: newOpponentModel,
         aiCases: newAiCases,
-        aiTrucoContext: null,
+        aiDecisionContext: null,
         lastRoundWinner: caller,
         gamePhase: 'round_end',
         currentTurn: null,

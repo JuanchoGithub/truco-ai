@@ -1,4 +1,4 @@
-import { GameState, ActionType, AiTrucoContext, PlayerTrucoCallEntry } from '../../types';
+import { GameState, ActionType, AiDecisionContext, PlayerTrucoCallEntry } from '../../types';
 import { calculateHandStrength, getHandPercentile } from '../../services/trucoLogic';
 
 function updateRoundHistoryWithCall(state: GameState, callText: string): GameState {
@@ -10,7 +10,7 @@ function updateRoundHistoryWithCall(state: GameState, callText: string): GameSta
     return { ...state, roundHistory: newRoundHistory };
 };
 
-export function handleCallTruco(state: GameState, action: { type: ActionType.CALL_TRUCO, payload?: { blurbText: string, trucoContext?: AiTrucoContext } }): GameState {
+export function handleCallTruco(state: GameState, action: { type: ActionType.CALL_TRUCO, payload?: { blurbText: string, decisionContext?: AiDecisionContext } }): GameState {
   const isEnvidoPossible = state.currentTrick === 0 && state.playerTricks[0] === null && state.aiTricks[0] === null;
   const caller = state.currentTurn!;
   const isPlayer = caller === 'player';
@@ -55,14 +55,14 @@ export function handleCallTruco(state: GameState, action: { type: ActionType.CAL
     trucoLevel: 1,
     pendingTrucoCaller: isEnvidoPossible ? state.currentTurn : null,
     messageLog: [...state.messageLog, { key: 'log.call_truco', options: { caller } }],
-    aiTrucoContext: action.payload?.trucoContext || null,
+    aiDecisionContext: action.payload?.decisionContext || null,
     playerBlurb: isPlayer ? { text: 'actionBar.truco', isVisible: true } : null,
     aiBlurb: !isPlayer && action.payload?.blurbText ? { text: action.payload.blurbText, isVisible: true } : null,
     isThinking: caller === 'ai' ? false : state.isThinking,
   };
 }
 
-export function handleCallRetruco(state: GameState, action: { type: ActionType.CALL_RETRUCO, payload?: { blurbText: string, trucoContext?: AiTrucoContext } }): GameState {
+export function handleCallRetruco(state: GameState, action: { type: ActionType.CALL_RETRUCO, payload?: { blurbText: string, decisionContext?: AiDecisionContext } }): GameState {
    const caller = state.currentTurn!;
    const isPlayer = caller === 'player';
    const updatedState = updateRoundHistoryWithCall(state, `${caller}: Retruco`);
@@ -75,14 +75,14 @@ export function handleCallRetruco(state: GameState, action: { type: ActionType.C
       trucoLevel: 2,
       pendingTrucoCaller: null,
       messageLog: [...state.messageLog, { key: 'log.call_retruco', options: { caller } }],
-      aiTrucoContext: action.payload?.trucoContext || null,
+      aiDecisionContext: action.payload?.decisionContext || null,
       playerBlurb: isPlayer ? { text: 'actionBar.retruco', isVisible: true } : null,
       aiBlurb: !isPlayer && action.payload?.blurbText ? { text: action.payload.blurbText, isVisible: true } : null,
       isThinking: caller === 'ai' ? false : state.isThinking,
     };
 }
 
-export function handleCallValeCuatro(state: GameState, action: { type: ActionType.CALL_VALE_CUATRO, payload?: { blurbText: string, trucoContext?: AiTrucoContext } }): GameState {
+export function handleCallValeCuatro(state: GameState, action: { type: ActionType.CALL_VALE_CUATRO, payload?: { blurbText: string, decisionContext?: AiDecisionContext } }): GameState {
    const caller = state.currentTurn!;
    const isPlayer = caller === 'player';
    const updatedState = updateRoundHistoryWithCall(state, `${caller}: Vale Cuatro`);
@@ -95,7 +95,7 @@ export function handleCallValeCuatro(state: GameState, action: { type: ActionTyp
       trucoLevel: 3,
       pendingTrucoCaller: null,
       messageLog: [...state.messageLog, { key: 'log.call_vale_cuatro', options: { caller } }],
-      aiTrucoContext: action.payload?.trucoContext || null,
+      aiDecisionContext: action.payload?.decisionContext || null,
       playerBlurb: isPlayer ? { text: 'actionBar.vale_cuatro', isVisible: true } : null,
       aiBlurb: !isPlayer && action.payload?.blurbText ? { text: action.payload.blurbText, isVisible: true } : null,
       isThinking: caller === 'ai' ? false : state.isThinking,

@@ -1,4 +1,3 @@
-
 {
   "ai_logic": {
     "initial_state": "La IA está esperando que comience el juego.",
@@ -37,6 +36,19 @@
     "envido_bait_body": "Evaluación de Mano Completa:\n  - Puntos de Envido/Flor: {{envidoPoints}} (Fuerte).\n  - Fuerza de Truco: {{trucoStrength}} (Débil).\nAnálisis: Mi mano es desequilibrada. Probablemente perderé si se canta Truco. Mi mejor oportunidad es maximizar los puntos del Envido.\nDecisión Táctica: No cantaré mi Envido. En su lugar, jugaré una carta y esperaré a que el jugador cante Envido primero. Esto me permite contraatacar y potencialmente ganar más puntos, compensando mi debilidad en el Truco.",
     "bait_probability_analysis": "\n[Análisis de Probabilidad de Cebo]\n{{baitReasoning}}",
     "proceeding_silent_play": "\n\n--- Procediendo con una jugada de carta silenciosa ---\n",
+    "feint_tactic_title": "[Táctica Avanzada: Finta]",
+    "feint_tactic_active_truco": "Táctica de Finta: El Truco ya está activo (nivel {{trucoLevel}}). Mi mano es muy fuerte ({{strength}}% prob. de ganar). Una jugada de cebo es óptima.",
+    "feint_tactic_body": "Mi mano es extremadamente fuerte (fuerza {{strength}}%). Cantar TRUCO ahora es la jugada estándar, pero podría asustar al oponente.",
+    "feint_tactic_opponent_aggro": "El oponente es agresivo (tasa de abandono de {{rate}}%). Aumento la probabilidad de finta.",
+    "feint_tactic_probability": "En lugar de eso, consideraré una finta para incitar un farol o una llamada de Truco del oponente. Probabilidad de intentar la finta: {{probability}}%.",
+    "feint_tactic_decision": "Decisión: La finta ha sido elegida. Jugando mi carta más débil, {{cardName}}, como cebo.",
+    "feint_tactic_skipped": "Consideré una finta, pero decidí que una apuesta directa por valor es mejor en esta situación.",
+    "post_envido_bait_title": "[Táctica Avanzada: Cebo Post-Envido]",
+    "post_envido_bait_body": "Mi mano de Truco es muy fuerte (fuerza {{strength}}). En lugar de cantar Truco inmediatamente después del Envido, lo cual podría asustar al oponente, consideraré una jugada de cebo.",
+    "post_envido_bait_opponent_aggro": "El oponente es agresivo, lo que hace que un cebo sea más efectivo. Aumentando la probabilidad.",
+    "post_envido_bait_chance": "Probabilidad de intentar el cebo: {{probability}}%.",
+    "post_envido_bait_decision": "Decisión: Cebo elegido. Jugando mi carta más débil, {{cardName}}, para ocultar mi fuerza.",
+    "post_envido_bait_skipped": "Consideré un cebo post-envido, pero una apuesta directa por valor es preferible ahora.",
     "envido_call_logic": "[Lógica: Cantar Envido]",
     "mano_bonus": "Soy mano, lo que me da ventaja en empates.",
     "opponent_model_context": "\n[Modelo Oponente ({{context}})]: Umbral de llamada del jugador: ~{{threshold}}. Mi umbral ajustado por presión: {{dynamicThreshold}}.",
@@ -211,6 +223,16 @@
     "randomizer_logic": {
       "chose": "Randomizer eligió {{type}}",
       "no_op": "No hay acciones válidas para el Randomizer en este turno."
+    },
+    "post_parda_bait_check": "[Táctica Avanzada: Cebo Post-Parda]\n- La primera mano fue parda, lo que hace esta mano decisiva.\n- Mi mano tiene una gran diferencia de poder entre mis cartas.",
+    "decision_post_parda_bait": "\nDecisión: Jugando mi carta más débil ({{weakCard}}) como cebo para ocultar mi {{strongCard}} e incitar un canto de Truco.",
+    "post_parda_bait_skip": "No se aplicará el cebo post-parda. Jugando de forma estándar para asegurar la mano.",
+    "cbr_logic": {
+      "checking": "[Lógica CBR] Buscando en la base de casos...",
+      "found_similar": "Se encontraron {{count}} casos similares (similitud máx: {{similarity}}%).",
+      "no_similar_fallback": "No se encontraron casos suficientemente similares (similitud < 98%). Volviendo a la lógica basada en reglas.",
+      "reusing_action": "Reutilizando la acción más exitosa de casos pasados: '{{action}}' (tasa de victoria del {{winRate}}%).",
+      "action_cluster_analysis": "Análisis de clúster de acciones: {{action}} tuvo una tasa de victoria histórica del {{winRate}}%."
     }
   }
 }

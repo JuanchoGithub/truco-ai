@@ -90,17 +90,39 @@ export interface PlayerPlayOrderEntry {
 }
 
 
-export interface Case {
-  strength: number;
-  isBluff: boolean;
-  outcome: 'win' | 'loss';
-  opponentFoldRateAtTimeOfCall: number;
+// --- NEW: Case-Based Reasoning (CBR) Types ---
+export interface DecisionContext {
+  // All values should be normalized 0-1 for distance calculation
+  handStrength: number;       // 0-1 (from calculateTrucoStrength)
+  envidoPoints: number;       // 0-1 (points / 33)
+  pressure: number;           // 0-1 ((pressure + 1) / 2)
+  opponentTrucoFoldRate: number; // 0-1 (from opponentModel)
+  trucoLevel: number;         // 0-1 (level / 3)
+  isMano: number;             // 0 or 1
+  trick: number;              // 0-1 (trick / 2)
+  roundProgress: number;      // 0-1 (cards played / 6)
 }
 
+export interface Case {
+  context: DecisionContext;
+  action: ActionType;
+  deceptionType: 'none' | 'bluff' | 'slow_play';
+  outcome: 'win' | 'loss'; // Outcome of the ROUND if this action was taken
+}
+
+// Fix: Added AiTrucoContext interface to resolve import error in trucoStrategy.ts
 export interface AiTrucoContext {
   strength: number;
   isBluff: boolean;
 }
+
+export interface AiDecisionContext {
+  context: DecisionContext;
+  action: ActionType;
+  deceptionType: 'none' | 'bluff' | 'slow_play';
+}
+// --- END CBR Types ---
+
 
 export interface OpponentHandProbabilities {
   suitDist: Partial<Record<Suit, number>>;
@@ -180,6 +202,11 @@ export interface RoundSummary {
     } | null;
 }
 
+export interface CardConstraint {
+  minHierarchy?: number;
+  maxHierarchy?: number;
+}
+
 export interface GameState {
   deck: Card[];
   playerHand: Card[];
@@ -225,7 +252,7 @@ export interface GameState {
   // AI Learning & Modeling
   opponentModel: OpponentModel;
   aiCases: Case[];
-  aiTrucoContext: AiTrucoContext | null;
+  aiDecisionContext: AiDecisionContext | null;
   
   // New: Probabilistic Opponent Modeling
   opponentHandProbabilities: OpponentHandProbabilities | null;
@@ -326,9 +353,10 @@ export type Action =
   | { type: ActionType.CALL_REAL_ENVIDO; payload?: { blurbText: string } }
   | { type: ActionType.CALL_FALTA_ENVIDO; payload?: { blurbText: string } }
   | { type: ActionType.DECLARE_FLOR; payload?: { blurbText?: string; player?: Player } }
-  | { type: ActionType.CALL_TRUCO; payload?: { blurbText: string; trucoContext?: AiTrucoContext } }
-  | { type: ActionType.CALL_RETRUCO; payload?: { blurbText: string; trucoContext?: AiTrucoContext } }
-  | { type: ActionType.CALL_VALE_CUATRO; payload?: { blurbText: string; trucoContext?: AiTrucoContext } }
+  // Fix: Added optional trucoContext property to payloads to fix type errors in trucoStrategy.ts
+  | { type: ActionType.CALL_TRUCO; payload?: { blurbText: string; decisionContext?: AiDecisionContext; trucoContext?: AiTrucoContext } }
+  | { type: ActionType.CALL_RETRUCO; payload?: { blurbText: string; decisionContext?: AiDecisionContext; trucoContext?: AiTrucoContext } }
+  | { type: ActionType.CALL_VALE_CUATRO; payload?: { blurbText: string; decisionContext?: AiDecisionContext; trucoContext?: AiTrucoContext } }
   | { type: ActionType.CALL_FALTA_TRUCO }
   | { type: ActionType.ACCEPT; payload?: { blurbText: string } }
   | { type: ActionType.DECLINE; payload?: { blurbText: string } }

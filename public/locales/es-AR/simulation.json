@@ -1,0 +1,437 @@
+{
+  "simulation": {
+    "title": "Modo Simulación",
+    "tab_auto": "Auto",
+    "tab_manual": "Manual",
+    "button_simulating": "Simulando...",
+    "button_restart": "Reiniciar",
+    "button_simulate_round": "Simular Ronda",
+    "button_batch_analyzer": "Análisis de Manos",
+    "button_scenario_tester": "Test de Escenarios",
+    "button_copy": "Copiar Texto",
+    "button_copied": "¡Copiado!",
+    "button_copy_error": "Error",
+    "button_exit": "Volver al Menú",
+    "scoreboard_title": "Marcador",
+    "round_status_title": "Estado Ronda {{round}}",
+    "phase": "Fase",
+    "turn": "Turno",
+    "mano": "Mano",
+    "initial_hand_ai": "Mano Inicial IA",
+    "initial_hand_randomizer": "Mano Inicial Randomizer",
+    "log_start_message": "Haz clic en \"Simular Ronda\" para empezar.",
+    "log_new_simulation": "--- INICIO DE SIMULACIÓN ---",
+    "log_round_start": "--- RONDA {{round}} ---",
+    "log_ai_hand": "Mano IA: {{hand}}",
+    "log_randomizer_hand": "Mano Randomizer: {{hand}}",
+    "log_mano": "Mano (empieza): {{player}}",
+    "log_resolving": "Resolviendo {{phase}}",
+    "log_game_winner_ai": "--- IA GANA EL JUEGO ---",
+    "log_game_winner_randomizer": "--- RANDOMIZER GANA EL JUEGO ---",
+    "log_round_end": "--- FIN DE LA RONDA {{round}} ---",
+    "log_round_end_winner": "Ganador: {{winner}}",
+    "log_round_end_score": "Marcador: IA {{aiScore}} - Randomizer {{playerScore}}",
+    "log_ai_logic": "[Lógica de IA]:\n{{reasoning}}",
+    "log_randomizer_logic": "[Lógica de Randomizer]:\n{{reasoning}}",
+    "manual": {
+      "setup_title": "Configurar Ronda Manual",
+      "scores_mano": "Puntajes y Mano",
+      "ai_score": "Puntaje IA",
+      "opponent_score": "Puntaje Oponente",
+      "mano": "Es Mano",
+      "ai_hand": "Mano de la IA",
+      "opponent_hand": "Mano del Oponente",
+      "start_round": "Empezar Ronda",
+      "valid_actions_for": "Acciones Válidas para",
+      "ai_suggestion": "Sugerencia de la IA",
+      "ask_ai": "Preguntar a IA",
+      "ask_ai_prompt": "Presiona 'Preguntar a IA' para ver su jugada recomendada.",
+      "reset": "Reiniciar",
+      "view_log": "Ver Log",
+      "log_title": "Registro de Ronda Manual",
+      "log_round_start": "INICIO DE RONDA MANUAL",
+      "log_initial_setup": "Configuración Inicial",
+      "log_ai_suggestion_title": "Sugerencia de la IA",
+      "log_action": "Acción",
+      "log_event": "Evento",
+      "ai_tricks": "Bazas de la IA",
+      "opponent_tricks": "Bazas del Oponente"
+    }
+  },
+  "simulation_actions": {
+    "play_card": "{{playerName}} juega {{cardName}}.",
+    "play_card_no_hand_data": "{{playerName}} juega una carta (datos de mano no disponibles)",
+    "call_envido": "{{playerName}} canta ENVIDO.",
+    "call_real_envido": "{{playerName}} canta REAL ENVIDO.",
+    "call_falta_envido": "{{playerName}} canta FALTA ENVIDO.",
+    "declare_flor": "{{playerName}} canta FLOR.",
+    "call_truco": "{{playerName}} canta TRUCO.",
+    "call_retruco": "{{playerName}} canta RETRUCO.",
+    "call_vale_cuatro": "{{playerName}} canta VALE CUATRO.",
+    "accept": "{{playerName}} dice QUIERO.",
+    "decline": "{{playerName}} dice NO QUIERO.",
+    "call_contraflor": "{{playerName}} canta CONTRAFLOR.",
+    "accept_contraflor": "{{playerName}} dice CON FLOR QUIERO.",
+    "decline_contraflor": "{{playerName}} dice CON FLOR ME ACHICO.",
+    "default": "{{playerName}} realiza la acción {{actionType}}"
+  },
+  "scenario_tester": {
+    "title": "Test de Escenarios de IA",
+    "load_predefined": "Cargar Escenario Predefinido...",
+    "or_create_custom": "...o crea un escenario personalizado",
+    "setup": "Configuración",
+    "ai_score": "Puntaje IA",
+    "opponent_score": "Puntaje Oponente",
+    "mano": "Es Mano",
+    "turn": "Turno Actual",
+    "phase": "Fase del Juego",
+    "truco_level": "Nivel de Truco",
+    "last_caller": "Último en Cantar Truco",
+    "ai_hand": "Mano de la IA",
+    "opponent_hand": "Mano del Oponente",
+    "clear": "Limpiar",
+    "run_test": "Ejecutar Test",
+    "regenerate_hands": "Regenerar Manos",
+    "result": "Resultado",
+    "chosen_action": "Acción Elegida",
+    "reasoning": "Razonamiento",
+    "no_result": "Ejecuta un test para ver la decisión de la IA.",
+    "select_scenario": "Seleccionar escenario...",
+    "run_simulations": "Correr Simulaciones (x1000)",
+    "simulating": "Simulando... ({{progress}}%)",
+    "cancel": "Cancelar",
+    "simulation_results": "Resultados de Simulación ({{count}})",
+    "clear_results": "Limpiar",
+    "envido_called": "Envido ya cantado",
+    "ai_envido_score": "Puntos Envido IA",
+    "opponent_envido_score": "Puntos Envido Oponente",
+    "scenario_names": {
+      "parda_y_gano": "Oportunidad de Parda y Gano",
+      "do_or_die": "Respuesta de Truco a todo o nada",
+      "lopsided_bait": "Engaño con Envido y mano desequilibrada",
+      "envido_primero": "Respuesta de Envido Primero",
+      "flor_vs_envido": "Respuesta de Flor vs Envido",
+      "endgame_pressure_truco": "Presión de Fin de Partida: 'Truco' para Ganar",
+      "dual_brava_probe": "Sondeo con Doble Brava y Carta Media-Baja",
+      "ancho_feint_chain": "Cadena de Finta con Ancho",
+      "false_ace_bait": "Cebo con As Falso",
+      "tie_breaker_low": "Desempate con Carta Baja",
+      "signal_masked_depletion": "Agotamiento Enmascarado por Señal",
+      "post_envido_low_shift": "Cambio a Carta Baja Post-Envido",
+      "triple_brava_figure_probe": "Sondeo con Figura en Mano de Bravas",
+      "parda_ancho_hint": "Insinuación de Ancho en Parda",
+      "false_7_deplete": "Agotamiento con 7 Falso",
+      "envido_suit_misdirect": "Despiste de Palo del Envido",
+      "brava_kiss_signal": "Cebo con As Falso y Brava",
+      "mid_game_figure_low": "Figura Baja a Mitad de Partida",
+      "late_false_ace_chain": "Cadena de As Falso al Final",
+      "parda_false_7": "Parda con 7 Falso",
+      "banter_low_glimpse": "Insinuación de Carta Baja con Charla",
+      "ancho_deplete_post_tie": "Agotamiento de Ancho Post-Empate",
+      "dual_false_bait": "Cebo con Doble Falso",
+      "mid_low_signal_mask": "Máscara de Señal con Carta Media-Baja",
+      "figure_ancho_shift": "Cambio de Figura a Ancho",
+      "endgame_low_balance": "Equilibrio con Carta Baja en Final de Partida",
+      "probe_false_deplete": "Sondeo de Agotamiento Falso",
+      "tie_ancho_glimpse": "Insinuación de Ancho en Empate",
+      "brava_mid_chain": "Cadena de Brava y Carta Media",
+      "signal_false_low": "Señal de Falso con Carta Baja",
+      "post_parda_figure": "Figura Post-Parda",
+      "dual_ancho_bait": "Cebo con Doble Ancho",
+      "false_brava_probe": "Sondeo con Brava Falsa",
+      "envido_low_unrelated": "Envido Bajo con Carta no Relacionada",
+      "all_tie_mid_hint": "Insinuación Media en Todo Empatado",
+      "clutch_false_deplete": "Agotamiento Falso Decisivo"
+    },
+    "phases": {
+      "trick_1": "Mano 1",
+      "trick_2": "Mano 2",
+      "trick_3": "Mano 3",
+      "envido_called": "Envido Cantado",
+      "truco_called": "Truco Cantado",
+      "retruco_called": "Retruco Cantado",
+      "flor_called": "Flor Cantada"
+    },
+    "regenerate_hands_tooltip": "Carga un escenario predefinido para usar esta función.",
+    "describe_button": "Describir",
+    "describe_button_aria": "Describir escenarios predefinidos",
+    "descriptions": {
+      "title": "Descripción de Escenarios",
+      "parda_y_gano": {
+        "title": "Oportunidad de 'Parda y Gano'",
+        "description": "Este escenario clásico pone a prueba la habilidad de la IA para reconocer una victoria garantizada. La primera mano fue un empate ('parda'). Según las reglas del Truco, el ganador de la segunda mano ahora gana la ronda entera. La IA está configurada para jugar primero en esta mano decisiva y se le da una mano que puede vencer a cualquier carta restante que el oponente pueda tener. La prueba es ver si la IA identifica correctamente esta oportunidad de alto valor y sin riesgo, y escala la apuesta cantando 'Truco' antes de jugar su carta ganadora."
+      },
+      "do_or_die": {
+        "title": "Respuesta de Truco a todo o nada",
+        "description": "Esta es una prueba de presión de final de partida. Al oponente le falta un punto para ganar (14 puntos) y ha cantado 'Truco'. Si la IA se retira ('No Quiero'), concede 1 punto y pierde la partida. Si la IA acepta ('Quiero') y pierde la mano, concede 2 puntos y también pierde la partida. A la IA se le da una mano muy débil. La jugada estratégica correcta es siempre aceptar ('Quiero'), porque retirarse es una derrota garantizada, mientras que aceptar proporciona una pequeña, aunque no nula, posibilidad de ganar si el oponente cometió un error o está de farol. Este escenario prueba la lógica de final de juego de la IA."
+      },
+      "lopsided_bait": {
+        "title": "Engaño con Envido y mano desequilibrada",
+        "description": "Esto prueba una táctica de engaño avanzada. A la IA se le da una mano 'desequilibrada': puntos muy altos para el Envido (ej. 31+) pero cartas muy débiles para el Truco. La jugada estándar sería cantar Envido inmediatamente. Sin embargo, la estrategia avanzada es 'cebar' al oponente jugando una carta en silencio. El objetivo es hacer que el oponente piense que la IA tiene un Envido débil, animándolo a cantarlo él mismo. Esto permite a la IA contraatacar con 'Real Envido' o 'Falta Envido', maximizando sus puntos en la única fase que puede ganar, mientras evita una probable derrota en la fase de Truco. Esto prueba la lógica de cebo estratégico de la IA."
+      },
+      "envido_primero": {
+        "title": "Respuesta de 'Envido Primero'",
+        "description": "Este escenario prueba la comprensión de la IA sobre las prioridades de las reglas. El oponente ha cantado 'Truco' en la primera mano. Sin embargo, la oportunidad de cantar Envido todavía está abierta. A la IA se le da una mano excelente para el Envido (ej. 33 puntos). La jugada correcta no es responder directamente al canto de Truco, sino interrumpir el flujo del juego cantando 'Envido Primero'. Esto obliga a que la apuesta de Envido se resuelva antes de que continúe la apuesta de Truco. Esto prueba el conocimiento de las reglas de la IA y su capacidad para priorizar oportunidades de sumar puntos."
+      },
+      "flor_vs_envido": {
+        "title": "Respuesta de Flor vs. Envido",
+        "description": "Otra prueba de prioridad de reglas. El oponente ha cantado 'Envido'. La IA, sin embargo, ha recibido una 'Flor' (tres cartas del mismo palo). Según las reglas, la Flor vence y anula cualquier apuesta de Envido. La IA no debe responder al canto de Envido (ej., aceptando o escalando). En su lugar, debe declarar su 'Flor', lo que automáticamente gana 3 puntos y cancela la secuencia de Envido. Esto prueba el conocimiento de la IA sobre la prioridad absoluta de la Flor."
+      },
+      "endgame_pressure_truco": {
+        "title": "Presión de Fin de Partida: El 'Truco' para Ganar",
+        "description": "Este escenario recrea un final de partida de alta tensión. La IA está en 14 puntos (a uno de la victoria), y el oponente está justo detrás con 13. Es el turno de actuar de la IA. Una victoria simple en la ronda le daría la partida. La prueba es ver cómo se comporta la IA bajo esta inmensa presión. ¿Jugará de forma conservadora o asumirá un riesgo y cantará 'Truco' inmediatamente, intentando forzar al oponente a retirarse para asegurar una victoria instantánea? Este escenario demuestra el sistema de 'Presión de Juego' de la IA y su disposición a hacer apuestas calculadas para cerrar una partida."
+      },
+      "dual_brava_probe": {
+        "title": "Sondeo con Doble Brava y Carta Media-Baja",
+        "description": "La IA tiene dos bravas superiores (1♠, 1♣) y una carta media-baja (6♦). Ronda nueva en 0-0. Prueba la habilidad de la IA para cebar al comenzar con la carta no obvia de 6♦ en lugar de revelar su fuerza, con el objetivo de provocar un canto de Truco que pueda contraatacar fácilmente."
+      },
+      "ancho_feint_chain": {
+        "title": "Cadena de Finta con Ancho",
+        "description": "La IA tiene 1♠, 3♥, 5♣ después de un Envido conocido. Prueba el liderazgo con cartas no bravas (3♥, 5♣) para fingir debilidad antes de usar el 1♠."
+      },
+      "false_ace_bait": {
+        "title": "Cebo con As Falso",
+        "description": "La IA tiene 1♣, 1♥, 2♦ durante un Truco. Prueba liderar con el débil 1♥ para cebar una escalada (Vale Cuatro), guardando el fuerte 1♣."
+      },
+      "tie_breaker_low": {
+        "title": "Desempate con Carta Baja",
+        "description": "La IA tiene 1♠, 7♥, 4♦ después de un empate. Prueba usar el sutil 7♥ (7 falso) como carta decisiva en lugar del poderoso 1♠ para cebar una subida."
+      },
+      "signal_masked_depletion": {
+        "title": "Agotamiento Enmascarado por Señal",
+        "description": "La IA tiene 1♣, 1♠, 10♠. Prueba usar una señal proxy y liderar con el 10♠ para implicar que las bravas se han gastado, cebando un Truco."
+      },
+      "post_envido_low_shift": {
+        "title": "Cambio a Carta Baja Post-Envido",
+        "description": "La IA tiene 1♠, 7♦, 12♥. Después del Envido, prueba liderar con el 12♥ no relacionado para ocultar las bravas y cebar un Retruco."
+      },
+      "triple_brava_figure_probe": {
+        "title": "Sondeo con Figura en Mano de Bravas",
+        "description": "La IA tiene dos bravas superiores + una figura. Prueba liderar con la figura para sondear, no con las bravas, para conservar poder."
+      },
+      "parda_ancho_hint": {
+        "title": "Insinuación de Ancho en Parda",
+        "description": "La IA tiene 1♣, 3♦, 6♠ después de un empate. Prueba liderar con el 3♦ para insinuar una mano más fuerte sin revelar el 1♣, cebando un Vale Cuatro."
+      },
+      "false_7_deplete": {
+        "title": "Agotamiento con 7 Falso",
+        "description": "Prueba la decisión de la IA frente a un 'Retruco' con una mano engañosa: una carta muy fuerte (1♠), una carta de sondeo (el 7♣ falso) y una carta baja (5♦). La prueba es ver si la IA, al reconocer la fuerza del As de Espadas, confía lo suficiente como para aceptar o incluso escalar a 'Vale Cuatro', a pesar de tener dos cartas de bajo valor."
+      },
+      "envido_suit_misdirect": {
+        "title": "Despiste de Palo del Envido",
+        "description": "La IA tiene 1♣, 2♠, 4♥ después de mostrar un Envido de espadas. Prueba liderar con el 4♥ no relacionado para desviar la atención del palo que contiene el 1♣."
+      },
+      "brava_kiss_signal": {
+        "title": "Cebo con As Falso y Brava",
+        "description": "La IA tiene 1♠, 1♦, 2♣. Prueba liderar con el débil 1♦ para cebar una cadena de Envido-Truco."
+      },
+      "mid_game_figure_low": {
+        "title": "Figura Baja a Mitad de Partida",
+        "description": "La IA tiene 7♠, 12♦, 10♥ después de ganar la mano 1. Prueba liderar con una figura (12♦) para fingir debilidad y cebar un Retruco."
+      },
+      "late_false_ace_chain": {
+        "title": "Cadena de As Falso al Final",
+        "description": "La IA tiene 1♣, 1♠, 1♥ en un final de partida de altas apuestas. Prueba liderar con el débil 1♥ para cebar un canto, guardando el 1♠ para el remate."
+      },
+      "parda_false_7": {
+        "title": "Parda con 7 Falso",
+        "description": "La IA tiene 7♦, 7♣, 3♠ después de un empate. Prueba liderar con el engañoso 7♣ (7 falso) para cebar una subida."
+      },
+      "banter_low_glimpse": {
+        "title": "Insinuación de Carta Baja con Charla",
+        "description": "La IA tiene 1♠, 5♠, 4♣ durante un Truco. Prueba mostrar el 4♣ antes de liderar con el 5♠ para fingir una mano basura."
+      },
+      "ancho_deplete_post_tie": {
+        "title": "Agotamiento de Ancho Post-Empate",
+        "description": "La IA tiene 1♣, 3♠, 11♦ después de dos empates. Prueba liderar con 3♠ para insinuar fuerza y cebar un canto para evitar una pérdida por ser mano."
+      },
+      "dual_false_bait": {
+        "title": "Cebo con Doble Falso",
+        "description": "La IA tiene 1♠, 1♦, 1♥ en el final de la partida. Prueba liderar con un as falso para cebar un canto."
+      },
+      "mid_low_signal_mask": {
+        "title": "Máscara de Señal con Carta Media-Baja",
+        "description": "La IA tiene 7♠, 6♣, 2♥. Prueba liderar con 6♣ para sondear, enmascarando la fuerza real."
+      },
+      "figure_ancho_shift": {
+        "title": "Cambio de Figura a Ancho",
+        "description": "La IA tiene 1♣, 3♦, 10♠ después de ganar la mano 1. Prueba liderar con 10♠ para fingir agotamiento, preparando un cebo con las cartas restantes."
+      },
+      "endgame_low_balance": {
+        "title": "Equilibrio con Carta Baja en Final de Partida",
+        "description": "La IA tiene 1♠, 5♦, 7♣ en 14-14. Prueba liderar con una carta equilibrada media-baja (5♦) para no mostrar desesperación y cebar un Vale Cuatro."
+      },
+      "probe_false_deplete": {
+        "title": "Sondeo de Agotamiento Falso",
+        "description": "La IA tiene 1♣, 12♠, 4♥ durante un Retruco. Prueba jugar el 12♠ para sondear, luego el bajo 4♥ para fingir debilidad."
+      },
+      "tie_ancho_glimpse": {
+        "title": "Insinuación de Ancho en Empate",
+        "description": "La IA tiene 7♦, 3♣, 6♠ después de un empate. Prueba liderar con 6♠ para cebar una subida en la mano decisiva."
+      },
+      "brava_mid_chain": {
+        "title": "Cadena de Brava y Carta Media",
+        "description": "La IA tiene 1♠, 7♠, 2♦ después de un Envido bajo. Prueba liderar con el muy bajo 2♦ para fingir debilidad, encadenando al 7♠ en un cebo."
+      },
+      "signal_false_low": {
+        "title": "Señal de Falso con Carta Baja",
+        "description": "La IA tiene 1♣, 5♥, 11♠. Prueba liderar con 5♥ para enmascarar su fuerza real."
+      },
+      "post_parda_figure": {
+        "title": "Figura Post-Parda",
+        "description": "La IA tiene 1♠, 10♦, 7♥ después de un empate. Prueba liderar con 10♦ para fingir agotamiento y cebar una reanudación del Truco."
+      },
+      "dual_ancho_bait": {
+        "title": "Cebo con Doble Ancho",
+        "description": "La IA tiene 1♣, 3♠, 3♥. Prueba liderar con un 3 para insinuar fuerza sin revelar la brava, cebando un Truco temprano."
+      },
+      "false_brava_probe": {
+        "title": "Sondeo con Brava Falsa",
+        "description": "La IA tiene 7♠, 7♣, 4♠ durante un Truco. Prueba jugar el 7♣ falso para sondear antes de comprometerse."
+      },
+      "envido_low_unrelated": {
+        "title": "Envido Bajo con Carta no Relacionada",
+        "description": "La IA tiene 1♠, 6♣, 2♦ después de un Envido de bastos. Prueba liderar con el 2♦ no relacionado para despistar."
+      },
+      "all_tie_mid_hint": {
+        "title": "Insinuación Media en Todo Empatado",
+        "description": "La IA tiene 1♣, 5♠, 12♥ después de dos empates. Prueba liderar con 5♠ para insinuar fuerza y evitar una pérdida por ser mano."
+      },
+      "clutch_false_deplete": {
+        "title": "Agotamiento Falso Decisivo",
+        "description": "La IA tiene 1♠, 7♦, 10♣ durante un Vale Cuatro. Prueba liderar con 7♦ para fingir agotamiento, guardando el 1♠ para la mano final."
+      }
+    },
+    "explanations": {
+      "accept_truco_do_or_die": "La IA acepta porque retirarse garantiza perder la partida. Aceptar es la única opción que ofrece una oportunidad de ganar, por pequeña que sea.",
+      "decline_truco_weak": "La IA se retira porque sus probabilidades calculadas de ganar son extremadamente bajas. Elige minimizar sus pérdidas en lugar de arriesgar más puntos.",
+      "decline_truco_low_equity": "La IA se retira porque sus probabilidades calculadas de ganar son extremadamente bajas. Elige minimizar sus pérdidas en lugar de arriesgar más puntos.",
+      "decline_truco_certain_loss": "La IA se retira porque sus probabilidades calculadas de ganar son extremadamente bajas. Elige minimizar sus pérdidas en lugar de arriesgar más puntos.",
+      "accept_truco_solid": "La IA acepta el canto de Truco porque su mano es lo suficientemente fuerte para competir. La equidad calculada es positiva o cercana a neutral.",
+      "accept_truco_decent_equity": "La IA acepta el canto de Truco porque su mano es lo suficientemente fuerte para competir. La equidad calculada es positiva o cercana a neutral.",
+      "accept_truco_bluff_call": "La mano de la IA es débil, pero acepta el canto de Truco bajo la sospecha de que el oponente está de farol, basándose en la presión del juego o el modelo del oponente.",
+      "escalate_truco_high_equity": "La IA sube la apuesta porque tiene una mano muy fuerte y su probabilidad de victoria calculada es alta. Esta es una apuesta por valor.",
+      "escalate_truco_strong": "La IA sube la apuesta porque tiene una mano muy fuerte y su probabilidad de victoria calculada es alta. Esta es una apuesta por valor.",
+      "escalate_truco_elite": "La IA sube la apuesta porque tiene una mano muy fuerte y su probabilidad de victoria calculada es alta. Esta es una apuesta por valor.",
+      "escalate_truco_bluff": "La IA sube la apuesta como un farol. Su mano es débil, pero está tratando de presionar al oponente para que se retire.",
+      "escalate_truco_weak_bluff": "La IA sube la apuesta como un farol. Su mano es débil, pero está tratando de presionar al oponente para que se retire.",
+      "escalate_truco_desperation_bluff": "La IA sube la apuesta como un farol. Su mano es débil, pero está tratando de presionar al oponente para que se retire.",
+      "call_truco_bluff": "La IA inicia el canto de Truco como un farol. Tiene una mano débil pero aprovecha la presión del juego o la tendencia del oponente a retirarse.",
+      "call_truco_value": "La IA inicia el canto de Truco por valor. La fuerza de su mano supera su umbral interno para hacer una apuesta con confianza.",
+      "call_truco_won_trick1": "La IA canta Truco porque ganó la primera mano y tiene una mano lo suficientemente fuerte como para ganar una de las dos manos restantes.",
+      "call_truco_certain_win": "La IA canta Truco porque ha identificado una condición de victoria garantizada para la ronda (ej., tener una carta imbatible).",
+      "call_truco_parda_y_gano": "La IA canta Truco porque ha identificado una condición de victoria garantizada para la ronda (ej., tener una carta imbatible).",
+      "call_truco_post_parda_bluff": "La IA canta Truco como un farol después de que la primera mano fuera un empate. Es una jugada estratégica para capitalizar la incertidumbre del oponente.",
+      "call_envido_strong": "La IA canta Envido por valor porque sus puntos de Envido son altos y superan su umbral interno, ajustado por la presión del juego.",
+      "call_real_dominant": "La IA canta Envido por valor porque sus puntos de Envido son altos y superan su umbral interno, ajustado por la presión del juego.",
+      "call_envido_bluff": "La IA canta Envido como un farol. Sus puntos son bajos, pero está tomando un riesgo calculado basado en la tasa de retiro del oponente y la presión del juego.",
+      "call_envido_marginal": "La IA canta Envido con una mano marginal. No es una apuesta fuerte, pero hay una pequeña posibilidad de ganar o de obtener información.",
+      "call_falta_win_game": "La IA canta Falta Envido, la apuesta más alta de Envido. Es una jugada agresiva para ganar el juego con una mano dominante o una jugada defensiva para evitar que el oponente gane.",
+      "call_falta_defensive": "La IA canta Falta Envido, la apuesta más alta de Envido. Es una jugada agresiva para ganar el juego con una mano dominante o una jugada defensiva para evitar que el oponente gane.",
+      "decline_envido_weak": "La IA rechaza el canto de Envido porque su ventaja calculada es negativa. Cree que la mano del oponente es más fuerte.",
+      "accept_envido_good_odds": "La IA acepta el canto de Envido porque su ventaja calculada es positiva. Cree que su mano tiene buenas posibilidades de ganar.",
+      "accept_envido_hero_call": "La IA acepta el canto de Envido a pesar de tener una mano débil. Es una 'hero call' hecha ante la posibilidad de que el oponente esté de farol.",
+      "escalate_real_stronger": "La IA sube la apuesta de Envido porque calcula una ventaja significativa sobre la mano probable del oponente.",
+      "escalate_envido_strong": "La IA sube la apuesta de Envido porque calcula una ventaja significativa sobre la mano probable del oponente.",
+      "call_flor_strong": "La IA canta Flor porque tiene tres cartas del mismo palo. Es un canto obligatorio y de alto valor.",
+      "ack_flor_weak": "La IA reconoce el canto de Flor del oponente. O no tiene Flor, o tiene una de menor valor, concediendo los puntos.",
+      "ack_flor_no_flor": "La IA reconoce el canto de Flor del oponente. O no tiene Flor, o tiene una de menor valor, concediendo los puntos.",
+      "call_contraflor_strong": "La IA sube a Contraflor porque también tiene Flor y cree que su valor en puntos es muy alto y probablemente ganará.",
+      "accept_contraflor_strong": "La IA acepta el desafío de Contraflor porque el valor de su Flor es lo suficientemente alto para cumplir con su umbral de riesgo.",
+      "decline_contraflor_weak": "La IA rechaza el desafío de Contraflor porque el valor de su Flor es demasiado bajo para arriesgarse a una apuesta de tan alto valor.",
+      "see_opponent": "La IA juega una carta baja o no crítica para sondear la mano del oponente sin revelar su propia fuerza.",
+      "secure_hand": "La IA juega su carta más fuerte disponible para asegurar una victoria en la mano, especialmente cuando tiene la ventaja (ej., es 'mano' o ganó la mano anterior).",
+      "win_round_cheap": "La IA juega la carta más débil que aún es lo suficientemente fuerte para ganar la mano, conservando sus cartas más poderosas para más tarde.",
+      "discard_low": "La IA juega su carta más débil porque no puede ganar la mano actual. Es una jugada para minimizar pérdidas y guardar mejores cartas.",
+      "parda_y_canto": "La IA juega intencionadamente una carta que empata la mano ('parda') mientras guarda una carta ganadora en reserva. Es una preparación para cantar Truco en la siguiente mano con una alta probabilidad de éxito.",
+      "unknown_action": "La acción de la IA no encaja en una categoría estratégica estándar. Esto puede ocurrir en estados de juego complejos o inusuales.",
+      "accept_truco_lookahead_fold": "La IA acepta el Truco en lugar de subir la apuesta porque su simulación de futuro predijo que se retiraría a un Vale Cuatro posterior.",
+      "escalate_truco_dominant_card": "La IA sube la apuesta de Truco porque tiene una carta final dominante e infiere que el oponente no puede superarla.",
+      "accept_truco_mixed": "La IA toma una decisión aleatoria basada en su módulo de estrategia mixta para mantenerse impredecible en situaciones límite.",
+      "decline_truco_mixed": "La IA toma una decisión aleatoria basada en su módulo de estrategia mixta para mantenerse impredecible en situaciones límite.",
+      "escalate_truco_mixed_bluff": "La IA toma una decisión aleatoria basada en su módulo de estrategia mixta para mantenerse impredecible en situaciones límite."
+    }
+  },
+  "card_picker": {
+    "title": "Seleccionar una Carta"
+  },
+  "batchAnalyzer": {
+    "title": "Analizador de Manos por Lotes",
+    "description": "Esta herramienta ejecuta el algoritmo de evaluación de fuerza de la IA sobre {{count}} combinaciones de manos estratégicamente distintas para evaluar su percepción de valor. Esto ayuda a calibrar los umbrales de apuesta de la IA e identificar posibles sesgos.",
+    "button_analyze": "Ejecutar Análisis Completo",
+    "loading": "Analizando... {{progress}}%",
+    "header_hand": "Mano",
+    "header_truco_value": "Valor de Truco",
+    "header_ai_assessment": "Evaluación de IA",
+    "copy_button": "Copiar como TSV",
+    "copy_button_copied": "¡Copiado!",
+    "copy_button_error": "¡Error!",
+    "copy_tooltip": "Copiar datos al portapapeles",
+    "simple_card_names": {
+      "as_de_espadas": "A♠",
+      "as_de_bastos": "A♣",
+      "ancho_falso": "A-",
+      "siete_de_espadas": "7♠",
+      "siete_de_oros": "7♦",
+      "siete_falso": "7-",
+      "tres": "3",
+      "dos": "2",
+      "rey": "R",
+      "caballo": "C",
+      "sota": "S",
+      "seis": "6",
+      "cinco": "5",
+      "cuatro": "4",
+      "default": "{{rank}}{{suit}}"
+    }
+  },
+  "ai_reason_keys": {
+    "accept_truco_do_or_die": "Aceptar Truco (A todo o nada)",
+    "decline_truco_weak": "No Querer Truco (Mano Débil)",
+    "decline_truco_low_equity": "No Querer Truco (Equidad Baja)",
+    "decline_truco_certain_loss": "No Querer Truco (Derrota Segura)",
+    "accept_truco_solid": "Querer Truco (Mano Sólida)",
+    "accept_truco_decent_equity": "Querer Truco (Equidad Decente)",
+    "accept_truco_bluff_call": "Querer Truco (Ver Farol)",
+    "escalate_truco_high_equity": "Escalar Truco (Equidad Alta)",
+    "escalate_truco_strong": "Escalar Truco (Mano Fuerte)",
+    "escalate_truco_elite": "Escalar Truco (Mano Élite)",
+    "escalate_truco_bluff": "Escalar Truco (Farol)",
+    "escalate_truco_weak_bluff": "Escalar Truco (Farol con Mano Débil)",
+    "escalate_truco_desperation_bluff": "Escalar Truco (Farol de Desesperación)",
+    "call_truco_bluff": "Cantar Truco (Farol)",
+    "call_truco_value": "Cantar Truco (Por Valor)",
+    "call_truco_won_trick1": "Cantar Truco (Ganó Mano 1)",
+    "call_truco_certain_win": "Cantar Truco (Victoria Segura)",
+    "call_truco_parda_y_gano": "Cantar Truco (Parda y Gano)",
+    "call_truco_post_parda_bluff": "Cantar Truco (Farol Post-Parda)",
+    "call_envido_strong": "Cantar Envido (Fuerte)",
+    "call_envido_bluff": "Cantar Envido (Farol)",
+    "call_envido_marginal": "Cantar Envido (Marginal)",
+    "call_real_dominant": "Cantar Real Envido (Dominante)",
+    "call_falta_win_game": "Cantar Falta Envido (Para Ganar)",
+    "call_falta_defensive": "Cantar Falta Envido (Defensivo)",
+    "decline_envido_weak": "No Querer Envido (Débil)",
+    "accept_envido_good_odds": "Querer Envido (Buenas Chances)",
+    "accept_envido_hero_call": "Querer Envido (Hero Call)",
+    "escalate_real_stronger": "Escalar a Real Envido",
+    "escalate_envido_strong": "Escalar a Envido-Envido",
+    "call_flor_strong": "Cantar Flor",
+    "ack_flor_weak": "Aceptar Flor (Mano Débil)",
+    "ack_flor_no_flor": "Aceptar Flor (Sin Flor)",
+    "call_contraflor_strong": "Cantar Contraflor",
+    "accept_contraflor_strong": "Querer Contraflor",
+    "decline_contraflor_weak": "No Querer Contraflor",
+    "see_opponent": "Jugar Carta (Sondear)",
+    "secure_hand": "Jugar Carta (Asegurar Mano)",
+    "win_round_cheap": "Jugar Carta (Ganar Barato)",
+    "discard_low": "Jugar Carta (Descartar)",
+    "parda_y_canto": "Jugar Carta (Parda y Canto)",
+    "unknown_action": "Acción Desconocida/Otra",
+    "accept_truco_lookahead_fold": "Querer Truco (Previsión de No Querer)",
+    "escalate_truco_dominant_card": "Escalar Truco (Carta Dominante)",
+    "accept_truco_mixed": "Querer Truco (Estrategia Mixta)",
+    "decline_truco_mixed": "No Querer Truco (Estrategia Mixta)",
+    "escalate_truco_mixed_bluff": "Escalar Truco (Farol Mixto)"
+  }
+}

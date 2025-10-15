@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Card, GameState, AiMove, Player, GamePhase, MessageObject, Action, ActionType } from '../types';
-import { createDeck, getCardName, decodeCardFromCode } from '../services/trucoLogic';
+import { createDeck, getCardName, decodeCardFromCode, getEnvidoValue, hasFlor } from '../services/trucoLogic';
 import { initialState } from '../hooks/useGameReducer';
 import { getLocalAIMove } from '../services/localAiService';
 import { predefinedScenarios, PredefinedScenario } from '../services/scenarioService';
@@ -140,6 +140,12 @@ const ScenarioTester: React.FC<{ onExit: () => void }> = ({ onExit }) => {
     const [mano, setMano] = useState<Player>('ai');
     const [currentTurn, setCurrentTurn] = useState<Player>('ai');
     const [gamePhase, setGamePhase] = useState<GamePhase>('trick_1');
+    const [trucoLevel, setTrucoLevel] = useState<0 | 1 | 2 | 3>(0);
+    const [lastCaller, setLastCaller] = useState<Player | null>(null);
+    const [hasEnvidoBeenCalled, setHasEnvidoBeenCalled] = useState<boolean>(false);
+    const [aiEnvidoValue, setAiEnvidoValue] = useState<number>(0);
+    const [opponentEnvidoValue, setOpponentEnvidoValue] = useState<number>(0);
+
     
     // UI state
     const [pickerState, setPickerState] = useState<{ open: boolean, hand: 'ai' | 'opponent', index: number }>({ open: false, hand: 'ai', index: 0 });
@@ -153,6 +159,20 @@ const ScenarioTester: React.FC<{ onExit: () => void }> = ({ onExit }) => {
     const [isSimulating, setIsSimulating] = useState(false);
     const [simulationProgress, setSimulationProgress] = useState(0);
     const simulationCancelled = useRef(false);
+
+    // Automatically calculate Envido points whenever hands change.
+    useEffect(() => {
+        const finalAiHand = aiHand.filter((c): c is Card => c !== null);
+        const finalOpponentHand = opponentHand.filter((c): c is Card => c !== null);
+
+        if (finalAiHand.length === 3) {
+            setAiEnvidoValue(getEnvidoValue(finalAiHand));
+        }
+        if (finalOpponentHand.length === 3) {
+            setOpponentEnvidoValue(getEnvidoValue(finalOpponentHand));
+        }
+    }, [aiHand, opponentHand]);
+
 
     const availableCards = useMemo(() => {
         const selected = [...aiHand, ...opponentHand].filter(c => c !== null);
@@ -198,8 +218,8 @@ const ScenarioTester: React.FC<{ onExit: () => void }> = ({ onExit }) => {
     };
 
     const handleLoadScenario = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const scenarioName = e.target.value;
-        const scenario = predefinedScenarios.find(s => t(s.nameKey) === scenarioName);
+        const scenarioKey = e.target.value;
+        const scenario = predefinedScenarios.find(s => s.nameKey === scenarioKey);
         if (!scenario) {
             setSelectedScenario(null);
             return;
@@ -214,6 +234,12 @@ const ScenarioTester: React.FC<{ onExit: () => void }> = ({ onExit }) => {
         setMano(baseState.mano || 'ai');
         setCurrentTurn(baseState.currentTurn || 'ai');
         setGamePhase(baseState.gamePhase || 'trick_1');
+        setTrucoLevel(baseState.trucoLevel || 0);
+        setLastCaller(baseState.lastCaller || null);
+        setHasEnvidoBeenCalled(baseState.hasEnvidoBeenCalledThisRound || false);
+        setAiEnvidoValue(baseState.aiEnvidoValue || 0);
+        setOpponentEnvidoValue(baseState.playerEnvidoValue || 0);
+
         
         // Generate and set hands
         regenerateAndApplyHands(scenario);
@@ -237,6 +263,8 @@ const ScenarioTester: React.FC<{ onExit: () => void }> = ({ onExit }) => {
             mano,
             currentTurn,
             gamePhase,
+            trucoLevel,
+            lastCaller,
             aiHand: finalAiHand,
             initialAiHand: finalAiHand,
             playerHand: finalOpponentHand,
@@ -245,8 +273,9 @@ const ScenarioTester: React.FC<{ onExit: () => void }> = ({ onExit }) => {
             playerTricks: selectedScenario?.baseState.playerTricks || initialState.playerTricks,
             trickWinners: selectedScenario?.baseState.trickWinners || initialState.trickWinners,
             currentTrick: selectedScenario?.baseState.currentTrick || 0,
-            lastCaller: gamePhase.includes('_called') ? (currentTurn === 'ai' ? 'player' : 'ai') : null,
-            trucoLevel: gamePhase.includes('retruco') ? 2 : gamePhase.includes('truco') ? 1 : 0,
+            hasEnvidoBeenCalledThisRound: hasEnvidoBeenCalled,
+            aiEnvidoValue: hasEnvidoBeenCalled ? aiEnvidoValue : null,
+            playerEnvidoValue: hasEnvidoBeenCalled ? opponentEnvidoValue : null,
         };
         
         const aiMove = getLocalAIMove(scenarioState);
@@ -293,6 +322,8 @@ const ScenarioTester: React.FC<{ onExit: () => void }> = ({ onExit }) => {
                         initialAiHand: newAiHand,
                         playerHand: newPlayerHand,
                         initialPlayerHand: newPlayerHand,
+                        aiHasFlor: hasFlor(newAiHand),
+                        playerHasFlor: hasFlor(newPlayerHand),
                     };
 
                     const aiMove = getLocalAIMove(scenarioState);
@@ -314,9 +345,7 @@ const ScenarioTester: React.FC<{ onExit: () => void }> = ({ onExit }) => {
     
     const sortedSimulationResults = useMemo(() => {
         if (!simulationResults) return null;
-        // FIX: The destructuring in the sort callback was potentially causing a type inference issue.
-        // Switched to explicit indexing `b[1] - a[1]` which is safer and clearer.
-        return Object.entries(simulationResults).sort((a, b) => b[1] - a[1]);
+        return Object.entries(simulationResults).sort((a, b) => Number(b[1]) - Number(a[1]));
     }, [simulationResults]);
 
 
@@ -347,27 +376,73 @@ const ScenarioTester: React.FC<{ onExit: () => void }> = ({ onExit }) => {
                                 {t('scenario_tester.describe_button')}
                             </button>
                         </div>
-                        <select onChange={handleLoadScenario} className="w-full p-2 bg-gray-900 border border-gray-600 rounded-md text-white">
-                            <option>{t('scenario_tester.select_scenario')}</option>
-                            {predefinedScenarios.map(s => <option key={s.nameKey}>{t(s.nameKey)}</option>)}
+                        <select onChange={handleLoadScenario} value={selectedScenario ? selectedScenario.nameKey : ''} className="w-full p-2 bg-gray-900 border border-gray-600 rounded-md text-white">
+                            <option value="">{t('scenario_tester.select_scenario')}</option>
+                            {predefinedScenarios.map(s => <option key={s.nameKey} value={s.nameKey}>{t(s.nameKey)}</option>)}
                         </select>
-                        <p className="text-center text-gray-400 text-sm">{t('scenario_tester.or_create_custom')}</p>
+                        {selectedScenario && (
+                            <div className="p-3 bg-black/30 border border-indigo-400/20 rounded-md text-sm">
+                                <h4 className="font-bold text-indigo-300 mb-1">{t(selectedScenario.nameKey)}</h4>
+                                <p className="text-gray-300 text-xs">
+                                    {t(`scenario_tester.descriptions.${selectedScenario.nameKey.split('.').pop()}.description`)}
+                                </p>
+                            </div>
+                        )}
+                        {!selectedScenario && <p className="text-center text-gray-400 text-sm">{t('scenario_tester.or_create_custom')}</p>}
                         
-                        <div className="grid grid-cols-2 gap-4">
-                            <div><label className="block text-sm font-medium text-gray-300">{t('scenario_tester.ai_score')}</label><input type="number" value={aiScore} onChange={e => {setAiScore(parseInt(e.target.value)); setSelectedScenario(null);}} className="w-full p-1 bg-gray-800 border border-gray-600 rounded-md"/></div>
-                            <div><label className="block text-sm font-medium text-gray-300">{t('scenario_tester.opponent_score')}</label><input type="number" value={opponentScore} onChange={e => {setOpponentScore(parseInt(e.target.value)); setSelectedScenario(null);}} className="w-full p-1 bg-gray-800 border border-gray-600 rounded-md"/></div>
+                        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div className="space-y-2">
+                                <div><label className="block text-sm font-medium text-gray-300">{t('scenario_tester.ai_score')}</label><input type="number" value={aiScore} onChange={e => {setAiScore(parseInt(e.target.value)); setSelectedScenario(null);}} className="w-full p-1 bg-gray-800 border border-gray-600 rounded-md"/></div>
+                                <div><label className="block text-sm font-medium text-gray-300">{t('scenario_tester.opponent_score')}</label><input type="number" value={opponentScore} onChange={e => {setOpponentScore(parseInt(e.target.value)); setSelectedScenario(null);}} className="w-full p-1 bg-gray-800 border border-gray-600 rounded-md"/></div>
+                            </div>
+                            <div className="space-y-2">
+                                <div><label className="block text-sm font-medium text-gray-300">{t('scenario_tester.mano')}</label><select value={mano} onChange={e => {setMano(e.target.value as Player); setSelectedScenario(null);}} className="w-full p-1 bg-gray-800 border border-gray-600 rounded-md"><option value="ai">{t('common.ai')}</option><option value="player">{t('common.opponent')}</option></select></div>
+                                <div><label className="block text-sm font-medium text-gray-300">{t('scenario_tester.turn')}</label><select value={currentTurn} onChange={e => {setCurrentTurn(e.target.value as Player); setSelectedScenario(null);}} className="w-full p-1 bg-gray-800 border border-gray-600 rounded-md"><option value="ai">{t('common.ai')}</option><option value="player">{t('common.opponent')}</option></select></div>
+                            </div>
+                             <div className="space-y-2">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-300">{t('scenario_tester.phase')}</label>
+                                    <select value={gamePhase} onChange={e => {setGamePhase(e.target.value as GamePhase); setSelectedScenario(null);}} className="w-full p-1 bg-gray-800 border border-gray-600 rounded-md">
+                                        <option value="trick_1">{t('scenario_tester.phases.trick_1')}</option>
+                                        <option value="trick_2">{t('scenario_tester.phases.trick_2')}</option>
+                                        <option value="trick_3">{t('scenario_tester.phases.trick_3')}</option>
+                                        <option value="envido_called">{t('scenario_tester.phases.envido_called')}</option>
+                                        <option value="truco_called">{t('scenario_tester.phases.truco_called')}</option>
+                                        <option value="retruco_called">{t('scenario_tester.phases.retruco_called')}</option>
+                                        <option value="flor_called">{t('scenario_tester.phases.flor_called')}</option>
+                                    </select>
+                                </div>
+                                 <div>
+                                    <label className="block text-sm font-medium text-gray-300">{t('scenario_tester.truco_level')}</label>
+                                    <select value={trucoLevel} onChange={e => {setTrucoLevel(parseInt(e.target.value) as 0|1|2|3); setSelectedScenario(null);}} className="w-full p-1 bg-gray-800 border border-gray-600 rounded-md">
+                                        <option value={0}>0 (None)</option>
+                                        <option value={1}>1 (Truco)</option>
+                                        <option value={2}>2 (Retruco)</option>
+                                        <option value={3}>3 (Vale Cuatro)</option>
+                                    </select>
+                                </div>
+                                 <div>
+                                    <label className="block text-sm font-medium text-gray-300">{t('scenario_tester.last_caller')}</label>
+                                    <select value={lastCaller || ''} onChange={e => {setLastCaller(e.target.value as Player); setSelectedScenario(null);}} disabled={trucoLevel === 0} className="w-full p-1 bg-gray-800 border border-gray-600 rounded-md disabled:opacity-50">
+                                        <option value="" disabled>{t('common.na')}</option>
+                                        <option value="ai">{t('common.ai')}</option>
+                                        <option value="player">{t('common.opponent')}</option>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
-                        <div className="grid grid-cols-3 gap-4">
-                            <div><label className="block text-sm font-medium text-gray-300">{t('scenario_tester.mano')}</label><select value={mano} onChange={e => {setMano(e.target.value as Player); setSelectedScenario(null);}} className="w-full p-1 bg-gray-800 border border-gray-600 rounded-md"><option value="ai">{t('common.ai')}</option><option value="player">{t('common.opponent')}</option></select></div>
-                            <div><label className="block text-sm font-medium text-gray-300">{t('scenario_tester.turn')}</label><select value={currentTurn} onChange={e => {setCurrentTurn(e.target.value as Player); setSelectedScenario(null);}} className="w-full p-1 bg-gray-800 border border-gray-600 rounded-md"><option value="ai">{t('common.ai')}</option><option value="player">{t('common.opponent')}</option></select></div>
-                            <div><label className="block text-sm font-medium text-gray-300">{t('scenario_tester.phase')}</label><select value={gamePhase} onChange={e => {setGamePhase(e.target.value as GamePhase); setSelectedScenario(null);}} className="w-full p-1 bg-gray-800 border border-gray-600 rounded-md">
-                                <option value="trick_1">{t('scenario_tester.phases.trick_1')}</option>
-                                <option value="trick_2">{t('scenario_tester.phases.trick_2')}</option>
-                                <option value="envido_called">{t('scenario_tester.phases.envido_called')}</option>
-                                <option value="truco_called">{t('scenario_tester.phases.truco_called')}</option>
-                                <option value="retruco_called">{t('scenario_tester.phases.retruco_called')}</option>
-                                <option value="flor_called">{t('scenario_tester.phases.flor_called')}</option>
-                            </select></div>
+
+                         <div className="bg-black/20 p-2 rounded-md space-y-2">
+                          <div className="flex items-center gap-2">
+                            <input type="checkbox" id="envido-called" checked={hasEnvidoBeenCalled} onChange={e => {setHasEnvidoBeenCalled(e.target.checked); setSelectedScenario(null);}} />
+                            <label htmlFor="envido-called" className="text-sm font-medium text-gray-300">{t('scenario_tester.envido_called')}</label>
+                          </div>
+                          {hasEnvidoBeenCalled && (
+                            <div className="grid grid-cols-2 gap-2 animate-fade-in-scale">
+                              <div><label className="block text-xs text-gray-400">{t('scenario_tester.ai_envido_score')}</label><input type="number" value={aiEnvidoValue} onChange={e => {setAiEnvidoValue(parseInt(e.target.value)); setSelectedScenario(null);}} className="w-full p-1 bg-gray-800 border border-gray-600 rounded-md text-sm"/></div>
+                              <div><label className="block text-xs text-gray-400">{t('scenario_tester.opponent_envido_score')}</label><input type="number" value={opponentEnvidoValue} onChange={e => {setOpponentEnvidoValue(parseInt(e.target.value)); setSelectedScenario(null);}} className="w-full p-1 bg-gray-800 border border-gray-600 rounded-md text-sm"/></div>
+                            </div>
+                          )}
                         </div>
                         
                          <div className="flex items-center gap-2 mt-2">
@@ -398,14 +473,12 @@ const ScenarioTester: React.FC<{ onExit: () => void }> = ({ onExit }) => {
                         <div className="flex flex-row gap-6 items-start justify-around mt-4">
                             <div className="w-full">
                                 <div className="flex justify-between items-center mb-1"><label className="font-semibold">{t('scenario_tester.ai_hand')}</label><button onClick={() => handleClearHand('ai')} className="text-xs text-red-400">{t('scenario_tester.clear')}</button></div>
-                                {/* Fix: Replaced percentage-based negative margin with a pixel-based one to resolve a parsing issue. */}
                                 <div className="flex justify-center space-x-[-53px] min-h-[124px] items-center">
                                   {aiHand.map((c, i) => <button key={i} onClick={() => handleOpenPicker('ai', i)} className="transition-transform duration-200 ease-out hover:-translate-y-4 hover:z-20"><CardComponent card={c || undefined} size="small" /></button>)}
                                 </div>
                             </div>
                             <div className="w-full">
                                 <div className="flex justify-between items-center mb-1"><label className="font-semibold">{t('scenario_tester.opponent_hand')}</label><button onClick={() => handleClearHand('opponent')} className="text-xs text-red-400">{t('scenario_tester.clear')}</button></div>
-                                {/* Fix: Replaced percentage-based negative margin with a pixel-based one to resolve a parsing issue. */}
                                 <div className="flex justify-center space-x-[-53px] min-h-[124px] items-center">
                                   {opponentHand.map((c, i) => <button key={i} onClick={() => handleOpenPicker('opponent', i)} className="transition-transform duration-200 ease-out hover:-translate-y-4 hover:z-20"><CardComponent card={c || undefined} size="small" /></button>)}
                                 </div>
