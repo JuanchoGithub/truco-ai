@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Card, GameState, AiMove, Player, GamePhase, MessageObject, Action, ActionType } from '../types';
 import { createDeck, getCardName, decodeCardFromCode } from '../services/trucoLogic';
 import { initialState } from '../hooks/useGameReducer';
@@ -21,7 +21,7 @@ const renderReasoning = (reasoningArray: (string | MessageObject)[], t: (key: st
             options.status = t(`ai_logic.statuses.${options.statusKey}`);
         }
         if (options.player) {
-            options.player = options.player === 'ai' ? t('common.ai') : t('common.player');
+            options.player = options.player === 'ai' ? t('common.ai') : t('common.opponent');
         }
 
         for (const key in options) {
@@ -40,7 +40,6 @@ const renderReasoning = (reasoningArray: (string | MessageObject)[], t: (key: st
     }).join('\n');
 };
 
-// Fix: Added getActionDescription function to resolve "Cannot find name" error.
 // A helper to describe an action
 const getActionDescription = (action: Action, state: Partial<GameState>, t: (key: string, options?: any) => string): string => {
     const player = (action as any)?.payload?.player || state.currentTurn;
@@ -147,6 +146,13 @@ const ScenarioTester: React.FC<{ onExit: () => void }> = ({ onExit }) => {
     const [testResult, setTestResult] = useState<AiMove | null>(null);
     const [selectedScenario, setSelectedScenario] = useState<PredefinedScenario | null>(null);
     const [isDescriptionVisible, setIsDescriptionVisible] = useState(false);
+    const [expandedResult, setExpandedResult] = useState<string | null>(null);
+
+    // Simulation state
+    const [simulationResults, setSimulationResults] = useState<Record<string, number> | null>(null);
+    const [isSimulating, setIsSimulating] = useState(false);
+    const [simulationProgress, setSimulationProgress] = useState(0);
+    const simulationCancelled = useRef(false);
 
     const availableCards = useMemo(() => {
         const selected = [...aiHand, ...opponentHand].filter(c => c !== null);
@@ -212,6 +218,7 @@ const ScenarioTester: React.FC<{ onExit: () => void }> = ({ onExit }) => {
         // Generate and set hands
         regenerateAndApplyHands(scenario);
         setTestResult(null); // Clear previous results
+        setSimulationResults(null);
     };
     
     const handleRunTest = () => {
@@ -246,12 +253,80 @@ const ScenarioTester: React.FC<{ onExit: () => void }> = ({ onExit }) => {
         setTestResult(aiMove);
     };
 
-    // Fix: Pass hand data to getActionDescription to prevent errors.
+    const handleRunSimulations = () => {
+        if (!selectedScenario) {
+            alert(t('scenario_tester.run_simulations_no_scenario_error'));
+            return;
+        }
+
+        setIsSimulating(true);
+        setSimulationProgress(0);
+        setSimulationResults(null);
+        setTestResult(null);
+        simulationCancelled.current = false;
+
+        const results: Record<string, number> = {};
+        const totalSims = 1000;
+        const batchSize = 20; // Process in chunks to keep UI responsive
+
+        const processSimChunk = (i: number) => {
+            if (i >= totalSims || simulationCancelled.current) {
+                setIsSimulating(false);
+                setSimulationResults(results);
+                if (simulationCancelled.current) {
+                    setSimulationResults(null);
+                }
+                return;
+            }
+
+            for (let j = 0; j < batchSize && i + j < totalSims; j++) {
+                const hands = selectedScenario.generateHands();
+                if (hands) {
+                    const { aiHand: newAiHand, playerHand: newPlayerHand } = hands;
+
+                    const scenarioState: GameState = {
+                        ...initialState,
+                        ...selectedScenario.baseState,
+                        aiScore: selectedScenario.baseState.aiScore || 0,
+                        playerScore: selectedScenario.baseState.playerScore || 0,
+                        aiHand: newAiHand,
+                        initialAiHand: newAiHand,
+                        playerHand: newPlayerHand,
+                        initialPlayerHand: newPlayerHand,
+                    };
+
+                    const aiMove = getLocalAIMove(scenarioState);
+                    const reason = aiMove.reasonKey || 'unknown_action';
+                    results[reason] = (results[reason] || 0) + 1;
+                }
+            }
+            
+            setSimulationProgress(Math.round(((i + batchSize) / totalSims) * 100));
+            setTimeout(() => processSimChunk(i + batchSize), 0); // Yield to main thread
+        };
+
+        processSimChunk(0);
+    };
+
+    const handleCancelSimulation = () => {
+        simulationCancelled.current = true;
+    };
+    
+    const sortedSimulationResults = useMemo(() => {
+        if (!simulationResults) return null;
+        // FIX: The destructuring in the sort callback was potentially causing a type inference issue.
+        // Switched to explicit indexing `b[1] - a[1]` which is safer and clearer.
+        return Object.entries(simulationResults).sort((a, b) => b[1] - a[1]);
+    }, [simulationResults]);
+
+
     const finalAiHand = aiHand.filter(c => c !== null) as Card[];
     const finalOpponentHand = opponentHand.filter(c => c !== null) as Card[];
     const actionDesc = testResult ? getActionDescription(testResult.action, { currentTurn, aiHand: finalAiHand, playerHand: finalOpponentHand }, t) : "";
     const reasoningDesc = testResult ? renderReasoning(testResult.reasoning, t) : "";
 
+    const totalSimsRun = sortedSimulationResults ? sortedSimulationResults.reduce((sum, [, count]) => sum + count, 0) : 0;
+    
     return (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
             <div className="bg-stone-800/95 border-4 border-indigo-700/50 rounded-xl shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col">
@@ -295,10 +370,10 @@ const ScenarioTester: React.FC<{ onExit: () => void }> = ({ onExit }) => {
                             </select></div>
                         </div>
                         
-                         <div className="flex items-center gap-4 mt-2">
-                            <button onClick={handleRunTest} className="w-full px-4 py-2 rounded-lg font-bold text-white bg-green-600 border-b-4 border-green-800 hover:bg-green-500 transition-colors">{t('scenario_tester.run_test')}</button>
-                            <div className="relative group w-full">
-                                <button onClick={() => selectedScenario && regenerateAndApplyHands(selectedScenario)} disabled={!selectedScenario} className="w-full px-4 py-2 rounded-lg font-bold text-white bg-blue-600 border-b-4 border-blue-800 hover:bg-blue-500 disabled:bg-gray-500 disabled:border-gray-700 transition-colors">{t('scenario_tester.regenerate_hands')}</button>
+                         <div className="flex items-center gap-2 mt-2">
+                            <button onClick={handleRunTest} disabled={isSimulating} className="flex-1 px-4 py-2 rounded-lg font-bold text-white bg-green-600 border-b-4 border-green-800 hover:bg-green-500 disabled:bg-gray-500 disabled:border-gray-700 transition-colors">{t('scenario_tester.run_test')}</button>
+                            <div className="relative group flex-1">
+                                <button onClick={() => selectedScenario && regenerateAndApplyHands(selectedScenario)} disabled={!selectedScenario || isSimulating} className="w-full px-4 py-2 rounded-lg font-bold text-white bg-blue-600 border-b-4 border-blue-800 hover:bg-blue-500 disabled:bg-gray-500 disabled:border-gray-700 transition-colors">{t('scenario_tester.regenerate_hands')}</button>
                                 {!selectedScenario && (
                                     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 w-max max-w-xs bg-gray-900 text-white text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
                                         {t('scenario_tester.regenerate_hands_tooltip')}
@@ -306,6 +381,19 @@ const ScenarioTester: React.FC<{ onExit: () => void }> = ({ onExit }) => {
                                 )}
                             </div>
                         </div>
+                         <div className="flex items-center gap-2 mt-2">
+                            {!isSimulating ? (
+                                <button onClick={handleRunSimulations} disabled={!selectedScenario} className="w-full px-4 py-2 rounded-lg font-bold text-white bg-purple-600 border-b-4 border-purple-800 hover:bg-purple-500 disabled:bg-gray-500 disabled:border-gray-700 transition-colors">{t('scenario_tester.run_simulations')}</button>
+                            ) : (
+                                <div className="w-full flex items-center gap-2">
+                                    <div className="flex-grow bg-gray-700 rounded-full h-4 relative overflow-hidden">
+                                        <div className="bg-purple-500 h-4 rounded-full" style={{ width: `${simulationProgress}%`, transition: 'width 0.1s' }}></div>
+                                        <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-white">{t('scenario_tester.simulating', { progress: simulationProgress })}</span>
+                                    </div>
+                                    <button onClick={handleCancelSimulation} className="px-4 py-2 rounded-lg font-bold text-white bg-red-600 border-b-4 border-red-800 hover:bg-red-500 transition-colors">{t('scenario_tester.cancel')}</button>
+                                </div>
+                            )}
+                         </div>
 
                         <div className="flex flex-row gap-6 items-start justify-around mt-4">
                             <div className="w-full">
@@ -324,21 +412,60 @@ const ScenarioTester: React.FC<{ onExit: () => void }> = ({ onExit }) => {
                     </div>
 
                     {/* Result Panel */}
-                    <div className="bg-black/40 p-4 rounded-lg border border-indigo-500/50 flex flex-col min-h-[300px]">
-                        <h3 className="text-lg font-bold text-indigo-200 mb-2">{t('scenario_tester.result')}</h3>
-                        {testResult ? (
-                            <div className="flex-grow flex flex-col gap-4 overflow-hidden">
-                                <div>
-                                    <h4 className="font-semibold text-gray-300">{t('scenario_tester.chosen_action')}</h4>
-                                    <p className="p-2 bg-black/50 rounded-md font-mono text-lg text-yellow-300">{actionDesc}</p>
+                    <div className="bg-black/40 p-4 rounded-lg border border-indigo-500/50 flex flex-col min-h-[300px] overflow-hidden gap-4">
+                        <div className="flex-shrink-0">
+                            <h3 className="text-lg font-bold text-indigo-200 mb-2">{t('scenario_tester.result')}</h3>
+                            {testResult ? (
+                                <div className="space-y-2">
+                                    <div>
+                                        <h4 className="font-semibold text-gray-300">{t('scenario_tester.chosen_action')}</h4>
+                                        <p className="p-2 bg-black/50 rounded-md font-mono text-lg text-yellow-300">{actionDesc}</p>
+                                    </div>
+                                    <details>
+                                        <summary className="cursor-pointer font-semibold text-gray-300">{t('scenario_tester.reasoning')}</summary>
+                                        <pre className="mt-1 p-2 bg-black/50 rounded-md text-xs text-cyan-200 whitespace-pre-wrap font-mono max-h-40 overflow-y-auto">{reasoningDesc}</pre>
+                                    </details>
                                 </div>
-                                <div className="flex-grow flex flex-col overflow-hidden">
-                                    <h4 className="font-semibold text-gray-300">{t('scenario_tester.reasoning')}</h4>
-                                    <pre className="p-2 bg-black/50 rounded-md text-xs text-cyan-200 whitespace-pre-wrap font-mono flex-grow overflow-y-auto">{reasoningDesc}</pre>
+                            ) : !simulationResults && (
+                                <div className="flex items-center justify-center h-full text-gray-400">{t('scenario_tester.no_result')}</div>
+                            )}
+                        </div>
+                         {sortedSimulationResults && (
+                            <div className="flex flex-col flex-grow overflow-hidden">
+                                <div className="flex justify-between items-center mb-2 flex-shrink-0">
+                                    <h3 className="text-lg font-bold text-indigo-200">{t('scenario_tester.simulation_results', { count: totalSimsRun })}</h3>
+                                    <button onClick={() => setSimulationResults(null)} className="text-xs text-red-400">{t('scenario_tester.clear_results')}</button>
+                                </div>
+                                <div className="flex-grow overflow-y-auto space-y-1 pr-2">
+                                    {sortedSimulationResults.map(([reason, count]) => {
+                                        const percentage = totalSimsRun > 0 ? (count / totalSimsRun) * 100 : 0;
+                                        const reasonText = t(`ai_reason_keys.${reason}`, { defaultValue: reason });
+                                        const isExpanded = expandedResult === reason;
+                                        return (
+                                            <div key={reason}>
+                                                <button 
+                                                    onClick={() => setExpandedResult(isExpanded ? null : reason)}
+                                                    className="w-full grid grid-cols-[1fr_auto] lg:grid-cols-[1fr_2fr_auto] items-center gap-2 text-sm p-2 rounded-md hover:bg-indigo-900/50 transition-colors"
+                                                    aria-expanded={isExpanded}
+                                                >
+                                                    <span className="truncate text-gray-300 text-left" title={reasonText}>{reasonText}</span>
+                                                    <div className="w-full bg-gray-700 rounded-full h-4 hidden lg:block">
+                                                        <div className="bg-indigo-500 h-4 rounded-full text-right" style={{ width: `${percentage}%` }} />
+                                                    </div>
+                                                    <span className="font-mono text-white text-right">{count} ({percentage.toFixed(1)}%)</span>
+                                                </button>
+                                                {isExpanded && (
+                                                    <div className="p-3 mt-1 bg-black/40 rounded-md border border-indigo-400/30 animate-fade-in-scale">
+                                                        <pre className="text-xs text-gray-200 whitespace-pre-wrap font-sans">
+                                                            {t(`scenario_tester.explanations.${reason}`, { defaultValue: "No explanation available." })}
+                                                        </pre>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             </div>
-                        ) : (
-                            <div className="flex items-center justify-center h-full text-gray-400">{t('scenario_tester.no_result')}</div>
                         )}
                     </div>
                 </div>

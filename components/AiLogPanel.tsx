@@ -1,6 +1,5 @@
-
-import React from 'react';
-import { AiReasoningEntry, Action, ActionType, MessageObject, Card } from '../types';
+import React, { useState, useEffect } from 'react';
+import { AiReasoningEntry, Action, ActionType, MessageObject, Card, RoundSummary } from '../types';
 import { useLocalization } from '../context/LocalizationContext';
 import { getCardName } from '../services/trucoLogic';
 
@@ -8,18 +7,48 @@ interface AiLogPanelProps {
   log: AiReasoningEntry[];
   dispatch: React.Dispatch<Action>;
   isModal: boolean;
+  roundHistory: RoundSummary[];
+  currentRound: number;
 }
 
-const AiLogPanel: React.FC<AiLogPanelProps> = ({ log, dispatch, isModal }) => {
+const AiLogPanel: React.FC<AiLogPanelProps> = ({ log, dispatch, isModal, roundHistory, currentRound }) => {
   const { t } = useLocalization();
-  const groupedLog: { [key: number]: (string | MessageObject)[][] } = log.reduce((acc, entry) => {
-    if (!acc[entry.round]) {
-      acc[entry.round] = [];
-    }
-    acc[entry.round].push(entry.reasoning);
-    return acc;
-  }, {} as { [key: number]: (string | MessageObject)[][] });
+  const [selectedRound, setSelectedRound] = useState(currentRound);
 
+  useEffect(() => {
+    // When the game progresses to a new round, update the selected round to the current one.
+    if (currentRound !== selectedRound) {
+        setSelectedRound(currentRound);
+    }
+  }, [currentRound]);
+
+  const handleRoundChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedRound(Number(e.target.value));
+  };
+
+  const roundLog = log.filter(entry => entry.round === selectedRound);
+
+  const getRoundScore = (roundNumber: number): string => {
+    if (roundHistory.length === 0) return '';
+    
+    // Sum points awarded in all rounds *before* the selected one to find the starting score.
+    let roundStartPlayerScore = 0;
+    let roundStartAiScore = 0;
+    for (const summary of roundHistory) {
+      if (summary.round < roundNumber) {
+        roundStartPlayerScore += summary.pointsAwarded.player;
+        roundStartAiScore += summary.pointsAwarded.ai;
+      }
+    }
+
+    return `(${t('common.you_short')}: ${roundStartPlayerScore} - ${t('common.ai')}: ${roundStartAiScore})`;
+  };
+
+  const displayRounds = Array.from(new Set([currentRound, ...roundHistory.map(r => r.round)]))
+    .filter(r => r > 0) // Exclude round 0
+    .sort((a, b) => b - a) // Sort descending
+    .slice(0, 5); // Get the last 5 relevant rounds
+  
   const renderReasoning = (reasoningArray: (string | MessageObject)[]): string => {
     return reasoningArray.map(reason => {
         if (typeof reason === 'string') return reason;
@@ -63,10 +92,19 @@ const AiLogPanel: React.FC<AiLogPanelProps> = ({ log, dispatch, isModal }) => {
   return (
     <div className={wrapperClasses}>
       <div className={containerClasses}>
-        <div className="p-4 border-b-2 border-cyan-400/30 flex justify-between items-center flex-shrink-0">
-          <h2 className="text-xl lg:text-2xl font-bold text-cyan-300 font-cinzel tracking-widest" style={{ textShadow: '2px 2px 3px rgba(0,0,0,0.7)' }}>
+        <div className="p-4 border-b-2 border-cyan-400/30 flex justify-between items-center flex-shrink-0 gap-2">
+          <h2 className="text-xl lg:text-2xl font-bold text-cyan-300 font-cinzel tracking-widest flex-shrink-0" style={{ textShadow: '2px 2px 3px rgba(0,0,0,0.7)' }}>
             {t('logPanel.ai_log_title')}
           </h2>
+          {displayRounds.length > 0 && (
+            <select value={selectedRound} onChange={handleRoundChange} className="bg-blue-900/80 border border-cyan-400/50 text-white text-sm rounded-md p-1 w-full max-w-[200px] flex-shrink">
+                {displayRounds.map(roundNumber => (
+                    <option key={roundNumber} value={roundNumber}>
+                        {t('common.round')} {roundNumber} {getRoundScore(roundNumber)}
+                    </option>
+                ))}
+            </select>
+          )}
           <button
             onClick={() => dispatch({ type: ActionType.TOGGLE_AI_LOG_EXPAND })}
             className="text-cyan-200 font-bold hover:text-white transition-colors p-1 rounded-md hover:bg-white/10"
@@ -82,26 +120,19 @@ const AiLogPanel: React.FC<AiLogPanelProps> = ({ log, dispatch, isModal }) => {
           </button>
         </div>
         <div className="p-4 flex-grow overflow-y-auto">
-          {Object.keys(groupedLog).reverse().map(roundKey => {
-            const roundNumber = parseInt(roundKey, 10);
-            if (roundNumber === 0) return null; // Don't show "Round 0"
-            
-            return (
-            <div key={`round-${roundNumber}`} className="mb-4">
-              <h3 className="text-base lg:text-lg font-bold text-yellow-300 border-b border-yellow-300/30 mb-2 pb-1">
-                {t('common.round')} {roundNumber}
-              </h3>
-              <div className="space-y-2">
-                  {groupedLog[roundNumber].map((reasoning, index) => (
-                      <div key={index} className="bg-black/30 p-2 rounded-md">
-                          <p className="text-xs lg:text-sm text-cyan-100 whitespace-pre-wrap font-mono">
-                              {renderReasoning(reasoning)}
-                          </p>
-                      </div>
-                  ))}
-              </div>
+          {roundLog.length > 0 ? (
+            <div className="space-y-2">
+              {roundLog.map((entry, index) => (
+                <div key={index} className="bg-black/30 p-2 rounded-md">
+                  <p className="text-xs lg:text-sm text-cyan-100 whitespace-pre-wrap font-mono">
+                    {renderReasoning(entry.reasoning)}
+                  </p>
+                </div>
+              ))}
             </div>
-          )})}
+          ) : (
+            <p className="text-gray-400 text-center">{t('logPanel.no_log_for_round')}</p>
+          )}
         </div>
       </div>
     </div>

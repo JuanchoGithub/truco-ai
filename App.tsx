@@ -1,5 +1,3 @@
-
-
 import React, { useReducer, useEffect, useState, useRef } from 'react';
 import { useGameReducer, initialState } from './hooks/useGameReducer';
 import { getLocalAIMove } from './services/localAiService';
@@ -481,7 +479,13 @@ const App: React.FC = () => {
         <div className="hidden lg:flex w-full max-w-xs flex-shrink-0 items-start justify-center">
           {state.isLogExpanded ? (
               <div className="w-full h-full animate-fade-in-scale">
-                <AiLogPanel log={state.aiReasoningLog} dispatch={dispatch} isModal={false} />
+                <AiLogPanel 
+                  log={state.aiReasoningLog} 
+                  dispatch={dispatch} 
+                  isModal={false} 
+                  roundHistory={state.roundHistory}
+                  currentRound={state.round}
+                />
               </div>
           ) : (
             <div className="pt-4">
@@ -503,7 +507,13 @@ const App: React.FC = () => {
       {/* MODALS for smaller screens */}
       <div className="lg:hidden">
         {state.isGameLogExpanded && <MessageLog messages={state.messageLog} dispatch={dispatch} isModal={true} />}
-        {state.isLogExpanded && <AiLogPanel log={state.aiReasoningLog} dispatch={dispatch} isModal={true} />}
+        {state.isLogExpanded && <AiLogPanel 
+            log={state.aiReasoningLog} 
+            dispatch={dispatch} 
+            isModal={true} 
+            roundHistory={state.roundHistory}
+            currentRound={state.round}
+        />}
       </div>
 
       {state.isDataModalVisible && (

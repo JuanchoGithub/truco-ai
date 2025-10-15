@@ -174,5 +174,20 @@ export const predefinedScenarios: PredefinedScenario[] = [
             { hasFlor: true }, // AI must have flor
             { minEnvido: 30, mustNotHaveFlor: true } // Opponent has high envido but no flor
         )
+    },
+    {
+        nameKey: 'scenario_tester.scenario_names.endgame_pressure_truco',
+        baseState: {
+            aiScore: 14,
+            playerScore: 13,
+            currentTurn: 'ai',
+            mano: 'ai',
+            gamePhase: 'trick_1',
+            currentTrick: 0
+        },
+        generateHands: () => generateHands(
+            { minTrucoStrength: 15, maxTrucoStrength: 22, mustNotHaveFlor: true }, // A decent, but not unbeatable hand for the AI
+            { minTrucoStrength: 23, mustNotHaveFlor: true } // A winning hand for the Player
+        )
     }
 ];
