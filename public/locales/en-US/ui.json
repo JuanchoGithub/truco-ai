@@ -291,7 +291,7 @@
     "log_ai_hand": "AI Hand: {{hand}}",
     "log_randomizer_hand": "Randomizer Hand: {{hand}}",
     "log_mano": "Hand (starts): {{player}}",
-    "log_resolving": "...Resolving {{phase}}...",
+    "log_resolving": "Resolving {{phase}}",
     "log_game_winner_ai": "--- AI WINS THE GAME ---",
     "log_game_winner_randomizer": "--- RANDOMIZER WINS THE GAME ---",
     "log_round_end": "--- END OF ROUND {{round}} ---",
@@ -313,6 +313,13 @@
       "ask_ai": "Ask AI",
       "ask_ai_prompt": "Press 'Ask AI' to see its recommended move.",
       "reset": "Reset Setup",
+      "view_log": "View Log",
+      "log_title": "Manual Round Log",
+      "log_round_start": "MANUAL ROUND START",
+      "log_initial_setup": "Initial Setup",
+      "log_ai_suggestion_title": "AI Suggestion",
+      "log_action": "Action",
+      "log_event": "Event",
       "ai_tricks": "AI's Tricks",
       "opponent_tricks": "Opponent's Tricks"
     }

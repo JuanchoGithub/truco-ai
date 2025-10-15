@@ -398,13 +398,15 @@ const ScenarioTester: React.FC<{ onExit: () => void }> = ({ onExit }) => {
                         <div className="flex flex-row gap-6 items-start justify-around mt-4">
                             <div className="w-full">
                                 <div className="flex justify-between items-center mb-1"><label className="font-semibold">{t('scenario_tester.ai_hand')}</label><button onClick={() => handleClearHand('ai')} className="text-xs text-red-400">{t('scenario_tester.clear')}</button></div>
-                                <div className="flex justify-center -space-x-[66%] min-h-[124px] items-center">
+                                {/* Fix: Replaced percentage-based negative margin with a pixel-based one to resolve a parsing issue. */}
+                                <div className="flex justify-center space-x-[-53px] min-h-[124px] items-center">
                                   {aiHand.map((c, i) => <button key={i} onClick={() => handleOpenPicker('ai', i)} className="transition-transform duration-200 ease-out hover:-translate-y-4 hover:z-20"><CardComponent card={c || undefined} size="small" /></button>)}
                                 </div>
                             </div>
                             <div className="w-full">
                                 <div className="flex justify-between items-center mb-1"><label className="font-semibold">{t('scenario_tester.opponent_hand')}</label><button onClick={() => handleClearHand('opponent')} className="text-xs text-red-400">{t('scenario_tester.clear')}</button></div>
-                                <div className="flex justify-center -space-x-[66%] min-h-[124px] items-center">
+                                {/* Fix: Replaced percentage-based negative margin with a pixel-based one to resolve a parsing issue. */}
+                                <div className="flex justify-center space-x-[-53px] min-h-[124px] items-center">
                                   {opponentHand.map((c, i) => <button key={i} onClick={() => handleOpenPicker('opponent', i)} className="transition-transform duration-200 ease-out hover:-translate-y-4 hover:z-20"><CardComponent card={c || undefined} size="small" /></button>)}
                                 </div>
                             </div>

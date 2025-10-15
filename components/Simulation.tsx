@@ -8,6 +8,7 @@ import { createDeck, getCardName, hasFlor } from '../services/trucoLogic';
 import BatchAnalyzer from './BatchAnalyzer';
 import { useLocalization } from '../context/LocalizationContext';
 import ScenarioTester from './ScenarioTester';
+import CentralMessage from './CentralMessage';
 
 const FULL_DECK = createDeck();
 
@@ -81,9 +82,10 @@ const getActionDescription = (action: Action, state: Partial<GameState>, t: (key
 const HandDisplay: React.FC<{ cards: (CardType | null)[], title: string, onCardClick?: (index: number) => void }> = ({ cards, title, onCardClick }) => (
     <div>
         <h3 className="text-lg font-bold text-yellow-200 mb-2">{title}</h3>
-        <div className="flex justify-center gap-2">
+        {/* Fix: Corrected Tailwind CSS syntax for negative arbitrary value and made style conditional. */}
+        <div className={`flex justify-center min-h-[124px] items-center ${onCardClick ? 'space-x-[-53px]' : 'gap-2'}`}>
             {cards.map((card, index) => (
-                <button key={index} onClick={() => onCardClick && onCardClick(index)} disabled={!onCardClick} className="disabled:cursor-default">
+                <button key={index} onClick={() => onCardClick && onCardClick(index)} disabled={!onCardClick} className={`disabled:cursor-default ${onCardClick ? 'transition-transform duration-200 ease-out hover:-translate-y-4 hover:z-20' : ''}`}>
                      <CardComponent card={card || undefined} size="small" />
                 </button>
             ))}
@@ -131,6 +133,28 @@ const CardPickerModal: React.FC<{
         </div>
     );
 };
+
+const ManualLogModal: React.FC<{ log: string[], onClose: () => void }> = ({ log, onClose }) => {
+    const { t } = useLocalization();
+    return (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4">
+            <div className="bg-stone-800/95 border-4 border-amber-700/50 rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
+                <div className="p-4 border-b-2 border-amber-700/30 flex justify-between items-center">
+                    <h3 className="text-xl font-bold text-amber-300">{t('simulation.manual.log_title')}</h3>
+                    <button onClick={onClose} className="text-amber-200 text-2xl font-bold">&times;</button>
+                </div>
+                <div className="p-4 flex-grow overflow-y-auto font-mono text-sm space-y-2">
+                    {log.map((entry, index) => {
+                         if (entry.startsWith('---')) return <p key={index} className="text-yellow-400 font-bold mt-2 pt-2 border-t border-yellow-400/20">{entry}</p>
+                         if (entry.startsWith('🤖')) return <pre key={index} className="whitespace-pre-wrap p-2 rounded bg-blue-900/40 text-blue-200">{entry}</pre>
+                         return <pre key={index} className="whitespace-pre-wrap text-gray-300">{`> ${entry}`}</pre>
+                    })}
+                </div>
+            </div>
+        </div>
+    )
+}
+
 
 const getValidActions = (state: GameState): Action[] => {
     const { gamePhase, currentTurn, lastCaller, trucoLevel, hasEnvidoBeenCalledThisRound, playerTricks, aiTricks, currentTrick, playerHasFlor, aiHasFlor, hasFlorBeenCalledThisRound, envidoPointsOnOffer, hasRealEnvidoBeenCalledThisSequence, playerHand, aiHand } = state;
@@ -404,11 +428,25 @@ const AutoSimulator: React.FC = () => {
 };
 
 const ManualSimulator: React.FC = () => {
-    const { t } = useLocalization();
+    const { t, translatePlayerName } = useLocalization();
     const [state, dispatch] = useReducer(useGameReducer, initialState);
     const [simPhase, setSimPhase] = useState<'setup' | 'play'>('setup');
     const [pickerState, setPickerState] = useState<{ open: boolean, hand: 'ai' | 'player', index: number }>({ open: false, hand: 'ai', index: 0 });
     const [aiSuggestion, setAiSuggestion] = useState<AiMove | null>(null);
+    const [expandedResult, setExpandedResult] = useState<string | null>(null);
+    const [manualEventLog, setManualEventLog] = useState<string[]>([]);
+    const [isLogModalOpen, setIsLogModalOpen] = useState(false);
+    
+    // State for central message display
+    const [localMessage, setLocalMessage] = useState<string | null>(null);
+    const [isMessageVisible, setIsMessageVisible] = useState(false);
+    const messageTimers = useRef<{ fadeOutTimerId?: number; clearTimerId?: number }>({});
+    
+    // New state for bulk simulation
+    const [simulationResults, setSimulationResults] = useState<Record<string, number> | null>(null);
+    const [isSimulating, setIsSimulating] = useState(false);
+    const [simulationProgress, setSimulationProgress] = useState(0);
+    const simulationCancelled = useRef(false);
 
     const [setupState, setSetupState] = useState({
         aiScore: 0,
@@ -417,6 +455,62 @@ const ManualSimulator: React.FC = () => {
         aiHand: [null, null, null] as (CardType | null)[],
         playerHand: [null, null, null] as (CardType | null)[]
     });
+
+    // Automatically handle resolution phases like ENVIDO_ACCEPTED
+    useEffect(() => {
+        if (simPhase !== 'play') return;
+        let resolutionAction: Action | null = null;
+        switch (state.gamePhase) {
+            case 'ENVIDO_ACCEPTED': resolutionAction = { type: ActionType.RESOLVE_ENVIDO_ACCEPT }; break;
+            case 'ENVIDO_DECLINED': resolutionAction = { type: ActionType.RESOLVE_ENVIDO_DECLINE }; break;
+            case 'TRUCO_DECLINED': resolutionAction = { type: ActionType.RESOLVE_TRUCO_DECLINE }; break;
+            case 'FLOR_SHOWDOWN': resolutionAction = { type: ActionType.RESOLVE_FLOR_SHOWDOWN }; break;
+            case 'CONTRAFLOR_DECLINED': resolutionAction = { type: ActionType.RESOLVE_CONTRAFLOR_DECLINE }; break;
+        }
+
+        if (resolutionAction) {
+            const logMessage = `--- ${t('simulation.log_resolving', { phase: state.gamePhase })} ---`;
+            setManualEventLog(prev => [...prev, logMessage]);
+            const timeoutId = setTimeout(() => {
+                dispatch(resolutionAction!);
+            }, 300); // A short delay to make the resolution noticeable
+            return () => clearTimeout(timeoutId);
+        }
+    }, [state.gamePhase, simPhase, t]);
+
+    // Handlers for central message
+    const clearMessageState = () => {
+        dispatch({ type: ActionType.CLEAR_CENTRAL_MESSAGE });
+        setLocalMessage(null);
+    };
+    const handleDismissMessage = () => {
+        clearTimeout(messageTimers.current.fadeOutTimerId);
+        clearTimeout(messageTimers.current.clearTimerId);
+        setIsMessageVisible(false);
+        messageTimers.current.clearTimerId = window.setTimeout(clearMessageState, 500);
+    };
+
+    // Effect to display central messages (like Envido results)
+    useEffect(() => {
+        if (simPhase !== 'play' || !state.centralMessage) return;
+
+        const options = { ...state.centralMessage.options };
+        if (options.winnerName) options.winnerName = translatePlayerName(options.winnerName);
+        if (options.winner) options.winner = translatePlayerName(options.winner);
+        
+        const translatedMessage = t(state.centralMessage.key, options);
+        setLocalMessage(translatedMessage);
+        setIsMessageVisible(true);
+
+        const logMessage = `--- ${t('simulation.manual.log_event')}: ${translatedMessage} ---`;
+        setManualEventLog(prev => [...prev, logMessage]);
+
+        if (!state.isCentralMessagePersistent) {
+            messageTimers.current.fadeOutTimerId = window.setTimeout(() => setIsMessageVisible(false), 1500);
+            messageTimers.current.clearTimerId = window.setTimeout(clearMessageState, 2000);
+        }
+    }, [state.centralMessage, simPhase, t, translatePlayerName]);
+
 
     const availableCards = useMemo(() => {
         const selected = [...setupState.aiHand, ...setupState.playerHand].filter(c => c !== null);
@@ -459,8 +553,17 @@ const ManualSimulator: React.FC = () => {
             aiHasFlor: hasFlor(aiHandCards)
         };
         dispatch({ type: ActionType.LOAD_PERSISTED_STATE, payload: partialState });
+        setManualEventLog([
+            `--- ${t('simulation.manual.log_round_start')} ---`,
+            `${t('simulation.manual.log_initial_setup')}:`,
+            `  ${t('simulation.manual.scores_mano')}: ${t('common.ai')} ${setupState.aiScore} - ${t('common.opponent')} ${setupState.playerScore}`,
+            `  ${t('simulation.manual.mano')}: ${setupState.mano.toUpperCase()}`,
+            `  ${t('simulation.manual.ai_hand')}: ${aiHandCards.map(getCardName).join(', ')}`,
+            `  ${t('simulation.manual.opponent_hand')}: ${playerHandCards.map(getCardName).join(', ')}`
+        ]);
         setSimPhase('play');
         setAiSuggestion(null);
+        setSimulationResults(null);
     };
 
     const validActions = useMemo(() => {
@@ -469,31 +572,99 @@ const ManualSimulator: React.FC = () => {
     }, [state, simPhase]);
 
     const handleActionClick = (action: Action) => {
+        if (state.isCentralMessagePersistent) handleDismissMessage();
         setAiSuggestion(null);
+        setSimulationResults(null);
+        const actionDesc = getActionDescription(action, state, t, {ai: t('common.ai'), opponent: t('common.opponent')});
+        setManualEventLog(prev => [...prev, actionDesc]);
         dispatch(action);
     };
 
     const handleAskAi = () => {
         let suggestion: AiMove;
-        if (state.currentTurn === 'ai') {
-            suggestion = getLocalAIMove(state);
-        } else {
-            const mirroredState = createMirroredState(state);
-            const mirroredSuggestion = getLocalAIMove(mirroredState);
-            if (mirroredSuggestion.action.type === ActionType.PLAY_CARD && mirroredSuggestion.action.payload.player === 'ai') {
-                mirroredSuggestion.action.payload.player = 'player';
+        let stateToSimulate = state;
+        if (state.currentTurn === 'player') {
+            stateToSimulate = createMirroredState(state);
+        }
+
+        suggestion = getLocalAIMove(stateToSimulate);
+        
+        if (state.currentTurn === 'player') {
+             if (suggestion.action.type === ActionType.PLAY_CARD && suggestion.action.payload.player === 'ai') {
+                suggestion.action.payload.player = 'player';
             }
-            if (mirroredSuggestion.action.type === ActionType.DECLARE_FLOR && mirroredSuggestion.action.payload?.player === 'ai') {
-                mirroredSuggestion.action.payload.player = 'player';
+            if (suggestion.action.type === ActionType.DECLARE_FLOR && suggestion.action.payload?.player === 'ai') {
+                suggestion.action.payload.player = 'player';
             }
-            suggestion = mirroredSuggestion;
         }
         setAiSuggestion(suggestion);
+        setSimulationResults(null);
+        
+        const actionDesc = getActionDescription(suggestion.action, state, t, {ai: t('common.ai'), opponent: t('common.opponent')});
+        const reasoningDesc = renderReasoning(suggestion.reasoning, t);
+        setManualEventLog(prev => {
+            const filteredLog = prev.filter(entry => !entry.startsWith('🤖'));
+            const suggestionLog = `🤖 ${t('simulation.manual.log_ai_suggestion_title')}:\n- ${t('simulation.manual.log_action')}: ${actionDesc}\n- ${t('scenario_tester.reasoning')}:\n${reasoningDesc.split('\n').map(l => `  ${l}`).join('\n')}`;
+            return [...filteredLog, suggestionLog];
+        });
     };
+
+    const handleRunSimulations = () => {
+        if (simPhase !== 'play') return;
+
+        setIsSimulating(true);
+        setSimulationProgress(0);
+        setSimulationResults(null);
+        setAiSuggestion(null);
+        simulationCancelled.current = false;
+
+        const results: Record<string, number> = {};
+        const totalSims = 1000;
+        const batchSize = 20;
+
+        let stateToSimulate = state;
+        if (state.currentTurn === 'player') {
+            stateToSimulate = createMirroredState(state);
+        }
+
+        const processSimChunk = (i: number) => {
+            if (i >= totalSims || simulationCancelled.current) {
+                setIsSimulating(false);
+                setSimulationResults(results);
+                if (simulationCancelled.current) {
+                    setSimulationResults(null);
+                }
+                return;
+            }
+
+            for (let j = 0; j < batchSize && i + j < totalSims; j++) {
+                const aiMove = getLocalAIMove(stateToSimulate);
+                const reason = aiMove.reasonKey || 'unknown_action';
+                results[reason] = (results[reason] || 0) + 1;
+            }
+            
+            setSimulationProgress(Math.round(((i + batchSize) / totalSims) * 100));
+            setTimeout(() => processSimChunk(i + batchSize), 0);
+        };
+
+        processSimChunk(0);
+    };
+
+    const handleCancelSimulation = () => {
+        simulationCancelled.current = true;
+    };
+
+    const sortedSimulationResults = useMemo(() => {
+        if (!simulationResults) return null;
+        return Object.entries(simulationResults).sort((a, b) => b[1] - a[1]);
+    }, [simulationResults]);
+    const totalSimsRun = sortedSimulationResults ? sortedSimulationResults.reduce((sum, [, count]) => sum + count, 0) : 0;
 
     const resetToSetup = () => {
         setSimPhase('setup');
         setAiSuggestion(null);
+        setSimulationResults(null);
+        setManualEventLog([]);
     };
 
     if (simPhase === 'setup') {
@@ -521,10 +692,12 @@ const ManualSimulator: React.FC = () => {
     const reasoningDesc = aiSuggestion ? renderReasoning(aiSuggestion.reasoning, t) : "";
 
     return (
-        <div className="w-full h-full flex flex-col gap-4">
-            <div className="flex-grow grid grid-cols-3 gap-4 overflow-hidden">
+        <div className="w-full h-full flex flex-col gap-4 relative">
+            <CentralMessage message={localMessage} isVisible={isMessageVisible} onDismiss={handleDismissMessage} />
+            {isLogModalOpen && <ManualLogModal log={manualEventLog} onClose={() => setIsLogModalOpen(false)} />}
+            <div className="flex-grow grid grid-cols-1 lg:grid-cols-3 gap-4 overflow-hidden">
                 {/* Left Panel: Actions & AI Suggestion */}
-                <div className="col-span-1 flex flex-col gap-4 overflow-y-auto pr-2">
+                <div className="col-span-1 lg:col-span-1 flex flex-col gap-4 overflow-y-auto pr-2">
                     <div className="bg-black/30 p-3 rounded-md">
                         <h2 className="text-xl font-bold text-cyan-200 mb-2">{t('simulation.manual.valid_actions_for')} {(state.currentTurn ?? '').toUpperCase()}</h2>
                         <div className="space-y-2 max-h-64 overflow-y-auto">
@@ -535,25 +708,72 @@ const ManualSimulator: React.FC = () => {
                             ))}
                         </div>
                     </div>
-                     <div className="bg-black/30 p-3 rounded-md flex-grow">
-                        <div className="flex justify-between items-center mb-2">
-                            <h2 className="text-xl font-bold text-cyan-200">{t('simulation.manual.ai_suggestion')}</h2>
-                            <button onClick={handleAskAi} className="px-3 py-1 text-sm rounded-lg font-bold text-white bg-blue-600 border-b-2 border-blue-800 hover:bg-blue-500 transition-colors">{t('simulation.manual.ask_ai')}</button>
-                        </div>
-                        {aiSuggestion ? (
-                            <div className="space-y-2">
-                                <p className="p-2 bg-black/50 rounded-md font-mono text-base text-yellow-300">{actionDesc}</p>
-                                <details>
-                                    <summary className="cursor-pointer font-semibold text-gray-300 text-sm">{t('scenario_tester.reasoning')}</summary>
-                                    <pre className="mt-1 p-2 bg-black/50 rounded-md text-xs text-cyan-200 whitespace-pre-wrap font-mono max-h-40 overflow-y-auto">{reasoningDesc}</pre>
-                                </details>
+                     <div className="bg-black/30 p-3 rounded-md flex-grow flex flex-col">
+                        <div className="flex-shrink-0">
+                            <h2 className="text-xl font-bold text-cyan-200 mb-2">{t('simulation.manual.ai_suggestion')}</h2>
+                            <div className="flex gap-2 mb-2">
+                                <button onClick={handleAskAi} disabled={isSimulating} className="flex-1 px-3 py-1 text-sm rounded-lg font-bold text-white bg-blue-600 border-b-2 border-blue-800 hover:bg-blue-500 disabled:bg-gray-500 transition-colors">{t('simulation.manual.ask_ai')}</button>
+                                {!isSimulating ? (
+                                    <button onClick={handleRunSimulations} className="flex-1 px-3 py-1 text-sm rounded-lg font-bold text-white bg-purple-600 border-b-2 border-purple-800 hover:bg-purple-500 transition-colors">{t('scenario_tester.run_simulations')}</button>
+                                ) : (
+                                    <button onClick={handleCancelSimulation} className="flex-1 px-3 py-1 text-sm rounded-lg font-bold text-white bg-red-600 border-b-2 border-red-800 hover:bg-red-500 transition-colors">{t('scenario_tester.cancel')}</button>
+                                )}
                             </div>
-                        ) : <p className="text-sm text-gray-400">{t('simulation.manual.ask_ai_prompt')}</p>}
+                            {isSimulating && (
+                                <div className="w-full bg-gray-700 rounded-full h-4 relative overflow-hidden my-2">
+                                    <div className="bg-purple-500 h-4 rounded-full" style={{ width: `${simulationProgress}%`, transition: 'width 0.1s' }}></div>
+                                    <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-white">{t('scenario_tester.simulating', { progress: simulationProgress })}</span>
+                                </div>
+                            )}
+                        </div>
+                        <div className="flex-grow overflow-y-auto">
+                            {aiSuggestion ? (
+                                <div className="space-y-2">
+                                    <p className="p-2 bg-black/50 rounded-md font-mono text-base text-yellow-300">{actionDesc}</p>
+                                    <details>
+                                        <summary className="cursor-pointer font-semibold text-gray-300 text-sm">{t('scenario_tester.reasoning')}</summary>
+                                        <pre className="mt-1 p-2 bg-black/50 rounded-md text-xs text-cyan-200 whitespace-pre-wrap font-mono max-h-40 overflow-y-auto">{reasoningDesc}</pre>
+                                    </details>
+                                </div>
+                            ) : !simulationResults && !isSimulating && <p className="text-sm text-gray-400">{t('simulation.manual.ask_ai_prompt')}</p>}
+
+                            {sortedSimulationResults && (
+                                <div className="flex flex-col flex-grow overflow-hidden mt-2">
+                                    <div className="flex justify-between items-center mb-2 flex-shrink-0">
+                                        <h3 className="text-lg font-bold text-indigo-200">{t('scenario_tester.simulation_results', { count: totalSimsRun })}</h3>
+                                        <button onClick={() => setSimulationResults(null)} className="text-xs text-red-400">{t('scenario_tester.clear_results')}</button>
+                                    </div>
+                                    <div className="flex-grow overflow-y-auto space-y-1 pr-2">
+                                        {sortedSimulationResults.map(([reason, count]) => {
+                                            const percentage = totalSimsRun > 0 ? (count / totalSimsRun) * 100 : 0;
+                                            const reasonText = t(`ai_reason_keys.${reason}`, { defaultValue: reason });
+                                            const isExpanded = expandedResult === reason;
+                                            return (
+                                                <div key={reason}>
+                                                    <button onClick={() => setExpandedResult(isExpanded ? null : reason)} className="w-full grid grid-cols-[1fr_auto] items-center gap-2 text-sm p-2 rounded-md hover:bg-indigo-900/50 transition-colors" aria-expanded={isExpanded}>
+                                                        <span className="truncate text-gray-300 text-left" title={reasonText}>{reasonText}</span>
+                                                        <span className="font-mono text-white text-right">{count} ({percentage.toFixed(1)}%)</span>
+                                                        <div className="col-span-2 w-full bg-gray-700 rounded-full h-2 mt-1">
+                                                            <div className="bg-indigo-500 h-2 rounded-full" style={{ width: `${percentage}%` }} />
+                                                        </div>
+                                                    </button>
+                                                    {isExpanded && (
+                                                        <div className="p-3 mt-1 bg-black/40 rounded-md border border-indigo-400/30 animate-fade-in-scale">
+                                                            <pre className="text-xs text-gray-200 whitespace-pre-wrap font-sans">{t(`scenario_tester.explanations.${reason}`, { defaultValue: "No explanation available." })}</pre>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
 
                 {/* Right Panel: Game State */}
-                 <div className="col-span-2 flex flex-col gap-4 overflow-y-auto pr-2">
+                 <div className="col-span-1 lg:col-span-2 flex flex-col gap-4 overflow-y-auto pr-2">
                      <div className="flex justify-between items-start">
                         <div className="bg-black/30 p-3 rounded-md">
                             <h2 className="text-xl font-bold text-cyan-200 mb-2">{t('simulation.scoreboard_title')}</h2>
@@ -566,7 +786,10 @@ const ManualSimulator: React.FC = () => {
                              <p>{t('simulation.turn')}: <span className="font-mono text-sm">{state.currentTurn?.toUpperCase() ?? t('common.na')}</span></p>
                              <p>{t('simulation.mano')}: <span className="font-mono text-sm">{state.mano.toUpperCase()}</span></p>
                         </div>
-                        <button onClick={resetToSetup} className="px-4 py-2 rounded-lg font-bold text-white bg-yellow-600 border-b-4 border-yellow-800 hover:bg-yellow-500 transition-colors">{t('simulation.manual.reset')}</button>
+                        <div className="flex gap-2">
+                             <button onClick={() => setIsLogModalOpen(true)} className="px-4 py-2 rounded-lg font-bold text-white bg-gray-600 border-b-4 border-gray-800 hover:bg-gray-500 transition-colors">{t('simulation.manual.view_log')}</button>
+                             <button onClick={resetToSetup} className="px-4 py-2 rounded-lg font-bold text-white bg-yellow-600 border-b-4 border-yellow-800 hover:bg-yellow-500 transition-colors">{t('simulation.manual.reset')}</button>
+                        </div>
                      </div>
                     <div className="space-y-4">
                         <HandDisplay title={t('simulation.manual.ai_hand')} cards={[...state.aiHand, null, null, null].slice(0,3)} />
