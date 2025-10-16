@@ -224,9 +224,6 @@
       "chose": "Randomizer eligió {{type}}",
       "no_op": "No hay acciones válidas para el Randomizer en este turno."
     },
-    "post_parda_bait_check": "[Táctica Avanzada: Cebo Post-Parda]\n- La primera mano fue parda, lo que hace esta mano decisiva.\n- Mi mano tiene una gran diferencia de poder entre mis cartas.",
-    "decision_post_parda_bait": "\nDecisión: Jugando mi carta más débil ({{weakCard}}) como cebo para ocultar mi {{strongCard}} e incitar un canto de Truco.",
-    "post_parda_bait_skip": "No se aplicará el cebo post-parda. Jugando de forma estándar para asegurar la mano.",
     "cbr_logic": {
       "checking": "[Lógica CBR] Buscando en la base de casos...",
       "found_similar": "Se encontraron {{count}} casos similares (similitud máx: {{similarity}}%).",

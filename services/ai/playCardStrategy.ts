@@ -1,11 +1,11 @@
 
-import { GameState, Card, Suit } from '../../types';
+import { GameState, Card, Suit, MessageObject } from '../../types';
 import { getCardHierarchy, getCardName, getEnvidoValue, determineTrickWinner, determineRoundWinner, getEnvidoDetails, hasFlor, getEnvidoSuit } from '../trucoLogic';
 import i18nService from '../i18nService';
 
 export interface PlayCardResult {
     index: number;
-    reasoning: string[];
+    reasoning: (string | MessageObject)[];
     reasonKey?: string;
 }
 
@@ -21,7 +21,7 @@ export const findBestCardToPlay = (state: GameState): PlayCardResult => {
     const { aiHand, playerTricks, currentTrick, trickWinners, mano, initialAiHand, playerEnvidoValue, roundHistory, round, trucoLevel, aiScore, playerScore, opponentModel } = state;
     if (aiHand.length === 0) return { index: 0, reasoning: [t('ai_logic.no_cards_left')]};
 
-    let reasoning: string[] = [t('ai_logic.play_card_logic'), t('ai_logic.my_hand', { hand: aiHand.map(getCardName).join(', ') })];
+    let reasoning: (string | MessageObject)[] = [t('ai_logic.play_card_logic'), t('ai_logic.my_hand', { hand: aiHand.map(getCardName).join(', ') })];
     const playerCardOnBoard = playerTricks[currentTrick];
 
     // --- AI is leading the trick ---
@@ -38,7 +38,6 @@ export const findBestCardToPlay = (state: GameState): PlayCardResult => {
                         reasoning.push(t('ai_logic.probabilistic_deception_check', { envidoPoints: myEnvidoDetails.value }));
                         
                         const scoreDelta = aiScore - playerScore;
-                        // Fix: Changed `mano === 'player'` to `mano !== 'ai'` to avoid a static analysis error inside this `if` block where `mano` is known to be `'ai'`. The logic remains the same.
                         const playerContext = mano !== 'ai' ? 'mano' : 'pie';
                         const isOpponentAggressive = opponentModel.envidoBehavior[playerContext].callThreshold < 26.5 || opponentModel.envidoBehavior[playerContext].foldRate < 0.3;
 
@@ -119,62 +118,25 @@ export const findBestCardToPlay = (state: GameState): PlayCardResult => {
                     return { index: cardIndex, reasoning, reasonKey: 'see_opponent' };
                 }
             case 1: // Second trick
-                if (aiHand.length === 2 && trickWinners[0] === 'ai') {
-                     const myEnvidoDetails = getEnvidoDetails(initialAiHand);
-                     if (myEnvidoDetails.value >= 28) {
-                         const areEnvidoPair = aiHand[0].suit === aiHand[1].suit;
-                         if (areEnvidoPair) {
-                            reasoning.push(t('ai_logic.deceptive_play_pair_left', { envidoPoints: myEnvidoDetails.value }));
-                            const weakerCardIndex = getCardHierarchy(aiHand[0]) < getCardHierarchy(aiHand[1]) ? 0 : 1;
-                            reasoning.push(t('ai_logic.deceptive_play_pair_reason'));
-                            reasoning.push(t('ai_logic.decision_play_deceptive', { cardName: getCardName(aiHand[weakerCardIndex]) }));
-                            return { index: weakerCardIndex, reasoning, reasonKey: 'see_opponent' };
-                         }
-                     }
-                }
-                
                 if (trickWinners[0] === 'ai') {
+                    // We won the first trick, so we play to win the round.
                     cardIndex = findCardIndexByValue(aiHand, 'max');
                     reasoning.push(t('ai_logic.decision_play_highest_won_trick1', { cardName: getCardName(aiHand[cardIndex]) }));
                     return { index: cardIndex, reasoning, reasonKey: 'secure_hand' };
                 } else if (trickWinners[0] === 'player') {
+                    // We lost the first trick, so we must win this one to stay in.
                     cardIndex = findCardIndexByValue(aiHand, 'max');
                     reasoning.push(t('ai_logic.decision_play_highest_lost_trick1', { cardName: getCardName(aiHand[cardIndex]) }));
                     return { index: cardIndex, reasoning, reasonKey: 'secure_hand' };
                 } else { // Tied first trick
-                    // --- NEW: Post-Parda Baiting Tactic ---
-                    const sortedHand = [...aiHand].sort((a, b) => getCardHierarchy(b) - getCardHierarchy(a));
-                    const strongestCard = sortedHand[0];
-                    const weakestCard = sortedHand[1];
-
-                    // Condition: Hand has a huge power gap (e.g., Ace + weak card)
-                    if (getCardHierarchy(strongestCard) - getCardHierarchy(weakestCard) >= 8) {
-                        let baitChance = 0.75; // High chance to try this tactic
-                        if (trucoLevel > 0) {
-                            baitChance = 0.25; // Less likely to bait if stakes are already high
-                        }
-                        
-                        reasoning.push(t('ai_logic.post_parda_bait_check'));
-                        
-                        if (Math.random() < baitChance) {
-                            cardIndex = findCardIndexByValue(aiHand, 'min');
-                            reasoning.push(t('ai_logic.decision_post_parda_bait', { 
-                                weakCard: getCardName(weakestCard), 
-                                strongCard: getCardName(strongestCard) 
-                            }));
-                            return { index: cardIndex, reasoning, reasonKey: 'see_opponent' };
-                        } else {
-                             reasoning.push(t('ai_logic.post_parda_bait_skip'));
-                        }
-                    }
-                    
+                    // The first trick was a tie, this one is decisive. No risks. Play the strongest card to win.
                     cardIndex = findCardIndexByValue(aiHand, 'max');
                     reasoning.push(t('ai_logic.decision_play_highest_tied_trick1', { cardName: getCardName(aiHand[cardIndex]) }));
                     return { index: cardIndex, reasoning, reasonKey: 'secure_hand' };
                 }
             case 2: // Third trick
                 reasoning.push(t('ai_logic.decision_play_last_card', { cardName: getCardName(aiHand[0]) }));
-                return { index: 0, reasoning };
+                return { index: 0, reasoning, reasonKey: 'play_last_card' };
         }
     }
 
@@ -238,6 +200,7 @@ export const findBestCardToPlay = (state: GameState): PlayCardResult => {
         return { index: cardIndex, reasoning, reasonKey: 'win_round_cheap' };
     } 
     
+    // Fix: Declare `cardIndex` with `const` to resolve a "Cannot find name" error.
     const cardIndex = findCardIndexByValue(aiHand, 'min');
     reasoning.push(t('ai_logic.decision_play_discard_lowest', { cardName: getCardName(aiHand[cardIndex]) }));
     return { index: cardIndex, reasoning, reasonKey: 'discard_low' };

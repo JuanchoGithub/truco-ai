@@ -224,9 +224,6 @@
       "chose": "Randomizer chose {{type}}",
       "no_op": "No valid actions for Randomizer this turn."
     },
-    "post_parda_bait_check": "[Advanced Tactic: Post-Tie Bait]\n- The first trick was a tie, making this trick decisive.\n- My hand has a large power gap between my cards.",
-    "decision_post_parda_bait": "\nDecision: Playing my weaker card ({{weakCard}}) as bait to hide my {{strongCard}} and incite a Truco call.",
-    "post_parda_bait_skip": "Skipping post-tie bait. Playing standard to secure the trick.",
     "cbr_logic": {
       "checking": "[CBR Logic] Searching case base...",
       "found_similar": "Found {{count}} similar cases (max similarity: {{similarity}}%).",

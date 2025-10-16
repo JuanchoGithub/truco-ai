@@ -1,3 +1,4 @@
+
 {
   "simulation": {
     "title": "Simulation Mode",
@@ -105,6 +106,7 @@
     "envido_called": "Envido Already Called",
     "ai_envido_score": "AI Envido Score",
     "opponent_envido_score": "Opponent Envido Score",
+    "run_simulations_no_scenario_error": "Please load a predefined scenario to run simulations.",
     "scenario_names": {
       "parda_y_gano": "Parda y Gano Opportunity",
       "do_or_die": "Do-or-Die Truco Response",
@@ -187,27 +189,27 @@
       },
       "dual_brava_probe": {
         "title": "Dual Brava Mid-Low Probe",
-        "description": "AI has two top bravas (1♠, 1♣) and a mid-low card (6♦). Fresh round at 0-0. Tests the AI's ability to bait by leading with the non-obvious 6♦ instead of revealing its strength, aiming to provoke a Truco call it can easily counter."
+        "description": "AI has two top bravas (A♠, A♣) and a mid-low card (6♦). Fresh round at 0-0. Tests the AI's ability to bait by leading with the non-obvious 6♦ instead of revealing its strength, aiming to provoke a Truco call it can easily counter."
       },
       "ancho_feint_chain": {
         "title": "Ancho Feint Chain",
-        "description": "AI has 1♠, 3♥, 5♣ after a known Envido. Tests leading with non-brava cards (3♥, 5♣) to feign weakness before using the 1♠."
+        "description": "AI has A♠, 3♥, 5♣ after a known Envido. Tests leading with non-brava cards (3♥, 5♣) to feign weakness before using the A♠."
       },
       "false_ace_bait": {
         "title": "False Ace Bait",
-        "description": "AI has 1♣, 1♥, 2♦ during a Truco. Tests leading with the weak 1♥ to bait an escalation (Vale Cuatro), saving the strong 1♣."
+        "description": "AI has A♣, A♥, 2♦ during a Truco. Tests leading with the weak A♥ to bait an escalation (Vale Cuatro), saving the strong A♣."
       },
       "tie_breaker_low": {
         "title": "Tie-Breaker Low",
-        "description": "AI has 1♠, 7♥, 4♦ after a tie. Tests using the subtle 7♥ (false 7) as the decider instead of the powerful 1♠ to bait a raise."
+        "description": "AI has A♠, 7♥, 4♦ after a tie. Tests using the subtle 7♥ (false 7) as the decider instead of the powerful A♠ to bait a raise."
       },
       "signal_masked_depletion": {
         "title": "Signal-Masked Depletion",
-        "description": "AI has 1♣, 1♠, 10♠. Tests using a proxy signal and leading with the 10♠ to imply bravas are spent, baiting a Truco."
+        "description": "AI has A♣, A♠, J♠. Tests using a proxy signal and leading with the J♠ to imply bravas are spent, baiting a Truco."
       },
       "post_envido_low_shift": {
         "title": "Post-Envido Low Shift",
-        "description": "AI has 1♠, 7♦, 12♥. After Envido, tests leading with the unrelated 12♥ to hide the bravas and bait a Retruco."
+        "description": "AI has A♠, 7♦, K♥. After Envido, tests leading with the unrelated K♥ to hide the bravas and bait a Retruco."
       },
       "triple_brava_figure_probe": {
         "title": "Triple Brava Figure Probe",
@@ -215,7 +217,7 @@
       },
       "parda_ancho_hint": {
         "title": "Parda Ancho Hint",
-        "description": "AI has 1♣, 3♦, 6♠ after a tie. Tests leading with the 3♦ to hint at a stronger hand without revealing the 1♣, baiting a Vale Cuatro."
+        "description": "AI has A♣, 3♦, 6♠ after a tie. Tests leading with the 3♦ to hint at a stronger hand without revealing the A♣, baiting a Vale Cuatro."
       },
       "false_7_deplete": {
         "title": "False 7 Deplete",
@@ -223,19 +225,19 @@
       },
       "envido_suit_misdirect": {
         "title": "Envido Suit Misdirect",
-        "description": "AI has 1♣, 2♠, 4♥ after showing a spade Envido. Tests leading with the unrelated 4♥ to misdirect from the suit containing the 1♣."
+        "description": "AI has A♣, 2♠, 4♥ after showing a spade Envido. Tests leading with the unrelated 4♥ to misdirect from the suit containing the A♣."
       },
       "brava_kiss_signal": {
         "title": "Brava Kiss Signal",
-        "description": "AI has 1♠, 1♦, 2♣. Tests leading with the weak 1♦ to bait an Envido-Truco chain."
+        "description": "AI has A♠, A♦, 2♣. Tests leading with the weak A♦ to bait an Envido-Truco chain."
       },
       "mid_game_figure_low": {
         "title": "Mid-Game Figure Low",
-        "description": "AI has 7♠, 12♦, 10♥ after winning trick 1. Tests leading with a figure (12♦) to feign weakness and bait a Retruco."
+        "description": "AI has 7♠, K♦, J♥ after winning trick 1. Tests leading with a figure (K♦) to feign weakness and bait a Retruco."
       },
       "late_false_ace_chain": {
         "title": "Late False Ace Chain",
-        "description": "AI has 1♣, 1♠, 1♥ in a high-stakes endgame. Tests leading with the weak 1♥ to bait a call, saving the 1♠ for the clinch."
+        "description": "AI has A♣, A♠, A♥ in a high-stakes endgame. Tests leading with the weak A♥ to bait a call, saving the A♠ for the clinch."
       },
       "parda_false_7": {
         "title": "Parda False 7",
@@ -243,11 +245,11 @@
       },
       "ancho_deplete_post_tie": {
         "title": "Ancho Deplete Post-Tie",
-        "description": "AI has 1♣, 3♠, 11♦ after two ties. Tests leading with 3♠ to hint at strength and bait a call to avoid a mano-decided loss."
+        "description": "AI has A♣, 3♠, H♦ after two ties. Tests leading with 3♠ to hint at strength and bait a call to avoid a mano-decided loss."
       },
       "dual_false_bait": {
         "title": "Dual False Bait",
-        "description": "AI has 1♠, 1♦, 1♥ in the endgame. Tests leading with a false ace to bait a call."
+        "description": "AI has A♠, A♦, A♥ in the endgame. Tests leading with a false ace to bait a call."
       },
       "mid_low_signal_mask": {
         "title": "Mid-Low Signal Mask",
@@ -255,15 +257,15 @@
       },
       "figure_ancho_shift": {
         "title": "Figure Ancho Shift",
-        "description": "AI has 1♣, 3♦, 10♠ after winning trick 1. Tests leading with 10♠ to feign depletion, setting up a bait with the remaining cards."
+        "description": "AI has A♣, 3♦, J♠ after winning trick 1. Tests leading with J♠ to feign depletion, setting up a bait with the remaining cards."
       },
       "endgame_low_balance": {
         "title": "Endgame Low Balance",
-        "description": "AI has 1♠, 5♦, 7♣ at 14-14. Tests leading with a balanced mid-low card (5♦) to avoid showing desperation and bait a Vale Cuatro."
+        "description": "AI has A♠, 5♦, 7♣ at 14-14. Tests leading with a balanced mid-low card (5♦) to avoid showing desperation and bait a Vale Cuatro."
       },
       "probe_false_deplete": {
         "title": "Probe False Deplete",
-        "description": "AI has 1♣, 12♠, 4♥ during Retruco. Tests playing the 12♠ to probe, then the low 4♥ to feign weakness."
+        "description": "AI has A♣, K♠, 4♥ during Retruco. Tests playing the K♠ to probe, then the low 4♥ to feign weakness."
       },
       "tie_ancho_glimpse": {
         "title": "Tie Ancho Glimpse",
@@ -271,19 +273,19 @@
       },
       "brava_mid_chain": {
         "title": "Brava Mid Chain",
-        "description": "AI has 1♠, 7♠, 2♦ after a low Envido. Tests leading with the very low 2♦ to feign weakness, chaining to 7♠ on a bait."
+        "description": "AI has A♠, 7♠, 2♦ after a low Envido. Tests leading with the very low 2♦ to feign weakness, chaining to 7♠ on a bait."
       },
       "signal_false_low": {
         "title": "Signal False Low",
-        "description": "AI has 1♣, 5♥, 11♠. Tests leading with 5♥ to mask its real strength."
+        "description": "AI has A♣, 5♥, H♠. Tests leading with 5♥ to mask its real strength."
       },
       "post_parda_figure": {
         "title": "Post-Parda Figure",
-        "description": "AI has 1♠, 10♦, 7♥ after a tie. Tests leading with 10♦ to feign depletion and bait a Truco resume."
+        "description": "After a tie in the first trick, the second trick is decisive. This scenario tests if the AI identifies this 'sudden death' situation. If it holds a hand that guarantees a win, it should call 'Truco' to maximize points. If not, it should play its strongest card to try and secure the round."
       },
       "dual_ancho_bait": {
         "title": "Dual Ancho Bait",
-        "description": "AI has 1♣, 3♠, 3♥. Tests leading with a 3 to hint at strength without revealing the brava, baiting an early Truco."
+        "description": "AI has A♣, 3♠, 3♥. Tests leading with a 3 to hint at strength without revealing the brava, baiting an early Truco."
       },
       "false_brava_probe": {
         "title": "False Brava Probe",
@@ -291,15 +293,15 @@
       },
       "envido_low_unrelated": {
         "title": "Envido Low Unrelated",
-        "description": "AI has 1♠, 6♣, 2♦ after a club Envido. Tests leading with the unrelated 2♦ to misdirect."
+        "description": "AI has A♠, 6♣, 2♦ after a club Envido. Tests leading with the unrelated 2♦ to misdirect."
       },
       "all_tie_mid_hint": {
-        "title": "All-Tie Mid Hint",
-        "description": "AI has 1♣, 5♠, 12♥ after two ties. Tests leading with 5♠ to hint at strength and avoid a mano loss."
+        "title": "Decisive Tie-Breaker as Hand",
+        "description": "The AI is 'mano' and the first two tricks were ties. The round is decided on this last card. The AI must analyze the probability of winning or tying the final trick (both outcomes give it the round win) and decide if it's advantageous enough to call 'Truco' before playing its card."
       },
       "clutch_false_deplete": {
         "title": "Clutch False Deplete",
-        "description": "AI has 1♠, 7♦, 10♣ during Vale Cuatro. Tests leading with 7♦ to feign depletion, saving the 1♠ for the final trick."
+        "description": "AI has A♠, 7♦, J♣ during Vale Cuatro. Tests leading with 7♦ to feign depletion, saving the A♠ for the final trick."
       }
     },
     "explanations": {
@@ -349,7 +351,8 @@
       "escalate_truco_dominant_card": "The AI escalates Truco because it holds a dominant final card and infers the opponent cannot beat it.",
       "accept_truco_mixed": "The AI makes a randomized decision based on its mixed-strategy module to remain unpredictable in borderline situations.",
       "decline_truco_mixed": "The AI makes a randomized decision based on its mixed-strategy module to remain unpredictable in borderline situations.",
-      "escalate_truco_mixed_bluff": "The AI makes a randomized decision based on its mixed-strategy module to remain unpredictable in borderline situations."
+      "escalate_truco_mixed_bluff": "The AI makes a randomized decision based on its mixed-strategy module to remain unpredictable in borderline situations.",
+      "play_last_card": "The AI plays its only remaining card to resolve the round."
     }
   },
   "card_picker": {
@@ -432,6 +435,7 @@
     "escalate_truco_dominant_card": "Escalate Truco (Dominant Card)",
     "accept_truco_mixed": "Accept Truco (Mixed Strategy)",
     "decline_truco_mixed": "Decline Truco (Mixed Strategy)",
-    "escalate_truco_mixed_bluff": "Escalate Truco (Mixed Bluff)"
+    "escalate_truco_mixed_bluff": "Escalate Truco (Mixed Bluff)",
+    "play_last_card": "Play Last Card"
   }
 }

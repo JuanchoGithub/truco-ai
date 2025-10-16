@@ -236,10 +236,14 @@ const ScenarioTester: React.FC<{ onExit: () => void }> = ({ onExit }) => {
         setGamePhase(baseState.gamePhase || 'trick_1');
         setTrucoLevel(baseState.trucoLevel || 0);
         setLastCaller(baseState.lastCaller || null);
-        setHasEnvidoBeenCalled(baseState.hasEnvidoBeenCalledThisRound || false);
+        
+        // FIX: Correctly determine if envido window is closed
+        const isRespondingToTruco = (baseState.gamePhase || '').includes('truco_called');
+        const envidoWindowClosed = (baseState.trucoLevel || 0) > 0 && !isRespondingToTruco;
+        setHasEnvidoBeenCalled(baseState.hasEnvidoBeenCalledThisRound || envidoWindowClosed);
+
         setAiEnvidoValue(baseState.aiEnvidoValue || 0);
         setOpponentEnvidoValue(baseState.playerEnvidoValue || 0);
-
         
         // Generate and set hands
         regenerateAndApplyHands(scenario);
@@ -312,18 +316,23 @@ const ScenarioTester: React.FC<{ onExit: () => void }> = ({ onExit }) => {
                 const hands = selectedScenario.generateHands();
                 if (hands) {
                     const { aiHand: newAiHand, playerHand: newPlayerHand } = hands;
+                    
+                    const baseState = selectedScenario.baseState;
+                    const isRespondingToTruco = (baseState.gamePhase || '').includes('truco_called');
+                    const envidoWindowClosed = (baseState.trucoLevel || 0) > 0 && !isRespondingToTruco;
 
                     const scenarioState: GameState = {
                         ...initialState,
-                        ...selectedScenario.baseState,
-                        aiScore: selectedScenario.baseState.aiScore || 0,
-                        playerScore: selectedScenario.baseState.playerScore || 0,
+                        ...baseState,
+                        aiScore: baseState.aiScore || 0,
+                        playerScore: baseState.playerScore || 0,
                         aiHand: newAiHand,
                         initialAiHand: newAiHand,
                         playerHand: newPlayerHand,
                         initialPlayerHand: newPlayerHand,
                         aiHasFlor: hasFlor(newAiHand),
                         playerHasFlor: hasFlor(newPlayerHand),
+                        hasEnvidoBeenCalledThisRound: baseState.hasEnvidoBeenCalledThisRound || envidoWindowClosed,
                     };
 
                     const aiMove = getLocalAIMove(scenarioState);

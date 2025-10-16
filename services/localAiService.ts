@@ -34,7 +34,6 @@ export const getLocalAIMove = (state: GameState): AiMove => {
     reasoning.push({ key: 'ai_logic.game_pressure', options: { pressure: gamePressure.toFixed(2), statusKey: pressureStatusKey } });
     reasoning.push({ key: 'ai_logic.separator' });
 
-
     // Recap the previous trick if it's not the first trick
     if (currentTrick > 0) {
         const lastTrickIndex = currentTrick - 1;
@@ -144,7 +143,7 @@ export const getLocalAIMove = (state: GameState): AiMove => {
                 const strongestCard = sortedHand[sortedHand.length - 1];
 
                 // Ensure there's a power gap to make the bait worthwhile
-                if (getCardHierarchy(strongestCard) - getCardHierarchy(weakestCard) > 5) {
+                if (getCardHierarchy(strongestCard) - getCardHierarchy(weakestCard) > 2) {
                     let baitProbability = 0.70; // High chance to try this tactic
                     const baitReasoning: MessageObject[] = [
                         { key: 'ai_logic.post_envido_bait_title' },
@@ -217,7 +216,6 @@ export const getLocalAIMove = (state: GameState): AiMove => {
             }
             
             // SCENARIO 2: LOPSIDED HAND BAIT (Strong Envido + Weak Truco)
-            // Goal: Bait the player into calling Envido to win more points there, offsetting a likely Truco loss.
             else if (aiEnvidoDetails.value >= 29 && handStrength <= 11) {
                 let baitChance = 0.15; // Base 15% chance
                 let baitReasoning: (string | MessageObject)[] = [{ key: 'ai_logic.lopsided_bait_analysis', options: { envidoPoints: aiEnvidoDetails.value, trucoStrength: handStrength } }];
@@ -259,7 +257,7 @@ export const getLocalAIMove = (state: GameState): AiMove => {
         }
         
         // --- NEW: Pre-Truco "Feint" Tactic for Monster Hands ---
-        if (trucoMove?.action.type === ActionType.CALL_TRUCO && !hasEnvidoBeenCalledThisRound) {
+        if (trucoMove?.action.type === ActionType.CALL_TRUCO && !hasEnvidoBeenCalledThisRound && currentTrick === 0) {
             const handStrength = trucoMove.action.payload?.trucoContext?.strength || 0;
             const isBluff = trucoMove.action.payload?.trucoContext?.isBluff || false;
 
@@ -270,7 +268,7 @@ export const getLocalAIMove = (state: GameState): AiMove => {
                 const strongestCard = sortedHand[sortedHand.length - 1];
 
                 // Ensure there's a significant power gap to make the feint worthwhile
-                if (getCardHierarchy(strongestCard) - getCardHierarchy(weakestCard) > 5) {
+                if (getCardHierarchy(strongestCard) - getCardHierarchy(weakestCard) > 2) {
                     let feintProbability = 0.70; // Base 70% chance to try this tactic
                     const feintReasoning: MessageObject[] = [
                         { key: 'ai_logic.feint_tactic_title' },
@@ -318,7 +316,7 @@ export const getLocalAIMove = (state: GameState): AiMove => {
             const strongestCard = sortedHand[sortedHand.length - 1];
     
             // Ensure there's a significant power gap to make the feint worthwhile
-            if (getCardHierarchy(strongestCard) - getCardHierarchy(weakestCard) >= 5) {
+            if (getCardHierarchy(strongestCard) - getCardHierarchy(weakestCard) >= 3) {
                 let feintProbability = 0.85; // High probability to try this tactic in this situation
                 const feintReasoning: MessageObject[] = [
                     { key: 'ai_logic.feint_tactic_title' },

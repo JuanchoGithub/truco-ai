@@ -431,11 +431,11 @@ export const predefinedScenarios: PredefinedScenario[] = [
         baseState: { 
             aiScore: 14, 
             playerScore: 14, 
-            gamePhase: 'vale_cuatro_called', 
+            gamePhase: 'trick_1', 
             mano: 'ai', 
             currentTurn: 'ai',
             trucoLevel: 3,
-            lastCaller: 'player'
+            lastCaller: null
         },
         generateHands: () => generateHands({ cardComposition: [{ minHierarchy: 14, maxHierarchy: 14 }, { minHierarchy: 11, maxHierarchy: 11 }, { minHierarchy: 5, maxHierarchy: 5 }], mustNotHaveFlor: true }, { mustNotHaveFlor: true })
     }

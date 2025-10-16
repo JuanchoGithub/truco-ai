@@ -1,3 +1,4 @@
+
 import { AiMove, GameState, ActionType, Card } from '../types';
 import { getCardName, getEnvidoValue } from './trucoLogic';
 import { findBestCardToPlay } from './ai/playCardStrategy';
@@ -158,7 +159,8 @@ export const generateSuggestionSummary = (move: AiMove, state: GameState): strin
         case 'see_opponent':
         case 'win_round_cheap':
         case 'discard_low':
-        case 'parda_y_canto': {
+        case 'parda_y_canto':
+        case 'play_last_card': {
             // FIX: Add type guard to ensure action is PLAY_CARD before accessing payload.
             if (action.type !== ActionType.PLAY_CARD) {
                 // This case should not be reached if reasonKeys are correctly assigned, but it acts as a type guard.
