@@ -1,4 +1,3 @@
-
 {
   "simulation": {
     "title": "Modo Simulación",
@@ -121,21 +120,22 @@
       "signal_masked_depletion": "Agotamiento Enmascarado por Señal",
       "post_envido_low_shift": "Cambio a Carta Baja Post-Envido",
       "triple_brava_figure_probe": "Sondeo con Figura en Mano de Bravas",
-      "parda_ancho_hint": "Insinuación de Ancho en Parda",
+      "post_tie_retruco_response": "Respuesta de Retruco Post-Empate",
       "false_7_deplete": "Agotamiento con 7 Falso",
       "envido_suit_misdirect": "Despiste de Palo del Envido",
       "brava_kiss_signal": "Cebo con As Falso y Brava",
       "mid_game_figure_low": "Figura Baja a Mitad de Partida",
       "late_false_ace_chain": "Cadena de As Falso al Final",
       "parda_false_7": "Parda con 7 Falso",
+      "tie_ancho_glimpse": "Juego Decisivo Post-Empate",
       "banter_low_glimpse": "Finta con Mano Fuerte",
       "ancho_deplete_post_tie": "Agotamiento de Ancho Post-Empate",
       "dual_false_bait": "Cebo con Doble Falso",
       "mid_low_signal_mask": "Máscara de Señal con Carta Media-Baja",
       "figure_ancho_shift": "Cambio de Figura a Ancho",
       "endgame_low_balance": "Equilibrio con Carta Baja en Final de Partida",
-      "probe_false_deplete": "Sondeo de Agotamiento Falso",
-      "tie_ancho_glimpse": "Insinuación de Ancho en Empate",
+      "retruco_response_with_ace": "Respuesta a Retruco con un As",
+      "tie_ancho_glimpse": "Juego Decisivo Post-Empate",
       "brava_mid_chain": "Cadena de Brava y Carta Media",
       "signal_false_low": "Señal de Falso con Carta Baja",
       "post_parda_figure": "Figura Post-Parda",
@@ -215,9 +215,9 @@
         "title": "Sondeo con Figura en Mano de Bravas",
         "description": "La IA tiene dos bravas superiores + una figura. Prueba liderar con la figura para sondear, no con las bravas, para conservar poder."
       },
-      "parda_ancho_hint": {
-        "title": "Insinuación de Ancho en Parda",
-        "description": "La IA tiene 1♣, 3♦, 6♠ después de un empate. Prueba liderar con el 3♦ para insinuar una mano más fuerte sin revelar el 1♣, cebando un Vale Cuatro."
+      "post_tie_retruco_response": {
+        "title": "Respuesta de Retruco Post-Empate",
+        "description": "Después de un empate, la segunda mano es decisiva. El oponente ha escalado a 'Retruco'. La IA tiene una carta ganadora y una perdedora. Esto prueba si la IA identifica correctamente la situación de victoria obligada y juega su carta más fuerte, en lugar de intentar un cebo que le haría perder la ronda y 3 puntos."
       },
       "false_7_deplete": {
         "title": "Agotamiento con 7 Falso",
@@ -263,13 +263,9 @@
         "title": "Equilibrio con Carta Baja en Final de Partida",
         "description": "La IA tiene 1♠, 5♦, 7♣ en 14-14. Prueba liderar con una carta equilibrada media-baja (5♦) para no mostrar desesperación y cebar un Vale Cuatro."
       },
-      "probe_false_deplete": {
-        "title": "Sondeo de Agotamiento Falso",
-        "description": "La IA tiene 1♣, 12♠, 4♥ durante Retruco. Prueba jugar el 12♠ para sondear, luego el bajo 4♥ para fingir debilidad."
-      },
-      "tie_ancho_glimpse": {
-        "title": "Insinuación de Ancho en Empate",
-        "description": "La IA tiene 7♦, 3♣, 6♠ después de un empate. Prueba liderar con 6♠ para cebar una subida en la mano decisiva."
+      "retruco_response_with_ace": {
+        "title": "Respuesta a Retruco con un As",
+        "description": "La IA se enfrenta a un 'Retruco' con una mano engañosa: una carta muy fuerte (un Ancho), una carta media (un Rey) y una carta baja. Esto prueba si la IA, basándose en la fuerza de su carta principal, confía lo suficiente como para aceptar la apuesta, a pesar de tener dos cartas de bajo valor."
       },
       "brava_mid_chain": {
         "title": "Cadena de Brava y Carta Media",
@@ -339,6 +335,11 @@
     }
   },
   "ai_reason_keys": {
+    "see_opponent": "Play Card (Probe)",
+    "probe_low_value": "Play Card (Probe Low-Value)",
+    "probe_mid_value": "Play Card (Probe Mid-Value)",
+    "probe_sacrificial": "Play Card (Sacrificial Probe)",
+    "probe_envido_hide": "Play Card (Hide Envido)",
     "accept_truco_do_or_die": "Accept Truco (Do or Die)",
     "decline_truco_weak": "Decline Truco (Weak Hand)",
     "decline_truco_low_equity": "Decline Truco (Low Equity)",
@@ -375,7 +376,6 @@
     "call_contraflor_strong": "Call Contraflor",
     "accept_contraflor_strong": "Accept Contraflor",
     "decline_contraflor_weak": "Decline Contraflor",
-    "see_opponent": "Play Card (Probe)",
     "secure_hand": "Play Card (Secure Trick)",
     "win_round_cheap": "Play Card (Win Cheaply)",
     "discard_low": "Play Card (Discard)",

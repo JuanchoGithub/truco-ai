@@ -1,4 +1,3 @@
-
 {
   "simulation": {
     "title": "Simulation Mode",
@@ -121,21 +120,21 @@
       "signal_masked_depletion": "Signal-Masked Depletion",
       "post_envido_low_shift": "Post-Envido Low Shift",
       "triple_brava_figure_probe": "Triple Brava Figure Probe",
-      "parda_ancho_hint": "Parda Ancho Hint",
+      "post_tie_retruco_response": "Post-Tie Retruco Response",
       "false_7_deplete": "False 7 Deplete",
       "envido_suit_misdirect": "Envido Suit Misdirect",
       "brava_kiss_signal": "Brava Kiss Signal",
       "mid_game_figure_low": "Mid-Game Figure Low",
       "late_false_ace_chain": "Late False Ace Chain",
       "parda_false_7": "Parda False 7",
+      "tie_ancho_glimpse": "Post-Tie Decisive Play",
       "banter_low_glimpse": "Feint with a Strong Hand",
       "ancho_deplete_post_tie": "Ancho Deplete Post-Tie",
       "dual_false_bait": "Dual False Bait",
       "mid_low_signal_mask": "Mid-Low Signal Mask",
       "figure_ancho_shift": "Figure Ancho Shift",
       "endgame_low_balance": "Endgame Low Balance",
-      "probe_false_deplete": "Probe False Deplete",
-      "tie_ancho_glimpse": "Tie Ancho Glimpse",
+      "retruco_response_with_ace": "Retruco Response with an Ace",
       "brava_mid_chain": "Brava Mid Chain",
       "signal_false_low": "Signal False Low",
       "post_parda_figure": "Post-Parda Figure",
@@ -215,9 +214,9 @@
         "title": "Triple Brava Figure Probe",
         "description": "AI has two top bravas + a figure. Tests leading with the figure to probe, not the bravas, to conserve power."
       },
-      "parda_ancho_hint": {
-        "title": "Parda Ancho Hint",
-        "description": "AI has A♣, 3♦, 6♠ after a tie. Tests leading with the 3♦ to hint at a stronger hand without revealing the A♣, baiting a Vale Cuatro."
+      "post_tie_retruco_response": {
+        "title": "Post-Tie Retruco Response",
+        "description": "After a tie, the second trick is decisive. The opponent has escalated to 'Retruco'. The AI has one winning card and one losing card. This tests if the AI correctly identifies the must-win situation and plays its strongest card, rather than attempting a bait play which would lose the round and 3 points."
       },
       "false_7_deplete": {
         "title": "False 7 Deplete",
@@ -263,13 +262,9 @@
         "title": "Endgame Low Balance",
         "description": "AI has A♠, 5♦, 7♣ at 14-14. Tests leading with a balanced mid-low card (5♦) to avoid showing desperation and bait a Vale Cuatro."
       },
-      "probe_false_deplete": {
-        "title": "Probe False Deplete",
-        "description": "AI has A♣, K♠, 4♥ during Retruco. Tests playing the K♠ to probe, then the low 4♥ to feign weakness."
-      },
-      "tie_ancho_glimpse": {
-        "title": "Tie Ancho Glimpse",
-        "description": "AI has 7♦, 3♣, 6♠ after a tie. Tests leading with 6♠ to bait a raise in the decider."
+      "retruco_response_with_ace": {
+        "title": "Retruco Response with an Ace",
+        "description": "The AI faces a 'Retruco' call with a deceptive hand: one top-tier card (an Ace), a middle card (a King), and a low card. This tests if the AI, relying on the strength of its top card, is confident enough to accept the bet, despite holding two low-value cards."
       },
       "brava_mid_chain": {
         "title": "Brava Mid Chain",
@@ -305,6 +300,11 @@
       }
     },
     "explanations": {
+      "see_opponent": "The AI plays a low or non-critical card to probe the opponent's hand without revealing its own strength.",
+      "probe_low_value": "The AI plays its absolute weakest card as bait, aiming to appear completely non-threatening and hide its true power.",
+      "probe_mid_value": "The AI plays its middle-strength card. This is a more subtle bait, making the AI's play look reasonable but not overly strong, which is more likely to lure an opponent into a trap.",
+      "probe_sacrificial": "The AI plays its second-best card to hide its absolute best card. This is a high-risk, high-reward feint to mislead the opponent into a costly escalation.",
+      "probe_envido_hide": "The AI is playing a card specifically to hide information about its Envido points. This is usually the 'third' card that does not belong to the Envido suit, or the low card of the Envido pair.",
       "accept_truco_do_or_die": "The AI accepts because folding guarantees losing the game. Accepting is the only choice that offers a chance to win, however slim.",
       "decline_truco_weak": "The AI folds because its calculated odds of winning are extremely low. It chooses to cut its losses rather than risk more points.",
       "decline_truco_low_equity": "The AI folds because its calculated odds of winning are extremely low. It chooses to cut its losses rather than risk more points.",
@@ -341,18 +341,17 @@
       "call_contraflor_strong": "The AI escalates to Contraflor because it also has Flor and believes its point value is very high and likely to win.",
       "accept_contraflor_strong": "The AI accepts the Contraflor challenge because its Flor value is high enough to meet its risk threshold.",
       "decline_contraflor_weak": "The AI declines the Contraflor challenge because its Flor value is too low to risk the high-stakes bet.",
-      "see_opponent": "The AI plays a low or non-critical card to probe the opponent's hand without revealing its own strength.",
-      "secure_hand": "The AI plays its strongest available card to secure a trick win, especially when it has the advantage (e.g., is 'mano' or won the previous trick).",
-      "win_round_cheap": "The AI plays the weakest card that is still strong enough to win the trick, conserving its more powerful cards for later.",
-      "discard_low": "The AI plays its weakest card because it cannot win the current trick. This is a move to cut losses and save better cards.",
-      "parda_y_canto": "The AI intentionally plays a card that ties the trick ('parda') while holding a winning card in reserve. This is a setup to call Truco in the next trick with a high chance of success.",
-      "unknown_action": "The AI's action doesn't fit a standard strategic category. This may occur in complex or unusual game states.",
-      "accept_truco_lookahead_fold": "The AI accepts Truco instead of escalating because its lookahead simulation predicted it would fold to a subsequent Vale Cuatro.",
-      "escalate_truco_dominant_card": "The AI escalates Truco because it holds a dominant final card and infers the opponent cannot beat it.",
-      "accept_truco_mixed": "The AI makes a randomized decision based on its mixed-strategy module to remain unpredictable in borderline situations.",
-      "decline_truco_mixed": "The AI makes a randomized decision based on its mixed-strategy module to remain unpredictable in borderline situations.",
-      "escalate_truco_mixed_bluff": "The AI makes a randomized decision based on its mixed-strategy module to remain unpredictable in borderline situations.",
-      "play_last_card": "The AI plays its only remaining card to resolve the round."
+      "secure_hand": "Play Card (Secure Trick)",
+      "win_round_cheap": "Play Card (Win Cheaply)",
+      "discard_low": "Play Card (Discard)",
+      "parda_y_canto": "Play Card (Parda y Canto)",
+      "unknown_action": "Unknown/Other Action",
+      "accept_truco_lookahead_fold": "Accept Truco (Lookahead Fold)",
+      "escalate_truco_dominant_card": "Escalate Truco (Dominant Card)",
+      "accept_truco_mixed": "Accept Truco (Mixed Strategy)",
+      "decline_truco_mixed": "Decline Truco (Mixed Strategy)",
+      "escalate_truco_mixed_bluff": "Escalate Truco (Mixed Bluff)",
+      "play_last_card": "Play Last Card"
     }
   },
   "card_picker": {
@@ -389,6 +388,11 @@
     }
   },
   "ai_reason_keys": {
+    "see_opponent": "Play Card (Probe)",
+    "probe_low_value": "Play Card (Probe Low-Value)",
+    "probe_mid_value": "Play Card (Probe Mid-Value)",
+    "probe_sacrificial": "Play Card (Sacrificial Probe)",
+    "probe_envido_hide": "Play Card (Hide Envido)",
     "accept_truco_do_or_die": "Accept Truco (Do or Die)",
     "decline_truco_weak": "Decline Truco (Weak Hand)",
     "decline_truco_low_equity": "Decline Truco (Low Equity)",
@@ -425,7 +429,6 @@
     "call_contraflor_strong": "Call Contraflor",
     "accept_contraflor_strong": "Accept Contraflor",
     "decline_contraflor_weak": "Decline Contraflor",
-    "see_opponent": "Play Card (Probe)",
     "secure_hand": "Play Card (Secure Trick)",
     "win_round_cheap": "Play Card (Win Cheaply)",
     "discard_low": "Play Card (Discard)",

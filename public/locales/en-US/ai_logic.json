@@ -1,3 +1,4 @@
+
 {
   "ai_logic": {
     "initial_state": "The AI is waiting for the game to start.",
@@ -41,13 +42,13 @@
     "feint_tactic_body": "My hand is extremely strong ({{strength}}% strength). Calling TRUCO now is the standard play, but it might scare the opponent away.",
     "feint_tactic_opponent_aggro": "Opponent is aggressive (fold rate of {{rate}}%). Increasing feint probability.",
     "feint_tactic_probability": "Instead, I will consider a feint to incite a bluff or Truco call from the opponent. Probability of attempting feint: {{probability}}%.",
-    "feint_tactic_decision": "Decision: Feint chosen. Playing my weakest card, {{cardName}}, as bait.",
+    "feint_tactic_decision": "Decision: Feint chosen. Playing my {{cardName}} as bait.",
     "feint_tactic_skipped": "Considered a feint, but decided that a direct value bet is better in this situation.",
     "post_envido_bait_title": "[Advanced Tactic: Post-Envido Bait]",
     "post_envido_bait_body": "My Truco hand is very strong (strength {{strength}}). Instead of calling Truco immediately after the Envido, which might scare the opponent, I will consider a bait play.",
     "post_envido_bait_opponent_aggro": "The opponent is aggressive, making a bait more effective. Increasing probability.",
     "post_envido_bait_chance": "Probability of attempting bait: {{probability}}%.",
-    "post_envido_bait_decision": "Decision: Bait chosen. Playing my weakest card, {{cardName}}, to hide my strength.",
+    "post_envido_bait_decision": "Decision: Bait chosen. Playing my {{cardName}} to hide my strength.",
     "post_envido_bait_skipped": "Considered a post-envido bait, but a direct value bet is preferable now.",
     "envido_call_logic": "[Logic: Call Envido]",
     "mano_bonus": "I am hand, which gives me an advantage in ties.",
@@ -94,6 +95,10 @@
     "play_card_logic": "[Logic: Play Card]",
     "my_hand": "My hand: {{hand}}",
     "leading_trick": "I am leading Trick {{trickNumber}}.",
+    "bait_tactic_check_title": "[Strategic Bait Tactic]",
+    "bait_tactic_check_body": "My hand contains one 'brava' card ({{strongest}}) and the rest are weaker. This is an ideal hand for a bait.",
+    "bait_tactic_decision": "Decision: Playing my {{cardName}} as bait to hide my strong card.",
+    "bait_tactic_skipped": "Considered a bait play, but opted for a more direct play to remain unpredictable.",
     "deceptive_play_high_envido": "[Information Hiding Strategy]: I have a high envido ({{envidoPoints}}). I will play to conceal the strength of my truco hand.",
     "deceptive_play_third_card_reason": "To avoid revealing my envido pair, I will play my third card (the one not from the envido suit) first.",
     "deceptive_play_flor_reason": "I have flor. To maximize ambiguity about my remaining cards, I will play the lowest of the three first.",
@@ -230,6 +235,8 @@
       "no_similar_fallback": "No sufficiently similar cases found (similarity < 98%). Falling back to rule-based logic.",
       "reusing_action": "Reusing most successful action from past cases: '{{action}}' ({{winRate}}% win rate).",
       "action_cluster_analysis": "Action cluster analysis: {{action}} had a {{winRate}}% historical win rate."
-    }
+    },
+    "bait_type_mid": "My hand allows for a mid-value bait. Playing a middle card to appear credible but not overly strong.",
+    "bait_type_low": "My hand allows for a low-value bait. Playing my weakest card to completely hide my strength."
   }
 }

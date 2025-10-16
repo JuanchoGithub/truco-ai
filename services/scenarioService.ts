@@ -276,7 +276,7 @@ export const predefinedScenarios: PredefinedScenario[] = [
         generateHands: () => generateHands({ cardComposition: [{ minHierarchy: 13 }, { minHierarchy: 13 }, { minHierarchy: 5, maxHierarchy: 7 }], mustNotHaveFlor: true }, { mustNotHaveFlor: true })
     },
     {
-        nameKey: 'scenario_tester.scenario_names.parda_ancho_hint',
+        nameKey: 'scenario_tester.scenario_names.post_tie_retruco_response',
         baseState: { 
             aiScore: 12, 
             playerScore: 11, 
@@ -288,7 +288,7 @@ export const predefinedScenarios: PredefinedScenario[] = [
             trucoLevel: 2,
             lastCaller: 'player'
         },
-        generateHands: () => generateHands({ numCards: 2, minTrucoStrength: 15 }, { numCards: 2 })
+        generateHands: () => generateHands({ numCards: 2, cardComposition: [{ minHierarchy: 13, maxHierarchy: 13 }, { maxHierarchy: 2 }] }, { numCards: 2, cardComposition: [{ minHierarchy: 10, maxHierarchy: 10 }, { maxHierarchy: 8 }] })
     },
     {
         nameKey: 'scenario_tester.scenario_names.false_7_deplete',
@@ -327,6 +327,11 @@ export const predefinedScenarios: PredefinedScenario[] = [
         nameKey: 'scenario_tester.scenario_names.parda_false_7',
         baseState: { aiScore: 2, playerScore: 1, trickWinners: ['tie', null, null], currentTrick: 1, mano: 'ai', currentTurn: 'ai', gamePhase: 'trick_2' },
         generateHands: () => generateHands({ numCards: 2, minTrucoStrength: 13, maxTrucoStrength: 15 }, { numCards: 2 })
+    },
+    {
+        nameKey: 'scenario_tester.scenario_names.tie_ancho_glimpse',
+        baseState: { aiScore: 5, playerScore: 4, trickWinners: ['tie', null, null], currentTrick: 1, mano: 'ai', currentTurn: 'ai', gamePhase: 'trick_2' },
+        generateHands: () => generateHands({ numCards: 2, cardComposition: [{ minHierarchy: 12, maxHierarchy: 12 }, { maxHierarchy: 2 }] }, { numCards: 2, cardComposition: [{ minHierarchy: 10, maxHierarchy: 10 }, { maxHierarchy: 8 }] })
     },
     {
         nameKey: 'scenario_tester.scenario_names.banter_low_glimpse',
@@ -368,7 +373,7 @@ export const predefinedScenarios: PredefinedScenario[] = [
         generateHands: () => generateHands({ cardComposition: [{ minHierarchy: 14, maxHierarchy: 14 }, { minHierarchy: 4, maxHierarchy: 4 }, { minHierarchy: 2, maxHierarchy: 2 }], mustNotHaveFlor: true }, { mustNotHaveFlor: true })
     },
     {
-        nameKey: 'scenario_tester.scenario_names.probe_false_deplete',
+        nameKey: 'scenario_tester.scenario_names.retruco_response_with_ace',
         baseState: { 
             aiScore: 1, 
             playerScore: 0, 
@@ -378,11 +383,6 @@ export const predefinedScenarios: PredefinedScenario[] = [
             currentTurn: 'ai' 
         },
         generateHands: () => generateHands({ cardComposition: [{ minHierarchy: 13, maxHierarchy: 13 }, { minHierarchy: 7, maxHierarchy: 7 }, { minHierarchy: 1, maxHierarchy: 1 }], mustNotHaveFlor: true }, { mustNotHaveFlor: true })
-    },
-    {
-        nameKey: 'scenario_tester.scenario_names.tie_ancho_glimpse',
-        baseState: { aiScore: 5, playerScore: 4, trickWinners: ['tie', null, null], currentTrick: 1, mano: 'ai', currentTurn: 'ai', gamePhase: 'trick_2' },
-        generateHands: () => generateHands({ numCards: 2, minTrucoStrength: 12 }, { numCards: 2 })
     },
     {
         nameKey: 'scenario_tester.scenario_names.brava_mid_chain',

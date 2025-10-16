@@ -1,4 +1,3 @@
-
 import { GameState, Card, Suit, MessageObject } from '../../types';
 import { getCardHierarchy, getCardName, getEnvidoValue, determineTrickWinner, determineRoundWinner, getEnvidoDetails, hasFlor, getEnvidoSuit } from '../trucoLogic';
 import i18nService from '../i18nService';
@@ -15,6 +14,25 @@ const findCardIndexByValue = (hand: Card[], type: 'min' | 'max'): number => {
     const cardToFind = type === 'min' ? sortedHand[0] : sortedHand[sortedHand.length - 1];
     return hand.findIndex(c => c.rank === cardToFind.rank && c.suit === cardToFind.suit);
 }
+
+const findBaitCard = (hand: Card[]): { index: number, card: Card, reasonKey: string, reason: MessageObject } => {
+    const sortedHand = [...hand].sort((a, b) => getCardHierarchy(a) - getCardHierarchy(b));
+    const [lowest, middle, highest] = sortedHand;
+
+    let baitCard = lowest;
+    let reasonKey = 'probe_low_value';
+    let baitReason: MessageObject = { key: 'ai_logic.bait_type_low' };
+
+    // If there's a huge total power gap AND a significant gap between the top two cards, play the middle as a more convincing bait.
+    if (hand.length === 3 && getCardHierarchy(highest) - getCardHierarchy(lowest) >= 8 && getCardHierarchy(highest) - getCardHierarchy(middle) >= 3) {
+        baitCard = middle;
+        reasonKey = 'probe_mid_value';
+        baitReason = { key: 'ai_logic.bait_type_mid' };
+    }
+
+    const index = hand.findIndex(c => c.rank === baitCard.rank && c.suit === baitCard.suit);
+    return { index, card: baitCard, reasonKey, reason: baitReason };
+};
 
 export const findBestCardToPlay = (state: GameState): PlayCardResult => {
     const { t } = i18nService;
@@ -68,21 +86,21 @@ export const findBestCardToPlay = (state: GameState): PlayCardResult => {
                                 const lowestCardIndex = findCardIndexByValue(aiHand, 'min');
                                 reasoning.push(t('ai_logic.deceptive_play_flor_reason'));
                                 reasoning.push(t('ai_logic.decision_play_deceptive', { cardName: getCardName(aiHand[lowestCardIndex]) }));
-                                return { index: lowestCardIndex, reasoning, reasonKey: 'see_opponent' };
+                                return { index: lowestCardIndex, reasoning, reasonKey: 'probe_envido_hide' };
                             } else if (thirdCardIndex !== -1) {
                                 // Weighted choice: 60% play third card, 40% sacrifice low of pair
                                 const moveRoll = Math.random();
                                 if (moveRoll < 0.6) {
                                     reasoning.push(t('ai_logic.deceptive_choice_third_card'));
                                     reasoning.push(t('ai_logic.decision_play_deceptive', { cardName: getCardName(aiHand[thirdCardIndex]) }));
-                                    return { index: thirdCardIndex, reasoning, reasonKey: 'see_opponent' };
+                                    return { index: thirdCardIndex, reasoning, reasonKey: 'probe_envido_hide' };
                                 } else {
                                     const pairCards = aiHand.filter(c => c.suit === envidoSuit);
                                     const lowOfPair = pairCards.sort((a,b) => getCardHierarchy(a) - getCardHierarchy(b))[0];
                                     const lowOfPairIndex = aiHand.findIndex(c => c.rank === lowOfPair.rank && c.suit === lowOfPair.suit);
                                     reasoning.push(t('ai_logic.deceptive_choice_low_pair'));
                                     reasoning.push(t('ai_logic.decision_play_deceptive', { cardName: getCardName(aiHand[lowOfPairIndex]) }));
-                                    return { index: lowOfPairIndex, reasoning, reasonKey: 'see_opponent' };
+                                    return { index: lowOfPairIndex, reasoning, reasonKey: 'probe_envido_hide' };
                                 }
                             }
                         } else {
@@ -104,18 +122,41 @@ export const findBestCardToPlay = (state: GameState): PlayCardResult => {
                         reasoning.push(t('ai_logic.advanced_tactic_sacrifice'));
                         reasoning.push(t('ai_logic.advanced_tactic_sacrifice_body', { card1: getCardName(sortedHand[0]), card2: getCardName(secondBestCard) }));
                         reasoning.push(t('ai_logic.decision_play_bait', { cardName: getCardName(secondBestCard) }));
-                        return { index: sacrificialIndex, reasoning, reasonKey: 'see_opponent' };
+                        return { index: sacrificialIndex, reasoning, reasonKey: 'probe_sacrificial' };
                     }
                 }
 
                 if (mano === 'ai') {
+                    // --- NEW: Strategic Bait Play ---
+                    if (trucoLevel === 0 && aiHand.length === 3) {
+                        const sortedHand = [...aiHand].sort((a, b) => getCardHierarchy(b) - getCardHierarchy(a));
+                        const strongestCard = sortedHand[0];
+                        const secondStrongestCard = sortedHand[1];
+
+                        // Condition: Hand has one "brava" (>= 7 de espadas) and the other two are mediocre or weak
+                        if (getCardHierarchy(strongestCard) >= 12 && getCardHierarchy(secondStrongestCard) <= 7) {
+                            const baitChance = 0.75; // High probability to try this with a good baiting hand
+                            reasoning.push(t('ai_logic.bait_tactic_check_title'));
+                            reasoning.push(t('ai_logic.bait_tactic_check_body', { strongest: getCardName(strongestCard) }));
+                            
+                            if (Math.random() < baitChance) {
+                                const { index: baitCardIndex, card: baitCard, reasonKey: baitReasonKey, reason: baitReason } = findBaitCard(aiHand);
+                                reasoning.push(baitReason);
+                                reasoning.push(t('ai_logic.bait_tactic_decision', { cardName: getCardName(baitCard) }));
+                                return { index: baitCardIndex, reasoning, reasonKey: baitReasonKey };
+                            } else {
+                                reasoning.push(t('ai_logic.bait_tactic_skipped'));
+                            }
+                        }
+                    }
+
                     cardIndex = findCardIndexByValue(aiHand, 'max');
                     reasoning.push(t('ai_logic.decision_play_highest_mano', { cardName: getCardName(aiHand[cardIndex]) }));
                     return { index: cardIndex, reasoning, reasonKey: 'secure_hand' };
                 } else {
-                    cardIndex = findCardIndexByValue(aiHand, 'min');
-                    reasoning.push(t('ai_logic.decision_play_lowest_not_mano', { cardName: getCardName(aiHand[cardIndex]) }));
-                    return { index: cardIndex, reasoning, reasonKey: 'see_opponent' };
+                    const { index: baitCardIndex, card: baitCard, reasonKey: baitReasonKey } = findBaitCard(aiHand);
+                    reasoning.push(t('ai_logic.decision_play_lowest_not_mano', { cardName: getCardName(baitCard) }));
+                    return { index: baitCardIndex, reasoning, reasonKey: baitReasonKey };
                 }
             case 1: // Second trick
                 if (trickWinners[0] === 'ai') {

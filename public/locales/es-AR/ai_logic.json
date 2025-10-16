@@ -1,3 +1,4 @@
+
 {
   "ai_logic": {
     "initial_state": "La IA está esperando que comience el juego.",
@@ -41,13 +42,13 @@
     "feint_tactic_body": "Mi mano es extremadamente fuerte (fuerza {{strength}}%). Cantar TRUCO ahora es la jugada estándar, pero podría asustar al oponente.",
     "feint_tactic_opponent_aggro": "El oponente es agresivo (tasa de abandono de {{rate}}%). Aumento la probabilidad de finta.",
     "feint_tactic_probability": "En lugar de eso, consideraré una finta para incitar un farol o una llamada de Truco del oponente. Probabilidad de intentar la finta: {{probability}}%.",
-    "feint_tactic_decision": "Decisión: La finta ha sido elegida. Jugando mi carta más débil, {{cardName}}, como cebo.",
+    "feint_tactic_decision": "Decisión: La finta ha sido elegida. Jugando mi carta {{cardName}} como cebo.",
     "feint_tactic_skipped": "Consideré una finta, pero decidí que una apuesta directa por valor es mejor en esta situación.",
     "post_envido_bait_title": "[Táctica Avanzada: Cebo Post-Envido]",
     "post_envido_bait_body": "Mi mano de Truco es muy fuerte (fuerza {{strength}}). En lugar de cantar Truco inmediatamente después del Envido, lo cual podría asustar al oponente, consideraré una jugada de cebo.",
     "post_envido_bait_opponent_aggro": "El oponente es agresivo, lo que hace que un cebo sea más efectivo. Aumentando la probabilidad.",
     "post_envido_bait_chance": "Probabilidad de intentar el cebo: {{probability}}%.",
-    "post_envido_bait_decision": "Decisión: Cebo elegido. Jugando mi carta más débil, {{cardName}}, para ocultar mi fuerza.",
+    "post_envido_bait_decision": "Decisión: Cebo elegido. Jugando mi carta {{cardName}} para ocultar mi fuerza.",
     "post_envido_bait_skipped": "Consideré un cebo post-envido, pero una apuesta directa por valor es preferible ahora.",
     "envido_call_logic": "[Lógica: Cantar Envido]",
     "mano_bonus": "Soy mano, lo que me da ventaja en empates.",
@@ -94,6 +95,10 @@
     "play_card_logic": "[Lógica: Jugar Carta]",
     "my_hand": "Mi mano: {{hand}}",
     "leading_trick": "Lidero la Mano {{trickNumber}}.",
+    "bait_tactic_check_title": "[Táctica de Cebo Estratégico]",
+    "bait_tactic_check_body": "Mi mano contiene una carta 'brava' ({{strongest}}) y el resto son más débiles. Es una mano ideal para un cebo.",
+    "bait_tactic_decision": "Decisión: Jugando mi carta {{cardName}} como cebo para ocultar mi carta fuerte.",
+    "bait_tactic_skipped": "Consideré una jugada de cebo, pero opté por una jugada más directa para no ser predecible.",
     "deceptive_play_high_envido": "[Estrategia de Ocultamiento]: Tengo un envido alto ({{envidoPoints}}). Jugaré para ocultar la fuerza de mi mano de truco.",
     "deceptive_play_third_card_reason": "Para no revelar mi par de envido, jugaré primero mi tercera carta (la que no es del palo del envido).",
     "deceptive_play_flor_reason": "Tengo flor. Para maximizar la ambigüedad sobre mis cartas restantes, jugaré la más baja de las tres primero.",
@@ -230,6 +235,8 @@
       "no_similar_fallback": "No se encontraron casos suficientemente similares (similitud < 98%). Volviendo a la lógica basada en reglas.",
       "reusing_action": "Reutilizando la acción más exitosa de casos pasados: '{{action}}' (tasa de victoria del {{winRate}}%).",
       "action_cluster_analysis": "Análisis de clúster de acciones: {{action}} tuvo una tasa de victoria histórica del {{winRate}}%."
-    }
+    },
+    "bait_type_mid": "Mi mano permite un cebo de valor medio. Jugando una carta intermedia para parecer creíble pero no demasiado fuerte.",
+    "bait_type_low": "Mi mano permite un cebo de valor bajo. Jugando mi carta más débil para ocultar completamente mi fuerza."
   }
 }

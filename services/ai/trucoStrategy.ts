@@ -236,7 +236,7 @@ export const getTrucoResponse = (state: GameState, gamePressure: number, reasoni
       }
   }
   
-  const isEarlyTruco = currentTrick === 0 && !playerTricks[0];
+  const isEarlyTruco = currentTrick === 0 && !playerTricks[0] && trucoLevel === 1;
   if (isEarlyTruco) {
       const myPercentile = getHandPercentile(aiHand);
       reasoning.push(t('ai_logic.early_truco_logic'));
