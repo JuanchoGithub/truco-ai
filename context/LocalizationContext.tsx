@@ -31,7 +31,7 @@ export const LocalizationProvider: React.FC<{ children: ReactNode }> = ({ childr
   const translatePlayerName = useCallback((player: string): string => {
     if (player === 'player') return t('common.you');
     if (player === 'ai') return t('common.ai');
-    if (player === 'tie') return t('game.tie');
+    if (player === 'tie') return t('common.tie');
     if (player === 'Jugador') return t('common.you'); // Legacy fallback
     if (player === 'IA') return t('common.ai'); // Legacy fallback
     return player;

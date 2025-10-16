@@ -9,7 +9,7 @@ function getNestedValue(obj: any, key: string): any {
 const i18nService = {
   async loadLanguage(lang: string): Promise<void> {
     try {
-      let uiPromise, phrasesPromise, aiLogicPromise, simulationPromise;
+      let uiPromise, phrasesPromise, aiLogicPromise, simulationPromise, scenarioRunnerPromise;
 
       // Use fetch with paths relative to the document root. This is more robust for deployment environments
       // like Vercel, as it correctly resolves paths even if the app is in a subdirectory.
@@ -19,6 +19,7 @@ const i18nService = {
           phrasesPromise = fetch('locales/en-US/phrases.json').then(res => res.json());
           aiLogicPromise = fetch('locales/en-US/ai_logic.json').then(res => res.json());
           simulationPromise = fetch('locales/en-US/simulation.json').then(res => res.json());
+          scenarioRunnerPromise = fetch('locales/en-US/scenario_runner.json').then(res => res.json());
           break;
         case 'es-AR':
         default:
@@ -26,22 +27,25 @@ const i18nService = {
           phrasesPromise = fetch('locales/es-AR/phrases.json').then(res => res.json());
           aiLogicPromise = fetch('locales/es-AR/ai_logic.json').then(res => res.json());
           simulationPromise = fetch('locales/es-AR/simulation.json').then(res => res.json());
+          scenarioRunnerPromise = fetch('locales/es-AR/scenario_runner.json').then(res => res.json());
           lang = 'es-AR'; // Ensure lang is set to the fallback for consistency
           break;
       }
       
-      const [uiData, phrasesData, aiLogicData, simulationData] = await Promise.all([
+      const [uiData, phrasesData, aiLogicData, simulationData, scenarioRunnerData] = await Promise.all([
         uiPromise,
         phrasesPromise,
         aiLogicPromise,
         simulationPromise,
+        scenarioRunnerPromise,
       ]);
 
       translations = { 
         ...uiData, 
         ...phrasesData, 
         ...aiLogicData,
-        ...simulationData
+        ...simulationData,
+        ...scenarioRunnerData
       };
       currentLanguage = lang;
     } catch (error) {

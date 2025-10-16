@@ -9,6 +9,7 @@ import BatchAnalyzer from './BatchAnalyzer';
 import { useLocalization } from '../context/LocalizationContext';
 import ScenarioTester from './ScenarioTester';
 import CentralMessage from './CentralMessage';
+import ScenarioRunner from './ScenarioRunner';
 
 const FULL_DECK = createDeck();
 
@@ -809,7 +810,7 @@ const ManualSimulator: React.FC = () => {
 
 const Simulation: React.FC<{ onExit: () => void }> = ({ onExit }) => {
     const { t } = useLocalization();
-    const [activeTab, setActiveTab] = useState<'auto' | 'manual'>('auto');
+    const [activeTab, setActiveTab] = useState<'auto' | 'manual' | 'runner'>('auto');
     const [showAnalyzer, setShowAnalyzer] = useState(false);
     const [showTester, setShowTester] = useState(false);
     
@@ -823,6 +824,7 @@ const Simulation: React.FC<{ onExit: () => void }> = ({ onExit }) => {
             <div className="w-full max-w-7xl flex-shrink-0 flex items-end gap-2">
                 <Tab title={t('simulation.tab_auto')} isActive={activeTab === 'auto'} onClick={() => setActiveTab('auto')} />
                 <Tab title={t('simulation.tab_manual')} isActive={activeTab === 'manual'} onClick={() => setActiveTab('manual')} />
+                <Tab title={t('simulation.tab_runner')} isActive={activeTab === 'runner'} onClick={() => setActiveTab('runner')} />
                 <button onClick={() => setShowTester(true)} className="px-4 py-2 rounded-lg font-bold text-white bg-indigo-600 border-b-4 border-indigo-800 hover:bg-indigo-500 transition-colors ml-auto">{t('simulation.button_scenario_tester')}</button>
                 <button onClick={() => setShowAnalyzer(true)} className="px-4 py-2 rounded-lg font-bold text-white bg-purple-600 border-b-4 border-purple-800 hover:bg-purple-500 transition-colors">{t('simulation.button_batch_analyzer')}</button>
             </div>
@@ -830,6 +832,7 @@ const Simulation: React.FC<{ onExit: () => void }> = ({ onExit }) => {
             <div className="w-full max-w-7xl flex-grow bg-black/40 p-4 rounded-b-lg rounded-r-lg border-2 border-cyan-800/50 overflow-hidden">
                 {activeTab === 'auto' && <AutoSimulator />}
                 {activeTab === 'manual' && <ManualSimulator />}
+                {activeTab === 'runner' && <ScenarioRunner />}
             </div>
 
             {showAnalyzer && <BatchAnalyzer onExit={() => setShowAnalyzer(false)} />}

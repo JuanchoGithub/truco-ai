@@ -20,7 +20,8 @@
     "close": "Close",
     "cancel": "Cancel",
     "loading": "Loading...",
-    "na": "N/A"
+    "na": "N/A",
+    "tie": "Tie"
   },
   "mainMenu": {
     "title": "TRUCO AI",
@@ -49,7 +50,6 @@
     "trick_winner": "Winner of trick {{trickNumber}}: {{winner}}",
     "round_winner_points": "Winner of the round: {{winner}}. Wins {{points}} {{points, plural, one{point} other{points}}}.",
     "round_winner": "Winner of the round: {{winner}}",
-    "tie": "TIE",
     "error_ai": "An error occurred with the AI. The AI forfeits its turn.",
     "session_restored": "--- Session Restored ---",
     "profile_imported": "--- Profile Imported ---",
