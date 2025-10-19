@@ -150,7 +150,7 @@ const CopyIcon = () => (
 );
 
 
-const BatchAnalyzer: React.FC<{ onExit: () => void }> = ({ onExit }) => {
+const BatchAnalyzer: React.FC = () => {
     const { t } = useLocalization();
     const [analysisResults, setAnalysisResults] = useState<AnalysisResult[] | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -260,87 +260,84 @@ const BatchAnalyzer: React.FC<{ onExit: () => void }> = ({ onExit }) => {
     };
 
     return (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-            <div className="bg-stone-800/95 border-4 border-amber-700/50 rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
-                <div className="p-4 border-b-2 border-amber-700/30 flex justify-between items-center flex-shrink-0">
-                    <h2 className="text-xl lg:text-2xl font-bold text-amber-300 font-cinzel tracking-widest">
-                        {t('batchAnalyzer.title')}
-                    </h2>
-                    <button onClick={onExit} className="text-amber-200 text-2xl lg:text-3xl font-bold hover:text-white transition-colors">&times;</button>
-                </div>
+        <div className="bg-stone-800/95 border-4 border-amber-700/50 rounded-xl shadow-2xl w-full h-full flex flex-col">
+            <div className="p-4 border-b-2 border-amber-700/30 flex justify-between items-center flex-shrink-0">
+                <h2 className="text-xl lg:text-2xl font-bold text-amber-300 font-cinzel tracking-widest">
+                    {t('batchAnalyzer.title')}
+                </h2>
+            </div>
 
-                <div className="p-4 lg:p-6 flex-grow overflow-y-auto text-amber-50 space-y-4">
-                    <p className="text-sm text-gray-300">
-                        {t('batchAnalyzer.description', { count: totalCombinations })}
-                    </p>
-                    
-                    {!isLoading && !analysisResults && (
-                        <div className="text-center py-8">
-                             <button onClick={runAnalysis} disabled={isLoading} className="px-6 py-3 rounded-lg font-bold text-white bg-green-600 border-b-4 border-green-800 hover:bg-green-500 disabled:bg-gray-500 disabled:border-gray-700 transition-colors text-lg">
-                                {t('batchAnalyzer.button_analyze')}
-                            </button>
-                        </div>
-                    )}
-                    
-                    {isLoading && (
-                        <div className="w-full bg-gray-700 rounded-full h-4 my-4">
-                            <div className="bg-green-500 h-4 rounded-full" style={{ width: `${progress}%`, transition: 'width 0.1s' }}></div>
-                            <p className="text-center text-xs mt-1">{t('batchAnalyzer.loading', { progress })}</p>
-                        </div>
-                    )}
+            <div className="p-4 lg:p-6 flex-grow overflow-y-auto text-amber-50 space-y-4">
+                <p className="text-sm text-gray-300">
+                    {t('batchAnalyzer.description', { count: totalCombinations })}
+                </p>
+                
+                {!isLoading && !analysisResults && (
+                    <div className="text-center py-8">
+                         <button onClick={runAnalysis} disabled={isLoading} className="px-6 py-3 rounded-lg font-bold text-white bg-green-600 border-b-4 border-green-800 hover:bg-green-500 disabled:bg-gray-500 disabled:border-gray-700 transition-colors text-lg">
+                            {t('batchAnalyzer.button_analyze')}
+                        </button>
+                    </div>
+                )}
+                
+                {isLoading && (
+                    <div className="w-full bg-gray-700 rounded-full h-4 my-4">
+                        <div className="bg-green-500 h-4 rounded-full" style={{ width: `${progress}%`, transition: 'width 0.1s' }}></div>
+                        <p className="text-center text-xs mt-1">{t('batchAnalyzer.loading', { progress })}</p>
+                    </div>
+                )}
 
-                    {sortedResults && (
-                        <div>
-                            <div className="flex justify-end items-center mb-2">
-                                <div className="relative group">
-                                    <button
-                                        onClick={handleCopy}
-                                        className="p-2 rounded-md text-gray-300 bg-black/40 border border-amber-700/80 hover:bg-black/60 hover:text-white transition-colors"
-                                        aria-label={t('batchAnalyzer.copy_tooltip')}
-                                    >
-                                        <CopyIcon />
-                                    </button>
-                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
-                                        {copyStatus}
-                                    </div>
+                {sortedResults && (
+                    <div>
+                        <div className="flex justify-end items-center mb-2">
+                            <div className="relative group">
+                                <button
+                                    onClick={handleCopy}
+                                    className="p-2 rounded-md text-gray-300 bg-black/40 border border-amber-700/80 hover:bg-black/60 hover:text-white transition-colors"
+                                    aria-label={t('batchAnalyzer.copy_tooltip')}
+                                >
+                                    <CopyIcon />
+                                </button>
+                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+                                    {copyStatus}
                                 </div>
                             </div>
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left text-xs lg:text-sm">
-                                    <thead className="bg-black/40 text-amber-100">
-                                        <tr>
-                                            <SortableHeader sortKey="hand" title={t('batchAnalyzer.header_hand')} sortConfig={sortConfig} requestSort={() => requestSort('trucoValue')} />
-                                            <SortableHeader sortKey="trucoValue" title={t('batchAnalyzer.header_truco_value')} sortConfig={sortConfig} requestSort={requestSort} />
-                                            <SortableHeader sortKey="aiAssessment" title={t('batchAnalyzer.header_ai_assessment')} sortConfig={sortConfig} requestSort={requestSort} />
-                                        </tr>
-                                    </thead>
-                                    <tbody className="bg-black/20">
-                                        {sortedResults.map((result, index) => (
-                                            <tr key={index} className="border-b border-stone-700">
-                                                <td className="p-2">
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="flex gap-1 flex-shrink-0">
-                                                            {result.hand.map(card => <CardComponent key={`${card.rank}-${card.suit}`} card={card} size="small" />)}
-                                                        </div>
-                                                        <span className="text-gray-300 text-[11px] lg:text-xs pl-2">
-                                                            {result.hand.map(card => getSimpleCardName(card, t)).join(', ')}
-                                                        </span>
-                                                    </div>
-                                                </td>
-                                                <td className="p-2 font-mono text-lg">{result.trucoValue}</td>
-                                                <td className="p-2 font-mono text-lg">
-                                                    <span className={result.aiAssessment > 0.75 ? 'text-green-400' : result.aiAssessment > 0.5 ? 'text-yellow-400' : 'text-red-400'}>
-                                                        {result.aiAssessment.toFixed(2)}
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
                         </div>
-                    )}
-                </div>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left text-xs lg:text-sm">
+                                <thead className="bg-black/40 text-amber-100">
+                                    <tr>
+                                        <SortableHeader sortKey="hand" title={t('batchAnalyzer.header_hand')} sortConfig={sortConfig} requestSort={() => requestSort('trucoValue')} />
+                                        <SortableHeader sortKey="trucoValue" title={t('batchAnalyzer.header_truco_value')} sortConfig={sortConfig} requestSort={requestSort} />
+                                        <SortableHeader sortKey="aiAssessment" title={t('batchAnalyzer.header_ai_assessment')} sortConfig={sortConfig} requestSort={requestSort} />
+                                    </tr>
+                                </thead>
+                                <tbody className="bg-black/20">
+                                    {sortedResults.map((result, index) => (
+                                        <tr key={index} className="border-b border-stone-700">
+                                            <td className="p-2">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="flex gap-1 flex-shrink-0">
+                                                        {result.hand.map(card => <CardComponent key={`${card.rank}-${card.suit}`} card={card} size="small" />)}
+                                                    </div>
+                                                    <span className="text-gray-300 text-[11px] lg:text-xs pl-2">
+                                                        {result.hand.map(card => getSimpleCardName(card, t)).join(', ')}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td className="p-2 font-mono text-lg">{result.trucoValue}</td>
+                                            <td className="p-2 font-mono text-lg">
+                                                <span className={result.aiAssessment > 0.75 ? 'text-green-400' : result.aiAssessment > 0.5 ? 'text-yellow-400' : 'text-red-400'}>
+                                                    {result.aiAssessment.toFixed(2)}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

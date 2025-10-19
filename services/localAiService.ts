@@ -87,7 +87,8 @@ export const getLocalAIMove = (state: GameState): AiMove => {
                 const blurbText = getRandomPhrase(PHRASE_KEYS.FLOR);
                 return {
                     action: { type: ActionType.DECLARE_FLOR, payload: { blurbText } },
-                    reasoning: [{ key: 'ai_logic.flor_priority_on_truco' }]
+                    reasoning: [{ key: 'ai_logic.flor_priority_on_truco' }],
+                    reasonKey: 'respond_truco_with_flor'
                 };
             }
             const envidoCallDecision = getEnvidoCall(state, gamePressure);
@@ -123,7 +124,8 @@ export const getLocalAIMove = (state: GameState): AiMove => {
                 const blurbText = getRandomPhrase(PHRASE_KEYS.FLOR);
                 return {
                     action: { type: ActionType.RESPOND_TO_ENVIDO_WITH_FLOR, payload: { blurbText } },
-                    reasoning: [{ key: 'ai_logic.flor_priority_on_envido' }]
+                    reasoning: [{ key: 'ai_logic.flor_priority_on_envido' }],
+                    reasonKey: 'respond_with_flor'
                 };
             }
             move = getEnvidoResponse(state, gamePressure, reasoning);
@@ -214,6 +216,27 @@ export const getLocalAIMove = (state: GameState): AiMove => {
         // --- Advanced Strategic Baiting Logic ---
         if (singingMove) {
             const aiEnvidoDetails = getEnvidoDetails(state.initialAiHand);
+
+            // NEW: High Envido Bait (User Request)
+            if (aiEnvidoDetails.value >= 30 && singingMove.action.type.includes('ENVIDO')) {
+                const baitChance = 0.70;
+                let baitReasoning: (string | MessageObject)[] = [{ key: 'ai_logic.high_envido_bait_analysis', options: { envidoPoints: aiEnvidoDetails.value, chance: (baitChance * 100).toFixed(0) } }];
+
+                if (Math.random() < baitChance) {
+                    const { index: baitCardIndex, card: baitCard, reasonKey, reason: baitCardReason } = findBaitCard(state.aiHand);
+                    baitReasoning.push(baitCardReason);
+                    baitReasoning.push({ key: 'ai_logic.high_envido_bait_decision', options: { cardName: getCardName(baitCard) }});
+                    
+                    return { 
+                        action: { type: ActionType.PLAY_CARD, payload: { player: 'ai', cardIndex: baitCardIndex } },
+                        reasoning: baitReasoning,
+                        reasonKey: reasonKey,
+                    };
+                } else {
+                    singingMove.reasoning.unshift({ key: 'ai_logic.high_envido_bait_skipped' });
+                }
+            }
+
             const handStrength = calculateHandStrength(state.initialAiHand);
             const { opponentModel } = state;
 
@@ -266,7 +289,7 @@ export const getLocalAIMove = (state: GameState): AiMove => {
                     return { 
                         action: { type: ActionType.PLAY_CARD, payload: { player: 'ai', cardIndex: cardToPlayResult.index } },
                         reasoning: reasoningLopsided,
-                        reasonKey: cardToPlayResult.reasonKey,
+                        reasonKey: 'bait_lopsided_hand',
                     };
                 }
             }
@@ -303,7 +326,7 @@ export const getLocalAIMove = (state: GameState): AiMove => {
                     feintReasoning.push({ key: 'ai_logic.feint_tactic_probability', options: { probability: (feintProbability * 100).toFixed(0) } });
 
                     if (Math.random() < feintProbability) {
-                        const { index: baitCardIndex, card: baitCard, reasonKey: baitReasonKey, reason: baitReason } = findBaitCard(state.aiHand);
+                        const { index: baitCardIndex, card: baitCard, reason: baitReason } = findBaitCard(state.aiHand);
                         feintReasoning.push(baitReason);
                         feintReasoning.push({ key: 'ai_logic.feint_tactic_decision', options: { cardName: getCardName(baitCard) } });
                         
@@ -311,7 +334,7 @@ export const getLocalAIMove = (state: GameState): AiMove => {
                         return {
                             action: { type: ActionType.PLAY_CARD, payload: { player: 'ai', cardIndex: baitCardIndex } },
                             reasoning: feintReasoning,
-                            reasonKey: baitReasonKey,
+                            reasonKey: 'feint_pre_truco',
                         };
                     } else {
                          trucoMove.reasoning.unshift({ key: 'ai_logic.feint_tactic_skipped' });
@@ -352,7 +375,7 @@ export const getLocalAIMove = (state: GameState): AiMove => {
                 feintReasoning.push({ key: 'ai_logic.feint_tactic_probability', options: { probability: (feintProbability * 100).toFixed(0) } });
     
                 if (Math.random() < feintProbability) {
-                    const { index: baitCardIndex, card: baitCard, reasonKey: baitReasonKey, reason: baitReason } = findBaitCard(state.aiHand);
+                    const { index: baitCardIndex, card: baitCard, reason: baitReason } = findBaitCard(state.aiHand);
                     feintReasoning.push(baitReason);
                     feintReasoning.push({ key: 'ai_logic.feint_tactic_decision', options: { cardName: getCardName(baitCard) } });
                     
@@ -360,7 +383,7 @@ export const getLocalAIMove = (state: GameState): AiMove => {
                     return {
                         action: { type: ActionType.PLAY_CARD, payload: { player: 'ai', cardIndex: baitCardIndex } },
                         reasoning: [...reasoning, ...feintReasoning, ...strengthResult.reasoning],
-                        reasonKey: baitReasonKey,
+                        reasonKey: 'feint_active_truco',
                     };
                 }
             }

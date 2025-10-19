@@ -177,6 +177,11 @@
       "win_round_cheap": "para ganar la ronda gastando lo mínimo.",
       "discard_low": "porque no podemos ganar esta mano y es mejor guardar las otras.",
       "parda_y_canto": "para empatar, ocultar nuestra carta más fuerte y poder cantar Truco después.",
+      "probe_low_value": "para ocultar tu fuerza y ver qué juega el oponente.",
+      "probe_mid_value": "para parecer creíble y tentar al oponente a cometer un error.",
+      "bait_lopsided_hand": "para tender una trampa y maximizar los puntos del Envido, ya que tu mano es débil para el Truco.",
+      "feint_pre_truco": "para ocultar tu mano increíblemente fuerte y tentar a la IA a que cante Truco o haga un farol.",
+      "feint_active_truco": "para parecer débil y tentar a la IA a que suba la apuesta, ya que tu mano es muy fuerte.",
       "default": "según la estrategia de la IA."
     },
     "respond_quiero_envido_good": "Tenemos {{points}} puntos. La IA cantó, pero nuestras chances de ganar son buenas. Deberíamos aceptar con 'Quiero'.",

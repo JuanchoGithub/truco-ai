@@ -1,4 +1,3 @@
-
 {
   "ai_logic": {
     "initial_state": "La IA está esperando que comience el juego.",
@@ -17,10 +16,6 @@
     "player_played": "Jugador jugó: {{cardName}}",
     "ai_played": "Yo jugué: {{cardName}}",
     "result": "Resultado: {{outcome}}",
-    "outcomes": {
-        "tie": "Empate",
-        "win": "{{winner}} ganó"
-    },
     "response_logic": "[Lógica de Respuesta]",
     "player_called": "El jugador cantó {{call}}. Debo responder.",
     "flor_priority_on_truco": "[Lógica de Prioridad: Flor]\nEl jugador cantó TRUCO, pero mi Flor tiene prioridad. Debo declararla.",
@@ -50,6 +45,9 @@
     "post_envido_bait_chance": "Probabilidad de intentar el cebo: {{probability}}%.",
     "post_envido_bait_decision": "Decisión: Cebo elegido. Jugando mi carta {{cardName}} para ocultar mi fuerza.",
     "post_envido_bait_skipped": "Consideré un cebo post-envido, pero una apuesta directa por valor es preferible ahora.",
+    "high_envido_bait_analysis": "[Táctica de Cebo con Envido Alto] Mi envido es muy fuerte ({{envidoPoints}}). Hay un {{chance}}% de probabilidad de que juegue una carta baja como cebo en lugar de cantar, para ocultar mi fuerza.",
+    "high_envido_bait_decision": "Decisión: Cebo elegido. Jugando mi carta {{cardName}} para ocultar mi fuerte Envido.",
+    "high_envido_bait_skipped": "Consideré un cebo con mi Envido alto, pero decidí cantar directamente esta vez.",
     "envido_call_logic": "[Lógica: Cantar Envido]",
     "mano_bonus": "Soy mano, lo que me da ventaja en empates.",
     "opponent_model_context": "\n[Modelo Oponente ({{context}})]: Umbral de llamada del jugador: ~{{threshold}}. Mi umbral ajustado por presión: {{dynamicThreshold}}.",
@@ -99,12 +97,6 @@
     "bait_tactic_check_body": "Mi mano contiene una carta 'brava' ({{strongest}}) y el resto son más débiles. Es una mano ideal para un cebo.",
     "bait_tactic_decision": "Decisión: Jugando mi carta {{cardName}} como cebo para ocultar mi carta fuerte.",
     "bait_tactic_skipped": "Consideré una jugada de cebo, pero opté por una jugada más directa para no ser predecible.",
-    "deceptive_play_high_envido": "[Estrategia de Ocultamiento]: Tengo un envido alto ({{envidoPoints}}). Jugaré para ocultar la fuerza de mi mano de truco.",
-    "deceptive_play_third_card_reason": "Para no revelar mi par de envido, jugaré primero mi tercera carta (la que no es del palo del envido).",
-    "deceptive_play_flor_reason": "Tengo flor. Para maximizar la ambigüedad sobre mis cartas restantes, jugaré la más baja de las tres primero.",
-    "decision_play_deceptive": "\nDecisión: Jugando el engañoso {{cardName}}.",
-    "deceptive_play_pair_left": "[Estrategia de Ocultamiento]: Me queda mi par de envido ({{envidoPoints}}).",
-    "deceptive_play_pair_reason": "Para que el oponente infiera que me queda la carta más fuerte del par, jugaré primero la más débil.",
     "advanced_tactic_sacrifice": "[Táctica Avanzada: Jugada de Sacrificio]",
     "advanced_tactic_sacrifice_body": "- Tengo una mano monstruosa ({{card1}} y {{card2}}).\n- En lugar de jugar mi carta más fuerte, jugaré la segunda mejor para ocultar mi verdadera fuerza.\n- El objetivo es incitar al jugador a subestimar mi mano y cantar Truco, para poder contraatacar con un Retruco devastador.",
     "decision_play_bait": "\nDecisión: Jugando {{cardName}} como cebo.",
@@ -198,6 +190,8 @@
     "probabilistic_deception_roll": "- Tirando el dado ({{roll}} vs probabilidad {{probability}})...",
     "probabilistic_deception_decision_execute": "-> Resultado: SÍ. Procediendo con la jugada de engaño.",
     "probabilistic_deception_decision_skip": "-> Resultado: NO. Procediendo con la jugada estándar para no ser predecible.",
+    "deceptive_play_flor_reason": "Tengo flor. Para maximizar la ambigüedad sobre mis cartas restantes, jugaré la más baja de las tres primero.",
+    "decision_play_deceptive": "\nDecisión: Jugando el engañoso {{cardName}}.",
     "deceptive_choice_third_card": "Elección de Engaño (60%): Jugar la tercera carta para ocultar el par por completo.",
     "deceptive_choice_low_pair": "Elección de Engaño (40%): Sacrificar la carta baja del par para que el oponente subestime mi carta restante.",
     "inference_flor": "- Inferencia de Flor: La mano del jugador es de un solo palo.",
@@ -229,14 +223,7 @@
       "chose": "Randomizer eligió {{type}}",
       "no_op": "No hay acciones válidas para el Randomizer en este turno."
     },
-    "cbr_logic": {
-      "checking": "[Lógica CBR] Buscando en la base de casos...",
-      "found_similar": "Se encontraron {{count}} casos similares (similitud máx: {{similarity}}%).",
-      "no_similar_fallback": "No se encontraron casos suficientemente similares (similitud < 98%). Volviendo a la lógica basada en reglas.",
-      "reusing_action": "Reutilizando la acción más exitosa de casos pasados: '{{action}}' (tasa de victoria del {{winRate}}%).",
-      "action_cluster_analysis": "Análisis de clúster de acciones: {{action}} tuvo una tasa de victoria histórica del {{winRate}}%."
-    },
-    "bait_type_mid": "Mi mano permite un cebo de valor medio. Jugando una carta intermedia para parecer creíble pero no demasiado fuerte.",
-    "bait_type_low": "Mi mano permite un cebo de valor bajo. Jugando mi carta más débil para ocultar completamente mi fuerza."
+    "bait_type_low": "Mi mano permite un cebo de valor bajo. Jugando mi carta más débil para ocultar completamente mi fuerza.",
+    "bait_type_mid": "Mi mano permite un cebo de valor medio. Jugando una carta intermedia para parecer creíble pero no demasiado fuerte."
   }
 }

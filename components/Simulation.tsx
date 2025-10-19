@@ -98,10 +98,10 @@ const HandDisplay: React.FC<{ cards: (CardType | null)[], title: string, onCardC
 const Tab: React.FC<{ title: string; isActive: boolean; onClick: () => void }> = ({ title, isActive, onClick }) => (
     <button
         onClick={onClick}
-        className={`px-6 py-2 font-bold text-lg rounded-t-lg transition-colors border-b-4 ${
+        className={`px-4 py-2 font-bold text-base whitespace-nowrap rounded-t-lg transition-colors ${
             isActive
-                ? 'bg-black/40 border-cyan-400 text-cyan-200'
-                : 'bg-gray-800/50 border-transparent text-gray-400 hover:bg-gray-700/50'
+                ? 'bg-black/40 border-l-2 border-t-2 border-r-2 border-cyan-800/50 text-cyan-200 border-b-black/40 -mb-[2px]' // Match content bg, pull down
+                : 'border-transparent text-gray-400 hover:bg-gray-800/60 hover:text-gray-200' // Inactive tabs are 'flat'
         }`}
     >
         {title}
@@ -657,10 +657,10 @@ const ManualSimulator: React.FC = () => {
 
     const sortedSimulationResults = useMemo(() => {
         if (!simulationResults) return null;
-        // Fix: Added explicit Number casting to prevent potential type errors during arithmetic operation.
         return Object.entries(simulationResults).sort((a, b) => Number(b[1]) - Number(a[1]));
     }, [simulationResults]);
-    const totalSimsRun = sortedSimulationResults ? sortedSimulationResults.reduce((sum, [, count]) => sum + count, 0) : 0;
+    // FIX: Add explicit Number casting to reduce function to prevent type errors. This resolves the error on line 314.
+    const totalSimsRun = sortedSimulationResults ? sortedSimulationResults.reduce((sum, [, count]) => sum + Number(count), 0) : 0;
 
     const resetToSetup = () => {
         setSimPhase('setup');
@@ -808,12 +808,12 @@ const ManualSimulator: React.FC = () => {
 };
 
 
+type SimTab = 'auto' | 'manual' | 'tester' | 'analyzer' | 'runner';
+
 const Simulation: React.FC<{ onExit: () => void }> = ({ onExit }) => {
     const { t } = useLocalization();
-    const [activeTab, setActiveTab] = useState<'auto' | 'manual' | 'runner'>('auto');
-    const [showAnalyzer, setShowAnalyzer] = useState(false);
-    const [showTester, setShowTester] = useState(false);
-    
+    const [activeTab, setActiveTab] = useState<SimTab>('auto');
+
     return (
         <div className="h-screen bg-gray-900 text-white font-sans flex flex-col items-center p-4 gap-4" style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/felt.png')"}}>
             <div className="w-full max-w-7xl flex justify-between items-center flex-shrink-0">
@@ -821,22 +821,25 @@ const Simulation: React.FC<{ onExit: () => void }> = ({ onExit }) => {
                 <button onClick={onExit} className="px-4 py-2 rounded-lg font-bold text-white bg-red-700 border-b-4 border-red-900 hover:bg-red-600">{t('simulation.button_exit')}</button>
             </div>
             
-            <div className="w-full max-w-7xl flex-shrink-0 flex items-end gap-2">
-                <Tab title={t('simulation.tab_auto')} isActive={activeTab === 'auto'} onClick={() => setActiveTab('auto')} />
-                <Tab title={t('simulation.tab_manual')} isActive={activeTab === 'manual'} onClick={() => setActiveTab('manual')} />
-                <Tab title={t('simulation.tab_runner')} isActive={activeTab === 'runner'} onClick={() => setActiveTab('runner')} />
-                <button onClick={() => setShowTester(true)} className="px-4 py-2 rounded-lg font-bold text-white bg-indigo-600 border-b-4 border-indigo-800 hover:bg-indigo-500 transition-colors ml-auto">{t('simulation.button_scenario_tester')}</button>
-                <button onClick={() => setShowAnalyzer(true)} className="px-4 py-2 rounded-lg font-bold text-white bg-purple-600 border-b-4 border-purple-800 hover:bg-purple-500 transition-colors">{t('simulation.button_batch_analyzer')}</button>
-            </div>
+            <div className="w-full max-w-7xl flex-grow flex flex-col min-h-0">
+                {/* Tab Bar */}
+                <div className="flex-shrink-0 flex items-end gap-2 px-2 border-b-2 border-cyan-800/50">
+                    <Tab title={t('simulation.tab_auto_hand')} isActive={activeTab === 'auto'} onClick={() => setActiveTab('auto')} />
+                    <Tab title={t('simulation.tab_manual_hand')} isActive={activeTab === 'manual'} onClick={() => setActiveTab('manual')} />
+                    <Tab title={t('simulation.tab_scenario_test')} isActive={activeTab === 'tester'} onClick={() => setActiveTab('tester')} />
+                    <Tab title={t('simulation.tab_batch_analysis')} isActive={activeTab === 'analyzer'} onClick={() => setActiveTab('analyzer')} />
+                    <Tab title={t('simulation.tab_runner')} isActive={activeTab === 'runner'} onClick={() => setActiveTab('runner')} />
+                </div>
 
-            <div className="w-full max-w-7xl flex-grow bg-black/40 p-4 rounded-b-lg rounded-r-lg border-2 border-cyan-800/50 overflow-hidden">
-                {activeTab === 'auto' && <AutoSimulator />}
-                {activeTab === 'manual' && <ManualSimulator />}
-                {activeTab === 'runner' && <ScenarioRunner />}
+                {/* Content Area */}
+                <div className="w-full flex-grow bg-black/40 p-4 rounded-b-lg rounded-tr-lg border-l-2 border-r-2 border-b-2 border-cyan-800/50 overflow-hidden">
+                    {activeTab === 'auto' && <AutoSimulator />}
+                    {activeTab === 'manual' && <ManualSimulator />}
+                    {activeTab === 'tester' && <ScenarioTester />}
+                    {activeTab === 'analyzer' && <BatchAnalyzer />}
+                    {activeTab === 'runner' && <ScenarioRunner />}
+                </div>
             </div>
-
-            {showAnalyzer && <BatchAnalyzer onExit={() => setShowAnalyzer(false)} />}
-            {showTester && <ScenarioTester onExit={() => setShowTester(false)} />}
         </div>
     );
 };

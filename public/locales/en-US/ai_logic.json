@@ -1,4 +1,3 @@
-
 {
   "ai_logic": {
     "initial_state": "The AI is waiting for the game to start.",
@@ -17,10 +16,6 @@
     "player_played": "Player played: {{cardName}}",
     "ai_played": "I played: {{cardName}}",
     "result": "Result: {{outcome}}",
-    "outcomes": {
-        "tie": "Tie",
-        "win": "{{winner}} won"
-    },
     "response_logic": "[Response Logic]",
     "player_called": "Player called {{call}}. I must respond.",
     "flor_priority_on_truco": "[Priority Logic: Flor]\nPlayer called TRUCO, but my Flor has priority. I must declare it.",
@@ -34,7 +29,7 @@
     "lopsided_bait_low_fold": "\n- The player rarely folds from Envido, which means I can extract more value if I escalate. (+15%)",
     "lopsided_bait_chance": "\n- Final bait probability: {{chance}}%.",
     "envido_bait_title": "[Superior Strategic Logic: Envido Bait]",
-    "envido_bait_body": "Full Hand Evaluation:\n  - Envido/Flor Points: {{envidoPoints}} (Strong).\n  - Truco Strength: {{trucoStrength}} (Weak).\nAnalysis: My hand is lopsided. I will likely lose if Truco is called. My best chance is to maximize Envido points.\nTactical Decision: I will not call my Envido. Instead, I will play a card and wait for the player to call Envido first. This allows me to counter-attack and potentially win more points, compensating for my weakness in Truco.",
+    "envido_bait_body": "Full Hand Evaluation:\n  - Envido/Flor Points: {{envidoPoints}} (Strong).\n  - Truco Strength: {{trucoStrength}} (Weak).\nAnalysis: My hand is lopsided. I will likely lose if Truco is called. My best chance is to maximize Envido points.\nTactical Decision: I will not call my Envido. Instead, I will play a card and wait for the player to call Envido first. This allows me to then counter-attack and potentially win more points, compensating for my weakness in Truco.",
     "bait_probability_analysis": "\n[Bait Probability Analysis]\n{{baitReasoning}}",
     "proceeding_silent_play": "\n\n--- Proceeding with a silent card play ---\n",
     "feint_tactic_title": "[Advanced Tactic: Feint]",
@@ -50,6 +45,9 @@
     "post_envido_bait_chance": "Probability of attempting bait: {{probability}}%.",
     "post_envido_bait_decision": "Decision: Bait chosen. Playing my {{cardName}} to hide my strength.",
     "post_envido_bait_skipped": "Considered a post-envido bait, but a direct value bet is preferable now.",
+    "high_envido_bait_analysis": "[High Envido Bait Tactic] My envido is very strong ({{envidoPoints}}). There is a {{chance}}% chance I will play a low card as bait instead of calling, to hide my strength.",
+    "high_envido_bait_decision": "Decision: Bait chosen. Playing my {{cardName}} to hide my strong Envido.",
+    "high_envido_bait_skipped": "Considered a bait with my high Envido, but decided to call directly this time.",
     "envido_call_logic": "[Logic: Call Envido]",
     "mano_bonus": "I am hand, which gives me an advantage in ties.",
     "opponent_model_context": "\n[Opponent Model ({{context}})]: Player's call threshold: ~{{threshold}}. My pressure-adjusted threshold: {{dynamicThreshold}}.",
@@ -99,12 +97,6 @@
     "bait_tactic_check_body": "My hand contains one 'brava' card ({{strongest}}) and the rest are weaker. This is an ideal hand for a bait.",
     "bait_tactic_decision": "Decision: Playing my {{cardName}} as bait to hide my strong card.",
     "bait_tactic_skipped": "Considered a bait play, but opted for a more direct play to remain unpredictable.",
-    "deceptive_play_high_envido": "[Information Hiding Strategy]: I have a high envido ({{envidoPoints}}). I will play to conceal the strength of my truco hand.",
-    "deceptive_play_third_card_reason": "To avoid revealing my envido pair, I will play my third card (the one not from the envido suit) first.",
-    "deceptive_play_flor_reason": "I have flor. To maximize ambiguity about my remaining cards, I will play the lowest of the three first.",
-    "decision_play_deceptive": "\nDecision: Playing the deceptive {{cardName}}.",
-    "deceptive_play_pair_left": "[Information Hiding Strategy]: I'm left with my envido pair ({{envidoPoints}}).",
-    "deceptive_play_pair_reason": "To make the opponent infer I'm left with the stronger card of the pair, I will play the weaker one first.",
     "advanced_tactic_sacrifice": "[Advanced Tactic: Sacrificial Play]",
     "advanced_tactic_sacrifice_body": "- I have a monster hand ({{card1}} and {{card2}}).\n- Instead of playing my strongest card, I will play the second best to hide my true strength.\n- The goal is to entice the player to underestimate my hand and call Truco, so I can counter with a devastating Retruco.",
     "decision_play_bait": "\nDecision: Playing {{cardName}} as bait.",
@@ -175,7 +167,7 @@
     "parda_gano_reasoning": "The first trick was a tie. Winning the second trick wins the round.",
     "parda_gano_win_condition_response": "Player played {{cardName}}. My card '{{myCardName}}' wins this trick.",
     "parda_gano_win_condition_lead": "I am leading the trick. My best card is {{myBestCard}}. The best possible card the opponent could have is {{opponentBestCard}}. As my card is superior, I have a guaranteed win.",
-    "parda_gano_win_condition_ace": "I am leading the trick and I have the Ace of Swords. No one can beat it.",
+    "parda_gano_win_condition_ace": "I am leading the trick and I have the Ace of Spades. No one can beat it.",
     "parda_gano_value_bet": "Calling {{call}} now is a risk-free value bet.\n- If the player folds, I win the points from the previous bet.\n- If the player accepts, we play for more points.",
     "decision_parda_gano_escalate": "\nDecision: Escalating to {{call}} for guaranteed value.",
     "escalation_certainty_logic": "[Logic: Escalation by Certainty]",
@@ -198,6 +190,8 @@
     "probabilistic_deception_roll": "- Rolling the dice ({{roll}} vs probability {{probability}})...",
     "probabilistic_deception_decision_execute": "-> Result: YES. Proceeding with deceptive play.",
     "probabilistic_deception_decision_skip": "-> Result: NO. Proceeding with standard play to avoid being predictable.",
+    "deceptive_play_flor_reason": "I have flor. To maximize ambiguity about my remaining cards, I will play the lowest of the three first.",
+    "decision_play_deceptive": "\nDecision: Playing the deceptive {{cardName}}.",
     "deceptive_choice_third_card": "Deception Choice (60%): Playing the third card to completely hide the pair.",
     "deceptive_choice_low_pair": "Deception Choice (40%): Sacrificing the low card of the pair to make the opponent underestimate my remaining card.",
     "inference_flor": "- Flor Inference: Player's hand is of a single suit.",
@@ -229,14 +223,7 @@
       "chose": "Randomizer chose {{type}}",
       "no_op": "No valid actions for Randomizer this turn."
     },
-    "cbr_logic": {
-      "checking": "[CBR Logic] Searching case base...",
-      "found_similar": "Found {{count}} similar cases (max similarity: {{similarity}}%).",
-      "no_similar_fallback": "No sufficiently similar cases found (similarity < 98%). Falling back to rule-based logic.",
-      "reusing_action": "Reusing most successful action from past cases: '{{action}}' ({{winRate}}% win rate).",
-      "action_cluster_analysis": "Action cluster analysis: {{action}} had a {{winRate}}% historical win rate."
-    },
-    "bait_type_mid": "My hand allows for a mid-value bait. Playing a middle card to appear credible but not overly strong.",
-    "bait_type_low": "My hand allows for a low-value bait. Playing my weakest card to completely hide my strength."
+    "bait_type_low": "My hand allows for a low-value bait. Playing my weakest card to completely hide my strength.",
+    "bait_type_mid": "My hand allows for a mid-value bait. Playing a middle card to appear credible but not overly strong."
   }
 }
