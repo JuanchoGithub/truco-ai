@@ -1,7 +1,7 @@
 import React, { useReducer, useEffect, useState, useRef } from 'react';
 import { useGameReducer, initialState } from './hooks/useGameReducer';
 import { getLocalAIMove } from './services/localAiService';
-import { ActionType, Action, GameState, AiMove, MessageObject } from './types';
+import { ActionType, Action, GameState, AiMove, MessageObject, MatchLog } from './types';
 import Scoreboard from './components/Scoreboard';
 import GameBoard from './components/GameBoard';
 import PlayerHand from './components/PlayerHand';
@@ -12,7 +12,7 @@ import AiLogPanel from './components/AiLogPanel';
 import AiBlurb from './components/AiBlurb';
 import PlayerBlurb from './components/PlayerBlurb';
 import CentralMessage from './components/CentralMessage';
-import { saveStateToStorage, loadStateFromStorage, clearStateFromStorage } from './services/storageService';
+import { saveStateToStorage, loadStateFromStorage, clearStateFromStorage, loadMatchLogs, MATCH_LOG_KEY } from './services/storageService';
 import DataModal from './components/DataModal';
 import { getCardName } from './services/trucoLogic';
 // Fix: Removed unused import causing an error.
@@ -30,7 +30,7 @@ import { useLocalization } from './context/LocalizationContext';
 type GameMode = 'menu' | 'playing' | 'tutorial' | 'playing-with-help' | 'manual' | 'simulation';
 
 const App: React.FC = () => {
-  const { t, translatePlayerName } = useLocalization();
+  const { t, translatePlayerName, language } = useLocalization();
   const [state, dispatch] = useReducer(useGameReducer, initialState);
   const [localMessage, setLocalMessage] = useState<string | null>(null);
   const [isMessageVisible, setIsMessageVisible] = useState(false);
@@ -345,6 +345,20 @@ const App: React.FC = () => {
 
   const handleStartGame = (mode: 'playing' | 'playing-with-help', continueGame: boolean) => {
     if (!continueGame) {
+        // If a game was in progress, save its logs before starting a new one.
+        if (state.round > 0 && state.roundHistory.length > 0) {
+            const newLog: MatchLog = {
+                matchId: Date.now(),
+                date: new Date().toLocaleString(language),
+                playerScore: state.playerScore,
+                aiScore: state.aiScore,
+                aiReasoningLog: state.aiReasoningLog,
+                roundHistory: state.roundHistory,
+            };
+            const existingLogs = loadMatchLogs() || [];
+            const updatedLogs = [newLog, ...existingLogs].slice(0, 5); // Keep last 5 matches
+            localStorage.setItem(MATCH_LOG_KEY, JSON.stringify(updatedLogs));
+        }
         clearStateFromStorage(mode);
         dispatch({ type: ActionType.RESTART_GAME });
     }

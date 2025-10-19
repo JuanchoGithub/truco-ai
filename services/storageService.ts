@@ -1,6 +1,22 @@
-import { GameState } from '../types';
+import { GameState, MatchLog } from '../types';
 
 const getStorageKey = (gameMode: 'playing' | 'playing-with-help'): string => `trucoAiGameState_${gameMode}`;
+export const MATCH_LOG_KEY = 'trucoAiMatchLogs';
+export const MAX_MATCHES = 5;
+
+export const loadMatchLogs = (): MatchLog[] | null => {
+    try {
+        const serializedLogs = localStorage.getItem(MATCH_LOG_KEY);
+        if (serializedLogs === null) {
+            return null;
+        }
+        return JSON.parse(serializedLogs) as MatchLog[];
+    } catch (error) {
+        console.error("Failed to load match logs from localStorage:", error);
+        return null;
+    }
+};
+
 
 export const saveStateToStorage = (state: GameState, gameMode: 'playing' | 'playing-with-help'): void => {
     try {

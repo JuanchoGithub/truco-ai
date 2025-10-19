@@ -109,7 +109,7 @@ export function handleRestartGame(initialState: GameState, state: GameState): Ga
     playerEnvidoHistory: state.playerEnvidoHistory,
     playerPlayOrderHistory: state.playerPlayOrderHistory,
     playerCardPlayStats: state.playerCardPlayStats,
-    roundHistory: state.roundHistory,
+    roundHistory: [], // Reset round history for a new game
     envidoPrimeroOpportunities: state.envidoPrimeroOpportunities,
     envidoPrimeroCalls: state.envidoPrimeroCalls,
     

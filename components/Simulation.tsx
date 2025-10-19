@@ -1,3 +1,4 @@
+
 import React, { useState, useReducer, useEffect, useRef, useMemo } from 'react';
 import { useGameReducer, initialState } from '../hooks/useGameReducer';
 import { getLocalAIMove } from '../services/localAiService';
@@ -182,7 +183,7 @@ const getValidActions = (state: GameState): Action[] => {
             }
         }
         if (gamePhase === 'truco_called') {
-            const canCallEnvidoPrimero = currentTrick === 0 && !playerTricks[0] && !aiTricks[0] && !hasEnvidoBeenCalledThisRound;
+            const canCallEnvidoPrimero = currentTrick === 0 && !hasEnvidoBeenCalledThisRound;
             const opponentHasFlor = currentTurn === 'player' ? aiHasFlor : playerHasFlor;
             if (hasFlor) validActions.push({ type: ActionType.DECLARE_FLOR });
             else if (canCallEnvidoPrimero && !opponentHasFlor) validActions.push({ type: ActionType.CALL_ENVIDO });
@@ -205,7 +206,7 @@ const getValidActions = (state: GameState): Action[] => {
             });
         }
 
-        const canSing = currentTrick === 0 && !playerTricks[0] && !aiTricks[0];
+        const canSing = currentTrick === 0;
         if (canSing) {
             if (hasFlor) validActions.push({ type: ActionType.DECLARE_FLOR });
             else if (!hasEnvidoBeenCalledThisRound && !aiHasFlor && !playerHasFlor) {

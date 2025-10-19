@@ -144,7 +144,9 @@
     "game_start": "Inicio del Juego",
     "game_log_button": "Registro",
     "ai_log_button": "Lógica IA",
-    "no_log_for_round": "No hay registros de la IA para esta ronda."
+    "no_log_for_round": "No hay registros de la IA para esta ronda.",
+    "current_match": "Partida Actual",
+    "match_from": "Partida del {{date}} ({{score}})"
   },
   "gameMenu": {
     "menu": "MENÚ",

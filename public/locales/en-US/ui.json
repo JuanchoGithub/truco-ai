@@ -144,7 +144,9 @@
     "game_start": "Game Start",
     "game_log_button": "Log",
     "ai_log_button": "AI Logic",
-    "no_log_for_round": "No AI logs for this round."
+    "no_log_for_round": "No AI logs for this round.",
+    "current_match": "Current Match",
+    "match_from": "Match from {{date}} ({{score}})"
   },
   "gameMenu": {
     "menu": "MENU",

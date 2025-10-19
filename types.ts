@@ -202,6 +202,15 @@ export interface RoundSummary {
     } | null;
 }
 
+export interface MatchLog {
+  matchId: number;
+  date: string;
+  playerScore: number;
+  aiScore: number;
+  aiReasoningLog: AiReasoningEntry[];
+  roundHistory: RoundSummary[];
+}
+
 export interface CardConstraint {
   minHierarchy?: number;
   maxHierarchy?: number;
