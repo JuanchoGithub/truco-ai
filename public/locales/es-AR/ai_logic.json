@@ -224,6 +224,13 @@
       "no_op": "No hay acciones válidas para el Randomizer en este turno."
     },
     "bait_type_low": "Mi mano permite un cebo de valor bajo. Jugando mi carta más débil para ocultar completamente mi fuerza.",
-    "bait_type_mid": "Mi mano permite un cebo de valor medio. Jugando una carta intermedia para parecer creíble pero no demasiado fuerte."
+    "bait_type_mid": "Mi mano permite un cebo de valor medio. Jugando una carta intermedia para parecer creíble pero no demasiado fuerte.",
+    "bluff_analysis": {
+      "title": "[Análisis de Farol de Fin de Ronda]",
+      "body": "El jugador cantó truco después de que jugué mi última carta ({{cardName}}). Mi mano está vacía, pero esto podría ser un farol. Analizaré la probabilidad.",
+      "stats": "De las {{totalCount}} cartas posibles que el jugador podría tener, {{weakerCount}} son más débiles que la mía. Esto me da una probabilidad de ganar del {{probability}}% si acepto.",
+      "error_no_card": "Error: No pude encontrar mi última carta jugada para analizar el farol.",
+      "error_no_unseen": "Error: No hay información sobre las cartas posibles del oponente."
+    }
   }
 }

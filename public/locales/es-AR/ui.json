@@ -23,6 +23,10 @@
     "na": "N/A",
     "tie": "Empate"
   },
+  "blurb_titles": {
+    "envido_result": "Resultado del Envido",
+    "trick_result": "Resultado de la Mano"
+  },
   "mainMenu": {
     "title": "TRUCO AI",
     "subtitle": "Un desafío de cartas contra una IA estratégica.",

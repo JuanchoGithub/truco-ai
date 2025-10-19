@@ -66,7 +66,7 @@ export function handleCallEnvido(state: GameState, action: { type: ActionType.CA
     playerEnvidoHistory: newEnvidoHistory,
     messageLog: [...state.messageLog, message],
     playerBlurb: isPlayer ? { text: 'actionBar.envido', isVisible: true } : null,
-    aiBlurb: !isPlayer && action.payload?.blurbText ? { text: action.payload.blurbText, isVisible: true } : null,
+    aiBlurb: !isPlayer && action.payload?.blurbText ? { titleKey: 'actionBar.envido', text: action.payload.blurbText, isVisible: true } : null,
     isThinking: caller === 'ai' ? false : state.isThinking,
   };
 }
@@ -118,7 +118,7 @@ export function handleCallRealEnvido(state: GameState, action: { type: ActionTyp
     playerEnvidoFoldHistory: newFoldHistory,
     hasEnvidoBeenCalledThisRound: true,
     playerBlurb: isPlayer ? { text: 'actionBar.real_envido', isVisible: true } : null,
-    aiBlurb: !isPlayer && action.payload?.blurbText ? { text: action.payload.blurbText, isVisible: true } : null,
+    aiBlurb: !isPlayer && action.payload?.blurbText ? { titleKey: 'actionBar.real_envido', text: action.payload.blurbText, isVisible: true } : null,
     isThinking: caller === 'ai' ? false : state.isThinking,
   };
 }
@@ -174,7 +174,7 @@ export function handleCallFaltaEnvido(state: GameState, action: { type: ActionTy
     playerEnvidoFoldHistory: newFoldHistory,
     hasEnvidoBeenCalledThisRound: true,
     playerBlurb: isPlayer ? { text: 'actionBar.falta_envido', isVisible: true } : null,
-    aiBlurb: !isPlayer && action.payload?.blurbText ? { text: action.payload.blurbText, isVisible: true } : null,
+    aiBlurb: !isPlayer && action.payload?.blurbText ? { titleKey: 'actionBar.falta_envido', text: action.payload.blurbText, isVisible: true } : null,
     isThinking: caller === 'ai' ? false : state.isThinking,
   };
 }
@@ -198,7 +198,7 @@ export function handleDeclareFlor(state: GameState, action: { type: ActionType.D
     messageLog: [...state.messageLog, { key: 'log.declare_flor', options: { caller } }],
     playerBlurb: isPlayer ? { text: 'actionBar.flor', isVisible: true } : null,
     aiBlurb: !isPlayer && action.payload?.blurbText
-      ? { text: action.payload.blurbText, isVisible: true }
+      ? { titleKey: 'actionBar.flor', text: action.payload.blurbText, isVisible: true }
       : state.aiBlurb,
     isThinking: caller === 'ai' ? false : state.isThinking,
   };
@@ -223,7 +223,7 @@ export function handleRespondToEnvidoWithFlor(state: GameState, action: { type: 
     envidoPointsOnOffer: 0, // Envido is cancelled
     messageLog: [...state.messageLog, { key: 'log.respond_envido_with_flor', options: { caller } }],
     playerBlurb: isPlayer ? { text: 'actionBar.flor', isVisible: true } : null,
-    aiBlurb: !isPlayer && action.payload?.blurbText ? { text: action.payload.blurbText, isVisible: true } : null,
+    aiBlurb: !isPlayer && action.payload?.blurbText ? { titleKey: 'actionBar.flor', text: action.payload.blurbText, isVisible: true } : null,
     isThinking: caller === 'ai' ? false : state.isThinking,
   };
 }
@@ -243,7 +243,7 @@ export function handleCallContraflor(state: GameState, action: { type: ActionTyp
     turnBeforeInterrupt: state.turnBeforeInterrupt,
     messageLog: [...state.messageLog, { key: 'log.call_contraflor', options: { caller } }],
     playerBlurb: isPlayer ? { text: 'actionBar.contraflor', isVisible: true } : null,
-    aiBlurb: !isPlayer && action.payload?.blurbText ? { text: action.payload.blurbText, isVisible: true } : null,
+    aiBlurb: !isPlayer && action.payload?.blurbText ? { titleKey: 'actionBar.contraflor', text: action.payload.blurbText, isVisible: true } : null,
     isThinking: caller === 'ai' ? false : state.isThinking,
   };
 }

@@ -1,5 +1,3 @@
-
-
 import React from 'react';
 import { Action, ActionType, MessageObject } from '../types';
 import { useLocalization } from '../context/LocalizationContext';
@@ -12,6 +10,17 @@ interface MessageLogProps {
 
 const MessageLog: React.FC<MessageLogProps> = ({ messages, dispatch, isModal }) => {
   const { t, translatePlayerName } = useLocalization();
+
+  const getMessageStyle = (message: string): string => {
+      const lowerMessage = message.toLowerCase();
+      if (lowerMessage.includes('truco') || lowerMessage.includes('retruco') || lowerMessage.includes('vale cuatro')) return 'text-yellow-300 font-semibold';
+      if (lowerMessage.includes('envido')) return 'text-blue-300 font-semibold';
+      if (lowerMessage.includes('flor') || lowerMessage.includes('contraflor')) return 'text-purple-300 font-semibold';
+      if (lowerMessage.includes('quiere')) return 'text-green-300';
+      if (lowerMessage.includes('no quiere')) return 'text-red-400';
+      if (lowerMessage.includes('gana') || lowerMessage.includes('wins')) return 'text-white';
+      return 'text-amber-50'; // default color
+  };
 
   const renderMessage = (msg: string | MessageObject): string => {
     if (typeof msg === 'string') return msg;
@@ -76,11 +85,14 @@ const MessageLog: React.FC<MessageLogProps> = ({ messages, dispatch, isModal }) 
                 {roundKey}
               </h3>
               <div className="space-y-1 pl-2">
-                  {groupedLog[roundKey].map((message, index) => (
-                      <p key={index} className="text-xs lg:text-sm text-amber-50 whitespace-pre-wrap">
+                  {groupedLog[roundKey].map((message, index) => {
+                      const styleClass = getMessageStyle(message);
+                      return (
+                      <p key={index} className={`text-xs lg:text-sm whitespace-pre-wrap ${styleClass}`}>
                           {message}
                       </p>
-                  ))}
+                      );
+                  })}
               </div>
             </div>
           ))}

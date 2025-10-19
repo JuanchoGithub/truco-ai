@@ -1,3 +1,4 @@
+
 import React, { useReducer, useEffect, useState, useRef } from 'react';
 import { useGameReducer, initialState } from './hooks/useGameReducer';
 import { getLocalAIMove } from './services/localAiService';
@@ -343,22 +344,26 @@ const App: React.FC = () => {
     </button>
   );
 
+  const saveCurrentGame = () => {
+    // If a game was in progress and has history, save its logs.
+    if (state.round > 0 && state.roundHistory.length > 0) {
+        const newLog: MatchLog = {
+            matchId: Date.now(),
+            date: new Date().toLocaleString(language),
+            playerScore: state.playerScore,
+            aiScore: state.aiScore,
+            aiReasoningLog: state.aiReasoningLog,
+            roundHistory: state.roundHistory,
+        };
+        const existingLogs = loadMatchLogs() || [];
+        const updatedLogs = [newLog, ...existingLogs].slice(0, 5); // Keep last 5 matches
+        localStorage.setItem(MATCH_LOG_KEY, JSON.stringify(updatedLogs));
+    }
+  };
+
   const handleStartGame = (mode: 'playing' | 'playing-with-help', continueGame: boolean) => {
     if (!continueGame) {
-        // If a game was in progress, save its logs before starting a new one.
-        if (state.round > 0 && state.roundHistory.length > 0) {
-            const newLog: MatchLog = {
-                matchId: Date.now(),
-                date: new Date().toLocaleString(language),
-                playerScore: state.playerScore,
-                aiScore: state.aiScore,
-                aiReasoningLog: state.aiReasoningLog,
-                roundHistory: state.roundHistory,
-            };
-            const existingLogs = loadMatchLogs() || [];
-            const updatedLogs = [newLog, ...existingLogs].slice(0, 5); // Keep last 5 matches
-            localStorage.setItem(MATCH_LOG_KEY, JSON.stringify(updatedLogs));
-        }
+        saveCurrentGame();
         clearStateFromStorage(mode);
         dispatch({ type: ActionType.RESTART_GAME });
     }
@@ -391,6 +396,11 @@ const App: React.FC = () => {
   const translatedGameOverReason = state.gameOverReason 
     ? t(state.gameOverReason.key, state.gameOverReason.options) 
     : null;
+
+  const handlePlayAgain = () => {
+    saveCurrentGame();
+    dispatch({ type: ActionType.RESTART_GAME });
+  };
 
 
   return (
@@ -445,7 +455,12 @@ const App: React.FC = () => {
             </div>
 
             {/* AI Speech Blurb */}
-            <AiBlurb text={state.aiBlurb?.text ?? ''} isVisible={!!state.aiBlurb?.isVisible} dispatch={dispatch} />
+            <AiBlurb 
+              titleKey={state.aiBlurb?.titleKey ?? ''}
+              text={state.aiBlurb?.text ?? ''} 
+              isVisible={!!state.aiBlurb?.isVisible} 
+              dispatch={dispatch} 
+            />
             
             {/* Player Speech Blurb */}
             <PlayerBlurb text={state.playerBlurb?.text ?? ''} isVisible={!!state.playerBlurb?.isVisible} />
@@ -540,7 +555,7 @@ const App: React.FC = () => {
       {state.winner && (
         <GameOverModal 
             winner={state.winner} 
-            onPlayAgain={() => dispatch({ type: ActionType.RESTART_GAME })}
+            onPlayAgain={handlePlayAgain}
             reason={translatedGameOverReason} 
         />
       )}

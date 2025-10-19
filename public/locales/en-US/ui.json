@@ -23,6 +23,10 @@
     "na": "N/A",
     "tie": "Tie"
   },
+  "blurb_titles": {
+    "envido_result": "Envido Result",
+    "trick_result": "Trick Result"
+  },
   "mainMenu": {
     "title": "TRUCO AI",
     "subtitle": "A card game challenge against a strategic AI.",

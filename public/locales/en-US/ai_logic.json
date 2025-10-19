@@ -224,6 +224,13 @@
       "no_op": "No valid actions for Randomizer this turn."
     },
     "bait_type_low": "My hand allows for a low-value bait. Playing my weakest card to completely hide my strength.",
-    "bait_type_mid": "My hand allows for a mid-value bait. Playing a middle card to appear credible but not overly strong."
+    "bait_type_mid": "My hand allows for a mid-value bait. Playing a middle card to appear credible but not overly strong.",
+    "bluff_analysis": {
+      "title": "[End-of-Round Bluff Analysis]",
+      "body": "The player called truco after I played my last card ({{cardName}}). My hand is empty, but this could be a bluff. I will analyze the probability.",
+      "stats": "Out of the {{totalCount}} possible cards the player could have, {{weakerCount}} are weaker than mine. This gives me a {{probability}}% chance of winning if I call.",
+      "error_no_card": "Error: Could not find my last played card to analyze the bluff.",
+      "error_no_unseen": "Error: No information on opponent's possible cards."
+    }
   }
 }

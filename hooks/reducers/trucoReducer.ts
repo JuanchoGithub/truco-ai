@@ -57,7 +57,7 @@ export function handleCallTruco(state: GameState, action: { type: ActionType.CAL
     messageLog: [...state.messageLog, { key: 'log.call_truco', options: { caller } }],
     aiDecisionContext: action.payload?.decisionContext || null,
     playerBlurb: isPlayer ? { text: 'actionBar.truco', isVisible: true } : null,
-    aiBlurb: !isPlayer && action.payload?.blurbText ? { text: action.payload.blurbText, isVisible: true } : null,
+    aiBlurb: !isPlayer && action.payload?.blurbText ? { titleKey: 'actionBar.truco', text: action.payload.blurbText, isVisible: true } : null,
     isThinking: caller === 'ai' ? false : state.isThinking,
   };
 }
@@ -77,7 +77,7 @@ export function handleCallRetruco(state: GameState, action: { type: ActionType.C
       messageLog: [...state.messageLog, { key: 'log.call_retruco', options: { caller } }],
       aiDecisionContext: action.payload?.decisionContext || null,
       playerBlurb: isPlayer ? { text: 'actionBar.retruco', isVisible: true } : null,
-      aiBlurb: !isPlayer && action.payload?.blurbText ? { text: action.payload.blurbText, isVisible: true } : null,
+      aiBlurb: !isPlayer && action.payload?.blurbText ? { titleKey: 'actionBar.retruco', text: action.payload.blurbText, isVisible: true } : null,
       isThinking: caller === 'ai' ? false : state.isThinking,
     };
 }
@@ -97,7 +97,7 @@ export function handleCallValeCuatro(state: GameState, action: { type: ActionTyp
       messageLog: [...state.messageLog, { key: 'log.call_vale_cuatro', options: { caller } }],
       aiDecisionContext: action.payload?.decisionContext || null,
       playerBlurb: isPlayer ? { text: 'actionBar.vale_cuatro', isVisible: true } : null,
-      aiBlurb: !isPlayer && action.payload?.blurbText ? { text: action.payload.blurbText, isVisible: true } : null,
+      aiBlurb: !isPlayer && action.payload?.blurbText ? { titleKey: 'actionBar.vale_cuatro', text: action.payload.blurbText, isVisible: true } : null,
       isThinking: caller === 'ai' ? false : state.isThinking,
     };
 }

@@ -1,5 +1,3 @@
-
-
 import React, { useRef } from 'react';
 // Fix: Imported `CardPlayStats` to use in type assertions.
 import { Action, ActionType, OpponentModel, Case, PlayerTrucoCallEntry, GameState, Card, Player, RoundSummary, PlayerCardPlayStatistics, CardCategory, CardPlayStats } from '../types';
@@ -89,6 +87,31 @@ const DataModal: React.FC<{ gameState: GameState, dispatch: React.Dispatch<Actio
   const avgTrucoStrength = playerTrucoCallHistory.length > 0
     ? playerTrucoCallHistory.reduce((sum, entry) => sum + entry.strength, 0) / playerTrucoCallHistory.length
     : 0;
+    
+  const renderCalls = (calls: string[]) => {
+      if (!calls || calls.length === 0) return <span className="text-gray-400">{t('dataModal.round_history_calls_none')}</span>;
+      
+      const getCallStyle = (callText: string): string => {
+          const lowerCall = callText.toLowerCase();
+          if (lowerCall.includes('truco') || lowerCall.includes('retruco') || lowerCall.includes('vale cuatro')) return 'text-yellow-300 font-semibold';
+          if (lowerCall.includes('envido')) return 'text-blue-300 font-semibold';
+          if (lowerCall.includes('flor') || lowerCall.includes('contraflor')) return 'text-purple-300 font-semibold';
+          if (lowerCall.includes('quiero')) return 'text-green-300';
+          if (lowerCall.includes('no quiero')) return 'text-red-400';
+          return 'text-gray-200';
+      };
+
+      return (
+          <>
+              {calls.map((call, index) => (
+                  <span key={index}>
+                      <span className={getCallStyle(call)}>{call}</span>
+                      {index < calls.length - 1 && ', '}
+                  </span>
+              ))}
+          </>
+      )
+  };
 
   return (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
@@ -188,7 +211,7 @@ const DataModal: React.FC<{ gameState: GameState, dispatch: React.Dispatch<Actio
                       </summary>
                       <div className="mt-2 pl-4 border-l-2 border-amber-600/50 space-y-1">
                         <p><span className="font-semibold">{t('dataModal.round_history_strength_envido')}:</span> {t('common.you')} {summary.playerHandStrength} / {summary.playerEnvidoPoints} vs {t('common.ai')} {summary.aiHandStrength} / {summary.aiEnvidoPoints}</p>
-                        <p><span className="font-semibold">{t('dataModal.round_history_calls')}:</span> {summary.calls.join(', ') || t('dataModal.round_history_calls_none')}</p>
+                        <p><span className="font-semibold">{t('dataModal.round_history_calls')}:</span> {renderCalls(summary.calls)}</p>
                         <p><span className="font-semibold">{t('dataModal.round_history_trick_winners')}:</span> {summary.trickWinners.map((w, i) => t('dataModal.round_history_trick_winner_pattern', { trick: i + 1, winner: w ? t(`common.${w}`) : t('common.na') })).join(' | ')}</p>
                         {summary.playerTricks && summary.aiTricks && (
                           <div>

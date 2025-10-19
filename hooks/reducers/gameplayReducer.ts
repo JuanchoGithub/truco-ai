@@ -1,5 +1,3 @@
-
-
 import { GameState, Action, ActionType, GamePhase, Case, OpponentModel, PlayerEnvidoActionEntry, PlayerPlayOrderEntry, RoundSummary, Card, PointNote, MessageObject } from '../../types';
 import { createDeck, shuffleDeck, determineTrickWinner, determineRoundWinner, getCardName, hasFlor, getEnvidoValue, getCardHierarchy, calculateHandStrength, getCardCode, decodeCardFromCode } from '../../services/trucoLogic';
 import { initializeProbabilities, updateProbsOnPlay } from '../../services/ai/inferenceService';
@@ -372,12 +370,12 @@ export function handlePlayCard(state: GameState, action: { type: ActionType.PLAY
     
     const trickMessageLog = [...messageLog, { key: 'game.trick_winner', options: { trickNumber: newState.currentTrick + 1, winner: trickWinner } }];
     
-    let trickOutcomeBlurb = null;
+    let trickOutcomeBlurb: { titleKey: string; text: string; isVisible: boolean; } | null = null;
     if (Math.random() < 0.4) { // 40% chance to say something
         if (trickWinner === 'ai') {
-            trickOutcomeBlurb = { text: getRandomPhrase(PHRASE_KEYS.TRICK_WIN), isVisible: true };
+            trickOutcomeBlurb = { titleKey: 'blurb_titles.trick_result', text: getRandomPhrase(PHRASE_KEYS.TRICK_WIN), isVisible: true };
         } else if (trickWinner === 'player') {
-            trickOutcomeBlurb = { text: getRandomPhrase(PHRASE_KEYS.TRICK_LOSE), isVisible: true };
+            trickOutcomeBlurb = { titleKey: 'blurb_titles.trick_result', text: getRandomPhrase(PHRASE_KEYS.TRICK_LOSE), isVisible: true };
         }
     }
     

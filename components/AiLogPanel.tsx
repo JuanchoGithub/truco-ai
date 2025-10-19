@@ -12,6 +12,61 @@ interface AiLogPanelProps {
   currentRound: number;
 }
 
+const getTopicStyling = (topic: string) => {
+    switch (topic) {
+        case 'truco':
+            return {
+                bg: 'bg-yellow-900/30',
+                border: 'border-yellow-600/50',
+                title: 'text-yellow-300',
+                text: 'text-yellow-200'
+            };
+        case 'envido':
+            return {
+                bg: 'bg-blue-900/30',
+                border: 'border-blue-600/50',
+                title: 'text-blue-300',
+                text: 'text-blue-200'
+            };
+        case 'flor':
+            return {
+                bg: 'bg-purple-900/30',
+                border: 'border-purple-600/50',
+                title: 'text-purple-300',
+                text: 'text-purple-200'
+            };
+        case 'play_card':
+        default:
+            return {
+                bg: 'bg-black/30',
+                border: 'border-cyan-800/50',
+                title: 'text-cyan-300',
+                text: 'text-cyan-100'
+            };
+    }
+};
+
+const getReasoningTopic = (reasoning: (string | MessageObject)[]): string => {
+    const topicKeywords: { [key: string]: string } = {
+        'truco': 'truco',
+        'envido': 'envido',
+        'flor': 'flor',
+        'contraflor': 'flor',
+        'play_card': 'play_card'
+    };
+
+    for (const reason of reasoning) {
+        if (typeof reason === 'object' && reason.key) {
+            for (const keyword in topicKeywords) {
+                if (reason.key.includes(keyword)) {
+                    return topicKeywords[keyword];
+                }
+            }
+        }
+    }
+    return 'default'; // Fallback
+};
+
 const AiLogPanel: React.FC<AiLogPanelProps> = ({ log, dispatch, isModal, roundHistory, currentRound }) => {
   const { t } = useLocalization();
   
@@ -76,10 +131,10 @@ const AiLogPanel: React.FC<AiLogPanelProps> = ({ log, dispatch, isModal, roundHi
   }, [selectedMatchData]);
   
   // Fix: Changed return type from `(JSX.Element | null)[]` to `React.ReactNode[]` to resolve TypeScript error.
-  const renderReasoningJsx = (reasoningArray: (string | MessageObject)[]): React.ReactNode[] => {
+  const renderReasoningJsx = (reasoningArray: (string | MessageObject)[], styling: ReturnType<typeof getTopicStyling>): React.ReactNode[] => {
     return reasoningArray.map((reason, index) => {
         let text: string;
-        let className = 'text-cyan-100'; // default
+        let className = styling.text; // Use topic-based text color
         let key: string | undefined;
 
         if (typeof reason === 'string') {
@@ -102,11 +157,11 @@ const AiLogPanel: React.FC<AiLogPanelProps> = ({ log, dispatch, isModal, roundHi
         
         // Apply styles based on key
         if (key) {
-            if (key.includes('separator')) {
-                return <hr key={index} className="border-cyan-700/50 my-2" />;
+             if (key.includes('separator')) {
+                return <hr key={index} className={`border-t border-dashed ${styling.border}/50 my-2`} />;
             }
-            if (key.includes('strategic_analysis') || key.includes('response_logic') || key.includes('play_card_logic') || key.includes('envido_call_logic') || key.includes('truco_call_logic') || key.includes('evaluation') || key.includes('_title')) {
-                className = 'text-yellow-300 font-bold mt-2 pt-2 border-t border-cyan-800';
+            if (key.includes('strategic_analysis') || key.includes('response_logic') || key.includes('play_card_logic') || key.includes('envido_call_logic') || key.includes('truco_call_logic') || key.includes('evaluation') || key.includes('_title') || key.includes('header')) {
+                className = `${styling.title} font-bold mt-2 pt-2 border-t ${styling.border}/70`;
             } else if (key.includes('_called')) {
                 className = 'text-orange-400 italic';
             } else if (key.includes('decision_')) {
@@ -162,11 +217,15 @@ const AiLogPanel: React.FC<AiLogPanelProps> = ({ log, dispatch, isModal, roundHi
         <div className="p-4 flex-grow overflow-y-auto">
           {roundLog && roundLog.length > 0 ? (
             <div className="space-y-4">
-              {roundLog.map((entry, index) => (
-                <div key={index} className="bg-black/30 p-3 rounded-md font-mono text-xs lg:text-sm">
-                  {renderReasoningJsx(entry.reasoning)}
-                </div>
-              ))}
+              {roundLog.map((entry, index) => {
+                const topic = getReasoningTopic(entry.reasoning);
+                const styling = getTopicStyling(topic);
+                return (
+                  <div key={index} className={`p-3 rounded-md font-mono text-xs lg:text-sm border ${styling.bg} ${styling.border}`}>
+                    {renderReasoningJsx(entry.reasoning, styling)}
+                  </div>
+                );
+              })}
             </div>
           ) : (
             <p className="text-gray-400 text-center">{t('logPanel.no_log_for_round')}</p>

@@ -270,7 +270,7 @@ export interface GameState {
   playerActionHistory: ActionType[];
   
   // Blurbs for phrases
-  aiBlurb: { text: string; isVisible: boolean; } | null;
+  aiBlurb: { titleKey: string; text: string; isVisible: boolean; } | null;
   playerBlurb: { text: string; isVisible: boolean; } | null;
 
   // Round Winner Announcement

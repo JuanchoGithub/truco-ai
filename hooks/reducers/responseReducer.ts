@@ -1,5 +1,3 @@
-
-
 import { GameState, ActionType, Player, GamePhase, Case, PlayerEnvidoActionEntry, MessageObject } from '../../types';
 import { getEnvidoValue, getFlorValue, getCardCode } from '../../services/trucoLogic';
 import { updateProbsOnEnvido } from '../../services/ai/inferenceService';
@@ -55,18 +53,15 @@ export function handleResolveEnvidoAccept(state: GameState): GameState {
         centralMessage = { key: 'centralMessage.envido_result', options: { playerPoints: playerEnvido, aiPoints: aiEnvido, winner } };
     }
     
-    let finalBlurb;
+    let finalBlurb: { titleKey: string; text: string; isVisible: boolean; } | null = null;
     if (state.pendingTrucoCaller === 'ai') {
-        // Fix: Use PHRASE_KEYS to get the correct phrase key.
         const reminderPhrase = getRandomPhrase(PHRASE_KEYS.POST_ENVIDO_TRUCO_REMINDER);
-        finalBlurb = { text: reminderPhrase, isVisible: true };
+        finalBlurb = { titleKey: 'actionBar.truco', text: reminderPhrase, isVisible: true };
     } else {
         if (winner === 'ai') {
-          // Fix: Use PHRASE_KEYS to get the correct phrase key.
-          finalBlurb = { text: getRandomPhrase(PHRASE_KEYS.ENVIDO_WIN), isVisible: true };
+          finalBlurb = { titleKey: 'blurb_titles.envido_result', text: getRandomPhrase(PHRASE_KEYS.ENVIDO_WIN), isVisible: true };
         } else {
-          // Fix: Use PHRASE_KEYS to get the correct phrase key.
-          finalBlurb = { text: getRandomPhrase(PHRASE_KEYS.ENVIDO_LOSE), isVisible: true };
+          finalBlurb = { titleKey: 'blurb_titles.envido_result', text: getRandomPhrase(PHRASE_KEYS.ENVIDO_LOSE), isVisible: true };
         }
     }
 
@@ -183,7 +178,7 @@ export function handleAccept(state: GameState, action: { type: ActionType.ACCEPT
       playerEnvidoHistory: newEnvidoHistory,
       playerBlurb: isPlayer ? { text: 'actionBar.quiero', isVisible: true } : null,
       aiBlurb: !isPlayer && action.payload?.blurbText 
-        ? { text: action.payload.blurbText, isVisible: true } 
+        ? { titleKey: 'actionBar.quiero', text: action.payload.blurbText, isVisible: true } 
         : null,
     };
 
@@ -215,11 +210,10 @@ export function handleResolveEnvidoDecline(state: GameState): GameState {
         points = state.previousEnvidoPoints;
     }
 
-    let finalBlurb = null;
+    let finalBlurb: { titleKey: string; text: string; isVisible: boolean; } | null = null;
     if (state.pendingTrucoCaller === 'ai') {
-        // Fix: Use PHRASE_KEYS to get the correct phrase key.
         const reminderPhrase = getRandomPhrase(PHRASE_KEYS.POST_ENVIDO_TRUCO_REMINDER);
-        finalBlurb = { text: reminderPhrase, isVisible: true };
+        finalBlurb = { titleKey: 'actionBar.truco', text: reminderPhrase, isVisible: true };
     }
     
     const finalLogMessage: MessageObject = { key: 'log.win_points', options: { winner: caller, points } };
@@ -400,7 +394,7 @@ export function handleDecline(state: GameState, action: { type: ActionType.DECLI
       playerEnvidoHistory: newEnvidoHistory,
       playerBlurb: isPlayer ? { text: 'actionBar.no_quiero', isVisible: true } : null,
       aiBlurb: !isPlayer && action.payload?.blurbText 
-        ? { text: action.payload.blurbText, isVisible: true } 
+        ? { titleKey: 'actionBar.no_quiero', text: action.payload.blurbText, isVisible: true } 
         : null,
     };
 
@@ -485,7 +479,7 @@ export function handleAcknowledgeFlor(state: GameState, action: { type: ActionTy
         lastCaller: null,
         roundHistory: newRoundHistory,
         playerBlurb: isPlayer ? { text: 'actionBar.flor_ack_good', isVisible: true } : null,
-        aiBlurb: !isPlayer && action.payload?.blurbText ? { text: action.payload.blurbText, isVisible: true } : null,
+        aiBlurb: !isPlayer && action.payload?.blurbText ? { titleKey: 'actionBar.flor_ack_good', text: action.payload.blurbText, isVisible: true } : null,
         isThinking: false,
     };
 }
@@ -500,7 +494,7 @@ export function handleAcceptContraflor(state: GameState, action: { type: ActionT
         florPointsOnOffer: 6,
         messageLog: [...state.messageLog, { key: 'log.accept_contraflor', options: { acceptor } }],
         playerBlurb: isPlayer ? { text: 'actionBar.contraflor_quiero', isVisible: true } : null,
-        aiBlurb: !isPlayer && action.payload?.blurbText ? { text: action.payload.blurbText, isVisible: true } : null,
+        aiBlurb: !isPlayer && action.payload?.blurbText ? { titleKey: 'actionBar.contraflor_quiero', text: action.payload.blurbText, isVisible: true } : null,
         isThinking: false,
     };
 }
@@ -515,7 +509,7 @@ export function handleDeclineContraflor(state: GameState, action: { type: Action
         florPointsOnOffer: 4,
         messageLog: [...state.messageLog, { key: 'log.decline_contraflor', options: { decliner } }],
         playerBlurb: isPlayer ? { text: 'actionBar.contraflor_no_quiero', isVisible: true } : null,
-        aiBlurb: !isPlayer && action.payload?.blurbText ? { text: action.payload.blurbText, isVisible: true } : null,
+        aiBlurb: !isPlayer && action.payload?.blurbText ? { titleKey: 'actionBar.contraflor_no_quiero', text: action.payload.blurbText, isVisible: true } : null,
         isThinking: false,
     };
 }

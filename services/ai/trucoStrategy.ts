@@ -72,7 +72,7 @@ const simulateRoundWin = (
               myCard = myWinningCards[myWinningCards.length - 1]; // Lowest winning card
               remainingMy.splice(remainingMy.findIndex(c => c === myCard), 1);
           } else {
-              myCard = remainingMy.pop()!; // throw lowest card
+              myCard = myWinningCards.pop()!; // throw lowest card
           }
       }
       
@@ -185,7 +185,7 @@ export const calculateTrucoStrength = (state: GameState): TrucoStrengthResult =>
 // Fix: Updated function signature to accept (string | MessageObject)[].
 export const getTrucoResponse = (state: GameState, gamePressure: number, reasoning: (string | MessageObject)[] = []): AiMove | null => {
   const { t } = i18nService;
-  const { trucoLevel, aiScore, playerScore, playerCalledHighEnvido, opponentModel, currentTrick, trickWinners, aiHand, playerHand, playerTricks, mano } = state;
+  const { trucoLevel, aiScore, playerScore, playerCalledHighEnvido, opponentModel, currentTrick, trickWinners, aiHand, playerHand, playerTricks, aiTricks, mano } = state;
   if (trucoLevel === 0) return null;
 
   // --- NEW: Do-or-Die Endgame Logic ---
@@ -207,11 +207,50 @@ export const getTrucoResponse = (state: GameState, gamePressure: number, reasoni
   }
   // --- END NEW LOGIC ---
 
-  const strengthResult = calculateTrucoStrength(state);
-  const myStrength = strengthResult.strength;
-  reasoning.push(t('ai_logic.strength_evaluation'));
-  reasoning.push(...strengthResult.reasoning);
+  let myStrength: number;
+  let strengthReasoning: (string | MessageObject)[];
 
+  // --- NEW: Special case for end-of-round bluff analysis ---
+  if (aiHand.length === 0 && playerHand.length > 0 && playerTricks[currentTrick] === null) {
+      reasoning.push({ key: 'ai_logic.bluff_analysis.title' });
+      const myLastCard = aiTricks[currentTrick];
+      
+      if (!myLastCard) {
+          // This should not happen, but as a fallback, assume no chance.
+          myStrength = 0;
+          strengthReasoning = [{ key: 'ai_logic.bluff_analysis.error_no_card' }];
+      } else {
+          const myLastCardValue = getCardHierarchy(myLastCard);
+          const possibleOpponentCards = state.opponentHandProbabilities?.unseenCards || [];
+          
+          if (possibleOpponentCards.length > 0) {
+              const weakerCards = possibleOpponentCards.filter(c => getCardHierarchy(c) < myLastCardValue);
+              const bluffProbability = weakerCards.length / possibleOpponentCards.length;
+              
+              strengthReasoning = [
+                  { key: 'ai_logic.bluff_analysis.body', options: { cardName: getCardName(myLastCard) } },
+                  { key: 'ai_logic.bluff_analysis.stats', options: {
+                      weakerCount: weakerCards.length,
+                      totalCount: possibleOpponentCards.length,
+                      probability: (bluffProbability * 100).toFixed(0)
+                  }}
+              ];
+              myStrength = bluffProbability;
+          } else {
+              // No unseen cards? Fallback to 0.
+              myStrength = 0;
+              strengthReasoning = [{ key: 'ai_logic.bluff_analysis.error_no_unseen' }];
+          }
+      }
+      reasoning.push(...strengthReasoning);
+  } else {
+      const strengthResult = calculateTrucoStrength(state);
+      myStrength = strengthResult.strength;
+      strengthReasoning = strengthResult.reasoning;
+      reasoning.push({ key: 'ai_logic.strength_evaluation' });
+      reasoning.push(...strengthReasoning);
+  }
+  
   // --- NEW: Certain Loss Logic ---
   if (myStrength < 0.05) { // Threshold for "certain loss"
       reasoning.push(t('ai_logic.defeat_analysis', { winProb: (myStrength * 100).toFixed(0) }));
