@@ -1,0 +1,267 @@
+
+{
+  "manual": {
+    "title": "Manual de Truco",
+    "exitButton": "Volver al Menú",
+    "answer": "Respuesta:",
+    "basics": {
+      "title": "Conceptos Básicos del Juego",
+      "p1_strong": "Objetivo:",
+      "p1_text": " Ser el primer jugador en llegar a 15 puntos.",
+      "p2_strong": "Jugadores:",
+      "p2_text": " Uno contra la IA.",
+      "p3_strong": "Mano:",
+      "p3_text": " El jugador que es 'mano' juega primero en la primera ronda. En las rondas siguientes, el ganador de la ronda anterior se convierte en 'mano'."
+    },
+    "errors": {
+      "title": "Errores Comunes a Evitar",
+      "table": {
+        "h1": "Error",
+        "h2": "Por qué es un error y qué hacer en su lugar",
+        "r1c1_strong": "Cantar Envido con pocos puntos (ej. 23) cuando no sos 'mano'.",
+        "r1c1_text": "",
+        "r1c2": "Siendo 'pie' (segundo en hablar), es muy probable que tu oponente tenga más puntos. Solo deberías cantar Envido en esta posición si tenés 27 puntos o más, o si estás intentando un farol calculado. De lo contrario, es mejor no cantar y esperar.",
+        "r2c1_strong": "Cantar 'Truco' solo porque tenés una carta fuerte.",
+        "r2c2": "Tener el As de Espadas es genial, pero si tus otras dos cartas son un 4 y un 5, tu mano en general es débil. El 'Truco' es una apuesta sobre la *ronda entera* (ganar 2 de 3 manos). Cantá Truco cuando tengas al menos dos cartas fuertes o una estrategia para ganar dos manos (ej. ganar la primera y luego empatar la segunda).",
+        "r3c1_strong": "Jugar siempre tu carta más fuerte primero cuando sos 'mano'.",
+        "r3c2": "Esto te hace predecible. Si tenés una mano muy fuerte (ej. As de Espadas y 7 de Espadas), considerá jugar una carta intermedia primero. Esto podría incitar a tu oponente a cantar 'Truco', permitiéndote contraatacar con 'Retruco' y ganar más puntos. Esta táctica se llama 'cebo'.",
+        "r4c1_strong": "Nunca irse al mazo (decir 'No Quiero').",
+        "r4c2": "Saber cuándo retirarse es tan importante como saber cuándo apostar. Si la IA canta 'Falta Envido' y tenés 24 puntos, aceptar es casi regalar el partido. Aprender a minimizar las pérdidas retirándose de manos desfavorables es clave para la victoria a largo plazo."
+      }
+    },
+    "fundamentals": {
+      "title": "Las Dos Fases: Envido y Truco",
+      "p1": "Cada ronda de Truco se divide en dos fases de apuestas separadas. Entenderlas es fundamental.",
+      "p2_strong": "¡Importante!",
+      "p2_text": " Una vez que se juega la primera carta de la segunda mano, la ventana para cantar Envido o Flor se cierra por el resto de la ronda.",
+      "table": {
+        "h1": "Fase",
+        "h2": "¿Qué es?",
+        "h3": "¿Cuándo ocurre?",
+        "h4": "Puntos Típicos",
+        "r1c1": "Flor",
+        "r1c2": "Un canto especial y obligatorio si tenés tres cartas del mismo palo. Anula y tiene prioridad sobre el Envido.",
+        "r1c3": "Solo en la primera mano, antes de jugar tu primera carta.",
+        "r1c4": "3-6 puntos",
+        "r2c1": "Envido",
+        "r2c2": "Una apuesta a quién tiene el puntaje más alto combinando dos cartas del mismo palo (o la carta más alta si no hay pares de palo).",
+        "r2c3": "Solo en la primera mano. Se puede cantar antes o después de un canto de 'Truco' (esto se llama 'Envido Primero').",
+        "r2c4": "1-7 puntos, o los puntos restantes para ganar el juego ('Falta Envido').",
+        "r3c1": "Truco",
+        "r3c2": "La apuesta principal sobre quién ganará más manos en la ronda (el mejor de tres).",
+        "r3c3": "Se puede iniciar en cualquier momento de la ronda, excepto durante la resolución del Envido o Flor.",
+        "r3c4": "1-4 puntos.",
+        "r4c1": "Jerarquía de Cartas",
+        "r4c2": "El valor de las cartas para ganar las manos del Truco, de la más fuerte a la más débil.",
+        "r4c3": "Aplica durante el Truco.",
+        "r4c4": "No otorga puntos directamente, pero determina quién gana las manos.",
+        "r5c1": "Cálculo del Envido",
+        "r5c2": "Se usa para la apuesta de 'tantos'.",
+        "r5c3": "Aplica durante el Envido.",
+        "r5c4": "No otorga puntos directamente, pero determina quién gana la apuesta.",
+        "r6c1": "Escalada del Truco",
+        "r6c2": "El Truco es una apuesta sobre la ronda. Si un jugador canta, el otro puede aceptar, rechazar o subir la apuesta.",
+        "r6c3": "Aplica durante el Truco.",
+        "r6c4": "1-4 puntos.",
+        "r7c1": "Mano",
+        "r7c2": "El jugador que juega primero en la primera ronda. En las rondas siguientes, el ganador de la ronda anterior es 'mano'.",
+        "r7c3": "Aplica durante todo el juego.",
+        "r7c4": "No otorga puntos directamente, pero desempata en el Envido y el Truco.",
+        "r8c1": "Pie",
+        "r8c2": "El jugador que juega segundo en la primera ronda. En las rondas siguientes, el perdedor de la ronda anterior es 'pie'.",
+        "r8c3": "Aplica durante todo el juego.",
+        "r8c4": "No otorga puntos directamente.",
+        "r9c1": "Farol",
+        "r9c2": "Una apuesta hecha con una mano débil para engañar al oponente haciéndole creer que tenés una mano fuerte.",
+        "r9c3": "Aplica durante el Envido y el Truco.",
+        "r9c4": "No otorga puntos directamente, pero puede hacerte ganar puntos que de otra manera no ganarías."
+      }
+    },
+    "glossary": {
+      "title": "Glosario y Variantes",
+      "variants": {
+        "title": "Variantes Comunes (No en este juego)",
+        "li1_strong": "Truco Venezolano, Truco Uruguayo, etc.:",
+        "li1_text": " Existen muchas variaciones regionales con diferentes reglas para la Flor, el Envido e incluso diferentes cartas. Esta IA juega una versión común argentina.",
+        "li2_strong": "Juego con Señas:",
+        "li2_text": " En juegos multijugador, los compañeros de equipo comunican la fuerza de sus cartas a través de un sistema de señas faciales. Obviamente, esto no aplica en un juego de un solo jugador."
+      },
+      "glossary": {
+        "title": "Glosario",
+        "li1_strong": "Parda:",
+        "li1_text": " Un empate en una mano (cuando ambos jugadores tiran cartas del mismo valor jerárquico).",
+        "li2_strong": "Irse al Mazo:",
+        "li2_text": " Rendirse en la ronda, ya sea diciendo 'No Quiero' a un canto o simplemente retirándose.",
+        "li3_strong": "Las Bravas:",
+        "li3_text": " Un término coloquial para las cuatro cartas más fuertes: los dos Ases y los dos Sietes.",
+        "li4_strong": "Cantar Primero:",
+        "li4_text": " Una ventaja estratégica. En el Envido, si cantás primero, tenés más control sobre la escalada de la apuesta."
+      }
+    },
+    "phases": {
+      "title": "Anatomía de una Ronda: Flor, Envido y Truco",
+      "p1_1": "Cada ronda se desarrolla en un orden específico, con fases de apuestas que se abren y se cierran. El orden es: ",
+      "p1_strong": "Flor → Envido → Truco",
+      "p1_2": ".",
+      "envido": {
+        "title": "El Envido (La Apuesta por Puntos)",
+        "p1": "El Envido es una apuesta a quién tiene la mejor combinación de cartas. Solo se puede jugar durante la primera mano de la ronda. Así se calcula:",
+        "table": {
+          "h1": "Canto",
+          "h2": "Puntos si se Acepta",
+          "h3": "Puntos si se Rechaza",
+          "h4": "Notas",
+          "r1c1": "Envido",
+          "r1c2": "2",
+          "r1c3": "1",
+          "r1c4": "La apuesta inicial.",
+          "r2c1": "Real Envido",
+          "r2c2": "3",
+          "r2c3": "1",
+          "r2c4": "Una escalada directa que vale más.",
+          "r3c1": "Envido + Envido",
+          "r3c2": "4",
+          "r3c3": "2",
+          "r3c4": "Responder a un 'Envido' con otro 'Envido'.",
+          "r4c1": "Falta Envido",
+          "r4c2": "Los puntos que le faltan al jugador con más puntaje para ganar el juego (a 15).",
+          "r4c3": "1",
+          "r4c4": "La apuesta máxima. Puede terminar el juego."
+        }
+      },
+      "flor": {
+        "title": "La Flor (La Mano Perfecta)",
+        "p1_1": "Si al recibir tus tres cartas, todas son del mismo palo, tenés ",
+        "p1_strong": "Flor",
+        "p1_2": ". Estás obligado a cantarla en tu primer turno. Anula cualquier apuesta de Envido y te otorga automáticamente 3 puntos. Si tu oponente también tiene Flor, puede cantar 'Contraflor', escalando la apuesta."
+      },
+      "tie": {
+        "title": "Reglas de Empate (Parda)",
+        "table": {
+          "h1": "Escenario",
+          "h2": "Quién Gana",
+          "r1c1": "Empate en la 1ra mano.",
+          "r1c2": "El ganador de la 2da mano gana la ronda. Si la 2da también es empate, el ganador de la 3ra gana.",
+          "r2c1": "Un jugador gana la 1ra mano, y la 2da es empate.",
+          "r2c2": "El jugador que ganó la 1ra mano gana la ronda.",
+          "r3c1": "Todas las manos son empates, o la 1ra y 3ra son empates.",
+          "r3c2": "El jugador que es 'mano' gana la ronda."
+        }
+      },
+      "truco": {
+        "title": "El Truco (La Apuesta por la Ronda)",
+        "p1": "El Truco es la apuesta sobre quién ganará 2 de las 3 manos. A diferencia del Envido, se puede cantar en cualquier momento (excepto durante la resolución del Envido/Flor).",
+        "li1_strong": "Truco (2 Puntos):",
+        "li1_text": " La apuesta inicial. Si el oponente no quiere, ganás 1 punto.",
+        "li2_strong": "Retruco (3 Puntos):",
+        "li2_text": " Una contra-apuesta al Truco. Si el oponente no quiere, ganás 2 puntos.",
+        "li3_strong": "Vale Cuatro (4 Puntos):",
+        "li3_text": " La apuesta final. Si el oponente no quiere, ganás 3 puntos."
+      }
+    },
+    "scenarios": {
+      "title": "Ejemplos Prácticos y Escenarios",
+      "p1": "La teoría está bien, pero el Truco se aprende jugando. Aquí hay algunos escenarios comunes para ilustrar la estrategia.",
+      "answer": "Respuesta:",
+      "quiz": "Pregunta Rápida:",
+      "ex1": {
+        "title": "Escenario 1: El Envido Débil",
+        "setup_1": " Tenés ",
+        "setup_2": ". Tu Envido es 5+4 = 9 (el Rey vale 0). La IA es 'mano' y canta ",
+        "setup_strong": "Envido",
+        "setup_3": ".",
+        "game": "Aunque es tentador aceptar para ver qué tiene la IA, tus 9 puntos son extremadamente bajos. La probabilidad de que la IA tenga más de 9 (lo cual es muy fácil) es muy alta.",
+        "result": "Decís 'No Quiero'. Le das 1 punto a la IA, pero evitás perder 2 o más puntos en una apuesta casi perdida.",
+        "lesson": "No te aferres a un Envido bajo, especialmente si no sos 'mano'. Minimizar las pérdidas es una estrategia ganadora a largo plazo.",
+        "quiz_q": "Si en lugar de 9, tuvieras 29 de Envido, ¿qué deberías hacer?",
+        "quiz_a": " ¡'Quiero'! 29 es un buen puntaje y vale la pena el riesgo."
+      },
+      "ex2": {
+        "title": "Escenario 2: El 'Envido Primero'",
+        "setup": " Sos 'mano'. Tenés una mano decente para el Truco: ",
+        "game": "La IA no sabe lo que tenés. La jugada óptima es cantar 'Envido Primero'. Esto obliga a la IA a resolver la apuesta del Envido antes de pensar en el Truco. Si ganás el Envido, sumás puntos y también obtenés información sobre las cartas de la IA (si tienen cartas altas o bajas, o si tienen pares de palo).",
+        "result": "Decís 'Envido Primero'. La IA acepta, vos tenés 28, la IA 26. Ganás 2 puntos. Ahora la fase de Truco continúa, pero ya tenés una ventaja de puntos e información.",
+        "lesson": "Siempre que la situación lo permita, resolvé el Envido primero. Es una valiosa fuente de puntos e información."
+      },
+      "ex3": {
+        "title": "Escenario 3: ¡La Flor Inesperada!",
+        "setup_1": " Tenés una Flor: ",
+        "setup_2": ". Tu puntaje de Flor es 20 + 7 + 4 + 3 = 34.",
+        "game": "Estás obligado a cantar 'Flor' en tu primer turno. La IA no tiene Flor.",
+        "result": "Cantás 'Flor'. La IA lo reconoce ('Son buenas'). Automáticamente ganás 3 puntos y la ronda termina para empezar una nueva. El Envido y el Truco se anulan.",
+        "lesson": "La Flor es una jugada poderosa que detiene todo lo demás. ¡No te olvides de cantarla!",
+        "quiz_q": "Si la IA también tuviera Flor, ¿qué podría cantar en respuesta a tu 'Flor'?",
+        "quiz_a": " Podría cantar 'Contraflor', escalando la apuesta para ver quién tiene el puntaje de Flor más alto."
+      },
+      "ex4": {
+        "title": "Escenario 4: Ganar con Astucia, no con Fuerza",
+        "setup_1": " Sos 'mano'. Tenés ",
+        "setup_2": ". Una mano mediocre. La IA es 'pie'.",
+        "game": "Jugás tu 3. La IA juega su 2. Ganás la primera mano. Ahora es tu turno de nuevo.",
+        "result": "Aunque tu 5 es débil, la IA no lo sabe. Cantás 'Truco'. La IA, habiendo perdido la primera mano y sin saber que tu carta restante es baja, podría pensar que tenés una carta fuerte guardada y dice 'No Quiero'. Ganás 1 punto.",
+        "lesson": "Ganar la primera mano te da una enorme ventaja psicológica. Usala para farolear y robar puntos incluso con manos débiles."
+      },
+      "ex5": {
+        "title": "Escenario 5: La Parda y Gano",
+        "setup": " Sos 'mano'. Empataste la primera mano (parda). En la segunda mano, jugás tu carta más fuerte y ganás. Solo te queda una carta: ",
+        "game": "Ganaste la segunda mano después de empatar la primera. ¡Esto significa que ya ganaste la ronda! La tercera mano no se juega.",
+        "result": "Automáticamente ganás la ronda. Si se cantó un 'Truco', ganás los puntos correspondientes.",
+        "lesson": "Recordá la regla de desempate: si empatás la primera y ganás la segunda, la ronda es tuya. Usá este conocimiento para apostar con confianza.",
+        "quiz_q": "Si en cambio, hubieras ganado la primera y empatado la segunda, ¿quién ganaría la ronda?",
+        "quiz_a": " ¡Vos! Ganar la primera y empatar la segunda también te da la victoria de la ronda."
+      },
+      "ex6": {
+        "title": "Escenario 6: El Sacrificio Inteligente",
+        "setup_1": " Sos 'mano'. Tenés una mano fuerte: ",
+        "setup_2": ". La IA es 'pie'.",
+        "game": "En lugar de jugar tu carta más fuerte (el 7 de Espadas), decidís jugar el 6 de Bastos. La IA, al ver una carta relativamente baja, juega un 7 de Oros para ganar la mano.",
+        "result": "Perdiste la primera mano a propósito. Ahora la IA se siente confiada y canta 'Truco'. ¡Esta es tu oportunidad! Respondés 'Quiero' y ganás fácilmente las siguientes dos manos con tu 7 de Espadas y tu As de Espadas (supongamos que tenías uno), ganando 2 puntos en lugar de solo 1.",
+        "lesson": "A veces, perder intencionalmente la primera mano (un 'sacrificio') es una táctica avanzada para incitar a tu oponente a apostar, permitiéndote ganar más puntos al final."
+      },
+      "ex7": {
+        "title": "Escenario 7: El Farol de Envido",
+        "setup_1": " Sos 'mano'. Tenés 27 para el Envido: ",
+        "setup_2": ". Tu oponente canta 'Envido'.",
+        "game": "27 es un buen puntaje, pero no una garantía. Sin embargo, decidís arriesgarte y farolear.",
+        "result": "Respondés con 'Real Envido'. La IA, que podría haber tenido 28 o 29, ahora duda. ¿Realmente tenés más de 30? Ante la incertidumbre y el riesgo de perder más puntos, la IA dice 'No Quiero'. Ganás 2 puntos con un farol exitoso, aunque tenías menos puntos.",
+        "lesson": "El Envido no es solo matemática. Escalar la apuesta puede hacer que un oponente con una mano ligeramente mejor se retire por miedo a una mano mucho más fuerte."
+      },
+      "ex8": {
+        "title": "Escenario 8: La Contraflor",
+        "setup_1": " Tenés una Flor de 38 puntos: ",
+        "setup_2": ". Cantás 'Flor'. Sorprendentemente, la IA responde con 'Contraflor'.",
+        "game": "La 'Contraflor' es una apuesta para ver quién tiene la Flor de mayor puntaje. Vale 6 puntos. Con 38, tenés una de las Flores más altas posibles. Es casi imposible que la IA te gane.",
+        "result": "Respondés 'Con Flor Quiero'. Se revelan las cartas. La IA tenía una Flor de 35 puntos. Ganás la apuesta y 6 puntos.",
+        "lesson": "Si tenés una Flor muy alta (33+), no dudes en aceptar una 'Contraflor'. Las probabilidades están abrumadoramente a tu favor."
+      }
+    },
+    "strategy": {
+      "title": "Estrategia General y Consejos",
+      "p1": "El Truco es un juego de información incompleta. Tu objetivo es tomar la mejor decisión con los datos que tenés, mientras engañás a tu oponente.",
+      "tips": {
+        "title": "Consejos Clave:",
+        "li1_strong": "La Posición es Poder:",
+        "li1_text": " Ser 'mano' (jugar primero) es una ventaja porque desempata a tu favor. Ser 'pie' (jugar segundo) también es una ventaja porque jugás con la carta de tu oponente a la vista.",
+        "li2_strong": "Observá a tu Oponente:",
+        "li2_text": " Esta IA aprende. Si siempre cantás Envido con 25 puntos, la IA se dará cuenta y te desafiará más a menudo. Variá tu juego.",
+        "li3_strong": "El Farol es un Recurso:",
+        "li3_text": " No tengas miedo de cantar 'Truco' con una mano mediocre si ganaste la primera mano. La presión puede obligar a la IA a retirarse.",
+        "li4_strong": "No te Enamores de tus Cartas:",
+        "li4_text": " A veces, la jugada correcta es retirarse y perder 1 punto en lugar de aceptar y arriesgarse a perder más. Jugar a largo plazo es más importante que ganar cada mano."
+      }
+    },
+    "welcome": {
+      "title": "Sobre el Juego",
+      "p1_1": "¡Bienvenido a Truco AI! Una aplicación web para un solo jugador del clásico juego de cartas argentino, ",
+      "p1_em": "Truco",
+      "p1_2": ". Enfrentate a un oponente de IA estratégico y adaptable, aprendé los secretos del juego y analizá tu propio estilo de juego.",
+      "p2_1": "El Truco es un juego de cartas que se juega con una baraja española. Es un juego de engaño, astucia y psicología. Los jugadores compiten para ser los primeros en llegar a 15 puntos. Los puntos se obtienen a través de dos mecanismos principales: el ",
+      "p2_strong1": "Truco",
+      "p2_2": ", una apuesta sobre quién ganará las 'manos' (rondas de cartas), y el ",
+      "p2_strong2": "Envido",
+      "p2_3": ", una apuesta sobre quién tiene la mejor combinación de cartas del mismo palo. Esta aplicación simula la variante argentina del juego, con la particularidad de la ",
+      "p2_strong3": "Flor",
+      "p2_4": "."
+    }
+  }
+}

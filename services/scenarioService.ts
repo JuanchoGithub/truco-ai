@@ -123,7 +123,7 @@ export interface PredefinedScenario {
     generateHands: () => { aiHand: Card[], playerHand: Card[] } | null;
 }
 
-export const predefinedScenarios: PredefinedScenario[] = [
+const baseScenarios: PredefinedScenario[] = [
     {
         nameKey: 'scenario_tester.scenario_names.parda_y_gano',
         baseState: {
@@ -440,3 +440,88 @@ export const predefinedScenarios: PredefinedScenario[] = [
         generateHands: () => generateHands({ cardComposition: [{ minHierarchy: 14, maxHierarchy: 14 }, { minHierarchy: 11, maxHierarchy: 11 }, { minHierarchy: 5, maxHierarchy: 5 }], mustNotHaveFlor: true }, { mustNotHaveFlor: true })
     }
 ];
+
+const scoreConditions = [
+    // Symmetrical
+    { ai: 0, player: 0 }, { ai: 5, player: 5 }, { ai: 10, player: 10 },
+    { ai: 12, player: 12 }, { ai: 14, player: 14 },
+    // Asymmetrical (AI losing)
+    { ai: 0, player: 5 }, { ai: 0, player: 10 }, { ai: 0, player: 12 },
+    // Asymmetrical (AI winning)
+    { ai: 5, player: 0 }, { ai: 10, player: 0 }, { ai: 14, player: 0 },
+];
+
+const envidoTestScenarios: PredefinedScenario[] = [];
+
+['weak', 'medium', 'high'].forEach(strength => {
+    const constraints: HandConstraints = {};
+
+    if (strength === 'weak') {
+        constraints.maxEnvido = 28;
+    } else if (strength === 'medium') {
+        constraints.minEnvido = 29;
+        constraints.maxEnvido = 31;
+    } else { // high
+        constraints.minEnvido = 32;
+    }
+
+    scoreConditions.forEach(scores => {
+        const scoreKey = `${scores.ai}_${scores.player}`;
+
+        // 1. AI is mano
+        envidoTestScenarios.push({
+            nameKey: `scenario_tester.scenario_names.envido_${strength}_ai_mano_${scoreKey}`,
+            baseState: {
+                aiScore: scores.ai, playerScore: scores.player,
+                mano: 'ai', currentTurn: 'ai', gamePhase: 'trick_1',
+            },
+            generateHands: () => generateHands(
+                { ...constraints, mustNotHaveFlor: true, numCards: 3 },
+                { mustNotHaveFlor: true, numCards: 3 }
+            ),
+        });
+        
+        // 2. Opponent is mano, plays a card
+        envidoTestScenarios.push({
+            nameKey: `scenario_tester.scenario_names.envido_${strength}_opp_mano_plays_card_${scoreKey}`,
+            baseState: {
+                aiScore: scores.ai, playerScore: scores.player,
+                mano: 'player', currentTurn: 'ai', gamePhase: 'trick_1',
+                playerTricks: [{ rank: 6, suit: 'bastos' }, null, null],
+            },
+            generateHands: () => generateHands(
+                { ...constraints, mustNotHaveFlor: true, numCards: 3 },
+                { mustNotHaveFlor: true, numCards: 2 }
+            ),
+        });
+
+        // 3. Opponent is mano, calls Envido
+        envidoTestScenarios.push({
+            nameKey: `scenario_tester.scenario_names.envido_${strength}_opp_mano_calls_envido_${scoreKey}`,
+            baseState: {
+                aiScore: scores.ai, playerScore: scores.player,
+                mano: 'player', currentTurn: 'ai', gamePhase: 'envido_called', lastCaller: 'player',
+            },
+            generateHands: () => generateHands(
+                { ...constraints, mustNotHaveFlor: true },
+                { minEnvido: 27, mustNotHaveFlor: true }
+            ),
+        });
+
+        // 4. Opponent is mano, calls Truco
+        envidoTestScenarios.push({
+            nameKey: `scenario_tester.scenario_names.envido_${strength}_opp_mano_calls_truco_${scoreKey}`,
+            baseState: {
+                aiScore: scores.ai, playerScore: scores.player,
+                mano: 'player', currentTurn: 'ai', gamePhase: 'truco_called', lastCaller: 'player',
+            },
+            generateHands: () => generateHands(
+                { ...constraints, mustNotHaveFlor: true },
+                { minTrucoStrength: 18, mustNotHaveFlor: true }
+            ),
+        });
+    });
+});
+
+
+export const predefinedScenarios: PredefinedScenario[] = [...baseScenarios, ...envidoTestScenarios];

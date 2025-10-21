@@ -48,21 +48,24 @@ const simulateRoundWin = (
           // --- ENHANCED CONTEXTUAL LOGIC FOR SIMULATED OPPONENT ---
           // The opponent's card choice depends on the trick and their learned playstyle.
           if (trick === 0) {
-              // On the first trick, the opponent's play is based on their learned `leadWithHighestRate`.
               const leadRoll = Math.random();
-              // If rate is 0.75, this is true 75% of the time.
               if (mano === 'player' && leadRoll < opponentModel.playStyle.leadWithHighestRate) {
                   oppCard = remainingOpp.shift()!; // Lead high as per tendency
               } else {
                   oppCard = remainingOpp.pop()!; // Lead low (represents baiting or a weak hand)
               }
           } else { // trick === 1 or 2
-              // For subsequent tricks, the opponent plays more predictably to win.
-              // If they won trick 1, they play high to secure the round.
-              // If they lost trick 1, they must win this trick, so they play high.
-              // If trick 1 was a tie, trick 2 is decisive, so they play high.
-              // This simplifies to always leading with their highest remaining card.
-              oppCard = remainingOpp.shift()!;
+                const oppLostFirstTrick = simTrickWinners[0] === 'ai';
+                const baitRoll = Math.random();
+                
+                // If opponent lost the first trick but has a monster card left, they might save it for trick 3
+                if (oppLostFirstTrick && remainingOpp.length === 2 && getCardHierarchy(remainingOpp[0]) >= 13 && baitRoll < opponentModel.playStyle.baitRate) {
+                    // Bait: play lowest card, save the monster
+                    oppCard = remainingOpp.pop()!;
+                } else {
+                    // Default: play highest card to win the current trick
+                    oppCard = remainingOpp.shift()!;
+                }
           }
           // --- END ENHANCED LOGIC ---
 
@@ -252,12 +255,33 @@ export const getTrucoResponse = (state: GameState, gamePressure: number, reasoni
   }
   
   // --- NEW: Certain Loss Logic ---
-  if (myStrength < 0.05) { // Threshold for "certain loss"
+  if (myStrength < 0.05) { // Threshold for "almost certain loss"
       reasoning.push(t('ai_logic.defeat_analysis', { winProb: (myStrength * 100).toFixed(0) }));
+
+      // If winning is mathematically impossible (strength is 0), never bluff.
+      if (myStrength === 0) {
+          reasoning.push(t('ai_logic.impossibility_analysis'));
+          const decisionReason = t('ai_logic.decision_fold_impossible');
+          return { action: { type: ActionType.DECLINE, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.NO_QUIERO) } }, reasoning: [...reasoning, decisionReason], reasonKey: 'decline_truco_impossible' };
+      }
       
-      // Consider a desperation bluff if the opponent has a history of folding.
-      const desperationBluffChance = 0.10 + (opponentModel.trucoFoldRate * 0.2) + (gamePressure > 0.5 ? gamePressure * 0.3 : 0);
-      reasoning.push(t('ai_logic.desperation_bluff_chance', { chance: (desperationBluffChance * 100).toFixed(0) }));
+      // Consider a desperation bluff, scaled by how low the win chance is.
+      const baseBluffChance = (myStrength / 0.05) * 0.10; // Scales from 0% to 10%
+      const opponentFoldBonus = opponentModel.trucoFoldRate * 0.2;
+      const pressureBonus = (gamePressure > 0.5 ? gamePressure * 0.3 : 0);
+      const desperationBluffChance = baseBluffChance + opponentFoldBonus + pressureBonus;
+
+      reasoning.push({ key: 'ai_logic.scaled_desperation_bluff_chance', options: { 
+          winProb: (myStrength * 100).toFixed(0),
+          baseChance: (baseBluffChance * 100).toFixed(0)
+      }});
+      if (opponentFoldBonus > 0) {
+          reasoning.push({ key: 'ai_logic.opponent_fold_bonus', options: { bonus: (opponentFoldBonus * 100).toFixed(0) }});
+      }
+      if (pressureBonus > 0) {
+          reasoning.push({ key: 'ai_logic.pressure_bonus', options: { bonus: (pressureBonus * 100).toFixed(0) }});
+      }
+      reasoning.push({ key: 'ai_logic.total_desperation_bluff_chance', options: { chance: (desperationBluffChance * 100).toFixed(0) } });
 
       if (trucoLevel < 3 && Math.random() < desperationBluffChance) {
           const escalateType = trucoLevel === 1 ? ActionType.CALL_RETRUCO : ActionType.CALL_VALE_CUATRO;

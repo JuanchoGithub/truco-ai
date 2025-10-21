@@ -7,6 +7,7 @@
     "tab_scenario_test": "Scenario Test",
     "tab_batch_analysis": "Hand Analysis",
     "tab_runner": "Scenario Runner",
+    "tab_gemini": "AI vs Gemini",
     "button_simulating": "Simulating...",
     "button_restart": "Restart",
     "button_simulate_round": "Simulate Round",
@@ -36,28 +37,50 @@
     "log_ai_logic": "[AI Logic]:\n{{reasoning}}",
     "log_randomizer_logic": "[Randomizer Logic]:\n{{reasoning}}",
     "manual": {
-      "setup_title": "Manual Round Setup",
-      "scores_mano": "Scores & Hand",
-      "ai_score": "AI Score",
-      "opponent_score": "Opponent Score",
-      "mano": "Is Hand (Mano)",
-      "ai_hand": "AI's Hand",
-      "opponent_hand": "Opponent's Hand",
-      "start_round": "Start Round",
-      "valid_actions_for": "Valid Actions for",
-      "ai_suggestion": "AI Suggestion",
-      "ask_ai": "Ask AI",
-      "ask_ai_prompt": "Press 'Ask AI' to see its recommended move.",
-      "reset": "Reset Setup",
-      "view_log": "View Log",
-      "log_title": "Manual Round Log",
-      "log_round_start": "MANUAL ROUND START",
-      "log_initial_setup": "Initial Setup",
-      "log_ai_suggestion_title": "AI Suggestion",
-      "log_action": "Action",
-      "log_event": "Event",
-      "ai_tricks": "AI's Tricks",
-      "opponent_tricks": "Opponent's Tricks"
+        "setup_title": "Manual Round Setup",
+        "scores_mano": "Scores & Hand",
+        "ai_score": "AI Score",
+        "opponent_score": "Opponent Score",
+        "mano": "Hand (starts)",
+        "ai_hand": "AI's Hand",
+        "opponent_hand": "Opponent's Hand",
+        "start_round": "Start Round",
+        "valid_actions_for": "Valid Actions for",
+        "ai_suggestion": "AI Suggestion",
+        "ask_ai": "Ask AI",
+        "ask_ai_prompt": "Press 'Ask AI' to see its recommended move.",
+        "reset": "Reset Setup",
+        "view_log": "View Log",
+        "log_title": "Manual Round Log",
+        "ai_tricks": "AI's Tricks",
+        "opponent_tricks": "Opponent's Tricks",
+        "log_round_start": "MANUAL ROUND START",
+        "log_initial_setup": "Initial Setup",
+        "log_ai_suggestion_title": "AI Suggestion",
+        "log_action": "Action",
+        "log_event": "Event"
+    },
+    "gemini": {
+        "title": "AI vs Gemini",
+        "description": "Watch the local AI play against an opponent powered by Google Gemini. After each round or match, Gemini will analyze the local AI's performance and provide coaching feedback.",
+        "start_round_sim": "Start Round Sim",
+        "start_match_sim": "Start Match Sim",
+        "stop_sim": "Stop",
+        "gemini_hand": "Gemini's Hand",
+        "local_ai_hand": "Local AI's Hand",
+        "game_log": "Game Log",
+        "gemini_thoughts": "Gemini's Thoughts",
+        "gemini_analysis": "Gemini's Analysis",
+        "get_analysis": "Get Analysis",
+        "analyzing": "Analyzing...",
+        "analysis_prompt": "Click 'Get Analysis' to have Gemini review the local AI's performance.",
+        "waiting_for_gemini": "Waiting for Gemini's move...",
+        "error_gemini_move": "Error getting Gemini's move. Skipping turn.",
+        "error_gemini_analysis": "Error getting Gemini's analysis.",
+        "log_game_winner_gemini": "--- GEMINI WINS THE GAME ---",
+        "error_quota_retry": "API quota exceeded. Automatically retrying in 30 seconds...",
+        "error_quota_manual": "Automatic retry failed. Please retry manually.",
+        "retry_button": "Retry Move"
     }
   },
   "simulation_actions": {
@@ -77,292 +100,7 @@
     "decline_contraflor": "{{playerName}} folds with FLOR.",
     "default": "{{playerName}} performs action {{actionType}}"
   },
-  "scenario_tester": {
-    "title": "AI Scenario Tester",
-    "load_predefined": "Load Pre-defined Scenario...",
-    "or_create_custom": "...or create a custom scenario",
-    "setup": "Setup",
-    "ai_score": "AI Score",
-    "opponent_score": "Opponent Score",
-    "mano": "Hand (Mano)",
-    "turn": "Current Turn",
-    "phase": "Game Phase",
-    "truco_level": "Truco Level",
-    "last_caller": "Last Truco Caller",
-    "ai_hand": "AI Hand",
-    "opponent_hand": "Opponent Hand",
-    "clear": "Clear",
-    "run_test": "Run Test",
-    "regenerate_hands": "Regenerate Hands",
-    "result": "Result",
-    "chosen_action": "Chosen Action",
-    "reasoning": "Reasoning",
-    "no_result": "Run a test to see the AI's decision.",
-    "select_scenario": "Select a scenario...",
-    "run_simulations": "Run Simulations (x{{count}})",
-    "simulating": "Simulating... ({{progress}}%)",
-    "cancel": "Cancel",
-    "simulation_results": "Simulation Results ({{count}})",
-    "clear_results": "Clear",
-    "envido_called": "Envido Already Called",
-    "ai_envido_score": "AI Envido Score",
-    "opponent_envido_score": "Opponent Envido Score",
-    "run_simulations_no_scenario_error": "Please load a predefined scenario to run simulations.",
-    "scenario_names": {
-      "parda_y_gano": "Parda y Gano Opportunity",
-      "do_or_die": "Do-or-Die Truco Response",
-      "lopsided_bait": "Lopsided Hand Envido Bait",
-      "envido_primero": "Envido Primero Response",
-      "flor_vs_envido": "Flor vs Envido Response",
-      "endgame_pressure_truco": "Endgame Pressure: The 'Truco' to Win",
-      "dual_brava_probe": "Dual Brava Mid-Low Probe",
-      "ancho_feint_chain": "Ancho Feint Chain",
-      "false_ace_bait": "False Ace Bait",
-      "tie_breaker_low": "Tie-Breaker Low",
-      "signal_masked_depletion": "Signal-Masked Depletion",
-      "post_envido_low_shift": "Post-Envido Low Shift",
-      "triple_brava_figure_probe": "Triple Brava Figure Probe",
-      "post_tie_retruco_response": "Post-Tie Retruco Response",
-      "false_7_deplete": "False 7 Deplete",
-      "envido_suit_misdirect": "Envido Suit Misdirect",
-      "brava_kiss_signal": "Brava Kiss Signal",
-      "mid_game_figure_low": "Mid-Game Figure Low",
-      "late_false_ace_chain": "Late False Ace Chain",
-      "parda_false_7": "Parda False 7",
-      "tie_ancho_glimpse": "Post-Tie Decisive Play",
-      "banter_low_glimpse": "Feint with a Strong Hand",
-      "ancho_deplete_post_tie": "Ancho Deplete Post-Tie",
-      "dual_false_bait": "Dual False Bait",
-      "mid_low_signal_mask": "Mid-Low Signal Mask",
-      "figure_ancho_shift": "Figure Ancho Shift",
-      "endgame_low_balance": "Endgame Low Balance",
-      "retruco_response_with_ace": "Retruco Response with an Ace",
-      "brava_mid_chain": "Brava Mid Chain",
-      "signal_false_low": "Signal False Low",
-      "post_parda_figure": "Post-Parda Figure",
-      "dual_ancho_bait": "Dual Ancho Bait",
-      "false_brava_probe": "False Brava Probe",
-      "envido_low_unrelated": "Envido Low Unrelated",
-      "all_tie_mid_hint": "All-Tie Mid Hint",
-      "clutch_false_deplete": "Clutch False Deplete"
-    },
-    "phases": {
-      "trick_1": "Trick 1",
-      "trick_2": "Trick 2",
-      "trick_3": "Trick 3",
-      "envido_called": "Envido Called",
-      "truco_called": "Truco Called",
-      "retruco_called": "Retruco Called",
-      "flor_called": "Flor Called"
-    },
-    "regenerate_hands_tooltip": "Load a predefined scenario to use this feature.",
-    "describe_button": "Describe",
-    "describe_button_aria": "Describe predefined scenarios",
-    "descriptions": {
-      "title": "Scenario Descriptions",
-      "parda_y_gano": {
-        "title": "'Parda y Gano' (Tie and Win) Opportunity",
-        "description": "This classic scenario tests the AI's ability to recognize a guaranteed win. The first trick was a tie ('parda'). According to Truco rules, the winner of the second trick now wins the entire round. The test is to see if the AI correctly identifies this risk-free, high-value opportunity and escalates the bet by calling 'Truco' before playing its winning card."
-      },
-      "do_or_die": {
-        "title": "Do-or-Die Truco Response",
-        "description": "This is an endgame pressure test. The opponent is one point away from winning the game (14 points) and has called 'Truco'. If the AI folds ('No Quiero'), it concedes 1 point and loses the game. If the AI accepts ('Quiero') and loses the trick, it concedes 2 points and also loses the game. The correct strategic play is to always accept ('Quiero'), because folding is a guaranteed loss, whereas accepting provides a slim, non-zero chance of winning if the opponent made a mistake or is bluffing. This scenario tests the AI's endgame logic."
-      },
-      "lopsided_bait": {
-        "title": "Lopsided Hand Envido Bait",
-        "description": "This tests an advanced deceptive tactic. The AI is given a 'lopsided' hand: very high points for Envido (e.g., 31+) but very weak cards for Truco. The advanced strategy is to 'bait' the opponent by playing a card silently. The goal is to make the opponent think the AI has a weak Envido, encouraging them to call it themselves. This allows the AI to then counter-escalate with 'Real Envido' or 'Falta Envido', maximizing its points in the only phase it can win, while avoiding a likely loss in the Truco phase."
-      },
-      "envido_primero": {
-        "title": "'Envido Primero' (Envido Goes First) Response",
-        "description": "This scenario tests the AI's understanding of rule priorities. The opponent has called 'Truco' in the first trick. However, the opportunity to call Envido is still open. The AI is given an excellent hand for Envido (e.g., 33 points). The correct play is not to respond to the Truco call directly, but to interrupt the flow of the game by calling 'Envido Primero'. This forces the Envido bet to be resolved before the Truco bet continues."
-      },
-      "flor_vs_envido": {
-        "title": "Flor vs. Envido Response",
-        "description": "Another rule priority test. The opponent has called 'Envido'. The AI, however, has been dealt a 'Flor' (three cards of the same suit). The AI should not respond to the Envido call. Instead, it must declare its 'Flor', which automatically wins 3 points and cancels the Envido sequence."
-      },
-      "endgame_pressure_truco": {
-        "title": "Endgame Pressure: The 'Truco' to Win",
-        "description": "This scenario recreates a high-stakes endgame. The AI is at 14 points (one away from victory), and the opponent is close behind at 13. It is the AI's turn to act. The test is to see how the AI behaves under this immense pressure. Will it play conservatively, or will it take a risk and call 'Truco' immediately? This scenario demonstrates the AI's 'Game Pressure' system and its willingness to make calculated gambles to close out a match."
-      },
-      "banter_low_glimpse": {
-        "title": "Feint with a Strong Hand",
-        "description": "The AI has a very strong hand (e.g., Ace of Spades, a 5, a 4) and it's its turn to play during an already accepted 'Truco'. This scenario tests the AI's 'feint' tactic. Instead of playing its strongest card (the Ace), the AI should opt to play its weakest card (the 4) as bait to encourage the opponent to escalate the bet to 'Retruco'."
-      },
-      "dual_brava_probe": {
-        "title": "Dual Brava Mid-Low Probe",
-        "description": "AI has two top bravas (A♠, A♣) and a mid-low card (6♦). Fresh round at 0-0. Tests the AI's ability to bait by leading with the non-obvious 6♦ instead of revealing its strength, aiming to provoke a Truco call it can easily counter."
-      },
-      "ancho_feint_chain": {
-        "title": "Ancho Feint Chain",
-        "description": "AI has A♠, 3♥, 5♣ after a known Envido. Tests leading with non-brava cards (3♥, 5♣) to feign weakness before using the A♠."
-      },
-      "false_ace_bait": {
-        "title": "False Ace Bait",
-        "description": "AI has A♣, A♥, 2♦ during a Truco. Tests leading with the weak A♥ to bait an escalation (Vale Cuatro), saving the strong A♣."
-      },
-      "tie_breaker_low": {
-        "title": "Tie-Breaker Low",
-        "description": "AI has A♠, 7♥, 4♦ after a tie. Tests using the subtle 7♥ (false 7) as the decider instead of the powerful A♠ to bait a raise."
-      },
-      "signal_masked_depletion": {
-        "title": "Signal-Masked Depletion",
-        "description": "AI has A♣, A♠, J♠. Tests using a proxy signal and leading with the J♠ to imply bravas are spent, baiting a Truco."
-      },
-      "post_envido_low_shift": {
-        "title": "Post-Envido Low Shift",
-        "description": "AI has A♠, 7♦, K♥. After Envido, tests leading with the unrelated K♥ to hide the bravas and bait a Retruco."
-      },
-      "triple_brava_figure_probe": {
-        "title": "Triple Brava Figure Probe",
-        "description": "AI has two top bravas + a figure. Tests leading with the figure to probe, not the bravas, to conserve power."
-      },
-      "post_tie_retruco_response": {
-        "title": "Post-Tie Retruco Response",
-        "description": "After a tie, the second trick is decisive. The opponent has escalated to 'Retruco'. The AI has one winning card and one losing card. This tests if the AI correctly identifies the must-win situation and plays its strongest card, rather than attempting a bait play which would lose the round and 3 points."
-      },
-      "false_7_deplete": {
-        "title": "False 7 Deplete",
-        "description": "Tests the AI's decision when facing a 'Retruco' with a deceptive hand: one very strong card (A♠), a probing card (the false 7♣), and a low card (5♦). The test is to see if the AI, recognizing the strength of the Ace of Spades, is confident enough to accept or even escalate to 'Vale Cuatro', despite holding two low-value cards."
-      },
-      "envido_suit_misdirect": {
-        "title": "Envido Suit Misdirect",
-        "description": "AI has A♣, 2♠, 4♥ after showing a spade Envido. Tests leading with the unrelated 4♥ to misdirect from the suit containing the A♣."
-      },
-      "brava_kiss_signal": {
-        "title": "Brava Kiss Signal",
-        "description": "AI has A♠, A♦, 2♣. Tests leading with the weak A♦ to bait an Envido-Truco chain."
-      },
-      "mid_game_figure_low": {
-        "title": "Mid-Game Figure Low",
-        "description": "AI has 7♠, K♦, J♥ after winning trick 1. Tests leading with a figure (K♦) to feign weakness and bait a Retruco."
-      },
-      "late_false_ace_chain": {
-        "title": "Late False Ace Chain",
-        "description": "AI has A♣, A♠, A♥ in a high-stakes endgame. Tests leading with the weak A♥ to bait a call, saving the A♠ for the clinch."
-      },
-      "parda_false_7": {
-        "title": "Parda False 7",
-        "description": "AI has 7♦, 7♣, 3♠ after a tie. Tests leading with the deceptive 7♣ (false 7) to bait a raise."
-      },
-      "ancho_deplete_post_tie": {
-        "title": "Ancho Deplete Post-Tie",
-        "description": "AI has A♣, 3♠, H♦ after two ties. Tests leading with 3♠ to hint at strength and bait a call to avoid a mano-decided loss."
-      },
-      "dual_false_bait": {
-        "title": "Dual False Bait",
-        "description": "AI has A♠, A♦, A♥ in the endgame. Tests leading with a false ace to bait a call."
-      },
-      "mid_low_signal_mask": {
-        "title": "Mid-Low Signal Mask",
-        "description": "AI has 7♠, 6♣, 2♥. Tests leading with 6♣ to probe, masking real strength."
-      },
-      "figure_ancho_shift": {
-        "title": "Figure Ancho Shift",
-        "description": "AI has A♣, 3♦, J♠ after winning trick 1. Tests leading with J♠ to feign depletion, setting up a bait with the remaining cards."
-      },
-      "endgame_low_balance": {
-        "title": "Endgame Low Balance",
-        "description": "AI has A♠, 5♦, 7♣ at 14-14. Tests leading with a balanced mid-low card (5♦) to avoid showing desperation and bait a Vale Cuatro."
-      },
-      "retruco_response_with_ace": {
-        "title": "Retruco Response with an Ace",
-        "description": "The AI faces a 'Retruco' call with a deceptive hand: one top-tier card (an Ace), a middle card (a King), and a low card. This tests if the AI, relying on the strength of its top card, is confident enough to accept the bet, despite holding two low-value cards."
-      },
-      "tie_ancho_glimpse": {
-        "title": "Post-Tie Decisive Play",
-        "description": "After a tie, the second trick is decisive. This scenario tests if the AI identifies this 'sudden death' situation. If it holds a hand that guarantees a win, it should call 'Truco' to maximize points. If not, it should play its strongest card to try and secure the round."
-      },
-      "brava_mid_chain": {
-        "title": "Brava Mid Chain",
-        "description": "AI has A♠, 7♠, 2♦ after a low Envido. Tests leading with the very low 2♦ to feign weakness, chaining to 7♠ on a bait."
-      },
-      "signal_false_low": {
-        "title": "Signal False Low",
-        "description": "AI has A♣, 5♥, H♠. Tests leading with 5♥ to mask its real strength."
-      },
-      "post_parda_figure": {
-        "title": "Post-Parda Figure",
-        "description": "After a tie in the first trick, the second trick is decisive. This scenario tests if the AI identifies this 'sudden death' situation. If it holds a hand that guarantees a win, it should call 'Truco' to maximize points. If not, it should play its strongest card to try and secure the round."
-      },
-      "dual_ancho_bait": {
-        "title": "Dual Ancho Bait",
-        "description": "AI has A♣, 3♠, 3♥. Tests leading with a 3 to hint at strength without revealing the brava, baiting an early Truco."
-      },
-      "false_brava_probe": {
-        "title": "False Brava Probe",
-        "description": "AI has 7♠, 7♣, 4♠ during Truco. Tests playing the false 7♣ to probe before committing."
-      },
-      "envido_low_unrelated": {
-        "title": "Envido Low Unrelated",
-        "description": "AI has A♠, 6♣, 2♦ after a club Envido. Tests leading with the unrelated 2♦ to misdirect."
-      },
-      "all_tie_mid_hint": {
-        "title": "Decisive Tie-Breaker as Hand",
-        "description": "The AI is 'mano' and the first two tricks were ties. The round is decided on this last card. The AI must analyze the probability of winning or tying the final trick (both outcomes give it the round win) and decide if it's advantageous enough to call 'Truco' before playing its card."
-      },
-      "clutch_false_deplete": {
-        "title": "Clutch False Deplete",
-        "description": "AI has A♠, 7♦, J♣ during Vale Cuatro. Tests leading with 7♦ to feign depletion, saving the A♠ for the final trick."
-      }
-    },
-    "explanations": {
-      "see_opponent": "The AI plays its weakest card to see what the opponent does without risking a valuable card. This is a common tactic when not leading the trick ('pie') to gather information.",
-      "probe_low_value": "A standard probing move. The AI plays its lowest value card to gather information about the opponent's hand while conserving its stronger cards for later tricks.",
-      "probe_mid_value": "A more advanced probing move. The AI plays a middle-value card to appear more credible, potentially baiting the opponent into a misplay or revealing a stronger card than necessary.",
-      "probe_sacrificial": "The AI intentionally plays a good (but not its best) card, sacrificing it to hide an even stronger card (like the Ace of Spades). This is a feint to lure the opponent into a trap.",
-      "probe_envido_hide": "The AI has a high Envido score but chooses to play a card that is not part of its Envido combination. This is a deceptive play to hide the fact that it has a strong Envido hand.",
-      "accept_truco_do_or_die": "The AI is in a 'do-or-die' situation where folding means a guaranteed loss of the game. It accepts the Truco because it's the only option that offers any chance of winning, however slim.",
-      "decline_truco_weak": "The AI's hand is considered too weak to compete in the Truco. It folds to minimize point loss, conceding the points for the current bet level.",
-      "decline_truco_low_equity": "The AI's calculated 'equity' (its win probability adjusted for various factors) is negative. It concludes that the risk of losing more points outweighs the chance of winning and folds.",
-      "decline_truco_certain_loss": "The AI's simulation predicts an almost 0% chance of winning the round. It folds immediately as the most logical action to prevent further point loss.",
-      "accept_truco_solid": "The AI assesses its hand as being strong enough to have a good chance of winning the Truco. It accepts the challenge.",
-      "accept_truco_decent_equity": "The AI's calculated equity is positive or only slightly negative, meaning the potential reward is worth the risk. It decides to accept the bet.",
-      "accept_truco_bluff_call": "The AI's hand is weak, but it suspects the opponent might be bluffing based on their profile or the game situation. It accepts the Truco to challenge the potential bluff.",
-      "escalate_truco_high_equity": "The AI calculates a very high equity, indicating a strong advantage. It escalates the bet to 'Retruco' or 'Vale Cuatro' to maximize its potential winnings.",
-      "escalate_truco_strong": "The AI's hand is strong, and it responds to the opponent's bet by raising the stakes to apply pressure and increase the value of the round.",
-      "escalate_truco_elite": "The AI has one of the top-tier hands in the game (e.g., in the 90th percentile). It escalates aggressively, confident in its superiority.",
-      "escalate_truco_bluff": "The AI escalates the Truco bet with a weak hand, attempting to intimidate the opponent into folding and stealing the pot.",
-      "escalate_truco_weak_bluff": "A specific type of bluff where the AI escalates despite having a weak hand, often relying on game pressure or the opponent's conservative profile.",
-      "escalate_truco_desperation_bluff": "The AI is far behind on the scoreboard and has a very low chance of winning normally. It attempts a high-risk, high-reward bluff by escalating the Truco as a last resort.",
-      "call_truco_bluff": "The AI initiates the Truco with a weak hand. This is a bluff intended to steal 1 point if the opponent folds.",
-      "call_truco_won_trick1": "The AI won the first trick, giving it a significant strategic advantage. It calls Truco to capitalize on this position of power.",
-      "call_truco_certain_win": "The AI has identified a situation where it has a guaranteed win for the round (e.g., holding the highest remaining card). It calls Truco as a risk-free value bet.",
-      "call_truco_post_parda_bluff": "After a tie in the first trick, the AI attempts a bluff by calling Truco, leveraging the uncertainty of the situation.",
-      "call_envido_strong": "The AI's Envido score is high (typically 27+). It calls Envido as a standard value bet, expecting to win the points.",
-      "call_envido_bluff": "The AI's Envido score is low, but it calls anyway. This is a bluff, hoping the opponent has an even lower score and will fold.",
-      "call_envido_marginal": "The AI's Envido score is mediocre, but it decides to take a calculated risk and call, often influenced by game pressure or the opponent's profile.",
-      "call_real_dominant": "The AI has a dominant Envido score (typically 30+). It skips the standard 'Envido' and calls 'Real Envido' directly to bet for more points.",
-      "call_falta_win_game": "The AI has a very high Envido score and is close to winning the game. It calls 'Falta Envido' to try and win the entire game in one bet.",
-      "call_falta_defensive": "The opponent is close to winning. The AI, holding a strong Envido hand, calls 'Falta Envido' as a defensive move to try and close the score gap or win outright.",
-      "decline_envido_weak": "The AI's Envido score is too low to compete against the opponent's bet. It folds to concede only 1 point.",
-      "accept_envido_good_odds": "The AI calculates that its Envido score has a good probability of being higher than the opponent's estimated score. It accepts the bet.",
-      "accept_envido_hero_call": "The AI's Envido score is likely lower than the opponent's, but it suspects a bluff and accepts the bet anyway. This is a high-risk 'hero call'.",
-      "escalate_real_stronger": "The opponent called 'Envido', but the AI's score is significantly higher. It escalates the bet to 'Real Envido' to press its advantage.",
-      "escalate_envido_strong": "The opponent called 'Envido'. The AI also has a good score and responds with another 'Envido' call (Envido-Envido) to raise the bet to 4 points.",
-      "call_flor_strong": "The AI was dealt three cards of the same suit ('Flor'). It is obligated to declare it, winning 3 points automatically if the opponent doesn't have one.",
-      "ack_flor_weak": "The AI also has Flor, but its score is too low to challenge the opponent's. It acknowledges the opponent's better Flor.",
-      "ack_flor_no_flor": "The AI does not have Flor and must concede the points to the opponent who does.",
-      "call_contraflor_strong": "The opponent called Flor, but the AI also has Flor and believes its score is high enough to win a showdown. It escalates to 'Contraflor'.",
-      "accept_contraflor_strong": "The opponent called 'Contraflor', and the AI accepts the challenge because it has a very high Flor score.",
-      "decline_contraflor_weak": "The AI has Flor but believes the opponent's must be higher to have called 'Contraflor'. It folds to concede fewer points.",
-      "win_round_cheap": "The AI can win the current trick with multiple cards. It chooses the weakest of its winning cards to conserve its stronger cards for later.",
-      "discard_low": "The AI cannot win the current trick. It plays its lowest-value card, conceding the trick to save its better cards.",
-      "parda_y_canto": "A strategic play where the AI intentionally ties the trick ('parda') while holding a winning card in reserve, creating an advantageous position to call 'Truco' later.",
-      "unknown_action": "An action occurred that does not have a specific predefined reason key. This can happen in complex or transitional game states.",
-      "accept_truco_lookahead_fold": "The AI's hand is strong enough to accept the 'Truco', but its internal simulation shows it would fold to a subsequent 'Vale Cuatro'. It makes the safe play and just accepts.",
-      "escalate_truco_dominant_card": "The AI is in the final trick and holds a card that is guaranteed to win. It escalates the bet as there is no risk.",
-      "accept_truco_mixed": "As part of a 'mixed strategy' to remain unpredictable, the AI decides to accept the Truco in a situation where it might otherwise fold.",
-      "decline_truco_mixed": "As part of a 'mixed strategy' to remain unpredictable, the AI decides to fold from the Truco in a situation where it might otherwise accept.",
-      "escalate_truco_mixed_bluff": "As part of a 'mixed strategy', the AI decides to make a risky bluff by escalating the bet, purely to be unpredictable.",
-      "play_last_card": "There is only one card left in the hand, so the AI plays it. This is the only possible move.",
-      "call_truco_value": "The AI initiates the Truco with a strong hand. This is a standard 'value bet' intended to win more points.",
-      "call_truco_parda_y_gano": "The first trick was a tie. The AI knows that winning the second trick wins the entire round. It calls 'Truco' before playing its winning card to maximize points from this guaranteed win situation.",
-      "secure_hand": "The AI plays its highest card because it is 'mano' (leading the trick) or because it has already won a previous trick and wants to secure the round win. This is a straightforward, non-deceptive play to exert pressure.",
-      "respond_with_flor": "The AI has Flor and the opponent called Envido. Flor voids the Envido. The correct action is to declare the Flor, which wins 3 points and cancels the Envido bet entirely.",
-      "respond_truco_with_flor": "The AI has Flor and the opponent called Truco. Flor has priority over Truco if Envido hasn't been settled. The correct action is to declare Flor first.",
-      "bait_lopsided_hand": "The AI has a 'lopsided' hand (strong Envido, weak Truco). Instead of calling Envido, it plays a card to bait the opponent into calling Envido first, allowing the AI to counter-escalate.",
-      "feint_pre_truco": "The AI has a monster hand for Truco but hasn't called yet. It plays a weaker card as a 'feint' to hide its strength and encourage the opponent to call Truco or bluff.",
-      "feint_active_truco": "A Truco bet is already active. The AI, holding a monster hand, plays a weaker card as bait to encourage the opponent to escalate the bet to 'Retruco' or 'Vale Cuatro'."
-    }
+  "card_picker": {
+    "title": "Select a Card"
   }
 }

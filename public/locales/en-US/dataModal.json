@@ -1,0 +1,124 @@
+{
+  "dataModal": {
+    "title": "Behavior Analysis",
+    "style_analysis_title": "Personality Profile (According to the AI)",
+    "no_data_message": "Play a few more rounds for the AI to generate a detailed profile of your play style.",
+    "behavior_profile_title": "Behavioral Profile",
+    "truco_threshold": "Truco Threshold (avg)",
+    "bluff_success": "Truco Bluff Success",
+    "envido_primero_rate": "\"Envido Primero\" Rate",
+    "envido_threshold": "Envido Threshold (avg)",
+    "envido_fold_rate": "Envido Fold Rate (vs AI)",
+    "envido_preference": "Envido Preference (Lead/Reply)",
+    "counter_tendency": "Counter-Attack Tendency",
+    "chain_bluff_rate": "Chain Bluff Rate",
+    "card_play_patterns_title": "Card Play Patterns",
+    "card_play_header_type": "Card Type",
+    "card_play_header_plays": "Plays",
+    "card_play_header_win_rate": "Win %",
+    "card_play_header_trick1": "Trick 1",
+    "card_play_header_trick2": "Trick 2",
+    "card_play_header_trick3": "Trick 3",
+    "card_play_header_lead": "Leading",
+    "card_play_header_response": "Responding",
+    "round_history_title": "Round History",
+    "round_history_summary": "Round {{round}} - {{winnerStatus}} ({{playerScore}} - {{aiScore}})",
+    "round_history_winner": "Winner: {{winner}}",
+    "round_history_in_progress": "In progress...",
+    "round_history_strength_envido": "Strength / Envido",
+    "round_history_calls": "Calls",
+    "round_history_calls_none": "None",
+    "round_history_trick_winners": "Trick Winners",
+    "round_history_trick_winner_pattern": "T{{trick}}: {{winner}}",
+    "round_history_played_cards": "Played Cards",
+    "round_history_played_cards_pattern": "Trick {{trick}}: You ({{playerCard}}) vs AI ({{aiCard}})",
+    "button_import": "Import Profile",
+    "button_export": "Export Profile",
+    "button_reset": "Reset Profile",
+    "import_success": "Profile imported successfully!",
+    "import_error": "Error: The selected file is not a valid profile.",
+    "import_error_format": "The file does not have the expected format.",
+    "reset_confirm_message": "Are you sure you want to erase all behavioral data the AI has learned about your play style? This action cannot be undone.",
+    "reset_confirmation": "The AI's learned player profile has been reset.",
+    "card_categories": {
+      "ancho_espada": "Ace of Swords",
+      "ancho_basto": "Ace of Clubs",
+      "siete_espada": "Seven of Swords",
+      "siete_oro": "Seven of Coins",
+      "tres": "Threes",
+      "dos": "Twos",
+      "anchos_falsos": "False Aces",
+      "reyes": "Kings",
+      "caballos": "Knights",
+      "sotas": "Jacks",
+      "sietes_malos": "False Sevens",
+      "seis": "Sixes",
+      "cincos": "Fives",
+      "cuatros": "Fours"
+    },
+    "confidence_level": "Confidence Level",
+    "traits": {
+      "not_enough_data": {
+        "title": "Analyzing...",
+        "description": "Play a few more rounds for the AI to generate a detailed profile of your playing style."
+      },
+      "envido_aggressor": {
+        "title": "The Envido Aggressor",
+        "high": "The AI has noticed that you frequently call Envido, even with modest points. You use the Envido as a tool to apply constant pressure.",
+        "medium": "You tend to be proactive with the Envido, not waiting for a perfect hand to call. The AI is learning to respect your calls."
+      },
+      "envido_conservative": {
+        "title": "The Envido Precise",
+        "high": "You only call Envido when you have a very strong hand. This makes you extremely credible, and the AI will take your calls very seriously."
+      },
+      "envido_cautious": {
+        "title": "The Envido Cautious",
+        "high": "The AI has detected that you often fold from Envido bets if you don't have a very strong hand. This could be exploited with bluffs."
+      },
+      "envido_bold": {
+        "title": "The Envido Bold",
+        "high": "You almost never fold from an Envido bet, showing that you are willing to challenge the AI to the end. Beware of overvalued hands!"
+      },
+      "truco_effective_bluffer": {
+        "title": "The Master Bluffer",
+        "high": "Your Truco bluffs are very effective. The AI has noticed that you often win points by betting with weak hands."
+      },
+      "truco_readable_bluffer": {
+        "title": "The Readable Bluffer",
+        "high": "The AI believes it has figured out your bluffing pattern. Be careful, as it might not fold to your risky bets."
+      },
+      "truco_frequent_bluffer": {
+        "title": "The Frequent Bluffer",
+        "high": "You attempt Truco bluffs regularly. This makes you unpredictable, but also vulnerable if the AI decides to call."
+      },
+      "truco_conservative": {
+        "title": "The Truco Reserved",
+        "high": "You are extremely conservative in Truco, betting only with elite hands. The AI has learned to fear and respect your calls greatly."
+      },
+      "truco_aggressive": {
+        "title": "The Truco Ram",
+        "high": "You don't hesitate to call Truco to apply pressure, even with modest hands. This makes you dangerous, but sometimes exposes you to a counter-attack."
+      },
+      "playstyle_predictable": {
+        "title": "The Predictable",
+        "high": "When you are 'mano', you almost always start by playing your strongest card. The AI can use this predictability to plan its strategy."
+      },
+      "playstyle_unpredictable": {
+        "title": "The Variable Tactician",
+        "high": "Your opening plays are varied and hard to predict. Sometimes you play your strongest card, sometimes a weak one, keeping the AI on its toes."
+      },
+      "envido_primero_specialist": {
+        "title": "The 'Primero' Specialist",
+        "high": "You use the 'Envido Primero' tactic frequently to interrupt the Truco. The AI is aware of this preference and might adjust its Truco calls accordingly."
+      },
+      "counter_puncher": {
+        "title": "The Counter-Puncher",
+        "high": "The AI has noticed that you respond aggressively to its high-value card plays, often attempting to win the trick rather than sacrificing a weak card. This indicates you are not easily intimidated."
+      },
+      "chain_bluffer": {
+          "title": "The Chain Bluffer",
+          "high": "The AI has detected a pattern where you lead a round with a weak card and then follow up by calling Truco. It suspects you use this tactic to set traps or steal points with weak hands."
+      }
+    }
+  }
+}

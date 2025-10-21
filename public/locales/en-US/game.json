@@ -1,0 +1,153 @@
+{
+  "blurb_titles": {
+    "envido_result": "Envido Result",
+    "trick_result": "Trick Result"
+  },
+  "mainMenu": {
+    "title": "TRUCO AI",
+    "subtitle": "A card game challenge against a strategic AI.",
+    "play_normal": "Play Against AI",
+    "play_with_help": "Play with Assistant",
+    "learn": "Learn to Play",
+    "manual": "Truco Manual",
+    "simulate": "Simulation Mode (AI vs AI)"
+  },
+  "continueGameModal": {
+    "title": "Saved Game Found",
+    "message": "We found a saved game. Would you like to continue or start a new one?",
+    "continue": "Continue Game",
+    "new_game": "New Game"
+  },
+  "game": {
+    "ai_thinking": "AI is thinking...",
+    "mano_is": "Hand: {{player}}",
+    "new_game_log": "--- New Game ---",
+    "new_game_started": "A new game has begun. {{player}} is hand.",
+    "new_round_log": "--- Round {{round}} ---",
+    "you_are_mano": "You are hand.",
+    "ai_is_mano": "The AI is hand.",
+    "player_plays_card": "{{player}} plays {{cardName}}",
+    "trick_winner": "Winner of trick {{trickNumber}}: {{winner}}",
+    "round_winner_points": "Winner of the round: {{winner}}. Wins {{points}} {{points, plural, one{point} other{points}}}.",
+    "round_winner": "Winner of the round: {{winner}}",
+    "error_ai": "An error occurred with the AI. The AI forfeits its turn.",
+    "session_restored": "--- Session Restored ---",
+    "profile_imported": "--- Profile Imported ---",
+    "game_over_by_points_win": "You won the game! The round ended early because you have enough points to win.",
+    "game_over_by_points_lose": "You lost the game! The round ended early because the AI has enough points to win.",
+    "round_info": "Round {{round}} | Hand: {{player}}",
+    "show_ai_logic_aria": "Show AI Logic"
+  },
+  "actionBar": {
+    "next_round": "Next Round",
+    "quiero": "I want it!",
+    "no_quiero": "I don't want it",
+    "envido_primero": "Envido Goes First",
+    "retruco": "Retruco!",
+    "vale_cuatro": "Vale Cuatro!",
+    "envido": "Envido!",
+    "real_envido": "Real Envido!",
+    "falta_envido": "Falta Envido!",
+    "truco": "Truco!",
+    "flor": "FLOR!",
+    "flor_ack": "OK (Yours are good)",
+    "flor_ack_mine_worse": "Mine are worse.",
+    "flor_ack_good": "They're good.",
+    "contraflor": "Contraflor!",
+    "contraflor_quiero": "With Flor, I want it!",
+    "contraflor_no_quiero": "With Flor, I fold"
+  },
+  "gameBoard": {
+    "ai_cards": "AI's Cards",
+    "player_cards": "Your Played Cards",
+    "empty_pile": "Empty Pile",
+    "round_over_title": "Round Over",
+    "points_summary_title": "Points",
+    "score_is": "The score is {{playerScore}} to {{aiScore}}",
+    "click_to_continue": "(Click to continue)",
+    "flor": "Flor",
+    "envido": "Envido",
+    "truco": "Truco",
+    "note_not_called": "Not called",
+    "note_flor_accepted": "Accepted",
+    "note_envido_accepted": "Accepted",
+    "note_declined": "{{decliner}} declined",
+    "note_truco_simple": "Simple Round",
+    "note_truco_truco": "Truco",
+    "note_truco_retruco": "Retruco",
+    "note_truco_vale_cuatro": "Vale Cuatro",
+    "note_contraflor_accepted": "Contraflor accepted",
+    "note_contraflor_declined": "Contraflor ({{decliner}} declined)",
+    "round_over_win": "You Won the Round",
+    "round_over_lose": "You Lost the Round",
+    "round_over_tie": "Round Tied"
+  },
+  "centralMessage": {
+    "tie_envido": "Tie at {{points}}. {{winnerName}} wins for being hand.",
+    "envido_result": "Your points: {{playerPoints}}. AI: {{aiPoints}}. {{winnerName}} wins!",
+    "flor_result": "Your points: {{playerPoints}}. AI: {{aiPoints}}. {{winnerName}} wins the Flor!"
+  },
+  "log": {
+    "welcome": "Welcome to Truco AI!",
+    "accept": "{{acceptor}} accepts!",
+    "decline": "{{decliner}} refuses.",
+    "envido_showdown": "Player has {{playerPoints}}. AI has {{aiPoints}}.",
+    "win_points": "{{winner}} wins {{points}} {{points, plural, one{point} other{points}}}.",
+    "flor_win_points": "{{winner}} wins {{points}} points for the Flor.",
+    "accept_contraflor": "{{acceptor}}: \"With Flor, I want it!\"",
+    "decline_contraflor": "{{decliner}}: \"With Flor, I fold.\"",
+    "flor_showdown_win": "{{winner}} wins {{points}} points.",
+    "call_envido_again": "{{caller}} calls ENVIDO again.",
+    "call_envido_primero": "{{caller}}: \"Envido comes first!\"",
+    "call_envido": "{{caller}} calls ENVIDO!",
+    "call_real_envido": "{{caller}} raises to REAL ENVIDO!",
+    "call_falta_envido": "{{caller}} calls FALTA ENVIDO!",
+    "declare_flor": "{{caller}} calls FLOR!",
+    "respond_envido_with_flor": "{{caller}} responds to Envido with FLOR!",
+    "call_contraflor": "{{caller}} calls CONTRAFLOR AL RESTO!",
+    "call_truco": "{{caller}} calls TRUCO!",
+    "call_retruco": "{{caller}} calls RETRUCO!",
+    "call_vale_cuatro": "{{caller}} calls VALE CUATRO!",
+    "call_falta_truco": "{{caller}} calls FALTA TRUCO!"
+  },
+  "gameOverModal": {
+    "win_title": "You Won!",
+    "lose_title": "You Lost!",
+    "win_reason": "Congratulations, you are the Truco champion!",
+    "lose_reason": "Better luck next time!",
+    "play_again": "Play Again"
+  },
+  "logPanel": {
+    "game_log_title": "Game Log",
+    "ai_log_title": "AI Logic",
+    "hide_ai_log": "Hide AI Logic",
+    "game_start": "Game Start",
+    "game_log_button": "Log",
+    "ai_log_button": "AI Logic",
+    "no_log_for_round": "No AI logs for this round.",
+    "current_match": "Current Match",
+    "match_from": "Match from {{date}} ({{score}})"
+  },
+  "gameMenu": {
+    "menu": "MENU",
+    "main_menu": "Main Menu",
+    "view_data": "View Data",
+    "view_ai_cards": "View AI's Cards",
+    "sound_on_advice": "Listen to AI's advice",
+    "sound_on_verses": "Listen to AI's verses"
+  },
+  "soundHint": {
+    "activate_voice": "Activate the AI voice here"
+  },
+  "scoreboard": {
+    "title": "Score"
+  },
+  "assistantPanel": {
+    "title": "AI Assistant",
+    "show_logic": "Show Detailed Logic",
+    "hide_logic": "Hide Logic",
+    "open_aria_label": "Open AI Assistant",
+    "close_aria_label": "Close AI Assistant",
+    "summon_message": "You can summon me again by clicking on my face on the bottom right."
+  }
+}

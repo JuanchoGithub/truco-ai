@@ -70,6 +70,8 @@ export interface OpponentModel {
     leadWithHighestRate: number; // When mano, trick 1
     baitRate: number;
     envidoPrimeroRate: number; // NEW: Rate of responding to Truco with Envido
+    counterTendency: number;
+    chainBluffRate: number;
   };
   trucoBluffs: ContextualActionStat;
 }
@@ -255,6 +257,7 @@ export interface GameState {
   trucoLevel: 0 | 1 | 2 | 3;
   playerEnvidoFoldHistory: boolean[];
   playerTrucoCallHistory: PlayerTrucoCallEntry[];
+  playerTrucoFoldHistory: boolean[];
   playerCalledHighEnvido: boolean;
   playedCards: Card[];
 
@@ -337,6 +340,7 @@ export enum ActionType {
   CLEAR_AI_BLURB = 'CLEAR_AI_BLURB',
   // Data Modal
   TOGGLE_DATA_MODAL = 'TOGGLE_DATA_MODAL',
+  RESET_OPPONENT_MODEL = 'RESET_OPPONENT_MODEL',
   // Local Storage
   LOAD_PERSISTED_STATE = 'LOAD_PERSISTED_STATE',
   // New action for imported data
@@ -381,6 +385,7 @@ export type Action =
   | { type: ActionType.CLEAR_PLAYER_BLURB }
   | { type: ActionType.CLEAR_AI_BLURB }
   | { type: ActionType.TOGGLE_DATA_MODAL }
+  | { type: ActionType.RESET_OPPONENT_MODEL }
   | { type: ActionType.LOAD_PERSISTED_STATE; payload: Partial<GameState> }
   | { type: ActionType.LOAD_IMPORTED_DATA; payload: Partial<GameState> }
   // New Flor Actions

@@ -6,51 +6,50 @@ function getNestedValue(obj: any, key: string): any {
   return key.split('.').reduce((o, i) => (o ? o[i] : undefined), obj);
 }
 
+// Deep merge helper
+function deepMerge(target: any, source: any) {
+    for (const key in source) {
+        if (source[key] instanceof Object && key in target) {
+            Object.assign(source[key], deepMerge(target[key], source[key]));
+        }
+    }
+    Object.assign(target || {}, source);
+    return target;
+}
+
+
 const i18nService = {
   async loadLanguage(lang: string): Promise<void> {
     try {
-      let uiPromise, phrasesPromise, aiLogicPromise, simulationPromise, scenarioRunnerPromise;
+      const files = ['common', 'game', 'suggestion', 'tutorial', 'dataModal', 'manual', 'scenario_tester', 'phrases', 'ai_logic', 'simulation', 'scenario_runner'];
+      
+      let effectiveLang = lang;
+      // Fallback to Spanish if an unsupported language is requested
+      if (lang !== 'en-US' && lang !== 'es-AR') {
+        effectiveLang = 'es-AR';
+      }
 
-      // Use fetch with paths relative to the document root. This is more robust for deployment environments
-      // like Vercel, as it correctly resolves paths even if the app is in a subdirectory.
-      switch (lang) {
-        case 'en-US':
-          uiPromise = fetch('locales/en-US/ui.json').then(res => res.json());
-          phrasesPromise = fetch('locales/en-US/phrases.json').then(res => res.json());
-          aiLogicPromise = fetch('locales/en-US/ai_logic.json').then(res => res.json());
-          simulationPromise = fetch('locales/en-US/simulation.json').then(res => res.json());
-          scenarioRunnerPromise = fetch('locales/en-US/scenario_runner.json').then(res => res.json());
-          break;
-        case 'es-AR':
-        default:
-          uiPromise = fetch('locales/es-AR/ui.json').then(res => res.json());
-          phrasesPromise = fetch('locales/es-AR/phrases.json').then(res => res.json());
-          aiLogicPromise = fetch('locales/es-AR/ai_logic.json').then(res => res.json());
-          simulationPromise = fetch('locales/es-AR/simulation.json').then(res => res.json());
-          scenarioRunnerPromise = fetch('locales/es-AR/scenario_runner.json').then(res => res.json());
-          lang = 'es-AR'; // Ensure lang is set to the fallback for consistency
-          break;
+      const promises = files.map(file => 
+        fetch(`locales/${effectiveLang}/${file}.json`).then(res => {
+          if (!res.ok) {
+            throw new Error(`Failed to fetch ${file}.json for lang ${effectiveLang}`);
+          }
+          return res.json();
+        })
+      );
+      
+      const allData = await Promise.all(promises);
+
+      let mergedTranslations = {};
+      for (const data of allData) {
+        deepMerge(mergedTranslations, data);
       }
       
-      const [uiData, phrasesData, aiLogicData, simulationData, scenarioRunnerData] = await Promise.all([
-        uiPromise,
-        phrasesPromise,
-        aiLogicPromise,
-        simulationPromise,
-        scenarioRunnerPromise,
-      ]);
-
-      translations = { 
-        ...uiData, 
-        ...phrasesData, 
-        ...aiLogicData,
-        ...simulationData,
-        ...scenarioRunnerData
-      };
-      currentLanguage = lang;
+      translations = mergedTranslations;
+      currentLanguage = effectiveLang;
     } catch (error) {
       console.error(`[i18n] Error loading language ${lang} via fetch:`, error);
-      // Fallback to default if loading fails
+      // Fallback to default if loading fails and we're not already on it
       if (lang !== 'es-AR') {
           await this.loadLanguage('es-AR');
       }

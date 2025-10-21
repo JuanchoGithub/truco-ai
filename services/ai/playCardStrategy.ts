@@ -15,7 +15,7 @@ const findCardIndexByValue = (hand: Card[], type: 'min' | 'max'): number => {
     return hand.findIndex(c => c.rank === cardToFind.rank && c.suit === cardToFind.suit);
 }
 
-const findBaitCard = (hand: Card[]): { index: number, card: Card, reasonKey: string, reason: MessageObject } => {
+export const findBaitCard = (hand: Card[]): { index: number, card: Card, reasonKey: string, reason: MessageObject } => {
     const sortedHand = [...hand].sort((a, b) => getCardHierarchy(a) - getCardHierarchy(b));
     const [lowest, middle, highest] = sortedHand;
 

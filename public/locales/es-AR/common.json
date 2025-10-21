@@ -1,0 +1,36 @@
+{
+  "common": {
+    "player": "Jugador",
+    "ai": "IA",
+    "you": "Vos",
+    "you_short": "Vos",
+    "randomizer": "Randomizer",
+    "opponent": "Oponente",
+    "round": "Ronda",
+    "hand": "Mano",
+    "of": "de",
+    "gemini": "Gemini",
+    "card_ranks": {
+      "1": "As", "2": "2", "3": "3", "4": "4", "5": "5", "6": "6", "7": "7",
+      "10": "Sota", "11": "Caballo", "12": "Rey"
+    },
+    "card_suits": {
+      "espadas": "Espadas", "bastos": "Bastos", "oros": "Oros", "copas": "Copas"
+    },
+    "card_name_pattern": "{{rank}} de {{suit}}",
+    "close": "Cerrar",
+    "cancel": "Cancelar",
+    "loading": "Cargando...",
+    "na": "N/A",
+    "tie": "Empate"
+  },
+  "cardImageService": {
+    "errors": {
+      "remote_load_failed": "Error al cargar la hoja de sprites remota",
+      "local_load_failed": "Error al cargar la hoja de sprites local",
+      "local_load_failed_path": "Error al cargar la hoja de sprites desde la ruta local. Asegúrate de que 'cartas.png' exista en la carpeta 'public'.",
+      "invalid_card": "Carta inválida proporcionada: {{cardName}}",
+      "no_canvas_context": "No se pudo obtener el contexto 2D del canvas"
+    }
+  }
+}

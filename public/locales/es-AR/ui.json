@@ -9,6 +9,7 @@
     "round": "Ronda",
     "hand": "Mano",
     "of": "de",
+    "gemini": "Gemini",
     "card_ranks": {
       "1": "As", "2": "2", "3": "3", "4": "4", "5": "5", "6": "6", "7": "7",
       "10": "Sota", "11": "Caballo", "12": "Rey"
@@ -391,11 +392,11 @@
   },
   "cardImageService": {
     "errors": {
-      "remote_load_failed": "Error loading remote sprite sheet",
-      "local_load_failed": "Error loading local sprite sheet",
-      "local_load_failed_path": "Error loading sprite sheet from local path. Ensure 'cartas.png' exists in the 'public' folder.",
-      "invalid_card": "Invalid card provided: {{cardName}}",
-      "no_canvas_context": "Could not get 2D canvas context"
+      "remote_load_failed": "Error al cargar la hoja de sprites remota",
+      "local_load_failed": "Error al cargar la hoja de sprites local",
+      "local_load_failed_path": "Error al cargar la hoja de sprites desde la ruta local. Asegúrate de que 'cartas.png' exista en la carpeta 'public'.",
+      "invalid_card": "Carta inválida proporcionada: {{cardName}}",
+      "no_canvas_context": "No se pudo obtener el contexto 2D del canvas"
     }
   },
   "manual": {
@@ -660,6 +661,116 @@
       "p2_3": ", a bet on who has the best combination of same-suited cards. This application simulates the Argentine variant of the game, with the particularity of the ",
       "p2_strong3": "Flor",
       "p2_4": "."
+    }
+  },
+  "card_picker": {
+    "title": "Select a Card"
+  },
+  "scenario_tester": {
+      "title": "Scenario Tester",
+      "setup": "Setup",
+      "describe_button": "Describe Scenarios",
+      "describe_button_aria": "View descriptions of predefined scenarios",
+      "select_scenario": "Select a predefined scenario...",
+      "or_create_custom": "Or create a custom one below",
+      "ai_score": "AI Score",
+      "opponent_score": "Opponent Score",
+      "mano": "Is Hand (Mano)",
+      "turn": "Current Turn",
+      "phase": "Game Phase",
+      "truco_level": "Truco Level",
+      "last_caller": "Last Caller",
+      "envido_called": "Envido already called",
+      "ai_envido_score": "AI Envido Points",
+      "opponent_envido_score": "Opponent Envido Points",
+      "phases": {
+        "trick_1": "Trick 1",
+        "trick_2": "Trick 2",
+        "trick_3": "Trick 3",
+        "envido_called": "Envido Called",
+        "truco_called": "Truco Called",
+        "retruco_called": "Retruco Called",
+        "flor_called": "Flor Called"
+      },
+      "run_test": "Run Test",
+      "regenerate_hands": "Regenerate Hands",
+      "regenerate_hands_tooltip": "For predefined scenarios only. Generates new random hands that fit the scenario's rules.",
+      "run_simulations": "Run {{count}} Simulations",
+      "simulating": "Simulating... ({{progress}}%)",
+      "cancel": "Cancel",
+      "ai_hand": "AI's Hand",
+      "clear": "Clear",
+      "opponent_hand": "Opponent's Hand",
+      "result": "Result",
+      "chosen_action": "Chosen Action",
+      "reasoning": "Reasoning",
+      "no_result": "Run a test to see the result.",
+      "simulation_results": "Simulation Results ({{count}} runs)",
+      "clear_results": "Clear",
+      "run_simulations_no_scenario_error": "Please select a predefined scenario to run bulk simulations.",
+      "descriptions": {
+        "title": "Scenario Descriptions",
+        "parda_y_gano": {
+          "title": "Parda y Gano (Tie and Win)",
+          "description": "The first trick was a tie. The AI is hand for the second and holds a strong hand. The goal is for the AI to recognize that winning this trick wins the round and to call Truco for maximum points."
+        },
+        "do_or_die": {
+          "title": "Do-or-Die",
+          "description": "The AI is about to lose the game. The opponent calls Truco. Folding is a certain loss. The AI must ignore its hand weakness and accept, as it's its only chance to win."
+        },
+        "lopsided_bait": {
+          "title": "Lopsided Hand Bait",
+          "description": "The AI has a very high Envido (31+) but very poor cards for Truco. The optimal strategy is to not call Envido and play a low card, hoping the opponent calls so it can be counter-attacked."
+        },
+        "envido_primero": {
+          "title": "Envido Primero",
+          "description": "The opponent calls Truco. The AI has an excellent Envido (33+). The correct rule/strategy is to interrupt with 'Envido is first' to secure those points before resolving the Truco."
+        },
+        "flor_vs_envido": {
+          "title": "Flor vs. Envido",
+          "description": "The opponent calls Envido. The AI has Flor. The rule is that Flor voids and beats Envido, so the AI must respond with 'Flor'."
+        },
+        "endgame_pressure_truco": {
+          "title": "Endgame Pressure",
+          "description": "The AI is about to win (14 points). It has a decent but not unbeatable hand. The goal is for the AI to play conservatively and avoid calling Truco, not risking the game unnecessarily."
+        }
+      },
+      "scenario_names": {
+        "parda_y_gano": "Parda y Gano (Tie and Win)",
+        "do_or_die": "Do-or-Die",
+        "lopsided_bait": "Lopsided Hand Bait",
+        "envido_primero": "Envido Primero",
+        "flor_vs_envido": "Flor vs. Envido",
+        "endgame_pressure_truco": "Endgame Pressure",
+        "dual_brava_probe": "Dual Brava Probe",
+        "ancho_feint_chain": "Ace Feint Chain",
+        "false_ace_bait": "False Ace Bait",
+        "tie_breaker_low": "Low Card Tie Breaker",
+        "signal_masked_depletion": "Masked Depletion Signal",
+        "post_envido_low_shift": "Post-Envido Low Shift",
+        "triple_brava_figure_probe": "Triple Brava Figure Probe",
+        "post_tie_retruco_response": "Post-Tie Retruco Response",
+        "false_7_deplete": "False 7 Deplete",
+        "envido_suit_misdirect": "Envido Suit Misdirect",
+        "brava_kiss_signal": "Brava \"Kiss\" Signal",
+        "mid_game_figure_low": "Mid-Game Low Figure",
+        "late_false_ace_chain": "Late False Ace Chain",
+        "parda_false_7": "Tie with False 7",
+        "tie_ancho_glimpse": "Ace Glimpse on Tie",
+        "banter_low_glimpse": "Banter Low Glimpse",
+        "ancho_deplete_post_tie": "Ace Deplete Post-Tie",
+        "dual_false_bait": "Dual False Bait",
+        "mid_low_signal_mask": "Mid-Low Signal Mask",
+        "figure_ancho_shift": "Figure-to-Ace Shift",
+        "endgame_low_balance": "Endgame Low Balance",
+        "retruco_response_with_ace": "Retruco Response with Ace",
+        "brava_mid_chain": "Brava-to-Mid Chain",
+        "signal_false_low": "False Low Signal",
+        "post_parda_figure": "Post-Tie Figure",
+        "false_brava_probe": "False Brava Probe",
+        "envido_low_unrelated": "Unrelated Low Envido",
+        "all_tie_mid_hint": "All-Tie Mid Hint",
+        "clutch_false_deplete": "Clutch False Deplete"
     }
   }
 }

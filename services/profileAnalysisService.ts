@@ -50,8 +50,8 @@ const TRAITS: PlayerTrait[] = [
   {
     id: 'truco_bluffer',
     scorer: ({ roundHistory }) => {
-      const bluffs = roundHistory.filter(r => r.playerTrucoCall?.isBluff);
       if (roundHistory.length < 5) return 0;
+      const bluffs = roundHistory.filter(r => r.playerTrucoCall?.isBluff);
       // Bluff rate as a percentage of rounds played
       return Math.min(1, bluffs.length / (roundHistory.length / 2));
     },
@@ -99,16 +99,19 @@ const TRAITS: PlayerTrait[] = [
     }
   },
   {
-    id: 'holds_strong_cards',
-    scorer: ({ playerCardPlayStats }) => {
-      const tresStats = playerCardPlayStats.tres;
-      if (tresStats.plays === 0) return 0;
-      // High score if 'tres' is played more in response than as a lead.
-      return tresStats.asResponse / tresStats.plays;
-    },
+    id: 'counter_puncher',
+    scorer: ({ opponentModel }) => opponentModel.playStyle.counterTendency,
     observer: (score) => {
-      if (score > 0.7) return { titleKey: 'dataModal.traits.counter_puncher.title', descriptionKey: 'dataModal.traits.counter_puncher.high' };
+      if (score > 0.6) return { titleKey: 'dataModal.traits.counter_puncher.title', descriptionKey: 'dataModal.traits.counter_puncher.high' };
       return null;
+    }
+  },
+  {
+    id: 'chain_bluffer',
+    scorer: ({ opponentModel }) => opponentModel.playStyle.chainBluffRate,
+    observer: (score) => {
+        if (score > 0.4) return { titleKey: 'dataModal.traits.chain_bluffer.title', descriptionKey: 'dataModal.traits.chain_bluffer.high' };
+        return null;
     }
   }
 ];

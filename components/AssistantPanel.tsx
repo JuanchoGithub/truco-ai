@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { AiMove, Card, MessageObject } from '../types';
 import { getSimpleSuggestionText } from '../services/suggestionService';
@@ -14,17 +13,28 @@ const AssistantPanel: React.FC<AssistantPanelProps> = ({ suggestion, playerHand 
   const { t } = useLocalization();
   const [isExpanded, setIsExpanded] = useState(false);
   const [showLogic, setShowLogic] = useState(false);
-  const [currentSuggestion, setCurrentSuggestion] = useState<AiMove | null>(suggestion);
+  const [isManuallyClosed, setIsManuallyClosed] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  const previousSuggestionRef = useRef<AiMove | null>(null);
 
   useEffect(() => {
-    // This now correctly updates the internal state when the suggestion prop becomes null,
-    // causing the component to disappear when it should.
-    setCurrentSuggestion(suggestion);
-    if (suggestion) {
-      setShowLogic(false); // Collapse logic view on new suggestion
+    // If a new suggestion arrives and it's different from the last one
+    if (suggestion && suggestion !== previousSuggestionRef.current) {
+      if (!isManuallyClosed) {
+        setIsExpanded(true);
+      }
+      setShowLogic(false); // Always collapse logic view on new suggestion
     }
-  }, [suggestion]);
+    
+    // If suggestion disappears (e.g., end of turn)
+    if (!suggestion) {
+      setIsExpanded(false);
+      setIsManuallyClosed(false); // Reset for the next turn
+    }
+
+    previousSuggestionRef.current = suggestion;
+  }, [suggestion, isManuallyClosed]);
   
   // Effect for handling clicks outside the panel
   useEffect(() => {
@@ -41,14 +51,34 @@ const AssistantPanel: React.FC<AssistantPanelProps> = ({ suggestion, playerHand 
     }
   }, [isExpanded]);
 
+  // Toast message timer
+  useEffect(() => {
+    if (toastMessage) {
+        const timer = setTimeout(() => {
+            setToastMessage(null);
+        }, 4000); // Show for 4 seconds
+        return () => clearTimeout(timer);
+    }
+  }, [toastMessage]);
 
-  if (!currentSuggestion) return null;
+  const handleManualClose = () => {
+    setIsExpanded(false);
+    setIsManuallyClosed(true);
+    setToastMessage(t('assistantPanel.summon_message'));
+  };
 
-  const suggestionText = currentSuggestion.summary || getSimpleSuggestionText(currentSuggestion, playerHand);
+  const handleOpenFromButton = () => {
+    setIsExpanded(true);
+    setIsManuallyClosed(false); // Re-enable auto-opening
+  };
+
+  if (!suggestion) return null;
+
+  const suggestionText = suggestion.summary || getSimpleSuggestionText(suggestion, playerHand);
 
   // Fix: Process the reasoning array into a displayable string.
-  const reasoningText = Array.isArray(currentSuggestion.reasoning)
-    ? currentSuggestion.reasoning.map(r => {
+  const reasoningText = Array.isArray(suggestion.reasoning)
+    ? suggestion.reasoning.map(r => {
         if (typeof r === 'string') return r;
         
         const options: { [key: string]: any } = { ...r.options };
@@ -68,17 +98,24 @@ const AssistantPanel: React.FC<AssistantPanelProps> = ({ suggestion, playerHand 
         
         return t(r.key, options || {});
       }).join('\n')
-    : String(currentSuggestion.reasoning || '');
+    : String(suggestion.reasoning || '');
 
   if (!isExpanded) {
     return (
-      <button
-        onClick={() => setIsExpanded(true)}
-        className="fixed bottom-4 right-4 w-16 h-16 bg-green-600 rounded-full shadow-lg flex items-center justify-center text-3xl text-white transform hover:scale-110 transition-transform z-50 animate-fade-in-scale border-4 border-green-400"
-        aria-label={t('assistantPanel.open_aria_label')}
-      >
-        🤖
-      </button>
+      <>
+        <button
+          onClick={handleOpenFromButton}
+          className="fixed bottom-4 right-4 w-16 h-16 bg-green-600 rounded-full shadow-lg flex items-center justify-center text-3xl text-white transform hover:scale-110 transition-transform z-50 animate-fade-in-scale border-4 border-green-400"
+          aria-label={t('assistantPanel.open_aria_label')}
+        >
+          🤖
+        </button>
+        {toastMessage && (
+            <div className="fixed bottom-24 right-4 p-3 bg-blue-800 text-white text-sm rounded-lg shadow-lg z-50 animate-fade-in-scale">
+                {toastMessage}
+            </div>
+        )}
+      </>
     );
   }
 
@@ -89,7 +126,7 @@ const AssistantPanel: React.FC<AssistantPanelProps> = ({ suggestion, playerHand 
           <span className="text-xl">🤖</span> {t('assistantPanel.title')}
         </h3>
         <button
-          onClick={() => setIsExpanded(false)}
+          onClick={handleManualClose}
           className="text-gray-400 text-2xl font-bold hover:text-white transition-colors"
           aria-label={t('assistantPanel.close_aria_label')}
         >

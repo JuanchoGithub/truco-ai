@@ -1,0 +1,124 @@
+{
+  "dataModal": {
+    "title": "Análisis de Comportamiento",
+    "style_analysis_title": "Perfil de Personalidad (Según la IA)",
+    "no_data_message": "Juega unas cuantas rondas más para que la IA pueda generar un perfil detallado de tu estilo de juego.",
+    "behavior_profile_title": "Perfil de Comportamiento",
+    "truco_threshold": "Umbral de Truco (prom)",
+    "bluff_success": "Éxito de Farol en Truco",
+    "envido_primero_rate": "Tasa de 'Envido Primero'",
+    "envido_threshold": "Umbral de Envido (prom)",
+    "envido_fold_rate": "Tasa de Abandono en Envido (vs IA)",
+    "envido_preference": "Preferencia de Envido (Mano/Pie)",
+    "counter_tendency": "Tendencia de Contraataque",
+    "chain_bluff_rate": "Tasa de Farol en Cadena",
+    "card_play_patterns_title": "Patrones de Juego de Cartas",
+    "card_play_header_type": "Tipo de Carta",
+    "card_play_header_plays": "Jugadas",
+    "card_play_header_win_rate": "% Victoria",
+    "card_play_header_trick1": "Mano 1",
+    "card_play_header_trick2": "Mano 2",
+    "card_play_header_trick3": "Mano 3",
+    "card_play_header_lead": "Liderando",
+    "card_play_header_response": "Respondiendo",
+    "round_history_title": "Historial de Rondas",
+    "round_history_summary": "Ronda {{round}} - {{winnerStatus}} ({{playerScore}} - {{aiScore}})",
+    "round_history_winner": "Ganador: {{winner}}",
+    "round_history_in_progress": "En progreso...",
+    "round_history_strength_envido": "Fuerza / Envido",
+    "round_history_calls": "Cantos",
+    "round_history_calls_none": "Ninguno",
+    "round_history_trick_winners": "Ganadores de Manos",
+    "round_history_trick_winner_pattern": "M{{trick}}: {{winner}}",
+    "round_history_played_cards": "Cartas Jugadas",
+    "round_history_played_cards_pattern": "Mano {{trick}}: Vos ({{playerCard}}) vs IA ({{aiCard}})",
+    "button_import": "Importar Perfil",
+    "button_export": "Exportar Perfil",
+    "button_reset": "Reiniciar Perfil",
+    "import_success": "¡Perfil importado con éxito!",
+    "import_error": "Error: El archivo seleccionado no es un perfil válido.",
+    "import_error_format": "El archivo no tiene el formato esperado.",
+    "reset_confirm_message": "¿Estás seguro de que quieres borrar todos los datos de comportamiento que la IA ha aprendido sobre tu estilo de juego? Esta acción no se puede deshacer.",
+    "reset_confirmation": "El perfil de jugador aprendido por la IA ha sido reiniciado.",
+    "card_categories": {
+      "ancho_espada": "Ancho de Espada",
+      "ancho_basto": "Ancho de Basto",
+      "siete_espada": "Siete de Espada",
+      "siete_oro": "Siete de Oros",
+      "tres": "Tres",
+      "dos": "Dos",
+      "anchos_falsos": "Anchos Falsos",
+      "reyes": "Reyes",
+      "caballos": "Caballos",
+      "sotas": "Sotas",
+      "sietes_malos": "Sietes Falsos",
+      "seis": "Seis",
+      "cincos": "Cincos",
+      "cuatros": "Cuatros"
+    },
+    "confidence_level": "Nivel de Confianza",
+    "traits": {
+      "not_enough_data": {
+        "title": "Analizando...",
+        "description": "Juega unas cuantas rondas más para que la IA pueda generar un perfil detallado de tu estilo de juego."
+      },
+      "envido_aggressor": {
+        "title": "El Agresor del Envido",
+        "high": "La IA ha notado que cantas Envido con frecuencia, incluso con puntos modestos. Usas el Envido como una herramienta para aplicar presión constante.",
+        "medium": "Tiendes a ser proactivo con el Envido, sin esperar a tener una mano perfecta para cantar. La IA está aprendiendo a respetar tus cantos."
+      },
+      "envido_conservative": {
+        "title": "El Preciso del Envido",
+        "high": "Solo cantas Envido cuando tienes una mano muy fuerte. Esto te hace extremadamente creíble, y la IA tomará tus cantos muy en serio."
+      },
+      "envido_cautious": {
+        "title": "El Cauteloso del Envido",
+        "high": "La IA ha detectado que a menudo te retiras de las apuestas de Envido si no tienes una mano muy fuerte. Esto podría ser explotado con faroles."
+      },
+      "envido_bold": {
+        "title": "El Valiente del Envido",
+        "high": "Casi nunca te retiras de una apuesta de Envido, demostrando que estás dispuesto a desafiar a la IA hasta el final. ¡Cuidado con las manos sobrevaloradas!"
+      },
+      "truco_effective_bluffer": {
+        "title": "El Farolero Maestro",
+        "high": "Tus faroles en el Truco son muy efectivos. La IA ha notado que a menudo gana puntos apostando con manos débiles."
+      },
+      "truco_readable_bluffer": {
+        "title": "El Farolero Legible",
+        "high": "La IA cree que ha descifrado tu patrón de faroles. Ten cuidado, ya que podría no retirarse a tus apuestas arriesgadas."
+      },
+      "truco_frequent_bluffer": {
+        "title": "El Farolero Frecuente",
+        "high": "Intentas faroles en el Truco con regularidad. Esto te hace impredecible, pero también vulnerable si la IA decide pagar para ver."
+      },
+      "truco_conservative": {
+        "title": "El Reservado del Truco",
+        "high": "Eres extremadamente conservador en el Truco, apostando solo con manos de élite. La IA ha aprendido a temer y respetar mucho tus cantos."
+      },
+      "truco_aggressive": {
+        "title": "El Ariete del Truco",
+        "high": "No dudas en cantar Truco para aplicar presión, incluso con manos modestas. Esto te hace peligroso, pero a veces te expones a un contraataque."
+      },
+      "playstyle_predictable": {
+        "title": "El Predecible",
+        "high": "Cuando eres 'mano', casi siempre empiezas jugando tu carta más fuerte. La IA puede usar esta previsibilidad para planificar su estrategia."
+      },
+      "playstyle_unpredictable": {
+        "title": "El Táctico Variable",
+        "high": "Tus jugadas de apertura son variadas y difíciles de predecir. A veces juegas tu carta más fuerte, a veces una débil, manteniendo a la IA en vilo."
+      },
+      "envido_primero_specialist": {
+        "title": "El Especialista del 'Primero'",
+        "high": "Usas la táctica de 'Envido Primero' con frecuencia para interrumpir el Truco. La IA es consciente de esta preferencia y podría ajustar sus cantos de Truco en consecuencia."
+      },
+      "counter_puncher": {
+        "title": "El Contragolpeador",
+        "high": "La IA ha notado que respondes agresivamente a sus jugadas de cartas altas, a menudo intentando ganar la mano en lugar de sacrificar una carta débil. Esto indica que no te dejas intimidar fácilmente."
+      },
+      "chain_bluffer": {
+        "title": "El Farolero en Cadena",
+        "high": "La IA ha detectado un patrón en el que inicias una ronda con una carta débil para luego cantar Truco. Sospecha que usas esta táctica para tender trampas o robar puntos con manos débiles."
+      }
+    }
+  }
+}

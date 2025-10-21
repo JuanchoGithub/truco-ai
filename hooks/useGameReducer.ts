@@ -48,6 +48,7 @@ export const initialState: GameState = {
   trucoLevel: 0,
   playerEnvidoFoldHistory: [],
   playerTrucoCallHistory: [],
+  playerTrucoFoldHistory: [],
   playerCalledHighEnvido: false,
   playedCards: [],
   // AI Learning & Modeling
@@ -62,6 +63,8 @@ export const initialState: GameState = {
       leadWithHighestRate: 0.75,
       baitRate: 0.1,
       envidoPrimeroRate: 0.3,
+      counterTendency: 0.5,
+      chainBluffRate: 0.15,
     },
     trucoBluffs: {
         mano: { attempts: 0, successes: 0 },
@@ -182,6 +185,21 @@ export function useGameReducer(state: GameState, action: Action): GameState {
       return { ...state, aiBlurb: null };
 
     // Local Storage & Import/Export Actions
+    case ActionType.RESET_OPPONENT_MODEL:
+        return {
+            ...state,
+            opponentModel: initialState.opponentModel,
+            aiCases: [],
+            playerEnvidoFoldHistory: [],
+            playerTrucoCallHistory: [],
+            playerTrucoFoldHistory: [],
+            playerEnvidoHistory: [],
+            playerPlayOrderHistory: [],
+            playerCardPlayStats: createInitialCardPlayStats(),
+            envidoPrimeroOpportunities: 0,
+            envidoPrimeroCalls: 0,
+            messageLog: [...state.messageLog, { key: 'dataModal.reset_confirmation' }],
+        };
     case ActionType.LOAD_IMPORTED_DATA:
     case ActionType.LOAD_PERSISTED_STATE: {
         const loadedState = action.payload;
@@ -206,6 +224,7 @@ export function useGameReducer(state: GameState, action: Action): GameState {
             aiCases: loadedState.aiCases || [],
             playerEnvidoFoldHistory: loadedState.playerEnvidoFoldHistory || [],
             playerTrucoCallHistory: loadedState.playerTrucoCallHistory || [],
+            playerTrucoFoldHistory: loadedState.playerTrucoFoldHistory || [],
             playerEnvidoHistory: loadedState.playerEnvidoHistory || [],
             playerPlayOrderHistory: loadedState.playerPlayOrderHistory || [],
             playerCardPlayStats: loadedState.playerCardPlayStats || initialState.playerCardPlayStats,

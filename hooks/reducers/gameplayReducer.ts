@@ -34,8 +34,16 @@ function updateOpponentModelFromHistory(state: GameState): OpponentModel {
         updateContext(manoActions, 'mano');
         updateContext(pieActions, 'pie');
     }
+
+    // 2. Analyze Truco Fold Rate
+    const trucoFolds = state.playerTrucoFoldHistory;
+    if (trucoFolds.length > 2) { // Need some data to start learning
+        const folds = trucoFolds.filter(didFold => didFold).length;
+        const newFoldRate = folds / trucoFolds.length;
+        newModel.trucoFoldRate = newModel.trucoFoldRate * DECAY + (1 - DECAY) * newFoldRate;
+    }
     
-    // 2. Analyze Play Style History (Remains as is, as it's already contextual)
+    // 3. Analyze Play Style History (Remains as is, as it's already contextual)
     const manoTrick1Leads = state.playerPlayOrderHistory.filter(p => p.wasLeadingTrick && p.trick === 0 && state.mano === 'player');
     if (manoTrick1Leads.length > 2) {
         let ledWithHighestCount = 0;
@@ -61,7 +69,7 @@ function updateOpponentModelFromHistory(state: GameState): OpponentModel {
         newModel.playStyle.baitRate = newModel.playStyle.baitRate * DECAY + (1 - DECAY) * newBaitRate;
     }
     
-    // 3. Analyze Truco Bluffing History with context
+    // 4. Analyze Truco Bluffing History with context
     const manoBluffs = { attempts: 0, successes: 0 };
     const pieBluffs = { attempts: 0, successes: 0 };
 
@@ -81,10 +89,58 @@ function updateOpponentModelFromHistory(state: GameState): OpponentModel {
     newModel.trucoBluffs.mano = { attempts: manoBluffs.attempts, successes: manoBluffs.successes };
     newModel.trucoBluffs.pie = { attempts: pieBluffs.attempts, successes: pieBluffs.successes };
     
-    // 4. Analyze "Envido Primero" Rate
+    // 5. Analyze "Envido Primero" Rate
     if (state.envidoPrimeroOpportunities > 2) { // Only update if we have enough data points
         const newRate = state.envidoPrimeroCalls / state.envidoPrimeroOpportunities;
         newModel.playStyle.envidoPrimeroRate = newModel.playStyle.envidoPrimeroRate * DECAY + (1 - DECAY) * newRate;
+    }
+
+    // 6. NEW: Analyze Counter Tendency
+    const trickResponses = state.playerPlayOrderHistory.filter(p => !p.wasLeadingTrick && p.trick < 2);
+    if (trickResponses.length > 3) {
+        let counterAttempts = 0;
+        let counterSuccesses = 0;
+        for (const response of trickResponses) {
+            const aiCardPlayedCode = state.roundHistory
+                .find(r => r.round === response.round)?.aiTricks[response.trick];
+            if (aiCardPlayedCode) {
+                const aiCard = decodeCardFromCode(aiCardPlayedCode);
+                // If AI led with a reasonably strong card (hierarchy >= 10)
+                if (getCardHierarchy(aiCard) >= 10) {
+                    counterAttempts++;
+                    const playerCard = decodeCardFromCode(response.playedCard);
+                    if (getCardHierarchy(playerCard) > getCardHierarchy(aiCard)) {
+                        counterSuccesses++;
+                    }
+                }
+            }
+        }
+        if (counterAttempts > 2) {
+            const newCounterTendency = counterSuccesses / counterAttempts;
+            newModel.playStyle.counterTendency = newModel.playStyle.counterTendency * DECAY + (1 - DECAY) * newCounterTendency;
+        }
+    }
+
+    // 7. NEW: Analyze Chain Bluff Rate
+    const trucoCallsInHistory = state.roundHistory.filter(r => r.playerTrucoCall !== null);
+    if (trucoCallsInHistory.length > 3) {
+        let chainBluffAttempts = 0;
+        let chainBluffs = 0;
+        for (const round of trucoCallsInHistory) {
+            const firstPlay = state.playerPlayOrderHistory.find(p => p.round === round.round && p.trick === 0 && p.wasLeadingTrick);
+            if (firstPlay) {
+                chainBluffAttempts++;
+                const playedCard = decodeCardFromCode(firstPlay.playedCard);
+                // A "weak lead" is a card with hierarchy < 8 (weaker than false aces) coupled with a bluff call
+                if (round.playerTrucoCall!.isBluff && getCardHierarchy(playedCard) < 8) {
+                    chainBluffs++;
+                }
+            }
+        }
+        if (chainBluffAttempts > 2) {
+            const newChainBluffRate = chainBluffs / chainBluffAttempts;
+            newModel.playStyle.chainBluffRate = newModel.playStyle.chainBluffRate * DECAY + (1 - DECAY) * newChainBluffRate;
+        }
     }
 
     return newModel;
@@ -104,6 +160,7 @@ export function handleRestartGame(initialState: GameState, state: GameState): Ga
     aiCases: state.aiCases,
     playerEnvidoFoldHistory: state.playerEnvidoFoldHistory,
     playerTrucoCallHistory: state.playerTrucoCallHistory,
+    playerTrucoFoldHistory: state.playerTrucoFoldHistory,
     playerEnvidoHistory: state.playerEnvidoHistory,
     playerPlayOrderHistory: state.playerPlayOrderHistory,
     playerCardPlayStats: state.playerCardPlayStats,

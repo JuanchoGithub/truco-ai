@@ -1,0 +1,36 @@
+{
+  "common": {
+    "player": "Player",
+    "ai": "AI",
+    "you": "You",
+    "you_short": "You",
+    "randomizer": "Randomizer",
+    "opponent": "Opponent",
+    "round": "Round",
+    "hand": "Hand",
+    "of": "of",
+    "gemini": "Gemini",
+    "card_ranks": {
+      "1": "Ace", "2": "2", "3": "3", "4": "4", "5": "5", "6": "6", "7": "7",
+      "10": "Jack", "11": "Knight", "12": "King"
+    },
+    "card_suits": {
+      "espadas": "Swords", "bastos": "Clubs", "oros": "Coins", "copas": "Cups"
+    },
+    "card_name_pattern": "{{rank}} of {{suit}}",
+    "close": "Close",
+    "cancel": "Cancel",
+    "loading": "Loading...",
+    "na": "N/A",
+    "tie": "Tie"
+  },
+  "cardImageService": {
+    "errors": {
+      "remote_load_failed": "Error loading remote sprite sheet",
+      "local_load_failed": "Error loading local sprite sheet",
+      "local_load_failed_path": "Error loading sprite sheet from local path. Ensure 'cartas.png' exists in the 'public' folder.",
+      "invalid_card": "Invalid card provided: {{cardName}}",
+      "no_canvas_context": "Could not get 2D canvas context"
+    }
+  }
+}

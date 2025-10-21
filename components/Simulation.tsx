@@ -11,6 +11,7 @@ import { useLocalization } from '../context/LocalizationContext';
 import ScenarioTester from './ScenarioTester';
 import CentralMessage from './CentralMessage';
 import ScenarioRunner from './ScenarioRunner';
+import GeminiSimulator from './GeminiSimulator';
 
 const FULL_DECK = createDeck();
 
@@ -26,7 +27,7 @@ const renderReasoning = (reasoningArray: (string | MessageObject)[], t: (key: st
             options.status = t(`ai_logic.statuses.${options.statusKey}`);
         }
         if (options.player) {
-            options.player = options.player === 'ai' ? t('common.ai') : t('common.opponent');
+            options.player = options.player === 'ai' ? t('common.ai') : t('common.randomizer');
         }
 
         for (const key in options) {
@@ -809,7 +810,7 @@ const ManualSimulator: React.FC = () => {
 };
 
 
-type SimTab = 'auto' | 'manual' | 'tester' | 'analyzer' | 'runner';
+type SimTab = 'auto' | 'manual' | 'tester' | 'analyzer' | 'runner' | 'gemini';
 
 const Simulation: React.FC<{ onExit: () => void }> = ({ onExit }) => {
     const { t } = useLocalization();
@@ -826,6 +827,7 @@ const Simulation: React.FC<{ onExit: () => void }> = ({ onExit }) => {
                 {/* Tab Bar */}
                 <div className="flex-shrink-0 flex items-end gap-2 px-2 border-b-2 border-cyan-800/50">
                     <Tab title={t('simulation.tab_auto_hand')} isActive={activeTab === 'auto'} onClick={() => setActiveTab('auto')} />
+                    <Tab title={t('simulation.tab_gemini')} isActive={activeTab === 'gemini'} onClick={() => setActiveTab('gemini')} />
                     <Tab title={t('simulation.tab_manual_hand')} isActive={activeTab === 'manual'} onClick={() => setActiveTab('manual')} />
                     <Tab title={t('simulation.tab_scenario_test')} isActive={activeTab === 'tester'} onClick={() => setActiveTab('tester')} />
                     <Tab title={t('simulation.tab_batch_analysis')} isActive={activeTab === 'analyzer'} onClick={() => setActiveTab('analyzer')} />
@@ -833,8 +835,9 @@ const Simulation: React.FC<{ onExit: () => void }> = ({ onExit }) => {
                 </div>
 
                 {/* Content Area */}
-                <div className="w-full flex-grow bg-black/40 p-4 rounded-b-lg rounded-tr-lg border-l-2 border-r-2 border-b-2 border-cyan-800/50 overflow-hidden">
+                <div className="w-full flex-grow bg-black/40 p-4 rounded-b-lg rounded-tr-lg border-l-2 border-r-2 border-b-2 border-cyan-800/50 overflow-y-auto">
                     {activeTab === 'auto' && <AutoSimulator />}
+                    {activeTab === 'gemini' && <GeminiSimulator />}
                     {activeTab === 'manual' && <ManualSimulator />}
                     {activeTab === 'tester' && <ScenarioTester />}
                     {activeTab === 'analyzer' && <BatchAnalyzer />}

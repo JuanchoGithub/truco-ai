@@ -192,7 +192,10 @@ export function handleAccept(state: GameState, action: { type: ActionType.ACCEPT
     }
     
     if (state.gamePhase.includes('truco') || state.gamePhase.includes('vale_cuatro')) {
-        return handleTrucoAccept(newState, messageLog);
+        const isPlayerAccepting = isPlayer && state.lastCaller === 'ai';
+        const newTrucoFoldHistory = isPlayerAccepting ? [...state.playerTrucoFoldHistory, false] : state.playerTrucoFoldHistory;
+        const updatedStateWithHistory = { ...newState, playerTrucoFoldHistory: newTrucoFoldHistory };
+        return handleTrucoAccept(updatedStateWithHistory, messageLog);
     }
     return newState;
 }
@@ -408,8 +411,11 @@ export function handleDecline(state: GameState, action: { type: ActionType.DECLI
     }
 
     if (state.gamePhase.includes('truco') || state.gamePhase.includes('vale_cuatro')) {
+        const isPlayerDeclining = isPlayer && state.lastCaller === 'ai';
+        const newTrucoFoldHistory = isPlayerDeclining ? [...state.playerTrucoFoldHistory, true] : state.playerTrucoFoldHistory;
         return {
             ...newState,
+            playerTrucoFoldHistory: newTrucoFoldHistory,
             gamePhase: 'TRUCO_DECLINED',
             messageLog,
             isThinking: false, // Stop thinking indicator

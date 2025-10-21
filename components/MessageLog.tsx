@@ -9,15 +9,15 @@ interface MessageLogProps {
 }
 
 const MessageLog: React.FC<MessageLogProps> = ({ messages, dispatch, isModal }) => {
-  const { t, translatePlayerName } = useLocalization();
+  const { t, translatePlayerName, language } = useLocalization();
 
   const getMessageStyle = (message: string): string => {
       const lowerMessage = message.toLowerCase();
       if (lowerMessage.includes('truco') || lowerMessage.includes('retruco') || lowerMessage.includes('vale cuatro')) return 'text-yellow-300 font-semibold';
       if (lowerMessage.includes('envido')) return 'text-blue-300 font-semibold';
       if (lowerMessage.includes('flor') || lowerMessage.includes('contraflor')) return 'text-purple-300 font-semibold';
-      if (lowerMessage.includes('quiere')) return 'text-green-300';
-      if (lowerMessage.includes('no quiere')) return 'text-red-400';
+      if (lowerMessage.includes('quiere') || lowerMessage.includes('querés')) return 'text-green-300';
+      if (lowerMessage.includes('no quiere') || lowerMessage.includes('no querés')) return 'text-red-400';
       if (lowerMessage.includes('gana') || lowerMessage.includes('wins')) return 'text-white';
       return 'text-amber-50'; // default color
   };
@@ -25,7 +25,21 @@ const MessageLog: React.FC<MessageLogProps> = ({ messages, dispatch, isModal }) 
   const renderMessage = (msg: string | MessageObject): string => {
     if (typeof msg === 'string') return msg;
     
+    let finalKey = msg.key;
     const options = { ...msg.options };
+
+    // Voseo correction for Spanish (Argentina)
+    if (language === 'es-AR') {
+        const actorIsPlayer = options.acceptor === 'player' || options.decliner === 'player';
+        if (actorIsPlayer) {
+            if (msg.key === 'log.accept') {
+                finalKey = 'log.accept_voseo';
+            } else if (msg.key === 'log.decline') {
+                finalKey = 'log.decline_voseo';
+            }
+        }
+    }
+    
     // These keys might contain a Player type ('player' or 'ai') that needs to be translated.
     const playerKeys: (keyof typeof options)[] = ['winner', 'winnerName', 'acceptor', 'acceptorName', 'decliner', 'declinerName', 'caller', 'player'];
 
@@ -34,7 +48,7 @@ const MessageLog: React.FC<MessageLogProps> = ({ messages, dispatch, isModal }) 
             options[key] = translatePlayerName(options[key] as string);
         }
     }
-    return t(msg.key, options);
+    return t(finalKey, options);
   };
 
 

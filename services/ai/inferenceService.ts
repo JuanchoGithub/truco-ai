@@ -1,4 +1,4 @@
-import { GameState, Card, Suit, Rank, OpponentHandProbabilities, ActionType, Player, MessageObject } from '../types';
+import { GameState, Card, Suit, Rank, OpponentHandProbabilities, ActionType, Player, MessageObject } from '../../types';
 import { createDeck, getEnvidoValue, getCardHierarchy, calculateHandStrength } from '../trucoLogic';
 import i18nService from '../i18nService';
 

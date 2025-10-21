@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Card, GameState, AiMove, Player, GamePhase, MessageObject, Action, ActionType } from '../types';
 import { hasFlor } from '../services/trucoLogic';
@@ -6,6 +5,7 @@ import { initialState } from '../hooks/useGameReducer';
 import { getLocalAIMove } from '../services/localAiService';
 import { predefinedScenarios, PredefinedScenario } from '../services/scenarioService';
 import { useLocalization } from '../context/LocalizationContext';
+import { defaultExpectedResultsData } from '../services/baselineData';
 
 // Helper types for this component
 interface ScenarioResult {
@@ -20,50 +20,6 @@ interface ExpectedScenarioResult {
 }
 type ValidationStatus = 'ok' | 'warn' | 'fail' | 'pending';
 
-
-// --- DEFAULT BASELINE ---
-
-const defaultExpectedResultsData = {
-  "scenarios": [
-    { "scenario": "scenario_tester.scenario_names.parda_y_gano", "totalRuns": 10000, "actionDistribution": { "call_truco_value": 4073, "call_truco_parda_y_gano": 2223, "secure_hand": 3580, "call_truco_post_parda_bluff": 97, "call_truco_bluff": 27 } },
-    { "scenario": "scenario_tester.scenario_names.do_or_die", "totalRuns": 1000, "actionDistribution": { "call_falta_win_game": 161, "accept_truco_do_or_die": 502, "call_envido_bluff": 131, "call_falta_defensive": 101, "call_real_dominant": 55, "call_envido_strong": 32, "call_envido_marginal": 18 } },
-    { "scenario": "scenario_tester.scenario_names.lopsided_bait", "totalRuns": 1000, "actionDistribution": { "probe_low_value": 685, "bait_lopsided_hand": 172, "call_real_dominant": 143 } },
-    { "scenario": "scenario_tester.scenario_names.envido_primero", "totalRuns": 1000, "actionDistribution": { "call_falta_win_game": 769, "call_real_dominant": 231 } },
-    { "scenario": "scenario_tester.scenario_names.flor_vs_envido", "totalRuns": 1000, "actionDistribution": { "respond_with_flor": 1000 } },
-    { "scenario": "scenario_tester.scenario_names.endgame_pressure_truco", "totalRuns": 1000, "actionDistribution": { "secure_hand": 498, "call_envido_strong": 105, "call_envido_bluff": 89, "call_real_dominant": 18, "call_falta_defensive": 59, "call_falta_win_game": 61, "call_truco_bluff": 81, "probe_mid_value": 52, "call_envido_marginal": 37 } },
-    { "scenario": "scenario_tester.scenario_names.dual_brava_probe", "totalRuns": 1000, "actionDistribution": { "feint_pre_truco": 502, "call_envido_strong": 361, "call_truco_value": 108, "call_envido_marginal": 29 } },
-    { "scenario": "scenario_tester.scenario_names.ancho_feint_chain", "totalRuns": 1000, "actionDistribution": { "probe_mid_value": 896, "call_truco_value": 103, "secure_hand": 1 } },
-    { "scenario": "scenario_tester.scenario_names.false_ace_bait", "totalRuns": 1000, "actionDistribution": { "secure_hand": 933, "probe_low_value": 67 } },
-    { "scenario": "scenario_tester.scenario_names.tie_breaker_low", "totalRuns": 1000, "actionDistribution": { "secure_hand": 307, "call_truco_parda_y_gano": 241, "call_truco_value": 440, "call_truco_post_parda_bluff": 11, "call_truco_bluff": 1 } },
-    { "scenario": "scenario_tester.scenario_names.signal_masked_depletion", "totalRuns": 1000, "actionDistribution": { "feint_pre_truco": 845, "call_truco_value": 155 } },
-    { "scenario": "scenario_tester.scenario_names.post_envido_low_shift", "totalRuns": 1000, "actionDistribution": { "probe_low_value": 900, "call_truco_value": 100 } },
-    { "scenario": "scenario_tester.scenario_names.triple_brava_figure_probe", "totalRuns": 1000, "actionDistribution": { "feint_pre_truco": 846, "call_truco_value": 154 } },
-    { "scenario": "scenario_tester.scenario_names.post_tie_retruco_response", "totalRuns": 1000, "actionDistribution": { "secure_hand": 1000 } },
-    { "scenario": "scenario_tester.scenario_names.false_7_deplete", "totalRuns": 1000, "actionDistribution": { "accept_truco_decent_equity": 659, "escalate_truco_mixed_bluff": 30, "decline_truco_low_equity": 284, "decline_truco_mixed": 27 } },
-    { "scenario": "scenario_tester.scenario_names.envido_suit_misdirect", "totalRuns": 1000, "actionDistribution": { "secure_hand": 890, "probe_mid_value": 99, "call_truco_value": 10, "call_truco_bluff": 1 } },
-    { "scenario": "scenario_tester.scenario_names.brava_kiss_signal", "totalRuns": 1000, "actionDistribution": { "call_truco_value": 853, "probe_low_value": 68, "call_envido_marginal": 79 } },
-    { "scenario": "scenario_tester.scenario_names.mid_game_figure_low", "totalRuns": 1000, "actionDistribution": { "call_truco_won_trick1": 553, "secure_hand": 447 } },
-    { "scenario": "scenario_tester.scenario_names.late_false_ace_chain", "totalRuns": 1000, "actionDistribution": { "feint_pre_truco": 859, "call_truco_value": 141 } },
-    { "scenario": "scenario_tester.scenario_names.parda_false_7", "totalRuns": 1000, "actionDistribution": { "secure_hand": 736, "call_truco_post_parda_bluff": 58, "call_truco_value": 129, "call_truco_bluff": 47, "call_truco_parda_y_gano": 30 } },
-    { "scenario": "scenario_tester.scenario_names.tie_ancho_glimpse", "totalRuns": 1000, "actionDistribution": { "secure_hand": 239, "call_truco_value": 761 } },
-    { "scenario": "scenario_tester.scenario_names.banter_low_glimpse", "totalRuns": 1000, "actionDistribution": { "secure_hand": 920, "probe_envido_hide": 80 } },
-    { "scenario": "scenario_tester.scenario_names.ancho_deplete_post_tie", "totalRuns": 1000, "actionDistribution": { "play_last_card": 602, "call_truco_certain_win": 239, "call_truco_value": 159 } },
-    { "scenario": "scenario_tester.scenario_names.dual_false_bait", "totalRuns": 1000, "actionDistribution": { "probe_low_value": 910, "call_truco_value": 85, "secure_hand": 5 } },
-    { "scenario": "scenario_tester.scenario_names.mid_low_signal_mask", "totalRuns": 1000, "actionDistribution": { "call_envido_strong": 411, "secure_hand": 304, "probe_mid_value": 141, "call_envido_bluff": 77, "call_real_dominant": 55, "call_truco_value": 10, "call_truco_bluff": 2 } },
-    { "scenario": "scenario_tester.scenario_names.figure_ancho_shift", "totalRuns": 1000, "actionDistribution": { "call_truco_won_trick1": 776, "secure_hand": 224 } },
-    { "scenario": "scenario_tester.scenario_names.endgame_low_balance", "totalRuns": 1000, "actionDistribution": { "probe_mid_value": 373, "call_envido_strong": 252, "call_envido_bluff": 143, "call_truco_bluff": 89, "secure_hand": 76, "call_falta_win_game": 49, "call_truco_value": 9, "call_real_dominant": 9 } },
-    { "scenario": "scenario_tester.scenario_names.retruco_response_with_ace", "totalRuns": 1000, "actionDistribution": { "accept_truco_decent_equity": 784, "escalate_truco_mixed_bluff": 50, "decline_truco_mixed": 48, "decline_truco_low_equity": 118 } },
-    { "scenario": "scenario_tester.scenario_names.tie_ancho_glimpse", "totalRuns": 1000, "actionDistribution": { "secure_hand": 239, "call_truco_value": 761 } },
-    { "scenario": "scenario_tester.scenario_names.brava_mid_chain", "totalRuns": 1000, "actionDistribution": { "probe_low_value": 900, "call_truco_value": 100 } },
-    { "scenario": "scenario_tester.scenario_names.signal_false_low", "totalRuns": 1000, "actionDistribution": { "call_envido_bluff": 104, "probe_mid_value": 534, "secure_hand": 185, "call_envido_marginal": 56, "call_truco_bluff": 121 } },
-    { "scenario": "scenario_tester.scenario_names.post_parda_figure", "totalRuns": 1000, "actionDistribution": { "call_truco_value": 233, "secure_hand": 578, "call_truco_bluff": 36, "call_truco_post_parda_bluff": 39, "call_truco_parda_y_gano": 114 } },
-    { "scenario": "scenario_tester.scenario_names.dual_ancho_bait", "totalRuns": 1000, "actionDistribution": { "feint_pre_truco": 715, "call_truco_value": 221, "call_envido_marginal": 64 } },
-    { "scenario": "scenario_tester.scenario_names.false_brava_probe", "totalRuns": 1000, "actionDistribution": { "call_real_dominant": 126, "call_falta_win_game": 367, "accept_truco_solid": 277, "call_envido_bluff": 107, "escalate_truco_strong": 123 } },
-    { "scenario": "scenario_tester.scenario_names.envido_low_unrelated", "totalRuns": 1000, "actionDistribution": { "probe_mid_value": 545, "secure_hand": 362, "call_truco_value": 64, "probe_envido_hide": 29 } },
-    { "scenario": "scenario_tester.scenario_names.all_tie_mid_hint", "totalRuns": 1000, "actionDistribution": { "play_last_card": 863, "call_truco_value": 45, "call_truco_certain_win": 65, "call_truco_bluff": 27 } },
-    { "scenario": "scenario_tester.scenario_names.clutch_false_deplete", "totalRuns": 1000, "actionDistribution": { "feint_active_truco": 780, "secure_hand": 220 } }
-  ]
-};
 
 // --- ICON COMPONENTS ---
 const StatusIcon: React.FC<{ status: ValidationStatus }> = ({ status }) => {
@@ -303,6 +259,29 @@ const ScenarioRunner: React.FC = () => {
         event.target.value = '';
     };
 
+    const handleExport = () => {
+        if (!results) return;
+
+        const dataToExport = {
+            date: new Date().toISOString(),
+            settings: {
+                iterations,
+                allowedDeviation: deviation,
+            },
+            baselineUsedForValidation: expectedResults,
+            results,
+        };
+
+        const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(JSON.stringify(dataToExport, null, 2))}`;
+        const link = document.createElement("a");
+        link.href = jsonString;
+        link.download = `truco-ai-scenario-results-${new Date().toISOString().split('T')[0]}.json`;
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     const sortedResults = useMemo(() => {
         if (!results) return null;
         return Object.entries(results).sort((a, b) => Number(b[1]) - Number(a[1]));
@@ -330,6 +309,7 @@ const ScenarioRunner: React.FC = () => {
                     )}
                     <input type="file" ref={fileInputRef} onChange={handleFileChange} accept=".json" className="hidden" />
                     <button onClick={handleImportClick} disabled={isRunning} className="px-6 py-2 rounded-lg font-bold text-white bg-blue-600 border-b-4 border-blue-800 hover:bg-blue-500 transition-colors disabled:bg-gray-500">{t('scenario_runner.import_button')}</button>
+                    <button onClick={handleExport} disabled={!results || isRunning} className="px-6 py-2 rounded-lg font-bold text-white bg-yellow-600 border-b-4 border-yellow-800 hover:bg-yellow-500 transition-colors disabled:bg-gray-500">{t('scenario_runner.export_button')}</button>
                     {importStatus && <span className={`text-sm ${importStatus.includes('Error') ? 'text-red-400' : 'text-green-400'}`}>{importStatus}</span>}
                 </div>
             </div>

@@ -1,0 +1,155 @@
+{
+  "blurb_titles": {
+    "envido_result": "Resultado del Envido",
+    "trick_result": "Resultado de la Mano"
+  },
+  "mainMenu": {
+    "title": "TRUCO AI",
+    "subtitle": "Un desafío de cartas contra una IA estratégica.",
+    "play_normal": "Jugar contra la IA",
+    "play_with_help": "Jugar con Ayuda",
+    "learn": "Aprender a Jugar",
+    "manual": "Manual del Truco",
+    "simulate": "Modo Simulación (IA vs IA)"
+  },
+  "continueGameModal": {
+    "title": "Partida Guardada",
+    "message": "Encontramos una partida guardada. ¿Deseas continuar o empezar una nueva?",
+    "continue": "Continuar Partida",
+    "new_game": "Nueva Partida"
+  },
+  "game": {
+    "ai_thinking": "IA está pensando...",
+    "mano_is": "Mano: {{player}}",
+    "new_game_log": "--- Nuevo Juego ---",
+    "new_game_started": "Un nuevo juego ha comenzado. {{player}} es mano.",
+    "new_round_log": "--- Ronda {{round}} ---",
+    "you_are_mano": "Eres mano.",
+    "ai_is_mano": "La IA es mano.",
+    "player_plays_card": "{{player}} juega {{cardName}}",
+    "trick_winner": "Ganador de la mano {{trickNumber}}: {{winner}}",
+    "round_winner_points": "Ganador de la ronda: {{winner}}. Gana {{points}} {{points, plural, one{punto} other{puntos}}}.",
+    "round_winner": "Ganador de la ronda: {{winner}}",
+    "error_ai": "Ocurrió un error con la IA. La IA pierde su turno.",
+    "session_restored": "--- Sesión Restaurada ---",
+    "profile_imported": "--- Perfil Importado ---",
+    "game_over_by_points_win": "¡Ganaste el juego! La ronda terminó antes porque ya tenés los puntos para ganar.",
+    "game_over_by_points_lose": "¡Perdiste el juego! La ronda terminó antes porque la IA ya tiene los puntos para ganar.",
+    "round_info": "Ronda {{round}} | Mano: {{player}}",
+    "show_ai_logic_aria": "Mostrar Lógica de la IA"
+  },
+  "actionBar": {
+    "next_round": "Siguiente Ronda",
+    "quiero": "¡Quiero!",
+    "no_quiero": "No Quiero",
+    "envido_primero": "Envido Primero",
+    "retruco": "¡Retruco!",
+    "vale_cuatro": "¡Vale Cuatro!",
+    "envido": "¡Envido!",
+    "real_envido": "¡Real Envido!",
+    "falta_envido": "¡Falta Envido!",
+    "truco": "¡Truco!",
+    "flor": "¡FLOR!",
+    "flor_ack": "Ok (Son buenas)",
+    "flor_ack_mine_worse": "Las mías son peores.",
+    "flor_ack_good": "Son buenas.",
+    "contraflor": "¡Contraflor al Resto!",
+    "contraflor_quiero": "¡Con Flor Quiero!",
+    "contraflor_no_quiero": "Con Flor me achico"
+  },
+  "gameBoard": {
+    "ai_cards": "Cartas de la IA",
+    "player_cards": "Tus Cartas Jugadas",
+    "empty_pile": "Pila Vacía",
+    "round_over_title": "Ronda Terminada",
+    "points_summary_title": "Puntos",
+    "score_is": "La partida va {{playerScore}} a {{aiScore}}",
+    "click_to_continue": "(Haz clic para continuar)",
+    "flor": "Flor",
+    "envido": "Envido",
+    "truco": "Truco",
+    "note_not_called": "No se cantó",
+    "note_flor_accepted": "Aceptada",
+    "note_envido_accepted": "Aceptado",
+    "note_declined": "{{decliner}} no quiso",
+    "note_truco_simple": "Ronda simple",
+    "note_truco_truco": "Truco",
+    "note_truco_retruco": "Retruco",
+    "note_truco_vale_cuatro": "Vale Cuatro",
+    "note_contraflor_accepted": "Contraflor aceptada",
+    "note_contraflor_declined": "Contraflor ({{decliner}} no quiso)",
+    "round_over_win": "Ganaste la Ronda",
+    "round_over_lose": "Perdiste la Ronda",
+    "round_over_tie": "Ronda Empatada"
+  },
+  "centralMessage": {
+    "tie_envido": "Empate en {{points}}. Gana {{winnerName}} por ser mano.",
+    "envido_result": "Tus tantos: {{playerPoints}}. IA: {{aiPoints}}. ¡Gana {{winnerName}}!",
+    "flor_result": "Tus puntos: {{playerPoints}}. IA: {{aiPoints}}. ¡Gana {{winnerName}} la Flor!"
+  },
+  "log": {
+    "welcome": "¡Bienvenido a Truco AI!",
+    "accept": "¡{{acceptor}} quiere!",
+    "decline": "{{decliner}} no quiere.",
+    "accept_voseo": "¡{{acceptor}} querés!",
+    "decline_voseo": "{{decliner}} no querés.",
+    "envido_showdown": "Jugador tiene {{playerPoints}}. La IA tiene {{aiPoints}}.",
+    "win_points": "{{winner}} gana {{points}} {{points, plural, one{punto} other{puntos}}}.",
+    "flor_win_points": "{{winner}} gana {{points}} puntos por la Flor.",
+    "accept_contraflor": "{{acceptor}}: \"¡Con Flor Quiero!\"",
+    "decline_contraflor": "{{decliner}}: \"Con Flor me achico.\"",
+    "flor_showdown_win": "{{winner}} gana {{points}} puntos.",
+    "call_envido_again": "{{caller}} canta ¡ENVIDO! de nuevo.",
+    "call_envido_primero": "{{caller}}: \"¡El envido está primero!\"",
+    "call_envido": "{{caller}} canta ¡ENVIDO!",
+    "call_real_envido": "{{caller}} sube a ¡REAL ENVIDO!",
+    "call_falta_envido": "{{caller}} canta ¡FALTA ENVIDO!",
+    "declare_flor": "{{caller}} canta ¡FLOR!",
+    "respond_envido_with_flor": "{{caller}} responde al Envido con ¡FLOR!",
+    "call_contraflor": "{{caller}} canta ¡CONTRAFLOR AL RESTO!",
+    "call_truco": "{{caller}} canta ¡TRUCO!",
+    "call_retruco": "{{caller}} canta ¡RETRUCO!",
+    "call_vale_cuatro": "{{caller}} canta ¡VALE CUATRO!",
+    "call_falta_truco": "{{caller}} canta ¡FALTA TRUCO!"
+  },
+  "gameOverModal": {
+    "win_title": "¡Ganaste!",
+    "lose_title": "¡Perdiste!",
+    "win_reason": "¡Felicitaciones, eres el campeón de Truco!",
+    "lose_reason": "¡Mejor suerte la próxima vez!",
+    "play_again": "Jugar de Nuevo"
+  },
+  "logPanel": {
+    "game_log_title": "Registro de Juego",
+    "ai_log_title": "Lógica de la IA",
+    "hide_ai_log": "Ocultar Lógica de la IA",
+    "game_start": "Inicio del Juego",
+    "game_log_button": "Registro",
+    "ai_log_button": "Lógica IA",
+    "no_log_for_round": "No hay registros de la IA para esta ronda.",
+    "current_match": "Partida Actual",
+    "match_from": "Partida del {{date}} ({{score}})"
+  },
+  "gameMenu": {
+    "menu": "MENÚ",
+    "main_menu": "Menu Principal",
+    "view_data": "Ver Datos",
+    "view_ai_cards": "Ver Cartas de la IA",
+    "sound_on_advice": "Escuchar consejos de la IA",
+    "sound_on_verses": "Escuchar versos de la IA"
+  },
+  "soundHint": {
+    "activate_voice": "Activa la voz de la IA aquí"
+  },
+  "scoreboard": {
+    "title": "Tantos"
+  },
+  "assistantPanel": {
+    "title": "Asistente de IA",
+    "show_logic": "Ver Lógica Detallada",
+    "hide_logic": "Ocultar Lógica",
+    "open_aria_label": "Abrir Asistente de IA",
+    "close_aria_label": "Cerrar Asistente de IA",
+    "summon_message": "Puedes volver a invocarme haciendo clic en mi cara en la parte inferior derecha."
+  }
+}

@@ -1,28 +1,10 @@
 import { GameState, ActionType, AiMove, Action, MessageObject, Card } from '../types';
-import { findBestCardToPlay } from './ai/playCardStrategy';
+import { findBestCardToPlay, findBaitCard } from './ai/playCardStrategy';
 import { getEnvidoResponse, getEnvidoCall, getFlorResponse, getFlorCallOrEnvidoCall } from './ai/envidoStrategy';
 // Fix: Imported `calculateTrucoStrength` to resolve a "Cannot find name" error.
 import { getTrucoResponse, getTrucoCall, calculateTrucoStrength } from './ai/trucoStrategy';
 import { getCardName, getEnvidoDetails, calculateHandStrength, getCardHierarchy } from './trucoLogic';
 import { getRandomPhrase, PHRASE_KEYS } from './ai/phrases';
-
-const findBaitCard = (hand: Card[]): { index: number, card: Card, reasonKey: string, reason: MessageObject } => {
-    const sortedHand = [...hand].sort((a, b) => getCardHierarchy(a) - getCardHierarchy(b));
-    const [lowest, middle, highest] = sortedHand;
-    let baitCard = lowest;
-    let baitReason: MessageObject = { key: 'ai_logic.bait_type_low' };
-    let reasonKey = 'probe_low_value';
-    
-    // If there's a huge total power gap AND a significant gap between the top two cards, play the middle as a more convincing bait.
-    if (hand.length === 3 && getCardHierarchy(highest) - getCardHierarchy(lowest) >= 8 && getCardHierarchy(highest) - getCardHierarchy(middle) >= 3) {
-        baitCard = middle;
-        baitReason = { key: 'ai_logic.bait_type_mid' };
-        reasonKey = 'probe_mid_value';
-    }
-
-    const index = hand.findIndex(c => c.rank === baitCard.rank && c.suit === baitCard.suit);
-    return { index, card: baitCard, reasonKey, reason: baitReason };
-};
 
 export const getLocalAIMove = (state: GameState): AiMove => {
     const { gamePhase, currentTurn, lastCaller, currentTrick, hasEnvidoBeenCalledThisRound, aiHasFlor, playerHasFlor, hasFlorBeenCalledThisRound, playerTricks, aiTricks, trickWinners, aiScore, playerScore, opponentModel, trucoLevel, mano } = state;

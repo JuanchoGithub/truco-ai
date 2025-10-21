@@ -1,0 +1,57 @@
+{
+  "tutorial": {
+    "exit": "Exit Tutorial",
+    "next": "Next",
+    "previous": "Previous",
+    "start_playing": "Start Playing!",
+    "feedback_correct": "Correct!",
+    "feedback_try_again": "Try again. Think about the hierarchy!",
+    "feedback_wrong_action": "That's not the action we're looking for right now. Try again!",
+    "feedback_well_done": "Well Done!",
+    "step0": {
+      "title": "Welcome to Truco!",
+      "message": "I'll teach you the basics. The goal is to be the first to reach 15 points. Let's start with the most important thing: the cards!"
+    },
+    "step1": {
+      "title": "Card Hierarchy",
+      "message": "In Truco, a card's power isn't its number. There's a special hierarchy. These are the 4 most powerful cards in the game. Memorize them!"
+    },
+    "step2": {
+      "title": "Hierarchy Quiz (1/3)",
+      "message": "The 7 of Swords and 7 of Coins are powerful cards, but one is stronger than the other! Which one do you think is more powerful?",
+      "success": "Correct! The 7 of Swords is stronger than the 7 of Coins. Let's move on!"
+    },
+    "step3": {
+      "title": "Hierarchy Quiz (2/3)",
+      "message": "Now for the common numbers. In Truco, all 3s are stronger than all 2s. Which of these cards wins?",
+      "success": "Exactly! Any 3 beats any 2. Easy!"
+    },
+    "step4": {
+      "title": "Hierarchy Quiz (3/3)",
+      "message": "Watch out for the 'false aces' (Ace of Coins and Cups). They are weaker than the 3s and 2s. Which of these cards is stronger?",
+      "success": "Perfect! Any 2 is stronger than the 'false aces'. You've mastered the basics of the hierarchy!"
+    },
+    "step5": {
+      "title": "The Envido: Betting for Points",
+      "message": "If you have 2 cards of the same suit, you can call 'Envido'. You add their values and then add 20. Face cards (10, 11, 12) are worth 0. Here, you have 5 + 6 + 20 = 31 points!"
+    },
+    "step6": {
+      "title": "Time to Call Envido!",
+      "message": "You have 7 + 6 + 20 = 33 points! That's an excellent Envido! The 'Envido' button is highlighted. Click it to call.",
+      "success": "Perfect! That's how you call Envido to win points."
+    },
+    "step7": {
+      "title": "The Truco: Betting on the Round",
+      "message": "The 'Truco' is a bet on who will win the round (2 out of 3 tricks). You can raise the bet with 'Retruco' and 'Vale Cuatro'. It's all about cunning and deception."
+    },
+    "step8": {
+      "title": "Time to Call Truco!",
+      "message": "What a hand! You have the Ace of Swords and the Ace of Clubs, the two strongest cards. It's a perfect hand to call 'Truco' and apply pressure! Click the button.",
+      "success": "Excellent! That's how you use Truco to bet on the round."
+    },
+    "step9": {
+      "title": "You're Ready!",
+      "message": "You've learned the card hierarchy, the Envido, and the Truco. You are now ready for your first match. Good luck!"
+    }
+  }
+}

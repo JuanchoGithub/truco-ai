@@ -83,6 +83,12 @@ const DataModal: React.FC<{ gameState: GameState, dispatch: React.Dispatch<Actio
     reader.readAsText(file);
     event.target.value = '';
   };
+  
+  const handleResetProfile = () => {
+      if (confirm(t('dataModal.reset_confirm_message'))) {
+          dispatch({ type: ActionType.RESET_OPPONENT_MODEL });
+      }
+  };
 
   const avgTrucoStrength = playerTrucoCallHistory.length > 0
     ? playerTrucoCallHistory.reduce((sum, entry) => sum + entry.strength, 0) / playerTrucoCallHistory.length
@@ -151,11 +157,13 @@ const DataModal: React.FC<{ gameState: GameState, dispatch: React.Dispatch<Actio
                     <p><span className="font-semibold text-white">{t('dataModal.truco_threshold')}:</span> {avgTrucoStrength > 0 ? avgTrucoStrength.toFixed(1) : t('common.na')}</p>
                     <p><span className="font-semibold text-white">{t('dataModal.bluff_success')}:</span> {liveBluffStats.attempts > 0 ? `${((liveBluffStats.successes / liveBluffStats.attempts) * 100).toFixed(0)}%` : t('common.na')} <span className="text-gray-400">({liveBluffStats.successes}/{liveBluffStats.attempts})</span></p>
                     <p><span className="font-semibold text-white">{t('dataModal.envido_primero_rate')}:</span> {(opponentModel.playStyle.envidoPrimeroRate * 100).toFixed(0)}%</p>
+                    <p><span className="font-semibold text-white">{t('dataModal.chain_bluff_rate')}:</span> {(opponentModel.playStyle.chainBluffRate * 100).toFixed(0)}%</p>
                 </div>
                 <div className="bg-black/30 p-3 rounded-md space-y-1">
                      <p><span className="font-semibold text-white">{t('dataModal.envido_threshold')}:</span> ~{((opponentModel.envidoBehavior.mano.callThreshold + opponentModel.envidoBehavior.pie.callThreshold) / 2).toFixed(1)}</p>
                      <p><span className="font-semibold text-white">{t('dataModal.envido_fold_rate')}:</span> {(((opponentModel.envidoBehavior.mano.foldRate + opponentModel.envidoBehavior.pie.foldRate) / 2) * 100).toFixed(1)}%</p>
                      <p><span className="font-semibold text-white">{t('dataModal.envido_preference')}:</span> {totalCalls > 0 ? `${manoCallRate.toFixed(0)}% / ${(100 - manoCallRate).toFixed(0)}%` : t('common.na')}</p>
+                     <p><span className="font-semibold text-white">{t('dataModal.counter_tendency')}:</span> {(opponentModel.playStyle.counterTendency * 100).toFixed(0)}%</p>
                 </div>
             </div>
           </div>
@@ -235,10 +243,13 @@ const DataModal: React.FC<{ gameState: GameState, dispatch: React.Dispatch<Actio
           </div>
 
         </div>
-        <div className="p-3 border-t-2 border-amber-700/30 flex-shrink-0 flex justify-end items-center gap-4">
-          <input type="file" ref={fileInputRef} onChange={handleFileChange} accept=".json" style={{ display: 'none' }} />
-          <button onClick={handleImportClick} className="px-3 py-1.5 text-xs lg:text-sm rounded-lg font-semibold text-cyan-200 bg-black/40 border-2 border-cyan-800/80 shadow-md hover:bg-black/60 hover:border-cyan-600 transition-colors">{t('dataModal.button_import')}</button>
-          <button onClick={handleExport} className="px-3 py-1.5 text-xs lg:text-sm rounded-lg font-semibold text-yellow-200 bg-black/40 border-2 border-yellow-800/80 shadow-md hover:bg-black/60 hover:border-yellow-600 transition-colors">{t('dataModal.button_export')}</button>
+        <div className="p-3 border-t-2 border-amber-700/30 flex-shrink-0 flex justify-between items-center gap-4">
+          <button onClick={handleResetProfile} className="px-3 py-1.5 text-xs lg:text-sm rounded-lg font-semibold text-red-300 bg-black/40 border-2 border-red-800/80 shadow-md hover:bg-black/60 hover:border-red-600 transition-colors">{t('dataModal.button_reset')}</button>
+          <div className="flex items-center gap-4">
+            <input type="file" ref={fileInputRef} onChange={handleFileChange} accept=".json" style={{ display: 'none' }} />
+            <button onClick={handleImportClick} className="px-3 py-1.5 text-xs lg:text-sm rounded-lg font-semibold text-cyan-200 bg-black/40 border-2 border-cyan-800/80 shadow-md hover:bg-black/60 hover:border-cyan-600 transition-colors">{t('dataModal.button_import')}</button>
+            <button onClick={handleExport} className="px-3 py-1.5 text-xs lg:text-sm rounded-lg font-semibold text-yellow-200 bg-black/40 border-2 border-yellow-800/80 shadow-md hover:bg-black/60 hover:border-yellow-600 transition-colors">{t('dataModal.button_export')}</button>
+          </div>
         </div>
       </div>
     </div>
