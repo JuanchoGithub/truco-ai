@@ -137,6 +137,8 @@ function updateOpponentModelFromHistory(state: GameState): OpponentModel {
                 }
             }
         }
+        // Fix: The condition should be based on the number of attempts for statistical relevance,
+        // and the rate calculation was using a non-existent property.
         if (chainBluffAttempts > 2) {
             const newChainBluffRate = chainBluffs / chainBluffAttempts;
             newModel.playStyle.chainBluffRate = newModel.playStyle.chainBluffRate * DECAY + (1 - DECAY) * newChainBluffRate;
@@ -147,28 +149,20 @@ function updateOpponentModelFromHistory(state: GameState): OpponentModel {
 }
 
 export function handleRestartGame(initialState: GameState, state: GameState): GameState {
-  // Create a clean slate for the new game, but persist the AI's learning data
-  // and user settings from the previous game.
+  // Update the opponent model based on the game that just finished.
+  const updatedOpponentModel = state.round > 0 ? updateOpponentModelFromHistory(state) : state.opponentModel;
   
-  const newMano = state.mano === 'player' ? 'ai' : 'player'; // Alternate who is 'mano'
+  const newMano = state.mano === 'player' ? 'ai' : 'player';
 
+  // Create a clean state for the new game, carrying over only the updated model and settings.
   const resetState: GameState = {
-    ...initialState, // Use initialState to reset most fields to default
+    ...initialState, // Use initialState to reset ALL fields to default, including history arrays
     
-    // Explicitly carry over all learning and historical data
-    opponentModel: state.opponentModel,
-    aiCases: state.aiCases,
-    playerEnvidoFoldHistory: state.playerEnvidoFoldHistory,
-    playerTrucoCallHistory: state.playerTrucoCallHistory,
-    playerTrucoFoldHistory: state.playerTrucoFoldHistory,
-    playerEnvidoHistory: state.playerEnvidoHistory,
-    playerPlayOrderHistory: state.playerPlayOrderHistory,
-    playerCardPlayStats: state.playerCardPlayStats,
-    roundHistory: [], // Reset round history for a new game
-    envidoPrimeroOpportunities: state.envidoPrimeroOpportunities,
-    envidoPrimeroCalls: state.envidoPrimeroCalls,
+    // Explicitly carry over only what's needed for the next game
+    opponentModel: updatedOpponentModel,
+    aiCases: state.aiCases, // This is long-term learning
     
-    // Preserve user settings like debug mode
+    // Preserve user settings
     isDebugMode: state.isDebugMode,
 
     // Explicitly define the starting state for the new game
@@ -178,13 +172,12 @@ export function handleRestartGame(initialState: GameState, state: GameState): Ga
     mano: newMano,
     currentTurn: newMano,
     winner: null,
+    // Keep the message log for continuity, but add a separator
     messageLog: [...state.messageLog, { key: 'game.new_game_log', type: 'round_separator' }, { key: 'game.new_game_started', options: { player: newMano } }],
     aiReasoningLog: [{ round: 0, reasoning: [{ key: 'ai_logic.initial_state' }] }],
   };
 
-  // By calling handleStartNewRound immediately, we ensure a seamless transition
-  // into the new game without getting stuck in an intermediate state, and we
-  // guarantee that the preserved historical data is correctly used.
+  // Start the first round of the new game with this clean state.
   return handleStartNewRound(resetState, { type: ActionType.START_NEW_ROUND });
 }
 

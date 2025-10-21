@@ -1,4 +1,3 @@
-
 import React from 'react';
 import Card from './Card';
 import { Card as CardType } from '../types';
@@ -73,7 +72,6 @@ const Manual: React.FC<ManualProps> = ({ onExit }) => {
                             <tr><td className="border p-2 font-bold text-center">{t('manual.fundamentals.table.r7c1')}</td><td className="border p-2">{t('manual.fundamentals.table.r7c2')}</td><td className="border p-2">{t('manual.fundamentals.table.r7c3')}</td><td className="border p-2">{t('manual.fundamentals.table.r7c4')}</td></tr>
                             <tr><td className="border p-2 font-bold text-center">{t('manual.fundamentals.table.r8c1')}</td><td className="border p-2">{t('manual.fundamentals.table.r8c2')}</td><td className="border p-2">{t('manual.fundamentals.table.r8c3')}</td><td className="border p-2">{t('manual.fundamentals.table.r8c4')}</td></tr>
                             <tr><td className="border p-2 font-bold text-center">{t('manual.fundamentals.table.r9c1')}</td><td className="border p-2">{t('manual.fundamentals.table.r9c2')}</td><td className="border p-2">{t('manual.fundamentals.table.r9c3')}</td><td className="border p-2">{t('manual.fundamentals.table.r9c4')}</td></tr>
-                            <tr><td className="border p-2 font-bold text-center">{t('manual.fundamentals.table.r10c1')}</td><td className="border p-2">{t('manual.fundamentals.table.r10c2')}</td><td className="border p-2">{t('manual.fundamentals.table.r10c3')}</td><td className="border p-2">{t('manual.fundamentals.table.r10c4')}</td></tr>
                         </tbody>
                     </table>
                 </div>

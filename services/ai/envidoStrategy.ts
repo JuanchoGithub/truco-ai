@@ -125,6 +125,15 @@ export const getEnvidoResponse = (state: GameState, gamePressure: number, reason
 
     // Low advantage -> Mostly Decline, with a chance for a hero call
     reasoning.push({ key: 'ai_logic.hand_seems_weaker' });
+    
+    // --- NEW: High-Value Hand Protection (User Request) ---
+    // Never fold a very strong hand just because the opponent escalated aggressively.
+    const highValueThreshold = 30;
+    if (aiEnvidoDetails.value >= highValueThreshold) {
+        reasoning.push({ key: 'ai_logic.high_value_hand_protection_accept', options: { myEnvido: aiEnvidoDetails.value, threshold: highValueThreshold } });
+        return { action: { type: ActionType.ACCEPT, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.QUIERO) } }, reasoning, reasonKey: 'accept_envido_high_value_override' };
+    }
+
     if (myEnvido >= 23 && randomFactor < heroCallChance) {
          reasoning.push({ key: 'ai_logic.decision_hero_call', options: { chance: (heroCallChance * 100).toFixed(0) } });
          return { action: { type: ActionType.ACCEPT, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.QUIERO) } }, reasoning, reasonKey: 'accept_envido_hero_call' };

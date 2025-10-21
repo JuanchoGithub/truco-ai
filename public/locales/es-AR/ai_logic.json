@@ -95,6 +95,7 @@
     "bluff_escalate_analysis": "[Análisis de Farol-Escalada]: Mi mano es media ({{myEnvido}}). Consideraré escalar como un farol para ser impredecible.",
     "bluff_escalate_chance": "Probabilidad de farol-escalada: {{chance}}%.",
     "decision_bluff_escalate": "Decisión: El dado cayó en farol. Escalando la apuesta para presionar al oponente.",
+    "high_value_hand_protection_accept": "\n[Protección de Mano de Alto Valor]\nMi puntaje de Envido es {{myEnvido}}, que está por encima del umbral de valor absoluto de {{threshold}}. A pesar del canto agresivo del oponente, retirarme con esta mano sería un error estratégico. Debo aceptar.",
     "play_card_logic": "[Lógica: Jugar Carta]",
     "my_hand": "Mi mano: {{hand}}",
     "leading_trick": "Lidero la Mano {{trickNumber}}.",

@@ -95,6 +95,7 @@
     "bluff_escalate_analysis": "[Bluff-Escalate Analysis]: My hand is medium ({{myEnvido}}). I will consider escalating as a bluff to be unpredictable.",
     "bluff_escalate_chance": "Bluff-escalate probability: {{chance}}%.",
     "decision_bluff_escalate": "Decision: The dice landed on bluff. Escalating the bet to apply pressure.",
+    "high_value_hand_protection_accept": "\n[High-Value Hand Protection]\nMy Envido score is {{myEnvido}}, which is above the absolute value threshold of {{threshold}}. Despite the opponent's aggressive call, folding this hand would be a strategic error. I must accept.",
     "play_card_logic": "[Logic: Play Card]",
     "my_hand": "My hand: {{hand}}",
     "leading_trick": "I am leading Trick {{trickNumber}}.",
