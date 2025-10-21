@@ -1,3 +1,4 @@
+
 let translations: any = {};
 let currentLanguage = 'es-AR'; // default
 
@@ -76,29 +77,28 @@ const i18nService = {
     
     let result = value;
 
-    // Handle interpolation and pluralization
     if (options) {
-      result = result.replace(/{{(.*?)}}/g, (match, rawExpression) => {
-        const expression = rawExpression.trim();
-        const parts = expression.split(',').map(p => p.trim());
-        const varName = parts[0];
-
-        if (options[varName] === undefined) {
-          return match; // return original placeholder if value not provided
+      // First, handle plurals with a very specific regex for the `one{...} other{...}` format.
+      // This is more robust than a generic parser.
+      const pluralRegex = /{{\s*(\w+)\s*,\s*plural\s*,\s*one{([^}]+)}\s*other{([^}]+)}\s*}}/g;
+      result = result.replace(pluralRegex, (match, varName, oneRule, otherRule) => {
+        const count = options[varName];
+        if (count === undefined || isNaN(Number(count))) {
+          console.warn(`[i18n] Pluralization variable '${varName}' not found or not a number for key '${key}'.`);
+          return match; // Return original block if data is missing
         }
 
-        if (parts.length > 1 && parts[1] === 'plural') {
-          // simple pluralization: {{count, plural, one{...} other{...}}}
-          const count = Number(options[varName]);
-          const oneMatch = /one{(.*?)}/.exec(expression);
-          const otherMatch = /other{(.*?)}/.exec(expression);
-          
-          if (oneMatch && otherMatch) {
-            return count === 1 ? oneMatch[1] : otherMatch[1];
-          }
+        return Number(count) === 1 ? oneRule.trim() : otherRule.trim();
+      });
+
+      // Then, handle simple variables. This regex won't conflict with the plural format.
+      const simpleVarRegex = /{{\s*(\w+)\s*}}/g;
+      result = result.replace(simpleVarRegex, (match, varName) => {
+        if (options[varName] !== undefined) {
+          return String(options[varName]);
         }
-        
-        return String(options[varName]);
+        console.warn(`[i18n] Missing value for placeholder '${varName}' in key '${key}'.`);
+        return match; // Leave placeholder if value not found
       });
     }
 
