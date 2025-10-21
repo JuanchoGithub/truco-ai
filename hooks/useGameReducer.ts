@@ -92,6 +92,9 @@ export const initialState: GameState = {
   // New Detailed Statistics
   playerCardPlayStats: createInitialCardPlayStats(),
   roundHistory: [],
+  // Match tracking
+  matchStartRoundIndex: 0,
+  matchStartAiLogIndex: 1, // Start at 1 to exclude the "initial state" log entry
 };
 
 export function useGameReducer(state: GameState, action: Action): GameState {

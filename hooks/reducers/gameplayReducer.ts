@@ -154,13 +154,28 @@ export function handleRestartGame(initialState: GameState, state: GameState): Ga
   
   const newMano = state.mano === 'player' ? 'ai' : 'player';
 
-  // Create a clean state for the new game, carrying over only the updated model and settings.
+  // Create a clean state for the new game, carrying over ALL persistent profile data.
   const resetState: GameState = {
-    ...initialState, // Use initialState to reset ALL fields to default, including history arrays
+    ...initialState, // Resets game-specific fields like scores, hands, tricks.
     
-    // Explicitly carry over only what's needed for the next game
+    // --- CARRY OVER PERSISTENT PROFILE DATA ---
     opponentModel: updatedOpponentModel,
-    aiCases: state.aiCases, // This is long-term learning
+    aiCases: state.aiCases, 
+    playerEnvidoHistory: state.playerEnvidoHistory,
+    playerPlayOrderHistory: state.playerPlayOrderHistory,
+    playerCardPlayStats: state.playerCardPlayStats,
+    roundHistory: state.roundHistory, // Keep full history for long-term analysis
+    playerEnvidoFoldHistory: state.playerEnvidoFoldHistory,
+    playerTrucoCallHistory: state.playerTrucoCallHistory,
+    playerTrucoFoldHistory: state.playerTrucoFoldHistory,
+    envidoPrimeroOpportunities: state.envidoPrimeroOpportunities,
+    envidoPrimeroCalls: state.envidoPrimeroCalls,
+    aiReasoningLog: state.aiReasoningLog, // Keep full history
+    // --- END PROFILE DATA ---
+
+    // Set start indexes for the new match
+    matchStartRoundIndex: state.roundHistory.length,
+    matchStartAiLogIndex: state.aiReasoningLog.length,
     
     // Preserve user settings
     isDebugMode: state.isDebugMode,
@@ -174,7 +189,6 @@ export function handleRestartGame(initialState: GameState, state: GameState): Ga
     winner: null,
     // Keep the message log for continuity, but add a separator
     messageLog: [...state.messageLog, { key: 'game.new_game_log', type: 'round_separator' }, { key: 'game.new_game_started', options: { player: newMano } }],
-    aiReasoningLog: [{ round: 0, reasoning: [{ key: 'ai_logic.initial_state' }] }],
   };
 
   // Start the first round of the new game with this clean state.

@@ -44,6 +44,7 @@ const App: React.FC = () => {
     return saved !== null ? JSON.parse(saved) : false; // Default to false
   });
   const [showSoundHint, setShowSoundHint] = useState(false);
+  const justStartedNewGame = useRef(false);
 
   useEffect(() => {
     const hintShown = localStorage.getItem('trucoAiSoundHintShown');
@@ -67,6 +68,11 @@ const App: React.FC = () => {
   useEffect(() => {
     const isPlaying = gameMode === 'playing' || gameMode === 'playing-with-help';
     if (isPlaying) {
+        if (justStartedNewGame.current) {
+            justStartedNewGame.current = false; // Consume the flag
+            return; // Do nothing, RESTART_GAME already correctly set up the new game state
+        }
+        
         const persistedState = loadStateFromStorage(gameMode);
         if (persistedState) {
             dispatch({ type: ActionType.LOAD_PERSISTED_STATE, payload: persistedState });
@@ -345,15 +351,19 @@ const App: React.FC = () => {
   );
 
   const saveCurrentGame = () => {
+    // Slice the history arrays to get data only for the match that is ending.
+    const roundsForThisMatch = state.roundHistory.slice(state.matchStartRoundIndex);
+    const reasoningForThisMatch = state.aiReasoningLog.slice(state.matchStartAiLogIndex);
+
     // If a game was in progress and has history, save its logs.
-    if (state.round > 0 && state.roundHistory.length > 0) {
+    if (state.round > 0 && roundsForThisMatch.length > 0) {
         const newLog: MatchLog = {
             matchId: Date.now(),
             date: new Date().toLocaleString(language),
             playerScore: state.playerScore,
             aiScore: state.aiScore,
-            aiReasoningLog: state.aiReasoningLog,
-            roundHistory: state.roundHistory,
+            aiReasoningLog: reasoningForThisMatch,
+            roundHistory: roundsForThisMatch,
         };
         const existingLogs = loadMatchLogs() || [];
         const updatedLogs = [newLog, ...existingLogs].slice(0, 5); // Keep last 5 matches
@@ -362,12 +372,14 @@ const App: React.FC = () => {
   };
 
   const handleStartGame = (mode: 'playing' | 'playing-with-help', continueGame: boolean) => {
-    if (!continueGame) {
-        saveCurrentGame();
-        clearStateFromStorage(mode);
-        dispatch({ type: ActionType.RESTART_GAME });
+    if (continueGame) {
+      setGameMode(mode);
+    } else {
+      saveCurrentGame();
+      dispatch({ type: ActionType.RESTART_GAME });
+      justStartedNewGame.current = true;
+      setGameMode(mode);
     }
-    setGameMode(mode);
   };
 
   if (gameMode === 'menu') {

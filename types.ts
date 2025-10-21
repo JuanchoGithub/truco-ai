@@ -295,6 +295,10 @@ export interface GameState {
   // New Detailed Statistics
   playerCardPlayStats: PlayerCardPlayStatistics;
   roundHistory: RoundSummary[];
+
+  // New: Match tracking for historical logs
+  matchStartRoundIndex: number;
+  matchStartAiLogIndex: number;
 }
 
 export interface AiMove {
