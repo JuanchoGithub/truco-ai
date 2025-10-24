@@ -22,7 +22,7 @@ function deepMerge(target: any, source: any) {
 const i18nService = {
   async loadLanguage(lang: string): Promise<void> {
     try {
-      const files = ['common', 'game', 'suggestion', 'tutorial', 'dataModal', 'manual', 'scenario_tester', 'phrases', 'ai_logic', 'simulation', 'scenario_runner'];
+      const files = ['common', 'game', 'suggestion', 'tutorial', 'dataModal', 'manual', 'scenario_tester', 'phrases', 'simulation', 'scenario_runner'];
       
       let effectiveLang = lang;
       // Fallback to Spanish if an unsupported language is requested

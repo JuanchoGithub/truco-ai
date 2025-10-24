@@ -15,7 +15,7 @@ function getAi() {
 }
 
 function getValidActionsForGemini(state: GameState): string[] {
-    const { gamePhase, currentTurn, lastCaller, trucoLevel, hasEnvidoBeenCalledThisRound, playerTricks, aiTricks, currentTrick, playerHasFlor, aiHasFlor, hasFlorBeenCalledThisRound, envidoPointsOnOffer, hasRealEnvidoBeenCalledThisSequence, playerHand } = state;
+    const { gamePhase, currentTurn, lastCaller, trucoLevel, hasEnvidoBeenCalledThisRound, playerTricks, aiTricks, currentTrick, playerHasFlor, aiHasFlor, hasFlorBeenCalledThisRound, envidoPointsOnOffer, hasRealEnvidoBeenCalledThisSequence, playerHand, isFlorEnabled } = state;
 
     if (currentTurn !== 'player') return []; // Gemini is always 'player'
 
@@ -41,7 +41,7 @@ function getValidActionsForGemini(state: GameState): string[] {
             validActions.push('DECLINE');
 
             if (gamePhase === 'envido_called') {
-                if (hasFlor) {
+                if (isFlorEnabled && hasFlor) {
                     validActions.push('RESPOND_TO_ENVIDO_WITH_FLOR');
                 } else {
                     if (envidoPointsOnOffer === 2) validActions.push('CALL_ENVIDO');
@@ -50,9 +50,9 @@ function getValidActionsForGemini(state: GameState): string[] {
                 }
             } else if (gamePhase === 'truco_called') {
                 if (currentTrick === 0 && !hasEnvidoBeenCalledThisRound) {
-                     if (hasFlor) {
+                     if (isFlorEnabled && hasFlor) {
                          validActions.push('DECLARE_FLOR');
-                     } else if (!aiHasFlor) { // if opponent (local AI) doesn't have flor
+                     } else if (!(isFlorEnabled && aiHasFlor)) { // if opponent (local AI) doesn't have flor
                          validActions.push('CALL_ENVIDO');
                      }
                 }
@@ -69,9 +69,9 @@ function getValidActionsForGemini(state: GameState): string[] {
         }
 
         if (currentTrick === 0 && !hasEnvidoBeenCalledThisRound) {
-            if (hasFlor) {
+            if (isFlorEnabled && hasFlor) {
                 validActions.push('DECLARE_FLOR');
-            } else if (!aiHasFlor) {
+            } else if (!(isFlorEnabled && aiHasFlor)) {
                 validActions.push('CALL_ENVIDO');
                 validActions.push('CALL_REAL_ENVIDO');
                 validActions.push('CALL_FALTA_ENVIDO');

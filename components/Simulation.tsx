@@ -1,4 +1,3 @@
-
 import React, { useState, useReducer, useEffect, useRef, useMemo } from 'react';
 import { useGameReducer, initialState } from '../hooks/useGameReducer';
 import { getLocalAIMove } from '../services/localAiService';
@@ -160,7 +159,7 @@ const ManualLogModal: React.FC<{ log: string[], onClose: () => void }> = ({ log,
 
 
 const getValidActions = (state: GameState): Action[] => {
-    const { gamePhase, currentTurn, lastCaller, trucoLevel, hasEnvidoBeenCalledThisRound, playerTricks, aiTricks, currentTrick, playerHasFlor, aiHasFlor, hasFlorBeenCalledThisRound, envidoPointsOnOffer, hasRealEnvidoBeenCalledThisSequence, playerHand, aiHand } = state;
+    const { gamePhase, currentTurn, lastCaller, trucoLevel, hasEnvidoBeenCalledThisRound, playerTricks, aiTricks, currentTrick, playerHasFlor, aiHasFlor, hasFlorBeenCalledThisRound, envidoPointsOnOffer, hasRealEnvidoBeenCalledThisSequence, playerHand, aiHand, isFlorEnabled } = state;
     if (!currentTurn) {
          if (state.gamePhase === 'round_end') return [{ type: ActionType.PROCEED_TO_NEXT_ROUND }];
          if (state.winner) return [{ type: ActionType.RESTART_GAME }];
@@ -176,7 +175,7 @@ const getValidActions = (state: GameState): Action[] => {
         validActions.push({ type: ActionType.DECLINE });
 
         if (gamePhase === 'envido_called') {
-            if (hasFlor) validActions.push({ type: ActionType.RESPOND_TO_ENVIDO_WITH_FLOR });
+            if (isFlorEnabled && hasFlor) validActions.push({ type: ActionType.RESPOND_TO_ENVIDO_WITH_FLOR });
             else {
                 if (envidoPointsOnOffer === 2) validActions.push({ type: ActionType.CALL_ENVIDO });
                 if (!hasRealEnvidoBeenCalledThisSequence) validActions.push({ type: ActionType.CALL_REAL_ENVIDO });
@@ -186,8 +185,8 @@ const getValidActions = (state: GameState): Action[] => {
         if (gamePhase === 'truco_called') {
             const canCallEnvidoPrimero = currentTrick === 0 && !hasEnvidoBeenCalledThisRound;
             const opponentHasFlor = currentTurn === 'player' ? aiHasFlor : playerHasFlor;
-            if (hasFlor) validActions.push({ type: ActionType.DECLARE_FLOR });
-            else if (canCallEnvidoPrimero && !opponentHasFlor) validActions.push({ type: ActionType.CALL_ENVIDO });
+            if (isFlorEnabled && hasFlor) validActions.push({ type: ActionType.DECLARE_FLOR });
+            else if (canCallEnvidoPrimero && !(isFlorEnabled && opponentHasFlor)) validActions.push({ type: ActionType.CALL_ENVIDO });
             validActions.push({ type: ActionType.CALL_RETRUCO });
         }
         if (gamePhase === 'retruco_called') validActions.push({ type: ActionType.CALL_VALE_CUATRO });
@@ -209,8 +208,8 @@ const getValidActions = (state: GameState): Action[] => {
 
         const canSing = currentTrick === 0;
         if (canSing) {
-            if (hasFlor) validActions.push({ type: ActionType.DECLARE_FLOR });
-            else if (!hasEnvidoBeenCalledThisRound && !aiHasFlor && !playerHasFlor) {
+            if (isFlorEnabled && hasFlor) validActions.push({ type: ActionType.DECLARE_FLOR });
+            else if (!hasEnvidoBeenCalledThisRound && !(isFlorEnabled && aiHasFlor) && !(isFlorEnabled && playerHasFlor)) {
                 validActions.push({ type: ActionType.CALL_ENVIDO });
                 validActions.push({ type: ActionType.CALL_REAL_ENVIDO });
                 validActions.push({ type: ActionType.CALL_FALTA_ENVIDO });

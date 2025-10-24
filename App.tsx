@@ -334,11 +334,30 @@ const App: React.FC = () => {
       return;
     }
 
-    if (gameMode === 'playing-with-help' && assistantMove?.summary) {
-        // Only speak if the summary text has actually changed.
-        if (assistantMove.summary !== lastSpokenSummary.current) {
-            speechService.speak(assistantMove.summary, 'assistant');
-            lastSpokenSummary.current = assistantMove.summary;
+    if (gameMode === 'playing-with-help' && assistantMove) {
+        const allMoves = [assistantMove, ...(assistantMove.alternatives || [])]
+            .filter((value, index, self) => 
+                index === self.findIndex((t) => (
+                    JSON.stringify(t.action) === JSON.stringify(value.action)
+                ))
+            );
+
+        // Create a unique key for this set of suggestions to avoid re-speaking
+        const suggestionsKey = allMoves.map(m => m.action.type).join('_');
+
+        if (suggestionsKey !== lastSpokenSummary.current) {
+            let fullSpeechText = t('assistantPanel.speech_intro');
+
+            allMoves.forEach((move, index) => {
+                const categoryKey = `assistantPanel.strategy_${move.strategyCategory || 'safe'}_title`;
+                const categoryTitle = t(categoryKey);
+                const moveSummary = move.summary || '';
+                
+                fullSpeechText += ` ${t('assistantPanel.speech_option', { number: index + 1 })}. ${categoryTitle}. ${moveSummary}.`;
+            });
+            
+            speechService.speak(fullSpeechText, 'assistant');
+            lastSpokenSummary.current = suggestionsKey;
         }
     } else if (gameMode === 'playing' && state.aiBlurb?.isVisible && state.aiBlurb.text) {
         speechService.speak(state.aiBlurb.text, 'opponent');
@@ -346,11 +365,11 @@ const App: React.FC = () => {
         lastSpokenSummary.current = null;
     } else {
         // When there's no active suggestion (e.g., turn ended), reset the tracker.
-        if (gameMode === 'playing-with-help' && !assistantMove?.summary) {
+        if (gameMode === 'playing-with-help' && !assistantMove) {
             lastSpokenSummary.current = null;
         }
     }
-  }, [state.aiBlurb, assistantMove, gameMode]);
+  }, [state.aiBlurb, assistantMove, gameMode, t]);
 
   const handlePlayerAction = () => {
     // If a persistent message is showing (like Envido results), clear it when the player acts.

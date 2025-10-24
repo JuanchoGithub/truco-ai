@@ -1,42 +1,113 @@
+
 import React, { useState, useEffect, useRef } from 'react';
-import { AiMove, Card, MessageObject } from '../types';
-import { getSimpleSuggestionText } from '../services/suggestionService';
+import { AiMove, Card } from '../types';
 import { useLocalization } from '../context/LocalizationContext';
-import { getCardName } from '../services/trucoLogic';
 
 interface AssistantPanelProps {
   suggestion: AiMove | null;
   playerHand: Card[];
 }
 
+const StrategyOptionCard: React.FC<{ move: AiMove; isPrimary: boolean; }> = ({ move, isPrimary }) => {
+    const { t } = useLocalization();
+    const [isLogicVisible, setIsLogicVisible] = useState(false);
+
+    const { summary, confidence, strategyCategory = 'safe', reasoning } = move;
+
+    const categoryStyles = {
+        safe: {
+            title: t('assistantPanel.strategy_safe_title'),
+            borderColor: 'border-green-400',
+            bgColor: 'bg-green-900/20',
+            titleColor: 'text-green-300',
+            risk: t('assistantPanel.risk_low'),
+            reward: t('assistantPanel.reward_moderate'),
+        },
+        aggressive: {
+            title: t('assistantPanel.strategy_aggressive_title'),
+            borderColor: 'border-yellow-400',
+            bgColor: 'bg-yellow-900/20',
+            titleColor: 'text-yellow-300',
+            risk: t('assistantPanel.risk_moderate'),
+            reward: t('assistantPanel.reward_high'),
+        },
+        deceptive: {
+            title: t('assistantPanel.strategy_deceptive_title'),
+            borderColor: 'border-purple-400',
+            bgColor: 'bg-purple-900/20',
+            titleColor: 'text-purple-300',
+            risk: t('assistantPanel.risk_high'),
+            reward: t('assistantPanel.reward_very_high'),
+        },
+    };
+
+    const styles = categoryStyles[strategyCategory];
+
+    const reasoningText = Array.isArray(reasoning)
+        ? reasoning.map(r => typeof r === 'string' ? r : t(r.key, r.options || {})).join('\n')
+        : String(reasoning || '');
+
+    return (
+        <div className={`p-3 rounded-lg border-2 ${styles.borderColor} ${styles.bgColor}`}>
+            <div className="flex justify-between items-start gap-2">
+                <h4 className={`font-bold text-base ${styles.titleColor}`}>{styles.title}</h4>
+                {confidence && (
+                    <div className="flex flex-col items-center flex-shrink-0">
+                        <span className="text-sm font-mono text-yellow-200 bg-yellow-900/50 px-2 py-0.5 rounded">
+                            {(confidence * 100).toFixed(0)}%
+                        </span>
+                        <span className="text-xs text-yellow-400">{t('assistantPanel.confidence')}</span>
+                    </div>
+                )}
+            </div>
+            <p className="text-lg font-semibold text-white my-2">{summary}</p>
+            <div className="text-xs text-gray-400 flex justify-between">
+                <span>{t('assistantPanel.risk')}: <span className="font-semibold">{styles.risk}</span></span>
+                <span>{t('assistantPanel.reward')}: <span className="font-semibold">{styles.reward}</span></span>
+            </div>
+            {isPrimary && (
+                 <div className="mt-3 border-t border-gray-700 pt-2">
+                    <button
+                      onClick={() => setIsLogicVisible(!isLogicVisible)}
+                      className="text-xs px-2 py-1 rounded-md font-semibold text-gray-300 bg-black/40 border border-gray-600 shadow-sm hover:bg-black/60 hover:border-gray-500 transition-colors"
+                    >
+                      {isLogicVisible ? t('assistantPanel.hide_logic') : t('assistantPanel.show_logic')}
+                    </button>
+                    {isLogicVisible && (
+                      <div className="mt-2 p-2 bg-black/50 rounded max-h-32 overflow-y-auto">
+                        <pre className="text-xs text-gray-400 whitespace-pre-wrap font-mono">{reasoningText}</pre>
+                      </div>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+};
+
+
 const AssistantPanel: React.FC<AssistantPanelProps> = ({ suggestion, playerHand }) => {
   const { t } = useLocalization();
   const [isExpanded, setIsExpanded] = useState(false);
-  const [showLogic, setShowLogic] = useState(false);
   const [isManuallyClosed, setIsManuallyClosed] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const previousSuggestionRef = useRef<AiMove | null>(null);
 
   useEffect(() => {
-    // If a new suggestion arrives and it's different from the last one
     if (suggestion && suggestion !== previousSuggestionRef.current) {
       if (!isManuallyClosed) {
         setIsExpanded(true);
       }
-      setShowLogic(false); // Always collapse logic view on new suggestion
     }
     
-    // If suggestion disappears (e.g., end of turn)
     if (!suggestion) {
       setIsExpanded(false);
-      setIsManuallyClosed(false); // Reset for the next turn
+      setIsManuallyClosed(false);
     }
 
     previousSuggestionRef.current = suggestion;
   }, [suggestion, isManuallyClosed]);
   
-  // Effect for handling clicks outside the panel
   useEffect(() => {
     if (isExpanded) {
       const handleClickOutside = (event: MouseEvent) => {
@@ -51,12 +122,11 @@ const AssistantPanel: React.FC<AssistantPanelProps> = ({ suggestion, playerHand 
     }
   }, [isExpanded]);
 
-  // Toast message timer
   useEffect(() => {
     if (toastMessage) {
         const timer = setTimeout(() => {
             setToastMessage(null);
-        }, 4000); // Show for 4 seconds
+        }, 4000);
         return () => clearTimeout(timer);
     }
   }, [toastMessage]);
@@ -69,39 +139,17 @@ const AssistantPanel: React.FC<AssistantPanelProps> = ({ suggestion, playerHand 
 
   const handleOpenFromButton = () => {
     setIsExpanded(true);
-    setIsManuallyClosed(false); // Re-enable auto-opening
+    setIsManuallyClosed(false);
   };
 
   if (!suggestion) return null;
 
-  const suggestionText = suggestion.summary || getSimpleSuggestionText(suggestion, playerHand);
-
-  const reasoningText = Array.isArray(suggestion.reasoning)
-    ? suggestion.reasoning.map(r => {
-        if (typeof r === 'string') return r;
-        
-        const options: { [key: string]: any } = { ...r.options };
-
-        if (options.statusKey) {
-            options.status = t(`ai_logic.statuses.${options.statusKey}`);
-        }
-
-        // Handle card objects, arrays of cards, and suits
-        for (const key in options) {
-            if (options[key] && typeof options[key] === 'object') {
-                if (Array.isArray(options[key])) { // Handle hand: Card[]
-                    options[key] = options[key].map((c: any) => getCardName(c)).join(', ');
-                } else if ('rank' in options[key] && 'suit' in options[key]) { // Handle card: Card
-                    options[key] = getCardName(options[key] as Card);
-                }
-            } else if (key === 'suit' && typeof options[key] === 'string') {
-                options[key] = t(`common.card_suits.${options[key]}`);
-            }
-        }
-        
-        return t(r.key, options || {});
-      }).join('\n')
-    : String(suggestion.reasoning || '');
+  const allSuggestions = [suggestion, ...(suggestion.alternatives || [])]
+    .filter((value, index, self) => 
+        index === self.findIndex((t) => (
+            JSON.stringify(t.action) === JSON.stringify(value.action)
+        ))
+    );
 
   if (!isExpanded) {
     return (
@@ -123,9 +171,9 @@ const AssistantPanel: React.FC<AssistantPanelProps> = ({ suggestion, playerHand 
   }
 
   return (
-    <div ref={panelRef} className="fixed bottom-20 right-4 w-80 lg:w-96 bg-gray-900/95 border-2 border-green-400 rounded-lg shadow-2xl shadow-green-500/20 z-50 text-white animate-fade-in-scale">
-      <div className="p-3 border-b border-green-400/30 flex justify-between items-center">
-        <h3 className="font-bold text-green-300 font-cinzel tracking-wider flex items-center gap-2">
+    <div ref={panelRef} className="fixed bottom-20 right-4 w-80 lg:w-96 bg-gray-900/95 border-2 border-cyan-400 rounded-lg shadow-2xl shadow-cyan-500/20 z-50 text-white animate-fade-in-scale flex flex-col max-h-[70vh]">
+      <div className="p-3 border-b border-cyan-400/30 flex justify-between items-center flex-shrink-0">
+        <h3 className="font-bold text-cyan-300 font-cinzel tracking-wider flex items-center gap-2">
           <span className="text-xl">🤖</span> {t('assistantPanel.title')}
         </h3>
         <button
@@ -136,65 +184,10 @@ const AssistantPanel: React.FC<AssistantPanelProps> = ({ suggestion, playerHand 
           &times;
         </button>
       </div>
-      <div className="p-3">
-        {/* Primary Suggestion */}
-        <div className="mb-3">
-            <div className="flex justify-between items-start gap-2">
-                <p className="font-semibold text-lg text-yellow-200 flex-1">
-                    {suggestionText}
-                </p>
-                {suggestion.confidence && (
-                    <div className="flex-shrink-0 flex flex-col items-center">
-                        <span className="text-sm font-mono text-yellow-200 bg-yellow-900/50 px-2 py-0.5 rounded">
-                            {(suggestion.confidence * 100).toFixed(0)}%
-                        </span>
-                        <span className="text-xs text-yellow-400">{t('assistantPanel.confidence')}</span>
-                    </div>
-                )}
-            </div>
-        </div>
-
-        {/* Alternatives */}
-        {suggestion.alternatives && suggestion.alternatives.length > 0 && (
-            <div className="border-t border-green-400/30 pt-3">
-                <h4 className="text-sm font-bold text-gray-300 mb-2">{t('assistantPanel.alternatives_title')}</h4>
-                <div className="space-y-3">
-                    {suggestion.alternatives.map((alt, index) => (
-                        <div key={index}>
-                            <div className="flex justify-between items-start text-sm gap-2">
-                                <p className="text-gray-200 flex-1">
-                                    {alt.summary}
-                                </p>
-                                {alt.confidence && (
-                                    <div className="flex-shrink-0 flex flex-col items-center">
-                                        <span className="text-xs font-mono text-gray-200 bg-gray-700/50 px-2 py-0.5 rounded">
-                                            {(alt.confidence * 100).toFixed(0)}%
-                                        </span>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        )}
-
-        {/* Logic Button */}
-        <div className="mt-4 border-t border-green-400/30 pt-3">
-            <button
-              onClick={() => setShowLogic(!showLogic)}
-              className="text-xs px-3 py-1 rounded-md font-semibold text-green-200 bg-black/40 border border-green-700/80 shadow-sm hover:bg-black/60 hover:border-green-600 transition-colors"
-            >
-              {showLogic ? t('assistantPanel.hide_logic') : t('assistantPanel.show_logic')}
-            </button>
-            {showLogic && (
-              <div className="mt-2 p-2 bg-black/50 rounded max-h-48 overflow-y-auto">
-                <pre className="text-xs text-gray-300 whitespace-pre-wrap font-mono">
-                  {reasoningText}
-                </pre>
-              </div>
-            )}
-        </div>
+      <div className="p-3 space-y-3 overflow-y-auto">
+        {allSuggestions.map((move, index) => (
+            <StrategyOptionCard key={index} move={move} isPrimary={index === 0} />
+        ))}
       </div>
     </div>
   );

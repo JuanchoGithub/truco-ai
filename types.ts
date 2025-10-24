@@ -310,6 +310,7 @@ export interface AiMove {
   reasonKey?: string;
   confidence?: number;
   alternatives?: AiMove[];
+  strategyCategory?: 'safe' | 'aggressive' | 'deceptive';
 }
 
 export enum ActionType {

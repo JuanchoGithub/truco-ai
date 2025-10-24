@@ -130,6 +130,7 @@ export function handleResolveEnvidoAccept(state: GameState): GameState {
         opponentHandProbabilities: updatedProbs,
         playerEnvidoValue: playerEnvido,
         aiEnvidoValue: aiEnvido,
+        hasEnvidoBeenCalledThisRound: true,
         hasRealEnvidoBeenCalledThisSequence: false, // Reset for next round
         ...postEnvidoState,
         aiBlurb: finalBlurb,
@@ -280,6 +281,7 @@ export function handleResolveEnvidoDecline(state: GameState): GameState {
         aiScore: newAiScore,
         messageLog: [...state.messageLog, finalLogMessage],
         playerEnvidoFoldHistory: newFoldHistory,
+        hasEnvidoBeenCalledThisRound: true,
         playerActionHistory: [...state.playerActionHistory, ActionType.DECLINE],
         hasRealEnvidoBeenCalledThisSequence: false, // Reset for next round
         ...postEnvidoState,
@@ -470,20 +472,21 @@ export function handleAcknowledgeFlor(state: GameState, action: { type: ActionTy
         };
     }
     
-    // Restore turn and continue
-    const nextTurn = state.turnBeforeInterrupt!;
-    const nextPhase = `trick_${state.currentTrick + 1}` as GamePhase;
-
+    // FIX: Acknowledging a Flor ends the scoring part of the round. Transition to 'round_end'.
+    // This prevents a state loop where the AI tries to call Envido again.
     return {
         ...state,
         playerScore: newPlayerScore,
         aiScore: newAiScore,
         messageLog: [...state.messageLog, finalLogMessage],
-        currentTurn: nextTurn,
-        gamePhase: nextPhase,
+        lastRoundWinner: florCaller, // Winner of flor takes mano for the next round
+        gamePhase: 'round_end',
+        currentTurn: null,
         turnBeforeInterrupt: null,
         lastCaller: null,
         roundHistory: newRoundHistory,
+        florPointsOnOffer: 0, // Reset flor points
+        envidoPointsOnOffer: 0, // Reset envido points
         playerBlurb: isPlayer ? { text: 'actionBar.flor_ack_good', isVisible: true } : null,
         aiBlurb: !isPlayer && action.payload?.blurbText ? { titleKey: 'actionBar.flor_ack_good', text: action.payload.blurbText, isVisible: true } : null,
         isThinking: false,
@@ -574,21 +577,22 @@ export function handleResolveFlorShowdown(state: GameState): GameState {
         };
     }
 
-    const nextTurn = state.turnBeforeInterrupt!;
-    const nextPhase = `trick_${state.currentTrick + 1}` as GamePhase;
-
+    // FIX: A resolved Flor ends the scoring part of the round. Transition to 'round_end'.
     return {
         ...state,
         playerScore: newPlayerScore,
         aiScore: newAiScore,
         messageLog: [...state.messageLog, logMessage],
-        centralMessage,
-        isCentralMessagePersistent: true,
-        currentTurn: nextTurn,
-        gamePhase: nextPhase,
+        centralMessage, // Show the result
+        isCentralMessagePersistent: false, // Let it fade
+        lastRoundWinner: winner,
+        gamePhase: 'round_end',
+        currentTurn: null,
         turnBeforeInterrupt: null,
         lastCaller: null,
         roundHistory: newRoundHistory,
+        florPointsOnOffer: 0,
+        envidoPointsOnOffer: 0,
     };
 }
 
@@ -641,18 +645,19 @@ export function handleResolveContraflorDecline(state: GameState): GameState {
         };
     }
 
-    const nextTurn = state.turnBeforeInterrupt!;
-    const nextPhase = `trick_${state.currentTrick + 1}` as GamePhase;
-    
+    // FIX: A resolved Flor ends the scoring part of the round. Transition to 'round_end'.
     return {
         ...state,
         playerScore: newPlayerScore,
         aiScore: newAiScore,
         messageLog: [...state.messageLog, finalLogMessage],
-        currentTurn: nextTurn,
-        gamePhase: nextPhase,
+        lastRoundWinner: winner,
+        gamePhase: 'round_end',
+        currentTurn: null,
         turnBeforeInterrupt: null,
         lastCaller: null,
         roundHistory: newRoundHistory,
+        florPointsOnOffer: 0,
+        envidoPointsOnOffer: 0,
     };
 }

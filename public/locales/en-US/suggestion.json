@@ -1,18 +1,37 @@
+
 {
   "suggestion": {
     "play_card": "Play the {{cardName}}.",
-    "play_card_reason": "The best move is to play the {{cardName}} {{reason}}.",
     "consider_move": "Consider the next move.",
     "reason": {
       "play_last_card": "because it's the only card left.",
       "default": "according to the AI's strategy."
     },
-    "detail_reason": {
-      "probe_low": "Play the {{cardName}}. It's your weakest card, ideal for seeing what the AI plays without revealing your hand's strength.",
-      "probe_mid": "Play the {{cardName}}. It's a mid-range card—not your strongest or weakest—which makes your play look credible and might trick the AI.",
-      "secure_hand": "Play the {{cardName}}. It's your strongest card and will guarantee you win this trick.",
-      "win_cheap": "Play the {{cardName}}. It's your weakest card that can still win this trick, saving stronger ones for later.",
-      "parda_y_canto": "Play the {{cardName}} to tie the trick. This hides your stronger cards and sets you up to call Truco on the next trick with an advantage."
+    "strategy": {
+      "safe_play_card": {
+        "title": "Play {{cardName}}",
+        "desc": "This is the high-percentage play. It aims to either win the current trick by spending the minimum required resources, or to probe the opponent's hand without risking valuable cards."
+      },
+      "aggressive_call_truco": {
+        "title": "Call Truco!",
+        "desc": "This is a value bet. Your hand ({{description}}) is strong. By calling 'Truco' now, you apply pressure and aim to win more points from the round. The risk is the AI has an even better hand, but the potential reward makes it a strong play."
+      },
+      "deceptive_bluff_truco": {
+        "title": "Call Truco! (Bluff)",
+        "desc": "This is a bluff. Your hand ({{description}}) is weak, but by calling 'Truco', you attempt to intimidate the AI into folding, allowing you to steal the round. It's risky, but can pay off if the AI hesitates."
+      },
+      "deceptive_bait_card": {
+        "title": "Play {{cardName}} (Bait)",
+        "desc": "This is a bait play. By playing a weaker card on purpose, you hide the true strength of your hand. The goal is to tempt the AI into calling 'Truco', thinking you are weak, so you can counter-attack with your stronger cards."
+      },
+      "aggressive_call_envido": {
+        "title": "Call {{call}}",
+        "desc": "You have {{points}} envido points {{details}}! This is a strong score. Calling now is a value bet to secure these points."
+      },
+      "deceptive_bluff_envido": {
+        "title": "Call {{call}} (Bluff)",
+        "desc": "Your envido points ({{points}}) are low. However, a bluff could make the AI fold if their own hand is mediocre, letting you steal 1 point."
+      }
     },
     "envido_from_cards": "(from the {{card1Name}} and {{card2Name}})",
     "envido_from_card": "(from the {{cardName}})",
@@ -20,23 +39,15 @@
     "truco_hand_top_heavy": "a top-heavy hand (led by the {{cardName}})",
     "truco_hand_balanced": "a solid, balanced hand",
     "truco_hand_weak": "a weak hand",
-    "respond_quiero_envido_good": "We have {{points}} points {{details}}. The AI called, but our chances of winning are good. We should accept with 'I want it'.",
-    "respond_quiero_truco_solid": "Our hand is good enough to compete ({{description}}). We should accept the Truco challenge with 'I want it'.",
-    "respond_no_quiero_envido_risk": "We have {{points}} points {{details}}, but the AI called strongly, and they likely have more. The safest move is to fold with 'I don't want it'.",
-    "respond_no_quiero_truco_weak": "Our hand is too weak for this challenge ({{description}}). The best play is to fold with 'I don't want it' to minimize point loss.",
-    "respond_escalate_truco_strong": "We have {{description}}. The situation is favorable to raise the bet to '{{call}}' because we have a great chance of winning!",
-    "respond_escalate_truco_bluff": "We're in a bad spot ({{description}}), but we can try a risky bluff. Raise the bet to '{{call}}' to see if we can make the AI fold.",
+    "respond_quiero_envido_good": "I Want It! (Your {{points}} points are good)",
+    "respond_quiero_truco_solid": "I Want It! (Your hand is solid)",
+    "respond_no_quiero_envido_risk": "I Don't Want It (Your {{points}} points are risky)",
+    "respond_no_quiero_truco_weak": "I Don't Want It (Your hand is weak)",
+    "respond_escalate_truco_strong": "{{call}}! (Your hand is very strong)",
+    "respond_escalate_truco_bluff": "{{call}}! (Counter-bluff)",
     "envido_strength_excellent": "an excellent score",
     "envido_strength_good": "a good score",
     "envido_strength_decent": "a decent score",
-    "envido_strength_low": "a low score",
-    "proactive_truco_bluff": "Our hand is weak ({{description}}), but we can try a bluff by calling '{{call}}'.{{alternative}}",
-    "proactive_truco_strong": "We have a very strong hand ({{description}})! It's the perfect time to call '{{call}}' and increase the round's value.{{alternative}}",
-    "proactive_truco_parda": "Key play! First trick was a tie. Win this, and you win the round. Calling 'Truco' is a risk-free move: if they fold, you get 1 point. If they accept, you win 2!",
-    "proactive_envido_bluff": "We only have {{points}} envido points {{details}}, which is low. However, {{opponentInfo}} We can try a bluff by calling '{{call}}'.{{alternative}}",
-    "proactive_envido_bluff_opponent_info": "the AI has a {{rate}}% chance of folding.",
-    "proactive_envido_bluff_opponent_info_default": "the AI might fold.",
-    "proactive_envido_strong": "We have {{points}} for envido {{details}}! That's {{strengthText}}, we should call '{{call}}'.",
-    "safe_play_alternative": " If you're not feeling bold, the safest play is to throw the {{cardName}}."
+    "envido_strength_low": "a low score"
   }
 }

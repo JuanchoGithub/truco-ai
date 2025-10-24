@@ -1,57 +1,14 @@
+
 import { AiMove, GameState, ActionType, Card } from '../types';
 import { getCardName, getEnvidoValue, getEnvidoDetails, getCardHierarchy } from './trucoLogic';
-import { findBestCardToPlay } from './ai/playCardStrategy';
 import i18nService from './i18nService';
 
-// Helper to determine the descriptive strength of envido points
-function getEnvidoStrengthText(points: number, t: (key: string) => string): string {
-    if (points >= 31) return t('suggestion.envido_strength_excellent');
-    if (points >= 28) return t('suggestion.envido_strength_good');
-    if (points >= 25) return t('suggestion.envido_strength_decent');
-    return t('suggestion.envido_strength_low');
-}
-
-function createMirroredState(currentState: GameState): GameState {
-    const mirroredTrickWinners = currentState.trickWinners.map(winner => {
-        if (winner === 'player') return 'ai';
-        if (winner === 'ai') return 'player';
-        return winner; // 'tie' or null
-    });
-
-    const mirroredState: GameState = {
-        ...currentState,
-        playerHand: currentState.aiHand,
-        aiHand: currentState.playerHand,
-        initialPlayerHand: currentState.initialAiHand,
-        initialAiHand: currentState.initialPlayerHand,
-        playerTricks: currentState.aiTricks,
-        aiTricks: currentState.playerTricks,
-        trickWinners: mirroredTrickWinners,
-        playerScore: currentState.aiScore,
-        aiScore: currentState.playerScore,
-        currentTurn: 'ai', // From the perspective of the AI playing as the player
-        playerHasFlor: currentState.aiHasFlor,
-        aiHasFlor: currentState.playerHasFlor,
-        mano: currentState.mano === 'player' ? 'ai' : 'player',
-        lastRoundWinner: currentState.lastRoundWinner === 'player' ? 'ai' : currentState.lastRoundWinner === 'ai' ? 'player' : currentState.lastRoundWinner,
-        lastCaller: currentState.lastCaller === 'player' ? 'ai' : (currentState.lastCaller === 'ai' ? 'player' : null),
-        turnBeforeInterrupt: currentState.turnBeforeInterrupt === 'player' ? 'ai' : (currentState.turnBeforeInterrupt === 'ai' ? 'player' : null),
-        pendingTrucoCaller: currentState.pendingTrucoCaller === 'player' ? 'ai' : (currentState.pendingTrucoCaller === 'ai' ? 'player' : null),
-        playerEnvidoValue: currentState.aiEnvidoValue,
-        aiEnvidoValue: currentState.playerEnvidoValue,
-    };
-    return mirroredState;
-}
-
 // This function provides a simple, direct text for a move.
-export const getSimpleSuggestionText = (move: AiMove, playerHand: Card[]): string => {
+export const getSimpleSuggestionText = (move: AiMove): string => {
     const { action } = move;
     switch (action.type) {
         case ActionType.PLAY_CARD:
-            const cardIndex = action.payload.cardIndex;
-            if (playerHand[cardIndex]) {
-                return i18nService.t('suggestion.play_card', { cardName: getCardName(playerHand[cardIndex]) });
-            }
+            // This case should ideally not be hit if the summary is generated correctly
             return i18nService.t('suggestion.play_card', { cardName: 'a card' });
         case ActionType.CALL_ENVIDO: return i18nService.t('actionBar.envido');
         case ActionType.CALL_REAL_ENVIDO: return i18nService.t('actionBar.real_envido');
@@ -98,7 +55,7 @@ function getEnvidoDescription(hand: Card[]): { points: number; details: string }
 // New helper function to describe truco hand composition
 function getTrucoHandDescription(hand: Card[]): string {
     const { t } = i18nService;
-    if (hand.length < 2) return t('suggestion.truco_hand_weak');
+    if (hand.length === 0) return t('suggestion.truco_hand_weak');
     
     const sortedHand = [...hand].sort((a,b) => getCardHierarchy(b) - getCardHierarchy(a));
     const hierarchies = sortedHand.map(getCardHierarchy);
@@ -110,106 +67,77 @@ function getTrucoHandDescription(hand: Card[]): string {
     return t('suggestion.truco_hand_weak');
 }
 
-// NEW: Generates a more detailed, educational reason for playing a specific card.
-function getDetailedPlayCardReason(reasonKey: string | undefined, card: Card, hand: Card[], t: (key: string, options?: any) => string): string {
-    const cardName = getCardName(card);
-
-    switch (reasonKey) {
-        case 'probe_low_value':
-            return t('suggestion.detail_reason.probe_low', { cardName });
-        case 'probe_mid_value':
-            return t('suggestion.detail_reason.probe_mid', { cardName });
-        case 'secure_hand':
-            return t('suggestion.detail_reason.secure_hand', { cardName });
-        case 'win_round_cheap':
-             return t('suggestion.detail_reason.win_cheap', { cardName });
-        case 'parda_y_canto':
-            return t('suggestion.detail_reason.parda_y_canto', { cardName });
-        default:
-            // Fallback for other reason keys like 'play_last_card', 'discard_low' etc.
-            const genericReasonKey = `suggestion.reason.${reasonKey || 'default'}`;
-            const genericReason = t(genericReasonKey, { defaultValue: t('suggestion.reason.default') });
-            return t('suggestion.play_card_reason', { cardName, reason: genericReason });
-    }
-}
-
-
 // This function generates a more conversational, strategic summary.
 export const generateSuggestionSummary = (move: AiMove, state: GameState): string => {
     const { t } = i18nService;
-    const { action, reasonKey } = move;
-    const { playerHand, gamePhase, initialPlayerHand, mano, opponentModel } = state;
+    const { action, strategyCategory } = move;
+    const { playerHand, gamePhase, initialPlayerHand } = state;
 
     const { points: playerEnvidoPoints, details: envidoDetails } = getEnvidoDescription(initialPlayerHand);
     const trucoHandDescription = getTrucoHandDescription(playerHand);
+
+    let title = '';
+    let description = '';
 
     switch (action.type) {
         case ActionType.PLAY_CARD: {
             const cardIndex = action.payload.cardIndex;
             const card = playerHand[cardIndex];
-            if (!card) return getSimpleSuggestionText(move, playerHand);
+            if (!card) return getSimpleSuggestionText(move);
             
-            return getDetailedPlayCardReason(reasonKey, card, playerHand, t);
+            title = t('suggestion.strategy.safe_play_card.title', { cardName: getCardName(card) });
+            
+            if (strategyCategory === 'deceptive') {
+                 title = t('suggestion.strategy.deceptive_bait_card.title', { cardName: getCardName(card) });
+                 description = t('suggestion.strategy.deceptive_bait_card.desc');
+            } else {
+                 description = t('suggestion.strategy.safe_play_card.desc');
+            }
+            return `${title} - ${description}`;
         }
         
-        // --- Proactive Envido Calls ---
         case ActionType.CALL_ENVIDO:
         case ActionType.CALL_REAL_ENVIDO:
         case ActionType.CALL_FALTA_ENVIDO: {
             const callType = t(`actionBar.${action.type.replace('CALL_', '').toLowerCase()}`);
-            const strengthText = getEnvidoStrengthText(playerEnvidoPoints, (key) => t(key));
-
-            if (reasonKey?.includes('bluff')) {
-                const playerContext = mano === 'player' ? 'mano' : 'pie';
-                const foldRate = opponentModel.envidoBehavior[playerContext].foldRate;
-                const opponentInfo = foldRate > 0.1 
-                    ? t('suggestion.proactive_envido_bluff_opponent_info', { rate: (foldRate * 100).toFixed(0) })
-                    : t('suggestion.proactive_envido_bluff_opponent_info_default');
-                
-                const mirroredStateForSafePlay = createMirroredState(state);
-                const safePlayMove = findBestCardToPlay(mirroredStateForSafePlay);
-                const safeCard = playerHand[safePlayMove.index];
-                const alternative = safeCard 
-                    ? t('suggestion.safe_play_alternative', { cardName: getCardName(safeCard) })
-                    : '';
-
-                return t('suggestion.proactive_envido_bluff', { points: playerEnvidoPoints, opponentInfo, call: callType, alternative, details: envidoDetails });
+            
+            if (strategyCategory === 'deceptive') {
+                title = t('suggestion.strategy.deceptive_bluff_envido.title', { call: callType });
+                description = t('suggestion.strategy.deceptive_bluff_envido.desc', { points: playerEnvidoPoints });
+            } else { // aggressive
+                 title = t('suggestion.strategy.aggressive_call_envido.title', { call: callType });
+                 description = t('suggestion.strategy.aggressive_call_envido.desc', { points: playerEnvidoPoints, details: envidoDetails });
             }
-            return t('suggestion.proactive_envido_strong', { points: playerEnvidoPoints, strengthText, call: callType, details: envidoDetails });
+            return `${title} - ${description}`;
         }
         
-        // --- Proactive Truco Calls ---
         case ActionType.CALL_TRUCO: {
             const callType = t(`actionBar.${action.type.replace('CALL_', '').toLowerCase()}`);
-            const mirroredStateForSafePlay = createMirroredState(state);
-            const safePlayMove = findBestCardToPlay(mirroredStateForSafePlay);
-            const safeCard = playerHand[safePlayMove.index];
-            const alternative = safeCard 
-                ? t('suggestion.safe_play_alternative', { cardName: getCardName(safeCard) })
-                : '';
-
-            if (reasonKey === 'call_truco_parda_y_gano') return t('suggestion.proactive_truco_parda');
-            if (reasonKey?.includes('bluff')) {
-                 return t('suggestion.proactive_truco_bluff', { description: trucoHandDescription, call: callType, alternative });
+            if (strategyCategory === 'deceptive') {
+                title = t('suggestion.strategy.deceptive_bluff_truco.title');
+                description = t('suggestion.strategy.deceptive_bluff_truco.desc', { description: trucoHandDescription });
+            } else { // aggressive
+                title = t('suggestion.strategy.aggressive_call_truco.title');
+                description = t('suggestion.strategy.aggressive_call_truco.desc', { description: trucoHandDescription, call: callType });
             }
-            return t('suggestion.proactive_truco_strong', { description: trucoHandDescription, call: callType, alternative });
+             return `${title} - ${description}`;
         }
 
         // --- Responses ---
         case ActionType.ACCEPT: {
             if (gamePhase.includes('envido')) return t('suggestion.respond_quiero_envido_good', { points: playerEnvidoPoints, details: envidoDetails });
             if (gamePhase.includes('truco')) return t('suggestion.respond_quiero_truco_solid', { description: trucoHandDescription });
-            return getSimpleSuggestionText(move, playerHand);
+            return getSimpleSuggestionText(move);
         }
         case ActionType.DECLINE: {
             if (gamePhase.includes('envido')) return t('suggestion.respond_no_quiero_envido_risk', { points: playerEnvidoPoints, details: envidoDetails });
             if (gamePhase.includes('truco')) return t('suggestion.respond_no_quiero_truco_weak', { description: trucoHandDescription });
-            return getSimpleSuggestionText(move, playerHand);
+            return getSimpleSuggestionText(move);
         }
         case ActionType.CALL_RETRUCO:
         case ActionType.CALL_VALE_CUATRO: {
             const callType = t(`actionBar.${action.type.replace('CALL_', '').toLowerCase()}`);
-             if (reasonKey?.includes('bluff')) {
+             if (strategyCategory === 'deceptive') {
                  return t('suggestion.respond_escalate_truco_bluff', { call: callType, description: trucoHandDescription });
             }
             return t('suggestion.respond_escalate_truco_strong', { call: callType, description: trucoHandDescription });
@@ -217,6 +145,6 @@ export const generateSuggestionSummary = (move: AiMove, state: GameState): strin
         
         // Default fallback for any unhandled reasonKey or action type
         default:
-            return getSimpleSuggestionText(move, playerHand);
+            return getSimpleSuggestionText(move);
     }
 };

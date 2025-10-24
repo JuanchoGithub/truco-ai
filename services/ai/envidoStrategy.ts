@@ -61,23 +61,23 @@ export const getEnvidoResponse = (state: GameState, gamePressure: number, reason
         const slowPlayChance = 0.25; // 25% chance to slow-play
         if (myEnvido >= 31 && randomFactor < slowPlayChance) {
             reasoning.push({ key: 'ai_logic.slow_play_tactic' });
-            return { action: { type: ActionType.ACCEPT, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.QUIERO) } }, reasoning, reasonKey: 'accept_envido_slow_play' };
+            return { action: { type: ActionType.ACCEPT, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.QUIERO) } }, reasoning, reasonKey: 'accept_envido_slow_play', strategyCategory: 'deceptive' };
         }
         
         if (aiPointsToWin <= envidoPointsOnOffer + 3 && myEnvido >= 30) {
              reasoning.push({ key: 'ai_logic.decision_falta_huge_advantage' });
              const blurbText = getRandomPhrase(PHRASE_KEYS.FALTA_ENVIDO);
-             return { action: { type: ActionType.CALL_FALTA_ENVIDO, payload: { blurbText } }, reasoning, reasonKey: 'escalate_falta_win_game' };
+             return { action: { type: ActionType.CALL_FALTA_ENVIDO, payload: { blurbText } }, reasoning, reasonKey: 'escalate_falta_win_game', strategyCategory: 'aggressive' };
         }
         if (envidoPointsOnOffer === 2 && myEnvido >= 28) { // Only escalate with Envido-Envido if hand is strong
             reasoning.push({ key: 'ai_logic.decision_envido_response_strong' });
             const blurbText = getRandomPhrase(PHRASE_KEYS.ENVIDO);
-            return { action: { type: ActionType.CALL_ENVIDO, payload: { blurbText } }, reasoning, reasonKey: 'escalate_envido_strong' };
+            return { action: { type: ActionType.CALL_ENVIDO, payload: { blurbText } }, reasoning, reasonKey: 'escalate_envido_strong', strategyCategory: 'aggressive' };
         }
         if (!hasRealEnvidoBeenCalledThisSequence) {
              reasoning.push({ key: 'ai_logic.decision_real_envido_stronger' });
              const blurbText = getRandomPhrase(PHRASE_KEYS.REAL_ENVIDO);
-             return { action: { type: ActionType.CALL_REAL_ENVIDO, payload: { blurbText } }, reasoning, reasonKey: 'escalate_real_stronger' };
+             return { action: { type: ActionType.CALL_REAL_ENVIDO, payload: { blurbText } }, reasoning, reasonKey: 'escalate_real_stronger', strategyCategory: 'aggressive' };
         }
     } 
     
@@ -108,20 +108,20 @@ export const getEnvidoResponse = (state: GameState, gamePressure: number, reason
                 // Choose what to escalate with. Real Envido is a strong bluff.
                 if (!hasRealEnvidoBeenCalledThisSequence && randomFactor < bluffEscalateChance / 2) { // 50% of the time, use a stronger bluff
                     const blurbText = getRandomPhrase(PHRASE_KEYS.REAL_ENVIDO);
-                    return { action: { type: ActionType.CALL_REAL_ENVIDO, payload: { blurbText } }, reasoning, reasonKey: 'escalate_real_bluff' };
+                    return { action: { type: ActionType.CALL_REAL_ENVIDO, payload: { blurbText } }, reasoning, reasonKey: 'escalate_real_bluff', strategyCategory: 'deceptive' };
                 } else if (envidoPointsOnOffer === 2) { // Only escalate with Envido-Envido if it's a simple envido
                     const blurbText = getRandomPhrase(PHRASE_KEYS.ENVIDO);
-                    return { action: { type: ActionType.CALL_ENVIDO, payload: { blurbText } }, reasoning, reasonKey: 'escalate_envido_bluff' };
+                    return { action: { type: ActionType.CALL_ENVIDO, payload: { blurbText } }, reasoning, reasonKey: 'escalate_envido_bluff', strategyCategory: 'deceptive' };
                 }
             } else if (randomFactor > (1 - bluffFoldChance)) {
                 reasoning.push({ key: 'ai_logic.bluff_fold_tactic' });
-                return { action: { type: ActionType.DECLINE, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.NO_QUIERO) } }, reasoning, reasonKey: 'decline_envido_bluff_fold' };
+                return { action: { type: ActionType.DECLINE, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.NO_QUIERO) } }, reasoning, reasonKey: 'decline_envido_bluff_fold', strategyCategory: 'safe' };
             }
         }
         // END MIXED STRATEGY
 
         reasoning.push({ key: 'ai_logic.decision_accept_envido' });
-        return { action: { type: ActionType.ACCEPT, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.QUIERO) } }, reasoning, reasonKey: 'accept_envido_good_odds' };
+        return { action: { type: ActionType.ACCEPT, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.QUIERO) } }, reasoning, reasonKey: 'accept_envido_good_odds', strategyCategory: 'safe' };
     }
 
     // Low advantage -> Mostly Decline, with a chance for a hero call
@@ -132,16 +132,16 @@ export const getEnvidoResponse = (state: GameState, gamePressure: number, reason
     const highValueThreshold = 30;
     if (aiEnvidoDetails.value >= highValueThreshold) {
         reasoning.push({ key: 'ai_logic.high_value_hand_protection_accept', options: { myEnvido: aiEnvidoDetails.value, threshold: highValueThreshold } });
-        return { action: { type: ActionType.ACCEPT, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.QUIERO) } }, reasoning, reasonKey: 'accept_envido_high_value_override' };
+        return { action: { type: ActionType.ACCEPT, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.QUIERO) } }, reasoning, reasonKey: 'accept_envido_high_value_override', strategyCategory: 'safe' };
     }
 
     if (myEnvido >= 23 && randomFactor < heroCallChance) {
          reasoning.push({ key: 'ai_logic.decision_hero_call', options: { chance: (heroCallChance * 100).toFixed(0) } });
-         return { action: { type: ActionType.ACCEPT, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.QUIERO) } }, reasoning, reasonKey: 'accept_envido_hero_call' };
+         return { action: { type: ActionType.ACCEPT, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.QUIERO) } }, reasoning, reasonKey: 'accept_envido_hero_call', strategyCategory: 'aggressive' };
     }
     
     reasoning.push({ key: 'ai_logic.decision_decline_envido' });
-    return { action: { type: ActionType.DECLINE, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.NO_QUIERO) } }, reasoning, reasonKey: 'decline_envido_weak' };
+    return { action: { type: ActionType.DECLINE, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.NO_QUIERO) } }, reasoning, reasonKey: 'decline_envido_weak', strategyCategory: 'safe' };
 };
 
 export const getEnvidoCall = (state: GameState, gamePressure: number): AiMove | null => {
@@ -176,11 +176,11 @@ export const getEnvidoCall = (state: GameState, gamePressure: number): AiMove | 
         if (aiPointsToWin <= 5 && randomFactor < 0.75) {
             const blurbText = getRandomPhrase(PHRASE_KEYS.FALTA_ENVIDO);
             const reasoning = { key: 'ai_logic.decision_falta_win', options: { envidoPoints: myEnvido.toFixed(1) } };
-            return { action: { type: ActionType.CALL_FALTA_ENVIDO, payload: { blurbText } }, reasoning: [...reasonPrefix, reasoning], reasonKey: 'call_falta_win_game' };
+            return { action: { type: ActionType.CALL_FALTA_ENVIDO, payload: { blurbText } }, reasoning: [...reasonPrefix, reasoning], reasonKey: 'call_falta_win_game', strategyCategory: 'aggressive' };
         } else {
             const blurbText = getRandomPhrase(PHRASE_KEYS.REAL_ENVIDO);
             const reasoning = { key: 'ai_logic.decision_real_envido_dominant', options: { envidoPoints: myEnvido.toFixed(1) } };
-            return { action: { type: ActionType.CALL_REAL_ENVIDO, payload: { blurbText } }, reasoning: [...reasonPrefix, reasoning], reasonKey: 'call_real_dominant' };
+            return { action: { type: ActionType.CALL_REAL_ENVIDO, payload: { blurbText } }, reasoning: [...reasonPrefix, reasoning], reasonKey: 'call_real_dominant', strategyCategory: 'aggressive' };
         }
     } 
     // Strong hand -> Standard call
@@ -188,12 +188,12 @@ export const getEnvidoCall = (state: GameState, gamePressure: number): AiMove | 
         if (playerPointsToWin <= 3 && myEnvido >= 28) {
              const blurbText = getRandomPhrase(PHRASE_KEYS.FALTA_ENVIDO);
              const reasoning = { key: 'ai_logic.decision_falta_defensive', options: { envidoPoints: myEnvido.toFixed(1) } };
-             return { action: { type: ActionType.CALL_FALTA_ENVIDO, payload: { blurbText } }, reasoning: [...reasonPrefix, reasoning], reasonKey: 'call_falta_defensive' };
+             return { action: { type: ActionType.CALL_FALTA_ENVIDO, payload: { blurbText } }, reasoning: [...reasonPrefix, reasoning], reasonKey: 'call_falta_defensive', strategyCategory: 'aggressive' };
         } else {
             const blurbText = getRandomPhrase(PHRASE_KEYS.ENVIDO);
             const reason = isObjectivelyStrong ? t('ai_logic.reasons.objectively_good') : t('ai_logic.reasons.above_threshold');
             const reasoning = { key: 'ai_logic.decision_envido_strong', options: { envidoPoints: myEnvido.toFixed(1), reason } };
-            return { action: { type: ActionType.CALL_ENVIDO, payload: { blurbText } }, reasoning: [...reasonPrefix, reasoning], reasonKey: 'call_envido_strong' };
+            return { action: { type: ActionType.CALL_ENVIDO, payload: { blurbText } }, reasoning: [...reasonPrefix, reasoning], reasonKey: 'call_envido_strong', strategyCategory: 'aggressive' };
         }
     }
     // Marginal hand -> Occasional call
@@ -202,7 +202,7 @@ export const getEnvidoCall = (state: GameState, gamePressure: number): AiMove | 
         if (randomFactor < marginalCallChance) {
             const blurbText = getRandomPhrase(PHRASE_KEYS.ENVIDO);
             const reasoning = { key: 'ai_logic.decision_envido_marginal', options: { envidoPoints: myEnvido.toFixed(1) } };
-            return { action: { type: ActionType.CALL_ENVIDO, payload: { blurbText } }, reasoning: [...reasonPrefix, reasoning], reasonKey: 'call_envido_marginal' };
+            return { action: { type: ActionType.CALL_ENVIDO, payload: { blurbText } }, reasoning: [...reasonPrefix, reasoning], reasonKey: 'call_envido_marginal', strategyCategory: 'aggressive' };
         }
     }
     // Low strength hand -> Bluffing
@@ -215,7 +215,7 @@ export const getEnvidoCall = (state: GameState, gamePressure: number): AiMove | 
             const blurbText = getRandomPhrase(PHRASE_KEYS.ENVIDO);
             reasonPrefix.push({ key: 'ai_logic.adjusted_bluff_chance', options: { chance: (adjustedBluffChance * 100).toFixed(0) } });
             const reasoning = { key: 'ai_logic.decision_envido_bluff', options: { envidoPoints: myEnvido.toFixed(1) } };
-            return { action: { type: ActionType.CALL_ENVIDO, payload: { blurbText } }, reasoning: [...reasonPrefix, reasoning], reasonKey: 'call_envido_bluff' };
+            return { action: { type: ActionType.CALL_ENVIDO, payload: { blurbText } }, reasoning: [...reasonPrefix, reasoning], reasonKey: 'call_envido_bluff', strategyCategory: 'deceptive' };
         }
     }
     
@@ -234,14 +234,14 @@ export const getFlorResponse = (state: GameState, reasoning: (string | MessageOb
             // Simple strategy: if my Flor is very good, I escalate.
             if (myFlor >= 30) {
                  const decisionReason = { key: 'ai_logic.decision_contraflor_strong' };
-                 return { action: { type: ActionType.CALL_CONTRAFLOR, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.CONTRAFLOR) } }, reasoning: [...reasoning, decisionReason], reasonKey: 'call_contraflor_strong' };
+                 return { action: { type: ActionType.CALL_CONTRAFLOR, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.CONTRAFLOR) } }, reasoning: [...reasoning, decisionReason], reasonKey: 'call_contraflor_strong', strategyCategory: 'aggressive' };
             } else {
                  const decisionReason = { key: 'ai_logic.decision_ack_flor_weak' };
-                 return { action: { type: ActionType.ACKNOWLEDGE_FLOR, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.FLOR_ACK_MINE_WORSE) } }, reasoning: [...reasoning, decisionReason], reasonKey: 'ack_flor_weak' };
+                 return { action: { type: ActionType.ACKNOWLEDGE_FLOR, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.FLOR_ACK_MINE_WORSE) } }, reasoning: [...reasoning, decisionReason], reasonKey: 'ack_flor_weak', strategyCategory: 'safe' };
             }
         } else {
             const decisionReason = { key: 'ai_logic.decision_ack_flor_no_flor' };
-            return { action: { type: ActionType.ACKNOWLEDGE_FLOR, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.FLOR_ACK_GOOD) } }, reasoning: [...reasoning, decisionReason], reasonKey: 'ack_flor_no_flor' };
+            return { action: { type: ActionType.ACKNOWLEDGE_FLOR, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.FLOR_ACK_GOOD) } }, reasoning: [...reasoning, decisionReason], reasonKey: 'ack_flor_no_flor', strategyCategory: 'safe' };
         }
     }
 
@@ -266,10 +266,10 @@ export const getFlorResponse = (state: GameState, reasoning: (string | MessageOb
 
         if (myFlor >= acceptanceThreshold) {
             const decisionReason = { key: 'ai_logic.decision_accept_contraflor', options: { florPoints: myFlor, threshold: acceptanceThreshold } };
-            return { action: { type: ActionType.ACCEPT_CONTRAFLOR, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.CONTRAFLOR_QUIERO) } }, reasoning: [...reasoning, decisionReason], reasonKey: 'accept_contraflor_strong' };
+            return { action: { type: ActionType.ACCEPT_CONTRAFLOR, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.CONTRAFLOR_QUIERO) } }, reasoning: [...reasoning, decisionReason], reasonKey: 'accept_contraflor_strong', strategyCategory: 'aggressive' };
         } else {
             const decisionReason = { key: 'ai_logic.decision_decline_contraflor', options: { florPoints: myFlor } };
-            return { action: { type: ActionType.DECLINE_CONTRAFLOR, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.CONTRAFLOR_NO_QUIERO) } }, reasoning: [...reasoning, decisionReason], reasonKey: 'decline_contraflor_weak' };
+            return { action: { type: ActionType.DECLINE_CONTRAFLOR, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.CONTRAFLOR_NO_QUIERO) } }, reasoning: [...reasoning, decisionReason], reasonKey: 'decline_contraflor_weak', strategyCategory: 'safe' };
         }
     }
 
@@ -289,14 +289,14 @@ export const getFlorCallOrEnvidoCall = (state: GameState, gamePressure: number):
             const envidoMove = getEnvidoCall(state, gamePressure);
             if (envidoMove) {
                 const updatedReasoning = [...reasonPrefix, { key: 'ai_logic.bluffing_with_envido' }, ...envidoMove.reasoning];
-                return { ...envidoMove, reasoning: updatedReasoning };
+                return { ...envidoMove, reasoning: updatedReasoning, strategyCategory: 'deceptive' };
             }
         }
         
         // Default to calling Flor
         const reasoning = { key: 'ai_logic.decision_call_flor', options: { florPoints: myFlor } };
         const blurbText = getRandomPhrase(PHRASE_KEYS.FLOR);
-        return { action: { type: ActionType.DECLARE_FLOR, payload: { blurbText, player: 'ai' } }, reasoning: [...reasonPrefix, reasoning], reasonKey: 'call_flor_strong' };
+        return { action: { type: ActionType.DECLARE_FLOR, payload: { blurbText, player: 'ai' } }, reasoning: [...reasonPrefix, reasoning], reasonKey: 'call_flor_strong', strategyCategory: 'aggressive' };
     } else {
         // No Flor, proceed with normal Envido logic
         return getEnvidoCall(state, gamePressure);

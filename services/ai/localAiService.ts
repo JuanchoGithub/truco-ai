@@ -1,7 +1,6 @@
-import { GameState, ActionType, AiMove, Action, MessageObject, Card } from '../types';
+import { GameState, ActionType, AiMove, Action, MessageObject, Card } from '../../types';
 import { findBestCardToPlay, findBaitCard } from './playCardStrategy';
 import { getEnvidoResponse, getEnvidoCall, getFlorResponse, getFlorCallOrEnvidoCall } from './envidoStrategy';
-// Fix: Imported `calculateTrucoStrength` to resolve a "Cannot find name" error.
 import { getTrucoResponse, getTrucoCall, calculateTrucoStrength } from './trucoStrategy';
 import { getCardName, getEnvidoDetails, calculateHandStrength, getCardHierarchy } from '../trucoLogic';
 import { getRandomPhrase, PHRASE_KEYS } from './phrases';

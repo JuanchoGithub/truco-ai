@@ -4,7 +4,7 @@ import { getCardHierarchy, getCardName, determineTrickWinner, determineRoundWinn
 import { getRandomPhrase, PHRASE_KEYS } from './phrases';
 import { generateConstrainedOpponentHand } from './inferenceService';
 import i18nService from '../i18nService';
-import { findBestCardToPlay } from './playCardStrategy';
+import { findBestCardToPlay, findBaitCard } from './playCardStrategy';
 
 /**
  * FIX: Rewritten round simulation to be accurate.
@@ -218,7 +218,7 @@ export const getTrucoResponse = (state: GameState, gamePressure: number, reasoni
           losePoints: pointsIfLose
       }));
       const decisionReason = t('ai_logic.decision_do_or_die_accept');
-      return { action: { type: ActionType.ACCEPT, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.QUIERO) } }, reasoning: [...reasoning, decisionReason], reasonKey: 'accept_truco_do_or_die' };
+      return { action: { type: ActionType.ACCEPT, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.QUIERO) } }, reasoning: [...reasoning, decisionReason], reasonKey: 'accept_truco_do_or_die', strategyCategory: 'aggressive' };
   }
   // --- END NEW LOGIC ---
 
@@ -274,7 +274,7 @@ export const getTrucoResponse = (state: GameState, gamePressure: number, reasoni
       if (myStrength === 0) {
           reasoning.push(t('ai_logic.impossibility_analysis'));
           const decisionReason = t('ai_logic.decision_fold_impossible');
-          return { action: { type: ActionType.DECLINE, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.NO_QUIERO) } }, reasoning: [...reasoning, decisionReason], reasonKey: 'decline_truco_impossible' };
+          return { action: { type: ActionType.DECLINE, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.NO_QUIERO) } }, reasoning: [...reasoning, decisionReason], reasonKey: 'decline_truco_impossible', strategyCategory: 'safe' };
       }
       
       // Consider a desperation bluff, scaled by how low the win chance is.
@@ -302,12 +302,12 @@ export const getTrucoResponse = (state: GameState, gamePressure: number, reasoni
           const trucoContext: AiTrucoContext = { strength: myStrength, isBluff: true };
           const decisionReason = t('ai_logic.decision_desperation_bluff', { call: escalateType.replace('CALL_', '') });
           // Fix: Changed reasoning from a joined string to an array.
-          return { action: { type: escalateType, payload: { blurbText, trucoContext } }, reasoning: [...reasoning, decisionReason], reasonKey: 'escalate_truco_desperation_bluff' };
+          return { action: { type: escalateType, payload: { blurbText, trucoContext } }, reasoning: [...reasoning, decisionReason], reasonKey: 'escalate_truco_desperation_bluff', strategyCategory: 'deceptive' };
       } else {
           // Otherwise, fold.
           const decisionReason = t('ai_logic.decision_fold_overwhelming_odds');
           // Fix: Changed reasoning from a joined string to an array.
-          return { action: { type: ActionType.DECLINE, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.NO_QUIERO) } }, reasoning: [...reasoning, decisionReason], reasonKey: 'decline_truco_certain_loss' };
+          return { action: { type: ActionType.DECLINE, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.NO_QUIERO) } }, reasoning: [...reasoning, decisionReason], reasonKey: 'decline_truco_certain_loss', strategyCategory: 'safe' };
       }
   }
   
@@ -326,7 +326,7 @@ export const getTrucoResponse = (state: GameState, gamePressure: number, reasoni
             const trucoContext: AiTrucoContext = { strength: myStrength, isBluff: false };
             const decisionReason = t('ai_logic.decision_escalate_elite_hand', { percentile: myPercentile, call: escalateType.replace('CALL_', '') });
             // Fix: Changed reasoning from a joined string to an array.
-            return { action: { type: escalateType, payload: { blurbText, trucoContext } }, reasoning: [...reasoning, decisionReason], reasonKey: 'escalate_truco_elite' };
+            return { action: { type: escalateType, payload: { blurbText, trucoContext } }, reasoning: [...reasoning, decisionReason], reasonKey: 'escalate_truco_elite', strategyCategory: 'aggressive' };
           }
       }
 
@@ -339,11 +339,11 @@ export const getTrucoResponse = (state: GameState, gamePressure: number, reasoni
              const trucoContext: AiTrucoContext = { strength: myStrength, isBluff: false };
              const decisionReason = t('ai_logic.decision_escalate_strong_hand', { percentile: myPercentile });
              // Fix: Changed reasoning from a joined string to an array.
-             return { action: { type: escalateType, payload: { blurbText, trucoContext } }, reasoning: [...reasoning, decisionReason], reasonKey: 'escalate_truco_strong' };
+             return { action: { type: escalateType, payload: { blurbText, trucoContext } }, reasoning: [...reasoning, decisionReason], reasonKey: 'escalate_truco_strong', strategyCategory: 'aggressive' };
           }
           const decisionReason = t('ai_logic.decision_accept_solid_hand', { percentile: myPercentile });
           // Fix: Changed reasoning from a joined string to an array.
-          return { action: { type: ActionType.ACCEPT, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.QUIERO) } }, reasoning: [...reasoning, decisionReason], reasonKey: 'accept_truco_solid' };
+          return { action: { type: ActionType.ACCEPT, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.QUIERO) } }, reasoning: [...reasoning, decisionReason], reasonKey: 'accept_truco_solid', strategyCategory: 'safe' };
       }
 
       // 3. Weaker Hands (< 50th percentile) -> Mostly fold, but with bluffing chances
@@ -352,7 +352,7 @@ export const getTrucoResponse = (state: GameState, gamePressure: number, reasoni
           if (Math.random() < foldChance) {
               const decisionReason = t('ai_logic.decision_fold_weak_hand', { percentile: myPercentile });
               // Fix: Changed reasoning from a joined string to an array.
-              return { action: { type: ActionType.DECLINE, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.NO_QUIERO) } }, reasoning: [...reasoning, decisionReason], reasonKey: 'decline_truco_weak' };
+              return { action: { type: ActionType.DECLINE, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.NO_QUIERO) } }, reasoning: [...reasoning, decisionReason], reasonKey: 'decline_truco_weak', strategyCategory: 'safe' };
           } else {
               // Remaining chance to do something else
               if (Math.random() < 0.15 && trucoLevel < 3) { // Small chance to bluff-escalate
@@ -362,11 +362,11 @@ export const getTrucoResponse = (state: GameState, gamePressure: number, reasoni
                 const trucoContext: AiTrucoContext = { strength: myStrength, isBluff: true };
                 const decisionReason = t('ai_logic.decision_escalate_bluff_weak_hand');
                 // Fix: Changed reasoning from a joined string to an array.
-                return { action: { type: escalateType, payload: { blurbText, trucoContext } }, reasoning: [...reasoning, decisionReason], reasonKey: 'escalate_truco_weak_bluff' };
+                return { action: { type: escalateType, payload: { blurbText, trucoContext } }, reasoning: [...reasoning, decisionReason], reasonKey: 'escalate_truco_weak_bluff', strategyCategory: 'deceptive' };
               }
               const decisionReason = t('ai_logic.decision_accept_weak_hand_bluff_call');
               // Fix: Changed reasoning from a joined string to an array.
-              return { action: { type: ActionType.ACCEPT, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.QUIERO) } }, reasoning: [...reasoning, decisionReason], reasonKey: 'accept_truco_bluff_call' };
+              return { action: { type: ActionType.ACCEPT, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.QUIERO) } }, reasoning: [...reasoning, decisionReason], reasonKey: 'accept_truco_bluff_call', strategyCategory: 'aggressive' };
           }
       }
   }
@@ -411,7 +411,7 @@ export const getTrucoResponse = (state: GameState, gamePressure: number, reasoni
                   const trucoContext: AiTrucoContext = { strength: myStrength, isBluff: false };
                   const decisionReason = t('ai_logic.decision_escalate_dominant_card', { call: escalateType.replace('CALL_', '') });
                   // Fix: Changed reasoning from a joined string to an array.
-                  return { action: { type: escalateType, payload: { blurbText, trucoContext } }, reasoning: [...reasoning, decisionReason], reasonKey: 'escalate_truco_dominant_card' };
+                  return { action: { type: escalateType, payload: { blurbText, trucoContext } }, reasoning: [...reasoning, decisionReason], reasonKey: 'escalate_truco_dominant_card', strategyCategory: 'aggressive' };
               }
           }
       }
@@ -454,14 +454,14 @@ export const getTrucoResponse = (state: GameState, gamePressure: number, reasoni
       const blurbText = getRandomPhrase(phrases);
       const trucoContext: AiTrucoContext = { strength: myStrength, isBluff: true };
       // Fix: Changed reasoning from a joined string to an array.
-      return { action: { type: escalateType, payload: { blurbText, trucoContext } }, reasoning: [...reasoning, t('ai_logic.mixed_strategy_bluff')], reasonKey: 'escalate_truco_mixed_bluff' };
+      return { action: { type: escalateType, payload: { blurbText, trucoContext } }, reasoning: [...reasoning, t('ai_logic.mixed_strategy_bluff')], reasonKey: 'escalate_truco_mixed_bluff', strategyCategory: 'deceptive' };
     }
     const actionType = aggressive ? ActionType.ACCEPT : ActionType.DECLINE;
     const blurbText = getRandomPhrase(aggressive ? PHRASE_KEYS.QUIERO : PHRASE_KEYS.NO_QUIERO);
     const resultText = aggressive ? t('ai_logic.results.accepting') : t('ai_logic.results.declining');
     return { action: { type: actionType, payload: { blurbText } }, 
              // Fix: Changed reasoning from a joined string to an array.
-             reasoning: [...reasoning, t('ai_logic.mixed_strategy_result', { result: resultText })], reasonKey: aggressive ? 'accept_truco_mixed' : 'decline_truco_mixed' };
+             reasoning: [...reasoning, t('ai_logic.mixed_strategy_result', { result: resultText })], reasonKey: aggressive ? 'accept_truco_mixed' : 'decline_truco_mixed', strategyCategory: aggressive ? 'aggressive' : 'safe' };
   }
 
 
@@ -487,7 +487,7 @@ export const getTrucoResponse = (state: GameState, gamePressure: number, reasoni
         if (futureMove?.action.type === ActionType.DECLINE) {
             reasoning.push(t('ai_logic.pre_commitment_result_fold'));
             const decisionReason = t('ai_logic.decision_pre_commitment_accept_instead');
-            return { action: { type: ActionType.ACCEPT, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.QUIERO) } }, reasoning: [...reasoning, decisionReason], reasonKey: 'accept_truco_lookahead_fold' };
+            return { action: { type: ActionType.ACCEPT, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.QUIERO) } }, reasoning: [...reasoning, decisionReason], reasonKey: 'accept_truco_lookahead_fold', strategyCategory: 'safe' };
         } else {
             reasoning.push(t('ai_logic.pre_commitment_result_accept'));
         }
@@ -496,15 +496,15 @@ export const getTrucoResponse = (state: GameState, gamePressure: number, reasoni
 
     const decisionReason = t('ai_logic.decision_escalate_high_equity', { equity: equity.toFixed(2), call: escalateType.replace('CALL_', '') });
     // Fix: Changed reasoning from a joined string to an array.
-    return { action: { type: escalateType, payload: { blurbText, trucoContext } }, reasoning: [...reasoning, decisionReason], reasonKey: 'escalate_truco_high_equity' };
+    return { action: { type: escalateType, payload: { blurbText, trucoContext } }, reasoning: [...reasoning, decisionReason], reasonKey: 'escalate_truco_high_equity', strategyCategory: 'aggressive' };
   } else if (equity > threshold) {
      const decisionReason = t('ai_logic.decision_accept_equity', { equity: equity.toFixed(2) });
     // Fix: Changed reasoning from a joined string to an array.
-    return { action: { type: ActionType.ACCEPT, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.QUIERO) } }, reasoning: [...reasoning, decisionReason], reasonKey: 'accept_truco_decent_equity' };
+    return { action: { type: ActionType.ACCEPT, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.QUIERO) } }, reasoning: [...reasoning, decisionReason], reasonKey: 'accept_truco_decent_equity', strategyCategory: 'safe' };
   } else {
     const decisionReason = t('ai_logic.decision_decline_equity', { equity: equity.toFixed(2), threshold });
     // Fix: Changed reasoning from a joined string to an array.
-    return { action: { type: ActionType.DECLINE, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.NO_QUIERO) } }, reasoning: [...reasoning, decisionReason], reasonKey: 'decline_truco_low_equity' };
+    return { action: { type: ActionType.DECLINE, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.NO_QUIERO) } }, reasoning: [...reasoning, decisionReason], reasonKey: 'decline_truco_low_equity', strategyCategory: 'safe' };
   }
 };
 
@@ -556,7 +556,7 @@ export const getTrucoCall = (state: GameState, gamePressure: number): AiMove | n
           const trucoContext: AiTrucoContext = { strength: 1.0, isBluff: false };
           // Fix: Changed reasoning from a joined string to an array.
           const reasoning = [t('ai_logic.opportunity_logic_parda_gano'), t('ai_logic.parda_gano_reasoning'), ...reasoningText, t('ai_logic.parda_gano_value_bet', { call: callName }), t('ai_logic.decision_parda_gano_escalate', { call: callName })];
-          return { action: { type: actionType, payload: { blurbText, trucoContext } }, reasoning: reasoning, reasonKey: 'call_truco_parda_y_gano' };
+          return { action: { type: actionType, payload: { blurbText, trucoContext } }, reasoning: reasoning, reasonKey: 'call_truco_parda_y_gano', strategyCategory: 'aggressive' };
       }
   }
 
@@ -616,7 +616,7 @@ export const getTrucoCall = (state: GameState, gamePressure: number): AiMove | n
                     t('ai_logic.decision_escalation_certainty', { call: actionType.replace('CALL_', '') })
                 ];
             }
-            return { action: { type: actionType, payload: { blurbText, trucoContext } }, reasoning, reasonKey: 'call_truco_certain_win' };
+            return { action: { type: actionType, payload: { blurbText, trucoContext } }, reasoning, reasonKey: 'call_truco_certain_win', strategyCategory: 'aggressive' };
         }
     }
 
@@ -648,7 +648,7 @@ export const getTrucoCall = (state: GameState, gamePressure: number): AiMove | n
       const blurbText = getRandomPhrase(PHRASE_KEYS.TRUCO);
       const trucoContext: AiTrucoContext = { strength: myStrength, isBluff: false };
       // Fix: Changed reasoning from a joined string to an array.
-      return { action: { type: ActionType.CALL_TRUCO, payload: { blurbText, trucoContext } }, reasoning: [...reasonPrefix, t('ai_logic.decision_truco_won_trick1')], reasonKey: 'call_truco_won_trick1' };
+      return { action: { type: ActionType.CALL_TRUCO, payload: { blurbText, trucoContext } }, reasoning: [...reasonPrefix, t('ai_logic.decision_truco_won_trick1')], reasonKey: 'call_truco_won_trick1', strategyCategory: 'aggressive' };
     }
   }
 
@@ -659,7 +659,7 @@ export const getTrucoCall = (state: GameState, gamePressure: number): AiMove | n
         const blurbText = getRandomPhrase(PHRASE_KEYS.TRUCO);
         const trucoContext: AiTrucoContext = { strength: myStrength, isBluff: true };
         // Fix: Changed reasoning from a joined string to an array.
-        return { action: { type: ActionType.CALL_TRUCO, payload: { blurbText, trucoContext } }, reasoning: [...reasonPrefix, t('ai_logic.decision_truco_bluff_parda', { ev: ev.toFixed(2) })], reasonKey: 'call_truco_post_parda_bluff' };
+        return { action: { type: ActionType.CALL_TRUCO, payload: { blurbText, trucoContext } }, reasoning: [...reasonPrefix, t('ai_logic.decision_truco_bluff_parda', { ev: ev.toFixed(2) })], reasonKey: 'call_truco_post_parda_bluff', strategyCategory: 'deceptive' };
       }
   }
 
@@ -667,26 +667,18 @@ export const getTrucoCall = (state: GameState, gamePressure: number): AiMove | n
   let trucoContext: AiTrucoContext | null = null;
   const strengthThreshold = 0.65 - envidoLeak - (gamePressure * 0.15); // More desperate -> lower threshold to call for value
   let reasonKey: string | null = null;
-  
-  // NEW: Generate alternatives for Decision Spectrum
-  let alternatives: AiMove[] = [];
-  const safePlayMove = findBestCardToPlay(state);
-  alternatives.push({
-      ...safePlayMove,
-      action: { type: ActionType.PLAY_CARD, payload: { player: 'ai', cardIndex: safePlayMove.index }},
-      // The confidence of playing safe is the inverse of the confidence of winning with a Truco call. A simplification.
-      confidence: 1 - myStrength
-  });
-
+  let strategyCategory: AiMove['strategyCategory'] = 'aggressive';
 
   if (Math.random() < adjustedBluffChance && myStrength < 0.45 - envidoLeak) {
     decision = t('ai_logic.decision_bluff_truco_weak_hand');
     trucoContext = { strength: myStrength, isBluff: true };
     reasonKey = 'call_truco_bluff';
+    strategyCategory = 'deceptive';
   } else if (myStrength >= strengthThreshold) {
     decision = t('ai_logic.decision_value_truco_strong_hand', { strength: myStrength.toFixed(2), threshold: strengthThreshold.toFixed(2) });
     trucoContext = { strength: myStrength, isBluff: false };
     reasonKey = 'call_truco_value';
+    strategyCategory = 'aggressive';
   }
 
   if (decision && trucoContext && reasonKey) {
@@ -694,7 +686,7 @@ export const getTrucoCall = (state: GameState, gamePressure: number): AiMove | n
     const action: Action = { type: ActionType.CALL_TRUCO, payload: { blurbText, trucoContext } };
     const confidence = reasonKey === 'call_truco_bluff' ? adjustedBluffChance : myStrength;
     // Fix: Changed reasoning from a joined string to an array.
-    return { action, reasoning: [...reasonPrefix, `\n${decision}`], reasonKey, confidence, alternatives };
+    return { action, reasoning: [...reasonPrefix, `\n${decision}`], reasonKey, confidence, strategyCategory };
   }
 
   return null;

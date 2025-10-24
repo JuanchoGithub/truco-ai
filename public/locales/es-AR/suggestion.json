@@ -1,18 +1,37 @@
+
 {
   "suggestion": {
     "play_card": "Jugar el {{cardName}}.",
-    "play_card_reason": "La mejor jugada es tirar el {{cardName}} {{reason}}.",
     "consider_move": "Considerar el siguiente movimiento.",
     "reason": {
       "play_last_card": "porque es la única carta que queda.",
       "default": "según la estrategia de la IA."
     },
-    "detail_reason": {
-      "probe_low": "Jugar el {{cardName}}. Es tu carta más débil, ideal para ver qué juega la IA sin revelar la fuerza de tu mano.",
-      "probe_mid": "Jugar el {{cardName}}. Es una carta de rango medio (ni la más fuerte, ni la más débil), lo que hace que tu jugada parezca creíble y puede engañar a la IA.",
-      "secure_hand": "Jugar el {{cardName}}. Es tu carta más fuerte y te garantizará ganar esta mano.",
-      "win_cheap": "Jugar el {{cardName}}. Es tu carta más débil que aún puede ganar esta mano, guardando las más fuertes para después.",
-      "parda_y_canto": "Jugar el {{cardName}} para empatar la mano. Esto oculta tus cartas más fuertes y te prepara para cantar Truco en la siguiente mano con ventaja."
+    "strategy": {
+      "safe_play_card": {
+        "title": "Jugar {{cardName}}",
+        "desc": "Esta es la jugada de mayor probabilidad. Apunta a ganar la mano actual gastando la menor cantidad de recursos posible o a sondear la mano del oponente sin arriesgar cartas valiosas."
+      },
+      "aggressive_call_truco": {
+        "title": "Cantar ¡Truco!",
+        "desc": "Esta es una apuesta por valor. Tu mano ({{description}}) es fuerte. Al cantar 'Truco' ahora, aplicás presión y apuntás a ganar más puntos. El riesgo es que la IA tenga una mano aún mejor, pero la recompensa potencial lo convierte en una jugada fuerte."
+      },
+      "deceptive_bluff_truco": {
+        "title": "Cantar ¡Truco! (Farol)",
+        "desc": "Este es un farol. Tu mano ({{description}}) es débil, pero al cantar 'Truco', intentás intimidar a la IA para que se retire, permitiéndote robar la ronda. Es arriesgado, pero puede dar sus frutos si la IA duda."
+      },
+      "deceptive_bait_card": {
+        "title": "Jugar {{cardName}} (Cebo)",
+        "desc": "Esta es una jugada de cebo. Al jugar una carta más débil a propósito, ocultás la verdadera fuerza de tu mano. El objetivo es tentar a la IA para que cante 'Truco', creyendo que sos débil, para que puedas contraatacar con tus cartas más fuertes."
+      },
+      "aggressive_call_envido": {
+        "title": "Cantar {{call}}",
+        "desc": "¡Tenés {{points}} puntos de envido {{details}}! Este es un puntaje fuerte. Cantar ahora es una apuesta por valor para asegurar estos puntos."
+      },
+      "deceptive_bluff_envido": {
+        "title": "Cantar {{call}} (Farol)",
+        "desc": "Tus puntos de envido ({{points}}) son bajos. Sin embargo, un farol podría hacer que la IA se retire si su propia mano es mediocre, permitiéndote robar 1 punto."
+      }
     },
     "envido_from_cards": "(con el {{card1Name}} y el {{card2Name}})",
     "envido_from_card": "(con el {{cardName}})",
@@ -20,23 +39,15 @@
     "truco_hand_top_heavy": "una mano 'top-heavy' (liderada por el {{cardName}})",
     "truco_hand_balanced": "una mano balanceada y sólida",
     "truco_hand_weak": "una mano débil",
-    "respond_quiero_envido_good": "Tenemos {{points}} puntos {{details}}. La IA cantó, pero nuestras chances de ganar son buenas. Deberíamos aceptar con 'Quiero'.",
-    "respond_quiero_truco_solid": "Nuestra mano es lo suficientemente buena como para competir ({{description}}). Deberíamos aceptar el desafío del Truco con 'Quiero'.",
-    "respond_no_quiero_envido_risk": "Tenemos {{points}} puntos {{details}}, pero la IA cantó fuerte, y es probable que tengan más. Lo más seguro es retirarse con 'No Quiero'.",
-    "respond_no_quiero_truco_weak": "Nuestra mano es demasiado débil para este desafío ({{description}}). La mejor jugada es retirarse con 'No Quiero' para minimizar la pérdida de puntos.",
-    "respond_escalate_truco_strong": "Tenemos {{description}}. ¡La situación es favorable para redoblar la apuesta a '{{call}}' porque tenemos muchas chances de ganar!",
-    "respond_escalate_truco_bluff": "Estamos en una mala posición ({{description}}), pero podemos intentar un farol arriesgado. Sube la apuesta a '{{call}}' para ver si logramos que la IA se retire.",
+    "respond_quiero_envido_good": "¡Quiero! (Tus {{points}} puntos son buenos)",
+    "respond_quiero_truco_solid": "¡Quiero! (Tu mano es sólida)",
+    "respond_no_quiero_envido_risk": "No Quiero (Tus {{points}} puntos son riesgosos)",
+    "respond_no_quiero_truco_weak": "No Quiero (Tu mano es débil)",
+    "respond_escalate_truco_strong": "¡{{call}}! (Tu mano es muy fuerte)",
+    "respond_escalate_truco_bluff": "¡{{call}}! (Farol de contraataque)",
     "envido_strength_excellent": "un puntaje excelente",
     "envido_strength_good": "un buen puntaje",
     "envido_strength_decent": "un puntaje decente",
-    "envido_strength_low": "un puntaje bajo",
-    "proactive_truco_bluff": "Nuestra mano es débil ({{description}}), pero podemos intentar un farol cantando '{{call}}'.{{alternative}}",
-    "proactive_truco_strong": "¡Tenemos una mano muy fuerte ({{description}})! Es el momento ideal para cantar '{{call}}' y aumentar el valor de la ronda.{{alternative}}",
-    "proactive_truco_parda": "¡Jugada clave! La primera mano fue empate. Si ganas esta, ganas la ronda. Cantar 'Truco' es una jugada sin riesgo: si se retiran, ganas 1 punto. Si aceptan, ¡ganas 2!",
-    "proactive_envido_bluff": "Tenemos solo {{points}} puntos de envido {{details}}, que es bajo. Sin embargo, {{opponentInfo}} Podemos intentar un farol (bluff) cantando '{{call}}'.{{alternative}}",
-    "proactive_envido_bluff_opponent_info": "la IA tiene una probabilidad de retirarse del {{rate}}%.",
-    "proactive_envido_bluff_opponent_info_default": "la IA podría retirarse.",
-    "proactive_envido_strong": "¡Tenemos {{points}} de envido {{details}}! Es {{strengthText}}, deberíamos cantar '{{call}}'.",
-    "safe_play_alternative": " Si no te animás, la jugada más segura es tirar el {{cardName}}."
+    "envido_strength_low": "un puntaje bajo"
   }
 }

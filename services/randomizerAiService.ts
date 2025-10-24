@@ -1,4 +1,3 @@
-
 import { GameState, AiMove, Action, ActionType, Card } from '../types';
 
 // Fix: The original function incorrectly added a `payload` object to every action,
@@ -23,7 +22,7 @@ export const getRandomizerMove = (state: GameState): AiMove => {
         validActions.push(createMove(ActionType.DECLINE));
 
         if (gamePhase === 'envido_called') {
-            if (playerHasFlor) {
+            if (state.isFlorEnabled && playerHasFlor) {
                 validActions.push(createMove(ActionType.RESPOND_TO_ENVIDO_WITH_FLOR));
             } else {
                 if (envidoPointsOnOffer === 2) {
@@ -38,7 +37,7 @@ export const getRandomizerMove = (state: GameState): AiMove => {
 
         if (gamePhase === 'truco_called') {
             const canCallEnvidoPrimero = currentTrick === 0 && !playerTricks[0] && !aiTricks[0] && !hasEnvidoBeenCalledThisRound;
-            if (playerHasFlor) {
+            if (state.isFlorEnabled && playerHasFlor) {
                 validActions.push(createMove(ActionType.DECLARE_FLOR));
             } else if (canCallEnvidoPrimero) {
                 validActions.push(createMove(ActionType.CALL_ENVIDO));
@@ -74,9 +73,9 @@ export const getRandomizerMove = (state: GameState): AiMove => {
         // Calling options
         const canSing = currentTrick === 0 && !playerTricks[0] && !aiTricks[0];
         if (canSing) {
-            if (playerHasFlor) {
+            if (state.isFlorEnabled && playerHasFlor) {
                 validActions.push(createMove(ActionType.DECLARE_FLOR));
-            } else if (!hasEnvidoBeenCalledThisRound) {
+            } else if (!hasEnvidoBeenCalledThisRound && !hasFlorBeenCalledThisRound) {
                 validActions.push(createMove(ActionType.CALL_ENVIDO));
                 validActions.push(createMove(ActionType.CALL_REAL_ENVIDO));
                 validActions.push(createMove(ActionType.CALL_FALTA_ENVIDO));
