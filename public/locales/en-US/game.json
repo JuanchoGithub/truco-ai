@@ -10,7 +10,8 @@
     "play_with_help": "Play with Assistant",
     "learn": "Learn to Play",
     "manual": "Truco Manual",
-    "simulate": "Simulation Mode (AI vs AI)"
+    "simulate": "Simulation Mode (AI vs AI)",
+    "options": "Options"
   },
   "continueGameModal": {
     "title": "Saved Game Found",
@@ -149,5 +150,16 @@
     "open_aria_label": "Open AI Assistant",
     "close_aria_label": "Close AI Assistant",
     "summon_message": "You can summon me again by clicking on my face on the bottom right."
+  },
+  "settingsModal": {
+    "title": "Settings",
+    "language": "Language",
+    "sound": "Sound",
+    "opponent_voice": "Opponent (AI) Voice",
+    "assistant_voice": "Assistant Voice",
+    "test_voice": "Test",
+    "select_voice": "Auto (Browser Default)",
+    "test_phrase_opponent": "Hello, I'm TRUCAI! Let's hear that Envido!",
+    "test_phrase_assistant": "Hey! I'm going to help you play TRUCO today!"
   }
 }

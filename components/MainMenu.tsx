@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { loadStateFromStorage } from '../services/storageService';
 import ContinueGameModal from './ContinueGameModal';
 import { useLocalization } from '../context/LocalizationContext';
+import SettingsModal from './SettingsModal';
 
 interface MainMenuProps {
   onStartGame: (mode: 'playing' | 'playing-with-help', continueGame: boolean) => void;
@@ -35,6 +36,43 @@ const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onLearn, onManual, onS
     mode: 'playing' | 'playing-with-help' | null;
   }>({ isOpen: false, mode: null });
   const { t, setLanguage, language } = useLocalization();
+
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isOpponentSoundEnabled, setIsOpponentSoundEnabled] = useState(() => {
+    const saved = localStorage.getItem('trucoAiOpponentSoundEnabled');
+    return saved !== null ? JSON.parse(saved) : false;
+  });
+  const [isAssistantSoundEnabled, setIsAssistantSoundEnabled] = useState(() => {
+    const saved = localStorage.getItem('trucoAiAssistantSoundEnabled');
+    return saved !== null ? JSON.parse(saved) : false;
+  });
+  const [opponentVoiceURI, setOpponentVoiceURI] = useState(() => localStorage.getItem('trucoAiOpponentVoiceURI') || 'auto');
+  const [assistantVoiceURI, setAssistantVoiceURI] = useState(() => localStorage.getItem('trucoAiAssistantVoiceURI') || 'auto');
+
+  const handleToggleOpponentSound = () => {
+    setIsOpponentSoundEnabled(prev => {
+      const newValue = !prev;
+      localStorage.setItem('trucoAiOpponentSoundEnabled', JSON.stringify(newValue));
+      return newValue;
+    });
+  };
+
+  const handleToggleAssistantSound = () => {
+    setIsAssistantSoundEnabled(prev => {
+      const newValue = !prev;
+      localStorage.setItem('trucoAiAssistantSoundEnabled', JSON.stringify(newValue));
+      return newValue;
+    });
+  };
+
+  const handleOpponentVoiceChange = (uri: string) => {
+    setOpponentVoiceURI(uri);
+    localStorage.setItem('trucoAiOpponentVoiceURI', uri);
+  };
+  const handleAssistantVoiceChange = (uri: string) => {
+    setAssistantVoiceURI(uri);
+    localStorage.setItem('trucoAiAssistantVoiceURI', uri);
+  };
 
   const handlePlayClick = (mode: 'playing' | 'playing-with-help') => {
     const savedState = loadStateFromStorage(mode);
@@ -71,6 +109,7 @@ const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onLearn, onManual, onS
                 <USFlag />
             </button>
         </div>
+        
         <h1 className="text-6xl lg:text-8xl font-cinzel font-bold tracking-wider text-yellow-300 mb-2" style={{ textShadow: '4px 4px 6px rgba(0,0,0,0.8)' }}>
           {t('mainMenu.title')}
         </h1>
@@ -104,9 +143,20 @@ const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onLearn, onManual, onS
           >
             {t('mainMenu.manual')}
           </button>
+          <button
+              onClick={() => setIsSettingsOpen(true)}
+              className="flex items-center justify-center gap-3 px-8 py-4 text-xl lg:text-2xl rounded-lg font-bold text-white shadow-lg transition-transform transform hover:scale-105 border-b-4 bg-gradient-to-b from-slate-600 to-slate-700 border-slate-900 hover:from-slate-500 hover:to-slate-600"
+              style={{ textShadow: '1px 1px 3px rgba(0,0,0,0.5)' }}
+          >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              <span>{t('mainMenu.options')}</span>
+          </button>
            <button
             onClick={onSimulate}
-            className="px-8 py-3 text-lg rounded-lg font-bold text-cyan-200 shadow-lg transition-transform transform hover:scale-105 border-b-4 bg-gradient-to-b from-gray-700 to-gray-800 border-gray-900 hover:from-gray-600 hover:to-gray-700 mt-4"
+            className="px-8 py-3 text-lg rounded-lg font-bold text-cyan-200 shadow-lg transition-transform transform hover:scale-105 border-b-4 bg-gradient-to-b from-gray-700 to-gray-800 border-gray-900 hover:from-gray-600 hover:to-gray-700"
             style={{ textShadow: '1px 1px 3px rgba(0,0,0,0.5)' }}
           >
             {t('mainMenu.simulate')}
@@ -118,6 +168,19 @@ const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onLearn, onManual, onS
           onContinue={handleContinue}
           onNewGame={handleNewGame}
           onCancel={() => setConfirmModal({ isOpen: false, mode: null })}
+        />
+      )}
+      {isSettingsOpen && (
+        <SettingsModal
+          onClose={() => setIsSettingsOpen(false)}
+          isOpponentSoundEnabled={isOpponentSoundEnabled}
+          onToggleOpponentSound={handleToggleOpponentSound}
+          isAssistantSoundEnabled={isAssistantSoundEnabled}
+          onToggleAssistantSound={handleToggleAssistantSound}
+          opponentVoiceURI={opponentVoiceURI}
+          onOpponentVoiceChange={handleOpponentVoiceChange}
+          assistantVoiceURI={assistantVoiceURI}
+          onAssistantVoiceChange={handleAssistantVoiceChange}
         />
       )}
     </div>

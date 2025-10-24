@@ -10,7 +10,8 @@
     "play_with_help": "Jugar con Ayuda",
     "learn": "Aprender a Jugar",
     "manual": "Manual del Truco",
-    "simulate": "Modo Simulación (IA vs IA)"
+    "simulate": "Modo Simulación (IA vs IA)",
+    "options": "Opciones"
   },
   "continueGameModal": {
     "title": "Partida Guardada",
@@ -41,7 +42,7 @@
   "actionBar": {
     "next_round": "Siguiente Ronda",
     "quiero": "¡Quiero!",
-    "no_quiero": "No Quiero",
+    "no_quiero": "No quiero",
     "envido_primero": "Envido Primero",
     "retruco": "¡Retruco!",
     "vale_cuatro": "¡Vale Cuatro!",
@@ -151,5 +152,16 @@
     "open_aria_label": "Abrir Asistente de IA",
     "close_aria_label": "Cerrar Asistente de IA",
     "summon_message": "Puedes volver a invocarme haciendo clic en mi cara en la parte inferior derecha."
+  },
+  "settingsModal": {
+    "title": "Configuración",
+    "language": "Idioma",
+    "sound": "Sonido",
+    "opponent_voice": "Voz del Oponente (IA)",
+    "assistant_voice": "Voz del Asistente",
+    "test_voice": "Probar",
+    "select_voice": "Automático (Navegador)",
+    "test_phrase_opponent": "Hola soy TRUCAI! Cantate un envido",
+    "test_phrase_assistant": "Hey! te voy a ayudar a jugar al TRUCO hoy!"
   }
 }

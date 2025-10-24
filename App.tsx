@@ -39,9 +39,13 @@ const App: React.FC = () => {
   const [gameMode, setGameMode] = useState<GameMode>('menu');
   const [assistantMove, setAssistantMove] = useState<AiMove | null>(null);
   const lastSpokenSummary = useRef<string | null>(null);
-  const [isSoundEnabled, setIsSoundEnabled] = useState(() => {
-    const saved = localStorage.getItem('trucoAiSoundEnabled');
-    return saved !== null ? JSON.parse(saved) : false; // Default to false
+  const [isOpponentSoundEnabled, setIsOpponentSoundEnabled] = useState(() => {
+    const saved = localStorage.getItem('trucoAiOpponentSoundEnabled');
+    return saved !== null ? JSON.parse(saved) : false;
+  });
+  const [isAssistantSoundEnabled, setIsAssistantSoundEnabled] = useState(() => {
+    const saved = localStorage.getItem('trucoAiAssistantSoundEnabled');
+    return saved !== null ? JSON.parse(saved) : false;
   });
   const [showSoundHint, setShowSoundHint] = useState(false);
   const justStartedNewGame = useRef(false);
@@ -62,8 +66,14 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
-    localStorage.setItem('trucoAiSoundEnabled', JSON.stringify(isSoundEnabled));
-  }, [isSoundEnabled]);
+    localStorage.setItem('trucoAiOpponentSoundEnabled', JSON.stringify(isOpponentSoundEnabled));
+    speechService.setOpponentSoundEnabled(isOpponentSoundEnabled);
+  }, [isOpponentSoundEnabled]);
+
+  useEffect(() => {
+    localStorage.setItem('trucoAiAssistantSoundEnabled', JSON.stringify(isAssistantSoundEnabled));
+    speechService.setAssistantSoundEnabled(isAssistantSoundEnabled);
+  }, [isAssistantSoundEnabled]);
 
   useEffect(() => {
     const isPlaying = gameMode === 'playing' || gameMode === 'playing-with-help';
@@ -310,25 +320,23 @@ const App: React.FC = () => {
       return;
     }
 
-    if (isSoundEnabled) {
-      if (gameMode === 'playing-with-help' && assistantMove?.summary) {
+    if (gameMode === 'playing-with-help' && assistantMove?.summary) {
         // Only speak if the summary text has actually changed.
         if (assistantMove.summary !== lastSpokenSummary.current) {
-            speechService.speak(assistantMove.summary);
+            speechService.speak(assistantMove.summary, 'assistant');
             lastSpokenSummary.current = assistantMove.summary;
         }
-      } else if (gameMode === 'playing' && state.aiBlurb?.isVisible && state.aiBlurb.text) {
-        speechService.speak(state.aiBlurb.text);
+    } else if (gameMode === 'playing' && state.aiBlurb?.isVisible && state.aiBlurb.text) {
+        speechService.speak(state.aiBlurb.text, 'opponent');
         // Clear last summary so the assistant speaks again if mode is switched back.
         lastSpokenSummary.current = null;
-      } else {
+    } else {
         // When there's no active suggestion (e.g., turn ended), reset the tracker.
         if (gameMode === 'playing-with-help' && !assistantMove?.summary) {
             lastSpokenSummary.current = null;
         }
-      }
     }
-  }, [state.aiBlurb, assistantMove, isSoundEnabled, gameMode]);
+  }, [state.aiBlurb, assistantMove, gameMode]);
 
   const handlePlayerAction = () => {
     // If a persistent message is showing (like Envido results), clear it when the player acts.
@@ -414,6 +422,10 @@ const App: React.FC = () => {
     dispatch({ type: ActionType.RESTART_GAME });
   };
 
+  const isSoundOnForMenu = gameMode === 'playing' ? isOpponentSoundEnabled : isAssistantSoundEnabled;
+  const toggleSoundForMenu = gameMode === 'playing' ?
+      () => setIsOpponentSoundEnabled(v => !v) :
+      () => setIsAssistantSoundEnabled(v => !v);
 
   return (
     <div className="h-screen bg-green-900 text-white font-sans overflow-hidden" style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/felt.png')"}}>
@@ -431,10 +443,10 @@ const App: React.FC = () => {
           <div className="absolute top-2 right-2 z-50">
               <GameMenu
                 gameMode={gameMode as 'playing' | 'playing-with-help'}
-                isSoundEnabled={isSoundEnabled}
+                isSoundEnabled={isSoundOnForMenu}
                 isDebugMode={state.isDebugMode}
                 onToggleSound={() => {
-                  setIsSoundEnabled(!isSoundEnabled);
+                  toggleSoundForMenu();
                   if (showSoundHint) handleDismissSoundHint();
                 }}
                 onToggleDebug={() => dispatch({ type: ActionType.TOGGLE_DEBUG_MODE })}

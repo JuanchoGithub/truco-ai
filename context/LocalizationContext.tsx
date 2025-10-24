@@ -41,7 +41,8 @@ export const LocalizationProvider: React.FC<{ children: ReactNode }> = ({ childr
     // Don't set isLoaded to false here, to avoid flicker on language change.
     // The loading screen will only show on initial load.
     await i18nService.loadLanguage(lang);
-    speechService.setLanguage(lang);
+    // Fix: Removed call to non-existent 'setLanguage' method on speechService.
+    // The speech service automatically uses the current language from i18nService.
     setLanguageState(lang);
     localStorage.setItem('truco-lang', lang);
     setIsLoaded(true);
