@@ -1,3 +1,4 @@
+
 import { GameState, Action, ActionType, GamePhase, Case, OpponentModel, PlayerEnvidoActionEntry, PlayerPlayOrderEntry, RoundSummary, Card, PointNote, MessageObject } from '../../types';
 import { createDeck, shuffleDeck, determineTrickWinner, determineRoundWinner, getCardName, hasFlor, getEnvidoValue, getCardHierarchy, calculateHandStrength, getCardCode, decodeCardFromCode } from '../../services/trucoLogic';
 import { initializeProbabilities, updateProbsOnPlay } from '../../services/ai/inferenceService';
@@ -148,7 +149,7 @@ function updateOpponentModelFromHistory(state: GameState): OpponentModel {
     return newModel;
 }
 
-export function handleRestartGame(initialState: GameState, state: GameState): GameState {
+export function handleRestartGame(initialState: GameState, state: GameState, action: { type: ActionType.RESTART_GAME; payload?: { isFlorEnabled: boolean } }): GameState {
   // Update the opponent model based on the game that just finished.
   const updatedOpponentModel = state.round > 0 ? updateOpponentModelFromHistory(state) : state.opponentModel;
   
@@ -179,6 +180,7 @@ export function handleRestartGame(initialState: GameState, state: GameState): Ga
     
     // Preserve user settings
     isDebugMode: state.isDebugMode,
+    isFlorEnabled: action.payload?.isFlorEnabled ?? state.isFlorEnabled,
 
     // Explicitly define the starting state for the new game
     playerScore: 0,
@@ -212,8 +214,8 @@ export function handleStartNewRound(state: GameState, action: { type: ActionType
   const newDeck = shuffleDeck(createDeck());
   const newPlayerHand = newDeck.slice(0, 3);
   const newAiHand = newDeck.slice(3, 6);
-  const playerHasFlor = hasFlor(newPlayerHand);
-  const aiHasFlor = hasFlor(newAiHand);
+  const playerHasFlor = state.isFlorEnabled && hasFlor(newPlayerHand);
+  const aiHasFlor = state.isFlorEnabled && hasFlor(newAiHand);
   const playerEnvidoPoints = getEnvidoValue(newPlayerHand);
   const aiEnvidoPoints = getEnvidoValue(newAiHand);
 

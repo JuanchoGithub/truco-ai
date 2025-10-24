@@ -1,3 +1,4 @@
+
 import { GameState, AiMove, ActionType, MessageObject } from '../../types';
 import { getEnvidoDetails, getFlorValue, hasFlor } from '../trucoLogic';
 import { getRandomPhrase, PHRASE_KEYS } from './phrases';
@@ -278,7 +279,7 @@ export const getFlorResponse = (state: GameState, reasoning: (string | MessageOb
 
 export const getFlorCallOrEnvidoCall = (state: GameState, gamePressure: number): AiMove | null => {
     const { t } = i18nService;
-    if (state.aiHasFlor) {
+    if (state.isFlorEnabled && state.aiHasFlor) {
         const myFlor = getFlorValue(state.initialAiHand);
         let reasonPrefix: (string | MessageObject)[] = [{ key: 'ai_logic.flor_or_envido_logic' }, { key: 'ai_logic.flor_or_envido_i_have_flor', options: { florPoints: myFlor } }];
         

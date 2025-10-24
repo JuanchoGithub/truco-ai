@@ -20,7 +20,7 @@
     "table_header_status": "Estado",
     "table_header_expected": "Esperado",
     "table_header_deviation": "Desviación",
-    "no_results": "Aún no se han generado resultados. Haz clic en 'Ejecutar Análisis' para comenzar.",
+    "no_results": "Aún no se han generado resultados. Hacé clic en 'Ejecutar Análisis' para comenzar.",
     "validation_placeholder": "N/A",
     "import_button": "Importar Línea Base",
     "import_success": "¡Línea base importada!",

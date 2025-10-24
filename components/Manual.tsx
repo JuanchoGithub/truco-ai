@@ -5,6 +5,7 @@ import { useLocalization } from '../context/LocalizationContext';
 
 interface ManualProps {
   onExit: () => void;
+  isFlorEnabled: boolean;
 }
 
 const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
@@ -29,7 +30,7 @@ const CardDisplay: React.FC<{ card: CardType, label?: string }> = ({ card, label
 );
 
 
-const Manual: React.FC<ManualProps> = ({ onExit }) => {
+const Manual: React.FC<ManualProps> = ({ onExit, isFlorEnabled }) => {
     const { t } = useLocalization();
     
   return (
@@ -41,7 +42,7 @@ const Manual: React.FC<ManualProps> = ({ onExit }) => {
         <div className="w-full max-w-5xl overflow-y-auto flex-grow p-2 lg:p-4 bg-black/40 rounded-lg border-2 border-yellow-900/50">
             <Section title={t('manual.welcome.title')}>
                 <p>{t('manual.welcome.p1_1')}<em>{t('manual.welcome.p1_em')}</em>{t('manual.welcome.p1_2')}</p>
-                <p>{t('manual.welcome.p2_1')}<strong>{t('manual.welcome.p2_strong1')}</strong>{t('manual.welcome.p2_2')}<strong>{t('manual.welcome.p2_strong2')}</strong>{t('manual.welcome.p2_3')}<strong>{t('manual.welcome.p2_strong3')}</strong>{t('manual.welcome.p2_4')}</p>
+                <p>{t('manual.welcome.p2_1')}<strong>{t('manual.welcome.p2_strong1')}</strong>{t('manual.welcome.p2_2')}<strong>{t('manual.welcome.p2_strong2')}</strong>{t('manual.welcome.p2_3_base')}{isFlorEnabled && t('manual.welcome.p2_flor_addon')}</p>
             </Section>
 
              <Section title={t('manual.basics.title')}>
@@ -63,7 +64,7 @@ const Manual: React.FC<ManualProps> = ({ onExit }) => {
                             </tr>
                         </thead>
                         <tbody className="bg-black/20">
-                            <tr><td className="border p-2 font-bold text-center">{t('manual.fundamentals.table.r1c1')}</td><td className="border p-2">{t('manual.fundamentals.table.r1c2')}</td><td className="border p-2">{t('manual.fundamentals.table.r1c3')}</td><td className="border p-2">{t('manual.fundamentals.table.r1c4')}</td></tr>
+                            {isFlorEnabled && <tr><td className="border p-2 font-bold text-center">{t('manual.fundamentals.table.r1c1')}</td><td className="border p-2">{t('manual.fundamentals.table.r1c2')}</td><td className="border p-2">{t('manual.fundamentals.table.r1c3')}</td><td className="border p-2">{t('manual.fundamentals.table.r1c4')}</td></tr>}
                             <tr><td className="border p-2 font-bold text-center">{t('manual.fundamentals.table.r2c1')}</td><td className="border p-2">{t('manual.fundamentals.table.r2c2')}</td><td className="border p-2">{t('manual.fundamentals.table.r2c3')}</td><td className="border p-2">{t('manual.fundamentals.table.r2c4')}</td></tr>
                             <tr><td className="border p-2 font-bold text-center">{t('manual.fundamentals.table.r3c1')}</td><td className="border p-2">{t('manual.fundamentals.table.r3c2')}</td><td className="border p-2">{t('manual.fundamentals.table.r3c3')}</td><td className="border p-2">{t('manual.fundamentals.table.r3c4')}</td></tr>
                             <tr><td className="border p-2 font-bold text-center">{t('manual.fundamentals.table.r4c1')}</td><td className="border p-2">{t('manual.fundamentals.table.r4c2')}</td><td className="border p-2">{t('manual.fundamentals.table.r4c3')}</td><td className="border p-2">{t('manual.fundamentals.table.r4c4')}</td></tr>
@@ -80,8 +81,10 @@ const Manual: React.FC<ManualProps> = ({ onExit }) => {
 
             <Section title={t('manual.phases.title')}>
                 <p>{t('manual.phases.p1_1')}<strong>{t('manual.phases.p1_strong')}</strong>{t('manual.phases.p1_2')}</p>
-                <h3 className="text-xl font-cinzel mt-6">{t('manual.phases.flor.title')}</h3>
-                <p>{t('manual.phases.flor.p1_1')}<strong>{t('manual.phases.flor.p1_strong')}</strong>{t('manual.phases.flor.p1_2')}</p>
+                {isFlorEnabled && <>
+                    <h3 className="text-xl font-cinzel mt-6">{t('manual.phases.flor.title')}</h3>
+                    <p>{t('manual.phases.flor.p1_1')}<strong>{t('manual.phases.flor.p1_strong')}</strong>{t('manual.phases.flor.p1_2')}</p>
+                </>}
                 <h3 className="text-xl font-cinzel mt-6">{t('manual.phases.envido.title')}</h3>
                 <p>{t('manual.phases.envido.p1')}</p>
                  <table className="w-full text-left text-sm border-collapse mt-2">
@@ -129,13 +132,13 @@ const Manual: React.FC<ManualProps> = ({ onExit }) => {
                     <p><strong>{t('mainMenu.learn')}:</strong> {t('manual.scenarios.ex2.lesson')}</p>
                 </Example>
 
-                <Example title={t('manual.scenarios.ex3.title')}>
+                {isFlorEnabled && <Example title={t('manual.scenarios.ex3.title')}>
                     <p><strong>{t('manual.basics.p3_strong')}</strong> {t('manual.scenarios.ex3.setup_1')}<CardDisplay card={{rank:7, suit:'copas'} as CardType} /> <CardDisplay card={{rank:4, suit:'copas'} as CardType} /> <CardDisplay card={{rank:3, suit:'copas'} as CardType} />{t('manual.scenarios.ex3.setup_2')}</p>
                     <p><strong>{t('common.you')}:</strong> {t('manual.scenarios.ex3.game')}</p>
                     <p><strong>{t('common.round')}:</strong> {t('manual.scenarios.ex3.result')}</p>
                     <p><strong>{t('mainMenu.learn')}:</strong> {t('manual.scenarios.ex3.lesson')}</p>
                     <p className="mt-2 p-2 bg-black/30 rounded"><strong>{t('manual.scenarios.quiz')}</strong> {t('manual.scenarios.ex3.quiz_q')} <em>({t('manual.scenarios.answer')} {t('manual.scenarios.ex3.quiz_a')})</em></p>
-                </Example>
+                </Example>}
 
                  <Example title={t('manual.scenarios.ex4.title')}>
                     <p><strong>{t('manual.basics.p3_strong')}</strong> {t('manual.scenarios.ex4.setup_1')}<CardDisplay card={{rank:3, suit:'bastos'} as CardType} /> <CardDisplay card={{rank:2, suit:'copas'} as CardType} /> <CardDisplay card={{rank:5, suit:'espadas'} as CardType} />{t('manual.scenarios.ex4.setup_2')}</p>
@@ -166,12 +169,12 @@ const Manual: React.FC<ManualProps> = ({ onExit }) => {
                     <p><strong>{t('mainMenu.learn')}:</strong> {t('manual.scenarios.ex7.lesson')}</p>
                 </Example>
                 
-                <Example title={t('manual.scenarios.ex8.title')}>
+                {isFlorEnabled && <Example title={t('manual.scenarios.ex8.title')}>
                     <p><strong>{t('manual.basics.p3_strong')}</strong> {t('manual.scenarios.ex8.setup_1')}<CardDisplay card={{rank:7, suit:'oros'}}/>, <CardDisplay card={{rank:6, suit:'oros'}}/>, <CardDisplay card={{rank:5, suit:'oros'}}/>{t('manual.scenarios.ex8.setup_2')}</p>
                     <p><strong>{t('common.you')}:</strong> {t('manual.scenarios.ex8.game')}</p>
                     <p><strong>{t('common.round')}:</strong> {t('manual.scenarios.ex8.result')}</p>
                     <p><strong>{t('mainMenu.learn')}:</strong> {t('manual.scenarios.ex8.lesson')}</p>
-                </Example>
+                </Example>}
             </Section>
 
             <Section title={t('manual.strategy.title')}>

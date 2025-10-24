@@ -8,6 +8,8 @@ import { handleCallTruco, handleCallRetruco, handleCallValeCuatro, handleCallFal
 import { handleAccept, handleDecline, handleResolveEnvidoAccept, handleResolveEnvidoDecline, handleResolveTrucoDecline, handleAcknowledgeFlor, handleAcceptContraflor, handleDeclineContraflor, handleResolveFlorShowdown, handleResolveContraflorDecline } from './reducers/responseReducer';
 import { createInitialCardPlayStats } from '../services/cardAnalysis';
 
+const savedFlorEnabled = localStorage.getItem('trucoAiFlorEnabled');
+const initialIsFlorEnabled = savedFlorEnabled !== null ? JSON.parse(savedFlorEnabled) : true;
 
 export const initialState: GameState = {
   deck: [],
@@ -36,6 +38,7 @@ export const initialState: GameState = {
   lastCaller: null,
   turnBeforeInterrupt: null,
   pendingTrucoCaller: null,
+  isFlorEnabled: initialIsFlorEnabled,
   hasEnvidoBeenCalledThisRound: false,
   hasRealEnvidoBeenCalledThisSequence: false,
   hasFaltaEnvidoBeenCalledThisSequence: false,
@@ -116,7 +119,7 @@ export function useGameReducer(state: GameState, action: Action): GameState {
   switch (action.type) {
     // Gameplay Actions
     case ActionType.RESTART_GAME:
-      return handleRestartGame(initialState, state);
+      return handleRestartGame(initialState, state, action);
     case ActionType.START_NEW_ROUND:
       return handleStartNewRound(state, action);
     case ActionType.PROCEED_TO_NEXT_ROUND:
@@ -237,6 +240,7 @@ export function useGameReducer(state: GameState, action: Action): GameState {
             
             // Carry over user settings and score from the previous game state
             isDebugMode: loadedState.isDebugMode || false,
+            isFlorEnabled: loadedState.isFlorEnabled ?? initialState.isFlorEnabled,
             playerScore: loadedState.playerScore || 0,
             aiScore: loadedState.aiScore || 0,
             

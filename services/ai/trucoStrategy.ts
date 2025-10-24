@@ -1,8 +1,10 @@
+
 import { GameState, AiMove, ActionType, Card, Rank, Player, Action, AiTrucoContext, MessageObject } from '../../types';
 import { getCardHierarchy, getCardName, determineTrickWinner, determineRoundWinner, calculateHandStrength, getHandPercentile } from '../trucoLogic';
 import { getRandomPhrase, PHRASE_KEYS } from './phrases';
 import { generateConstrainedOpponentHand } from './inferenceService';
 import i18nService from '../i18nService';
+import { findBestCardToPlay } from './playCardStrategy';
 
 /**
  * FIX: Rewritten round simulation to be accurate.
@@ -123,7 +125,17 @@ export const calculateTrucoStrength = (state: GameState): TrucoStrengthResult =>
   let reasoning: (string | MessageObject)[] = [];
 
   if (aiHand.length === 0) {
-    return { strength: 0, reasoning: [t('ai_logic.no_cards_left')] };
+    reasoning.push({ key: 'ai_logic.strength_evaluation' });
+    reasoning.push({ key: 'ai_logic.my_current_hand', options: { hand: '[]' } });
+    
+    // Outcome is deterministic, run a single simulation on the current board state
+    const amILeading = playerTricks[currentTrick] === null;
+    const simOptions = { state, iterations: 1, amILeading };
+    // Pass empty hands as cards are already on board and accounted for in `state.trickWinners`
+    const winProb = simulateRoundWin([], [], simOptions);
+    
+    reasoning.push({ key: 'ai_logic.win_prob_avg', options: { avgProb: (winProb * 100).toFixed(0) } });
+    return { strength: winProb, reasoning };
   }
   
   // Start with a base heuristic of raw card power
@@ -427,7 +439,8 @@ export const getTrucoResponse = (state: GameState, gamePressure: number, reasoni
   reasoning.push(t('ai_logic.bluff_inference', { context: playerContext.toUpperCase(), rate: (bluffRate * 100).toFixed(0), adjust: bluffAdjustFormatted }));
   const pressureAdjustFormatted = `${gamePressure > 0 ? '+' : ''}${(gamePressure * 0.15).toFixed(2)}`;
   reasoning.push(t('ai_logic.game_pressure_adjustment', { adjust: pressureAdjustFormatted }));
-  reasoning.push(t('ai_logic.final_equity', { equity: equity.toFixed(2) }));
+  const threshold = -0.15;
+  reasoning.push(t('ai_logic.final_equity', { equity: equity.toFixed(2), threshold }));
 
   const maxRandomChance = 0.10; 
   const randomMoveChance = maxRandomChance * Math.max(0, 1 - Math.abs(equity) * 2.5);
@@ -484,12 +497,12 @@ export const getTrucoResponse = (state: GameState, gamePressure: number, reasoni
     const decisionReason = t('ai_logic.decision_escalate_high_equity', { equity: equity.toFixed(2), call: escalateType.replace('CALL_', '') });
     // Fix: Changed reasoning from a joined string to an array.
     return { action: { type: escalateType, payload: { blurbText, trucoContext } }, reasoning: [...reasoning, decisionReason], reasonKey: 'escalate_truco_high_equity' };
-  } else if (equity > -0.15) {
+  } else if (equity > threshold) {
      const decisionReason = t('ai_logic.decision_accept_equity', { equity: equity.toFixed(2) });
     // Fix: Changed reasoning from a joined string to an array.
     return { action: { type: ActionType.ACCEPT, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.QUIERO) } }, reasoning: [...reasoning, decisionReason], reasonKey: 'accept_truco_decent_equity' };
   } else {
-    const decisionReason = t('ai_logic.decision_decline_equity', { equity: equity.toFixed(2) });
+    const decisionReason = t('ai_logic.decision_decline_equity', { equity: equity.toFixed(2), threshold });
     // Fix: Changed reasoning from a joined string to an array.
     return { action: { type: ActionType.DECLINE, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.NO_QUIERO) } }, reasoning: [...reasoning, decisionReason], reasonKey: 'decline_truco_low_equity' };
   }
@@ -540,7 +553,7 @@ export const getTrucoCall = (state: GameState, gamePressure: number): AiMove | n
           } else { actionType = ActionType.CALL_VALE_CUATRO; phrases = PHRASE_KEYS.VALE_CUATRO; callName = 'VALE CUATRO'; }
 
           const blurbText = getRandomPhrase(phrases);
-          const trucoContext: AiTrucoContext = { strength: 1.0, isBluff: false }; // Strength is effectively 100%
+          const trucoContext: AiTrucoContext = { strength: 1.0, isBluff: false };
           // Fix: Changed reasoning from a joined string to an array.
           const reasoning = [t('ai_logic.opportunity_logic_parda_gano'), t('ai_logic.parda_gano_reasoning'), ...reasoningText, t('ai_logic.parda_gano_value_bet', { call: callName }), t('ai_logic.decision_parda_gano_escalate', { call: callName })];
           return { action: { type: actionType, payload: { blurbText, trucoContext } }, reasoning: reasoning, reasonKey: 'call_truco_parda_y_gano' };
@@ -654,6 +667,17 @@ export const getTrucoCall = (state: GameState, gamePressure: number): AiMove | n
   let trucoContext: AiTrucoContext | null = null;
   const strengthThreshold = 0.65 - envidoLeak - (gamePressure * 0.15); // More desperate -> lower threshold to call for value
   let reasonKey: string | null = null;
+  
+  // NEW: Generate alternatives for Decision Spectrum
+  let alternatives: AiMove[] = [];
+  const safePlayMove = findBestCardToPlay(state);
+  alternatives.push({
+      ...safePlayMove,
+      action: { type: ActionType.PLAY_CARD, payload: { player: 'ai', cardIndex: safePlayMove.index }},
+      // The confidence of playing safe is the inverse of the confidence of winning with a Truco call. A simplification.
+      confidence: 1 - myStrength
+  });
+
 
   if (Math.random() < adjustedBluffChance && myStrength < 0.45 - envidoLeak) {
     decision = t('ai_logic.decision_bluff_truco_weak_hand');
@@ -668,8 +692,9 @@ export const getTrucoCall = (state: GameState, gamePressure: number): AiMove | n
   if (decision && trucoContext && reasonKey) {
     const blurbText = getRandomPhrase(PHRASE_KEYS.TRUCO);
     const action: Action = { type: ActionType.CALL_TRUCO, payload: { blurbText, trucoContext } };
+    const confidence = reasonKey === 'call_truco_bluff' ? adjustedBluffChance : myStrength;
     // Fix: Changed reasoning from a joined string to an array.
-    return { action, reasoning: [...reasonPrefix, `\n${decision}`], reasonKey };
+    return { action, reasoning: [...reasonPrefix, `\n${decision}`], reasonKey, confidence, alternatives };
   }
 
   return null;

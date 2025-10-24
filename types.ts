@@ -1,3 +1,4 @@
+
 // Fix: Created a dedicated types file to resolve circular dependencies and export all necessary types.
 
 export type Suit = 'espadas' | 'bastos' | 'oros' | 'copas';
@@ -245,6 +246,7 @@ export interface GameState {
   lastCaller: Player | null;
   turnBeforeInterrupt: Player | null;
   pendingTrucoCaller: Player | null;
+  isFlorEnabled: boolean;
   hasEnvidoBeenCalledThisRound: boolean;
   hasRealEnvidoBeenCalledThisSequence: boolean;
   hasFaltaEnvidoBeenCalledThisSequence: boolean;
@@ -306,6 +308,8 @@ export interface AiMove {
   reasoning: (string | MessageObject)[];
   summary?: string;
   reasonKey?: string;
+  confidence?: number;
+  alternatives?: AiMove[];
 }
 
 export enum ActionType {
@@ -362,7 +366,7 @@ export type Action =
   | { type: ActionType.ADD_AI_REASONING_LOG; payload: AiReasoningEntry }
   | { type: ActionType.TOGGLE_AI_LOG_EXPAND }
   | { type: ActionType.TOGGLE_GAME_LOG_EXPAND }
-  | { type: ActionType.RESTART_GAME }
+  | { type: ActionType.RESTART_GAME; payload?: { isFlorEnabled: boolean } }
   | { type: ActionType.START_NEW_ROUND }
   | { type: ActionType.PROCEED_TO_NEXT_ROUND }
   | { type: ActionType.PLAY_CARD; payload: { player: Player; cardIndex: number } }

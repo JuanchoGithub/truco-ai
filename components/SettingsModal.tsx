@@ -12,6 +12,8 @@ interface SettingsModalProps {
   onOpponentVoiceChange: (uri: string) => void;
   assistantVoiceURI: string;
   onAssistantVoiceChange: (uri: string) => void;
+  isFlorEnabled: boolean;
+  onToggleFlor: () => void;
 }
 
 const VoiceSelector: React.FC<{
@@ -77,6 +79,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   onOpponentVoiceChange,
   assistantVoiceURI,
   onAssistantVoiceChange,
+  isFlorEnabled,
+  onToggleFlor,
 }) => {
   const { t, setLanguage, language } = useLocalization();
   const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
@@ -87,9 +91,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
         setAvailableVoices(voices);
     };
     
-    // Voices might load asynchronously. We listen for an event from the service.
     speechService.onVoicesLoaded(updateVoices);
-    updateVoices(); // Initial call in case they are already loaded
+    updateVoices();
 
     return () => {
         speechService.offVoicesLoaded(updateVoices);
@@ -142,6 +145,21 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                         onVoiceChange={onAssistantVoiceChange}
                         testPhrase={t('settingsModal.test_phrase_assistant')}
                     />
+                </div>
+            </div>
+            
+            <div>
+                <h3 className="text-lg font-semibold text-gray-200 mb-2">{t('settingsModal.rules')}</h3>
+                <div className="bg-black/20 p-4 rounded-md">
+                    <div className="flex items-center justify-between">
+                        <span className="text-gray-200">{t('settingsModal.flor_enabled')}</span>
+                        <button
+                            onClick={onToggleFlor}
+                            className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-yellow-500 ${ isFlorEnabled ? 'bg-green-600' : 'bg-gray-600' }`}
+                        >
+                            <span className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${ isFlorEnabled ? 'translate-x-6' : 'translate-x-1' }`} />
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

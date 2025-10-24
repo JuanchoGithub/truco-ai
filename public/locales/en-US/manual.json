@@ -258,9 +258,8 @@
       "p2_strong1": "Truco",
       "p2_2": ", a bet on who will win the 'tricks' (rounds of cards), and the ",
       "p2_strong2": "Envido",
-      "p2_3": ", a bet on who has the best combination of same-suited cards. This application simulates the Argentine variant of the game, with the particularity of the ",
-      "p2_strong3": "Flor",
-      "p2_4": "."
+      "p2_3_base": ", a bet on who has the best combination of same-suited cards. This application simulates the Argentine variant of the game.",
+      "p2_flor_addon": " with the particularity of the Flor."
     }
   }
 }

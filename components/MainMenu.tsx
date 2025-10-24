@@ -5,7 +5,7 @@ import { useLocalization } from '../context/LocalizationContext';
 import SettingsModal from './SettingsModal';
 
 interface MainMenuProps {
-  onStartGame: (mode: 'playing' | 'playing-with-help', continueGame: boolean) => void;
+  onStartGame: (mode: 'playing' | 'playing-with-help', continueGame: boolean, options: { isFlorEnabled: boolean }) => void;
   onLearn: () => void;
   onManual: () => void;
   onSimulate: () => void;
@@ -48,6 +48,10 @@ const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onLearn, onManual, onS
   });
   const [opponentVoiceURI, setOpponentVoiceURI] = useState(() => localStorage.getItem('trucoAiOpponentVoiceURI') || 'auto');
   const [assistantVoiceURI, setAssistantVoiceURI] = useState(() => localStorage.getItem('trucoAiAssistantVoiceURI') || 'auto');
+  const [isFlorEnabled, setIsFlorEnabled] = useState(() => {
+    const saved = localStorage.getItem('trucoAiFlorEnabled');
+    return saved !== null ? JSON.parse(saved) : true; // default to true
+  });
 
   const handleToggleOpponentSound = () => {
     setIsOpponentSoundEnabled(prev => {
@@ -73,6 +77,14 @@ const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onLearn, onManual, onS
     setAssistantVoiceURI(uri);
     localStorage.setItem('trucoAiAssistantVoiceURI', uri);
   };
+  
+  const handleToggleFlor = () => {
+    setIsFlorEnabled(prev => {
+      const newValue = !prev;
+      localStorage.setItem('trucoAiFlorEnabled', JSON.stringify(newValue));
+      return newValue;
+    });
+  };
 
   const handlePlayClick = (mode: 'playing' | 'playing-with-help') => {
     const savedState = loadStateFromStorage(mode);
@@ -80,20 +92,20 @@ const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onLearn, onManual, onS
     if (savedState && savedState.round && savedState.round > 0 && !savedState.winner) {
       setConfirmModal({ isOpen: true, mode });
     } else {
-      onStartGame(mode, false);
+      onStartGame(mode, false, { isFlorEnabled });
     }
   };
 
   const handleContinue = () => {
     if (confirmModal.mode) {
-      onStartGame(confirmModal.mode, true);
+      onStartGame(confirmModal.mode, true, { isFlorEnabled });
       setConfirmModal({ isOpen: false, mode: null });
     }
   };
 
   const handleNewGame = () => {
     if (confirmModal.mode) {
-      onStartGame(confirmModal.mode, false);
+      onStartGame(confirmModal.mode, false, { isFlorEnabled });
       setConfirmModal({ isOpen: false, mode: null });
     }
   };
@@ -181,6 +193,8 @@ const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onLearn, onManual, onS
           onOpponentVoiceChange={handleOpponentVoiceChange}
           assistantVoiceURI={assistantVoiceURI}
           onAssistantVoiceChange={handleAssistantVoiceChange}
+          isFlorEnabled={isFlorEnabled}
+          onToggleFlor={handleToggleFlor}
         />
       )}
     </div>

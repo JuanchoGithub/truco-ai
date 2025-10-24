@@ -154,10 +154,12 @@ const App: React.FC = () => {
     const isResolving = state.gamePhase.includes('_ACCEPTED') ||
                         state.gamePhase.includes('_DECLINED') ||
                         state.gamePhase.includes('_SHOWDOWN');
+                        
+    const isPlayerRespondingToCall = state.gamePhase.includes('_called');
 
     const canSuggest = gameMode === 'playing-with-help' &&
                        state.currentTurn === 'player' &&
-                       state.playerHand.length > 0 &&
+                       (state.playerHand.length > 0 || isPlayerRespondingToCall) && // Allow suggestions on response even with 0 cards
                        !state.winner &&
                        !state.isThinking &&
                        !isResolving &&
@@ -187,6 +189,9 @@ const App: React.FC = () => {
               aiHasFlor: currentState.playerHasFlor,
               mano: currentState.mano === 'player' ? 'ai' : 'player',
               lastRoundWinner: currentState.lastRoundWinner === 'player' ? 'ai' : currentState.lastRoundWinner === 'ai' ? 'player' : currentState.lastRoundWinner,
+              // The assistant is playing against the main AI. To make its advice objective,
+              // it should use a neutral opponent model, not the one tailored to the human player.
+              opponentModel: initialState.opponentModel,
               // Flip context-sensitive properties
               lastCaller: currentState.lastCaller === 'player' ? 'ai' : (currentState.lastCaller === 'ai' ? 'player' : null),
               turnBeforeInterrupt: currentState.turnBeforeInterrupt === 'player' ? 'ai' : (currentState.turnBeforeInterrupt === 'ai' ? 'player' : null),
@@ -213,7 +218,16 @@ const App: React.FC = () => {
       try {
           const suggestion = getPlayerSuggestion(state);
           const summary = generateSuggestionSummary(suggestion, state);
-          const suggestionWithSummary: AiMove = { ...suggestion, summary };
+          let suggestionWithSummary: AiMove = { ...suggestion, summary };
+          
+          // NEW: If the suggestion has alternatives, generate summaries for them too.
+          if (suggestionWithSummary.alternatives) {
+              suggestionWithSummary.alternatives = suggestionWithSummary.alternatives.map(alt => ({
+                  ...alt,
+                  summary: generateSuggestionSummary(alt, state)
+              }));
+          }
+
           setAssistantMove(suggestionWithSummary);
       } catch(error) {
           console.error("Error getting player suggestion:", error);
@@ -379,12 +393,12 @@ const App: React.FC = () => {
     }
   };
 
-  const handleStartGame = (mode: 'playing' | 'playing-with-help', continueGame: boolean) => {
+  const handleStartGame = (mode: 'playing' | 'playing-with-help', continueGame: boolean, options: { isFlorEnabled: boolean }) => {
     if (continueGame) {
       setGameMode(mode);
     } else {
       saveCurrentGame();
-      dispatch({ type: ActionType.RESTART_GAME });
+      dispatch({ type: ActionType.RESTART_GAME, payload: { isFlorEnabled: options.isFlorEnabled } });
       justStartedNewGame.current = true;
       setGameMode(mode);
     }
@@ -406,7 +420,7 @@ const App: React.FC = () => {
   }
   
   if (gameMode === 'manual') {
-    return <Manual onExit={() => setGameMode('menu')} />;
+    return <Manual onExit={() => setGameMode('menu')} isFlorEnabled={state.isFlorEnabled} />;
   }
   
   if (gameMode === 'simulation') {
@@ -419,7 +433,7 @@ const App: React.FC = () => {
 
   const handlePlayAgain = () => {
     saveCurrentGame();
-    dispatch({ type: ActionType.RESTART_GAME });
+    dispatch({ type: ActionType.RESTART_GAME, payload: { isFlorEnabled: state.isFlorEnabled } });
   };
 
   const isSoundOnForMenu = gameMode === 'playing' ? isOpponentSoundEnabled : isAssistantSoundEnabled;

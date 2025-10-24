@@ -40,6 +40,8 @@
     "show_ai_logic_aria": "Show AI Logic"
   },
   "actionBar": {
+    "play_card": "Play Card",
+    "decline": "I don't want it",
     "next_round": "Next Round",
     "quiero": "I want it!",
     "no_quiero": "I don't want it",
@@ -149,7 +151,9 @@
     "hide_logic": "Hide Logic",
     "open_aria_label": "Open AI Assistant",
     "close_aria_label": "Close AI Assistant",
-    "summon_message": "You can summon me again by clicking on my face on the bottom right."
+    "summon_message": "You can summon me again by clicking on my face on the bottom right.",
+    "alternatives_title": "Alternative Plays",
+    "confidence": "Confidence"
   },
   "settingsModal": {
     "title": "Settings",
@@ -160,6 +164,8 @@
     "test_voice": "Test",
     "select_voice": "Auto (Browser Default)",
     "test_phrase_opponent": "Hello, I'm TRUCAI! Let's hear that Envido!",
-    "test_phrase_assistant": "Hey! I'm going to help you play TRUCO today!"
+    "test_phrase_assistant": "Hey! I'm going to help you play TRUCO today!",
+    "rules": "Game Rules",
+    "flor_enabled": "Enable 'Flor'"
   }
 }

@@ -76,12 +76,15 @@ const AssistantPanel: React.FC<AssistantPanelProps> = ({ suggestion, playerHand 
 
   const suggestionText = suggestion.summary || getSimpleSuggestionText(suggestion, playerHand);
 
-  // Fix: Process the reasoning array into a displayable string.
   const reasoningText = Array.isArray(suggestion.reasoning)
     ? suggestion.reasoning.map(r => {
         if (typeof r === 'string') return r;
         
         const options: { [key: string]: any } = { ...r.options };
+
+        if (options.statusKey) {
+            options.status = t(`ai_logic.statuses.${options.statusKey}`);
+        }
 
         // Handle card objects, arrays of cards, and suits
         for (const key in options) {
@@ -105,13 +108,13 @@ const AssistantPanel: React.FC<AssistantPanelProps> = ({ suggestion, playerHand 
       <>
         <button
           onClick={handleOpenFromButton}
-          className="fixed bottom-4 right-4 w-16 h-16 bg-green-600 rounded-full shadow-lg flex items-center justify-center text-3xl text-white transform hover:scale-110 transition-transform z-50 animate-fade-in-scale border-4 border-green-400"
+          className="fixed bottom-20 right-4 w-16 h-16 bg-green-600 rounded-full shadow-lg flex items-center justify-center text-3xl text-white transform hover:scale-110 transition-transform z-50 animate-fade-in-scale border-4 border-green-400"
           aria-label={t('assistantPanel.open_aria_label')}
         >
           🤖
         </button>
         {toastMessage && (
-            <div className="fixed bottom-24 right-4 p-3 bg-blue-800 text-white text-sm rounded-lg shadow-lg z-50 animate-fade-in-scale">
+            <div className="fixed bottom-40 right-4 p-3 bg-blue-800 text-white text-sm rounded-lg shadow-lg z-50 animate-fade-in-scale">
                 {toastMessage}
             </div>
         )}
@@ -120,7 +123,7 @@ const AssistantPanel: React.FC<AssistantPanelProps> = ({ suggestion, playerHand 
   }
 
   return (
-    <div ref={panelRef} className="fixed bottom-4 right-4 w-80 lg:w-96 bg-gray-900/95 border-2 border-green-400 rounded-lg shadow-2xl shadow-green-500/20 z-50 text-white animate-fade-in-scale">
+    <div ref={panelRef} className="fixed bottom-20 right-4 w-80 lg:w-96 bg-gray-900/95 border-2 border-green-400 rounded-lg shadow-2xl shadow-green-500/20 z-50 text-white animate-fade-in-scale">
       <div className="p-3 border-b border-green-400/30 flex justify-between items-center">
         <h3 className="font-bold text-green-300 font-cinzel tracking-wider flex items-center gap-2">
           <span className="text-xl">🤖</span> {t('assistantPanel.title')}
@@ -134,22 +137,64 @@ const AssistantPanel: React.FC<AssistantPanelProps> = ({ suggestion, playerHand 
         </button>
       </div>
       <div className="p-3">
-        <p className="font-semibold text-lg text-yellow-200">
-          {suggestionText}
-        </p>
-        <button
-          onClick={() => setShowLogic(!showLogic)}
-          className="text-xs mt-2 px-3 py-1 rounded-md font-semibold text-green-200 bg-black/40 border border-green-700/80 shadow-sm hover:bg-black/60 hover:border-green-600 transition-colors"
-        >
-          {showLogic ? t('assistantPanel.hide_logic') : t('assistantPanel.show_logic')}
-        </button>
-        {showLogic && (
-          <div className="mt-2 p-2 bg-black/50 rounded max-h-48 overflow-y-auto">
-            <pre className="text-xs text-gray-300 whitespace-pre-wrap font-mono">
-              {reasoningText}
-            </pre>
-          </div>
+        {/* Primary Suggestion */}
+        <div className="mb-3">
+            <div className="flex justify-between items-start gap-2">
+                <p className="font-semibold text-lg text-yellow-200 flex-1">
+                    {suggestionText}
+                </p>
+                {suggestion.confidence && (
+                    <div className="flex-shrink-0 flex flex-col items-center">
+                        <span className="text-sm font-mono text-yellow-200 bg-yellow-900/50 px-2 py-0.5 rounded">
+                            {(suggestion.confidence * 100).toFixed(0)}%
+                        </span>
+                        <span className="text-xs text-yellow-400">{t('assistantPanel.confidence')}</span>
+                    </div>
+                )}
+            </div>
+        </div>
+
+        {/* Alternatives */}
+        {suggestion.alternatives && suggestion.alternatives.length > 0 && (
+            <div className="border-t border-green-400/30 pt-3">
+                <h4 className="text-sm font-bold text-gray-300 mb-2">{t('assistantPanel.alternatives_title')}</h4>
+                <div className="space-y-3">
+                    {suggestion.alternatives.map((alt, index) => (
+                        <div key={index}>
+                            <div className="flex justify-between items-start text-sm gap-2">
+                                <p className="text-gray-200 flex-1">
+                                    {alt.summary}
+                                </p>
+                                {alt.confidence && (
+                                    <div className="flex-shrink-0 flex flex-col items-center">
+                                        <span className="text-xs font-mono text-gray-200 bg-gray-700/50 px-2 py-0.5 rounded">
+                                            {(alt.confidence * 100).toFixed(0)}%
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
         )}
+
+        {/* Logic Button */}
+        <div className="mt-4 border-t border-green-400/30 pt-3">
+            <button
+              onClick={() => setShowLogic(!showLogic)}
+              className="text-xs px-3 py-1 rounded-md font-semibold text-green-200 bg-black/40 border border-green-700/80 shadow-sm hover:bg-black/60 hover:border-green-600 transition-colors"
+            >
+              {showLogic ? t('assistantPanel.hide_logic') : t('assistantPanel.show_logic')}
+            </button>
+            {showLogic && (
+              <div className="mt-2 p-2 bg-black/50 rounded max-h-48 overflow-y-auto">
+                <pre className="text-xs text-gray-300 whitespace-pre-wrap font-mono">
+                  {reasoningText}
+                </pre>
+              </div>
+            )}
+        </div>
       </div>
     </div>
   );
