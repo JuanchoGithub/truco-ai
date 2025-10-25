@@ -206,7 +206,77 @@ export function useGameReducer(state: GameState, action: Action): GameState {
             envidoPrimeroCalls: 0,
             messageLog: [...state.messageLog, { key: 'dataModal.reset_confirmation' }],
         };
-    case ActionType.LOAD_IMPORTED_DATA:
+    case ActionType.LOAD_IMPORTED_DATA: {
+        const loadedProfile = action.payload;
+        if (!loadedProfile || !loadedProfile.opponentModel) return state;
+
+        // --- Data Migration for legacy profiles ---
+        let migratedPlayerEnvidoHistory = loadedProfile.playerEnvidoHistory || [];
+        // Check for old format: { called: boolean, points: number }
+        if (migratedPlayerEnvidoHistory.length > 0 && migratedPlayerEnvidoHistory[0].hasOwnProperty('called')) {
+            migratedPlayerEnvidoHistory = (migratedPlayerEnvidoHistory as any[]).map(oldEntry => {
+                const roundInfo = loadedProfile.roundHistory?.find(r => r.round === oldEntry.round);
+                const wasMano = roundInfo ? roundInfo.mano === 'player' : false; // Best guess if round not found
+                return {
+                    round: oldEntry.round,
+                    envidoPoints: oldEntry.points,
+                    action: oldEntry.called ? 'called' : 'did_not_call',
+                    wasMano: wasMano,
+                };
+            });
+        }
+        
+        let migratedPlayerPlayOrderHistory = loadedProfile.playerPlayOrderHistory || [];
+        if (migratedPlayerPlayOrderHistory.length > 0 && migratedPlayerPlayOrderHistory[0].hasOwnProperty('order')) {
+            migratedPlayerPlayOrderHistory = []; // Cannot migrate this data, reset it.
+        }
+
+        let migratedPlayerTrucoCallHistory = loadedProfile.playerTrucoCallHistory || [];
+        if (migratedPlayerTrucoCallHistory.length > 0 && migratedPlayerTrucoCallHistory[0].hasOwnProperty('called')) {
+            migratedPlayerTrucoCallHistory = []; // Cannot migrate this data, reset it.
+        }
+        
+        let migratedPlayerEnvidoFoldHistory = loadedProfile.playerEnvidoFoldHistory || [];
+        if (migratedPlayerEnvidoFoldHistory.length > 0 && typeof migratedPlayerEnvidoFoldHistory[0] !== 'boolean') {
+             migratedPlayerEnvidoFoldHistory = (migratedPlayerEnvidoFoldHistory as any[]).map(e => e.folded);
+        }
+
+        let migratedPlayerTrucoFoldHistory = loadedProfile.playerTrucoFoldHistory || [];
+        if (migratedPlayerTrucoFoldHistory.length > 0 && typeof migratedPlayerTrucoFoldHistory[0] !== 'boolean') {
+             migratedPlayerTrucoFoldHistory = (migratedPlayerTrucoFoldHistory as any[]).map(e => e.folded);
+        }
+        // --- End Data Migration ---
+
+        const restoredState: GameState = {
+            ...initialState,
+            // Carry over imported profile data, using migrated versions where necessary
+            opponentModel: loadedProfile.opponentModel || initialState.opponentModel,
+            aiCases: loadedProfile.aiCases || [],
+            playerEnvidoHistory: migratedPlayerEnvidoHistory,
+            playerPlayOrderHistory: migratedPlayerPlayOrderHistory,
+            playerCardPlayStats: loadedProfile.playerCardPlayStats || createInitialCardPlayStats(),
+            roundHistory: loadedProfile.roundHistory || [],
+            playerEnvidoFoldHistory: migratedPlayerEnvidoFoldHistory,
+            playerTrucoCallHistory: migratedPlayerTrucoCallHistory,
+            playerTrucoFoldHistory: migratedPlayerTrucoFoldHistory,
+            envidoPrimeroOpportunities: loadedProfile.envidoPrimeroOpportunities || 0,
+            envidoPrimeroCalls: loadedProfile.envidoPrimeroCalls || 0,
+            aiReasoningLog: loadedProfile.aiReasoningLog || [],
+            
+            // Carry over user settings from current state
+            isDebugMode: state.isDebugMode,
+            isFlorEnabled: state.isFlorEnabled,
+
+            // Explicitly reset game state for a new match
+            playerScore: 0,
+            aiScore: 0,
+            round: 0,
+            mano: 'player',
+            messageLog: [{ key: 'game.profile_imported', type: 'round_separator' }],
+        };
+
+        return handleStartNewRound(restoredState, { type: ActionType.START_NEW_ROUND });
+    }
     case ActionType.LOAD_PERSISTED_STATE: {
         const loadedState = action.payload;
         if (!loadedState) return state;
@@ -245,9 +315,7 @@ export function useGameReducer(state: GameState, action: Action): GameState {
             aiScore: loadedState.aiScore || 0,
             
             // Set a message indicating session restoration or import
-            messageLog: action.type === ActionType.LOAD_PERSISTED_STATE
-              ? [...(loadedState.messageLog || []), { key: 'game.session_restored', type: 'round_separator' }]
-              : [{ key: 'game.profile_imported', type: 'round_separator' }],
+            messageLog: [...(loadedState.messageLog || []), { key: 'game.session_restored', type: 'round_separator' }],
 
             // Continue the game by setting the correct mano for the *next* round
             mano: loadedState.mano || 'player',

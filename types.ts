@@ -1,4 +1,3 @@
-
 // Fix: Created a dedicated types file to resolve circular dependencies and export all necessary types.
 
 export type Suit = 'espadas' | 'bastos' | 'oros' | 'copas';

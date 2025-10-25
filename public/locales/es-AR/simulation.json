@@ -79,6 +79,36 @@
       "error_quota_retry": "Se excedió la cuota de la API. Reintentando automáticamente en 30 segundos...",
       "error_quota_manual": "El reintento automático falló. Por favor, reintenta manualmente.",
       "retry_button": "Reintentar Jugada"
+    },
+    "batchAnalyzer": {
+      "title": "Analizador de Manos",
+      "description": "Esta herramienta calcula la fuerza heurística ('Valor Truco') y la evaluación de la IA (fuerza de simulación) para {{count}} combinaciones de manos estratégicamente únicas.",
+      "button_analyze": "Analizar Todas las Manos",
+      "loading": "Analizando... ({{progress}}%)",
+      "copy_button": "Copiar TSV",
+      "copy_button_copied": "¡Copiado!",
+      "copy_button_error": "Error",
+      "copy_tooltip": "Copiar datos como TSV (para hojas de cálculo)",
+      "header_hand": "Mano",
+      "header_truco_value": "Valor Truco",
+      "header_ai_assessment": "Evaluación IA",
+      "simple_card_names": {
+        "as_de_espadas": "As E",
+        "as_de_bastos": "As B",
+        "ancho_falso": "Ancho Falso",
+        "siete_de_espadas": "7 E",
+        "siete_de_oros": "7 O",
+        "siete_falso": "7 Falso",
+        "tres": "3",
+        "dos": "2",
+        "rey": "Rey",
+        "caballo": "Caballo",
+        "sota": "Sota",
+        "seis": "6",
+        "cinco": "5",
+        "cuatro": "4",
+        "default": "{{rank}} {{suit}}"
+      }
     }
   },
   "simulation_actions": {
