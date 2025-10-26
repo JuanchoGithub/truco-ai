@@ -126,8 +126,18 @@ export const getLocalAIMove = (state: GameState): AiMove => {
         let alternatives: AiMove[] = [];
 
         // Determine all possible strategic moves
-        const singingMove = getFlorCallOrEnvidoCall(state, gamePressure);
-        const trucoMove = getTrucoCall(state, gamePressure);
+        let singingMove: AiMove | null = null;
+        // FIX: Only consider singing (Envido/Flor) if it's legal to do so.
+        if (currentTrick === 0 && !hasEnvidoBeenCalledThisRound) {
+            singingMove = getFlorCallOrEnvidoCall(state, gamePressure);
+        }
+        
+        // Similarly, only consider Truco if not in an Envido/Flor phase.
+        let trucoMove: AiMove | null = null;
+        if (!gamePhase.includes('envido') && !gamePhase.includes('flor')) {
+            trucoMove = getTrucoCall(state, gamePressure);
+        }
+        
         const safeCardPlay = findBestCardToPlay(state);
         const baitCardPlay = findBaitCard(state.aiHand);
         
