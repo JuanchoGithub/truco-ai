@@ -1,6 +1,6 @@
 // Fix: Moved the game reducer logic from the misnamed types.ts to its correct location here.
 // This file now contains the full, correct reducer implementation for the game.
-import { GameState, Action, ActionType, AiDecisionContext, MessageObject } from '../types';
+import { GameState, Action, ActionType, AiDecisionContext, MessageObject, AiArchetype } from '../types';
 import { handleRestartGame, handleStartNewRound, handlePlayCard } from './reducers/gameplayReducer';
 // Fix: Corrected typo in function name from 'handleCallFalfaEnvido' to 'handleCallFaltaEnvido'.
 import { handleCallEnvido, handleCallRealEnvido, handleCallFaltaEnvido, handleDeclareFlor, handleRespondToEnvidoWithFlor, handleCallContraflor } from './reducers/envidoReducer';
@@ -76,6 +76,7 @@ export const initialState: GameState = {
   },
   aiCases: [],
   aiDecisionContext: null,
+  aiArchetype: 'Balanced',
   // Probabilistic Opponent Modeling
   opponentHandProbabilities: null,
   playerEnvidoValue: null,

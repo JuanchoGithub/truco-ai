@@ -218,6 +218,8 @@ export interface CardConstraint {
   maxHierarchy?: number;
 }
 
+export type AiArchetype = 'Balanced' | 'Aggressive' | 'Cautious' | 'Deceptive';
+
 export interface GameState {
   deck: Card[];
   playerHand: Card[];
@@ -266,6 +268,7 @@ export interface GameState {
   opponentModel: OpponentModel;
   aiCases: Case[];
   aiDecisionContext: AiDecisionContext | null;
+  aiArchetype: AiArchetype;
   
   // New: Probabilistic Opponent Modeling
   opponentHandProbabilities: OpponentHandProbabilities | null;

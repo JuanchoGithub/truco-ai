@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { Card, GameState, AiMove, Player, GamePhase, MessageObject, Action, ActionType } from '../types';
+import { Card, GameState, AiMove, Player, GamePhase, MessageObject, Action, ActionType, AiArchetype } from '../types';
 import { hasFlor } from '../services/trucoLogic';
 import { initialState } from '../hooks/useGameReducer';
 import { getLocalAIMove } from '../services/localAiService';
@@ -11,6 +11,7 @@ import { defaultExpectedResultsData } from '../services/baselineData';
 interface ScenarioResult {
     nameKey: string;
     results: Record<string, number>;
+    byArchetype: Record<string, Record<string, number>>;
     totalRuns: number;
 }
 interface ExpectedScenarioResult {
@@ -158,6 +159,33 @@ const ScenarioResultRow: React.FC<{
                     })}
                     </tbody>
                 </table>
+                
+                <h4 className="text-base font-bold text-cyan-200 mt-4 mb-2 pt-2 border-t border-cyan-800/50">{t('scenario_runner.results_by_archetype_title')}</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {Object.entries(result.byArchetype).map(([archetype, archResults]) => {
+                        const totalForArch = Object.values(archResults).reduce((s, c) => s + c, 0);
+                        if (totalForArch === 0) return null;
+
+                        const sortedArchResults = Object.entries(archResults).sort((a, b) => b[1] - a[1]);
+
+                        return (
+                            <div key={archetype} className="bg-gray-900/50 p-3 rounded-lg border border-gray-700">
+                                <h5 className="font-semibold text-cyan-300 mb-2">{t(`ai_logic.archetypes.${archetype}`)}</h5>
+                                <ul className="text-xs space-y-1">
+                                    {sortedArchResults.map(([reason, count]) => {
+                                        const freq = (count / totalForArch) * 100;
+                                        return (
+                                            <li key={reason} className="flex justify-between items-center gap-2">
+                                                <span className="truncate text-gray-300" title={t(`ai_reason_keys.${reason}`, { defaultValue: reason })}>{t(`ai_reason_keys.${reason}`, { defaultValue: reason })}</span>
+                                                <div className="flex-shrink-0 font-mono text-gray-100">{freq.toFixed(1)}% <span className="text-gray-400">({count})</span></div>
+                                            </li>
+                                        );
+                                    })}
+                                </ul>
+                            </div>
+                        );
+                    })}
+                </div>
             </div>
         </details>
     );
@@ -178,9 +206,43 @@ const ScenarioRunner: React.FC = () => {
     const cancelRef = useRef(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
+    const [archetypesToInclude, setArchetypesToInclude] = useState<Record<AiArchetype, boolean>>({
+        Balanced: true,
+        Aggressive: true,
+        Cautious: true,
+        Deceptive: true,
+    });
+
     const handleRun = async () => {
         setIsRunning(true);
-        const initialResults = predefinedScenarios.map(s => ({ nameKey: s.nameKey, results: {}, totalRuns: 0 }));
+        const archetypesToRun = (Object.keys(archetypesToInclude) as AiArchetype[]).filter(
+            arch => archetypesToInclude[arch]
+        );
+
+        if (archetypesToRun.length === 0) {
+            alert("Please select at least one archetype to run.");
+            setIsRunning(false);
+            return;
+        }
+    
+        const iterationsPerArchetype = Math.floor(iterations / archetypesToRun.length);
+        if (iterationsPerArchetype < 1) {
+            alert(`Iterations must be at least the number of archetypes selected (${archetypesToRun.length}).`);
+            setIsRunning(false);
+            return;
+        }
+
+        const totalSims = iterationsPerArchetype * archetypesToRun.length * predefinedScenarios.length;
+        let simsCompleted = 0;
+
+        const initialResults: ScenarioResult[] = predefinedScenarios.map(s => {
+            const byArchetype: Record<string, Record<string, number>> = {};
+            archetypesToRun.forEach(arch => {
+                byArchetype[arch] = {};
+            });
+            return { nameKey: s.nameKey, results: {}, byArchetype, totalRuns: 0 };
+        });
+
         setResults(initialResults);
         setProgress({ currentScenario: 0, totalScenarios: predefinedScenarios.length, overallProgress: 0, scenarioName: '' });
         cancelRef.current = false;
@@ -191,41 +253,56 @@ const ScenarioRunner: React.FC = () => {
             if (cancelRef.current) break;
 
             const scenario = predefinedScenarios[i];
-            const currentScenarioResult = { results: {}, totalRuns: 0 };
             
-            for (let j = 0; j < iterations; j++) {
+            const byArchetype: Record<string, Record<string, number>> = {};
+            archetypesToRun.forEach(arch => { byArchetype[arch] = {}; });
+            const currentScenarioResult = { results: {}, byArchetype, totalRuns: 0 };
+
+            for (const archetype of archetypesToRun) {
+                for (let j = 0; j < iterationsPerArchetype; j++) {
+                    if (cancelRef.current) break;
+
+                    const hands = scenario.generateHands();
+                    if (hands) {
+                        const { aiHand, playerHand } = hands;
+                        const baseState = scenario.baseState;
+                        const isRespondingToTruco = (baseState.gamePhase || '').includes('truco_called');
+                        const envidoWindowClosed = (baseState.trucoLevel || 0) > 0 && !isRespondingToTruco;
+
+                        const scenarioState: GameState = {
+                            ...initialState, ...baseState,
+                            aiArchetype: archetype,
+                            aiScore: baseState.aiScore || 0, playerScore: baseState.playerScore || 0,
+                            aiHand, initialAiHand: aiHand,
+                            playerHand, initialPlayerHand: playerHand,
+                            aiHasFlor: hasFlor(aiHand), playerHasFlor: hasFlor(playerHand),
+                            hasEnvidoBeenCalledThisRound: baseState.hasEnvidoBeenCalledThisRound || envidoWindowClosed,
+                        };
+
+                        const aiMove = getLocalAIMove(scenarioState);
+                        const reason = aiMove.reasonKey || 'unknown_action';
+                        
+                        currentScenarioResult.results[reason] = (currentScenarioResult.results[reason] || 0) + 1;
+                        currentScenarioResult.byArchetype[archetype][reason] = (currentScenarioResult.byArchetype[archetype][reason] || 0) + 1;
+                        currentScenarioResult.totalRuns++;
+                    }
+
+                    simsCompleted++;
+                }
                 if (cancelRef.current) break;
-
-                const hands = scenario.generateHands();
-                if (hands) {
-                    const { aiHand, playerHand } = hands;
-                    const baseState = scenario.baseState;
-                    const isRespondingToTruco = (baseState.gamePhase || '').includes('truco_called');
-                    const envidoWindowClosed = (baseState.trucoLevel || 0) > 0 && !isRespondingToTruco;
-
-                    const scenarioState: GameState = {
-                        ...initialState, ...baseState,
-                        aiScore: baseState.aiScore || 0, playerScore: baseState.playerScore || 0,
-                        aiHand, initialAiHand: aiHand,
-                        playerHand, initialPlayerHand: playerHand,
-                        aiHasFlor: hasFlor(aiHand), playerHasFlor: hasFlor(playerHand),
-                        hasEnvidoBeenCalledThisRound: baseState.hasEnvidoBeenCalledThisRound || envidoWindowClosed,
-                    };
-
-                    const aiMove = getLocalAIMove(scenarioState);
-                    const reason = aiMove.reasonKey || 'unknown_action';
-                    currentScenarioResult.results[reason] = (currentScenarioResult.results[reason] || 0) + 1;
-                    currentScenarioResult.totalRuns++;
-                }
-
-                if (j % 50 === 0) {
-                    const overallProgress = ((i * iterations + j) / (predefinedScenarios.length * iterations)) * 100;
-                    setProgress({ currentScenario: i + 1, totalScenarios: predefinedScenarios.length, scenarioName: t(scenario.nameKey), overallProgress });
-                    await new Promise(resolve => setTimeout(resolve, 0));
-                }
             }
+
+            const overallProgress = (simsCompleted / totalSims) * 100;
+            setProgress({ 
+                currentScenario: i + 1, 
+                totalScenarios: predefinedScenarios.length, 
+                scenarioName: t(scenario.nameKey), 
+                overallProgress 
+            });
+
             accumulatedResults[i] = { ...accumulatedResults[i], ...currentScenarioResult };
             setResults([...accumulatedResults]);
+            await new Promise(resolve => setTimeout(resolve, 0));
         }
         
         setProgress(prev => ({ ...prev, overallProgress: cancelRef.current ? prev.overallProgress : 100, currentScenario: cancelRef.current ? prev.currentScenario : predefinedScenarios.length }));
@@ -293,24 +370,43 @@ const ScenarioRunner: React.FC = () => {
             <div className="flex-shrink-0 bg-black/30 p-4 rounded-lg border border-cyan-700/50 space-y-3">
                 <h2 className="text-xl font-bold text-cyan-200">{t('scenario_runner.title')}</h2>
                 <p className="text-sm text-gray-300 max-w-3xl">{t('scenario_runner.description')}</p>
-                <div className="flex items-end gap-4 flex-wrap">
-                    <div>
-                        <label htmlFor="deviation" className="block text-sm font-medium text-gray-300">{t('scenario_runner.deviation_label')}</label>
-                        <input type="number" id="deviation" value={deviation} onChange={e => setDeviation(Math.max(0, parseInt(e.target.value) || 10))} disabled={isRunning} className="w-24 p-1 bg-gray-800 border border-gray-600 rounded-md" step="1" min="0" max="100"/>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex items-end gap-4 flex-wrap">
+                        <div>
+                            <label htmlFor="deviation" className="block text-sm font-medium text-gray-300">{t('scenario_runner.deviation_label')}</label>
+                            <input type="number" id="deviation" value={deviation} onChange={e => setDeviation(Math.max(0, parseInt(e.target.value) || 10))} disabled={isRunning} className="w-24 p-1 bg-gray-800 border border-gray-600 rounded-md" step="1" min="0" max="100"/>
+                        </div>
+                        <div>
+                            <label htmlFor="iterations" className="block text-sm font-medium text-gray-300">{t('scenario_runner.iterations_label')}</label>
+                            <input type="number" id="iterations" value={iterations} onChange={e => setIterations(Math.max(1, parseInt(e.target.value) || 1000))} disabled={isRunning} className="w-28 p-1 bg-gray-800 border border-gray-600 rounded-md" step="100"/>
+                        </div>
+                        {!isRunning ? (
+                            <button onClick={handleRun} className="px-6 py-2 rounded-lg font-bold text-white bg-green-600 border-b-4 border-green-800 hover:bg-green-500 transition-colors">{t('scenario_runner.run_button')}</button>
+                        ) : (
+                            <button onClick={handleCancel} className="px-6 py-2 rounded-lg font-bold text-white bg-red-600 border-b-4 border-red-800 hover:bg-red-500 transition-colors">{t('scenario_runner.cancel_button')}</button>
+                        )}
+                        <input type="file" ref={fileInputRef} onChange={handleFileChange} accept=".json" className="hidden" />
+                        <button onClick={handleImportClick} disabled={isRunning} className="px-6 py-2 rounded-lg font-bold text-white bg-blue-600 border-b-4 border-blue-800 hover:bg-blue-500 transition-colors disabled:bg-gray-500">{t('scenario_runner.import_button')}</button>
+                        <button onClick={handleExport} disabled={!results || isRunning} className="px-6 py-2 rounded-lg font-bold text-white bg-yellow-600 border-b-4 border-yellow-800 hover:bg-yellow-500 transition-colors disabled:bg-gray-500">{t('scenario_runner.export_button')}</button>
+                        {importStatus && <span className={`text-sm ${importStatus.includes('Error') ? 'text-red-400' : 'text-green-400'}`}>{importStatus}</span>}
                     </div>
-                    <div>
-                        <label htmlFor="iterations" className="block text-sm font-medium text-gray-300">{t('scenario_runner.iterations_label')}</label>
-                        <input type="number" id="iterations" value={iterations} onChange={e => setIterations(Math.max(1, parseInt(e.target.value) || 1000))} disabled={isRunning} className="w-28 p-1 bg-gray-800 border border-gray-600 rounded-md" step="100"/>
+                     <div>
+                        <h4 className="text-sm font-medium text-gray-300 mb-2">{t('scenario_runner.archetypes_title')}</h4>
+                        <div className="flex flex-wrap gap-x-4 gap-y-1">
+                            {(Object.keys(archetypesToInclude) as AiArchetype[]).map(arch => (
+                                <label key={arch} className="flex items-center gap-2 text-sm">
+                                    <input
+                                        type="checkbox"
+                                        checked={archetypesToInclude[arch]}
+                                        onChange={e => setArchetypesToInclude(prev => ({ ...prev, [arch]: e.target.checked }))}
+                                        disabled={isRunning}
+                                        className="h-4 w-4 rounded bg-gray-700 border-gray-600 text-cyan-500 focus:ring-cyan-600"
+                                    />
+                                    {t(`ai_logic.archetypes.${arch}`)}
+                                </label>
+                            ))}
+                        </div>
                     </div>
-                    {!isRunning ? (
-                        <button onClick={handleRun} className="px-6 py-2 rounded-lg font-bold text-white bg-green-600 border-b-4 border-green-800 hover:bg-green-500 transition-colors">{t('scenario_runner.run_button')}</button>
-                    ) : (
-                        <button onClick={handleCancel} className="px-6 py-2 rounded-lg font-bold text-white bg-red-600 border-b-4 border-red-800 hover:bg-red-500 transition-colors">{t('scenario_runner.cancel_button')}</button>
-                    )}
-                    <input type="file" ref={fileInputRef} onChange={handleFileChange} accept=".json" className="hidden" />
-                    <button onClick={handleImportClick} disabled={isRunning} className="px-6 py-2 rounded-lg font-bold text-white bg-blue-600 border-b-4 border-blue-800 hover:bg-blue-500 transition-colors disabled:bg-gray-500">{t('scenario_runner.import_button')}</button>
-                    <button onClick={handleExport} disabled={!results || isRunning} className="px-6 py-2 rounded-lg font-bold text-white bg-yellow-600 border-b-4 border-yellow-800 hover:bg-yellow-500 transition-colors disabled:bg-gray-500">{t('scenario_runner.export_button')}</button>
-                    {importStatus && <span className={`text-sm ${importStatus.includes('Error') ? 'text-red-400' : 'text-green-400'}`}>{importStatus}</span>}
                 </div>
             </div>
 

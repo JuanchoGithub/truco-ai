@@ -1,30 +1,256 @@
-import { GameState, ActionType, AiMove, Action, MessageObject, Card } from '../../types';
+import { GameState, ActionType, AiMove, Action, MessageObject, Card, AiArchetype } from '../../types';
 import { findBestCardToPlay, findBaitCard } from './playCardStrategy';
-import { getEnvidoResponse, getEnvidoCall, getFlorResponse, getFlorCallOrEnvidoCall } from './envidoStrategy';
-import { getTrucoResponse, getTrucoCall, calculateTrucoStrength } from './trucoStrategy';
+import { getEnvidoResponseOptions, getFlorResponse } from './envidoStrategy';
+import { getTrucoResponseOptions, getTrucoCall, calculateTrucoStrength, calculateTrucoMoveEV } from './trucoStrategy';
 import { getCardName, getEnvidoDetails, calculateHandStrength, getCardHierarchy } from '../trucoLogic';
 import { getRandomPhrase, PHRASE_KEYS } from './phrases';
 
-export const getLocalAIMove = (state: GameState): AiMove => {
-    const { gamePhase, currentTurn, lastCaller, currentTrick, hasEnvidoBeenCalledThisRound, aiHasFlor, playerHasFlor, hasFlorBeenCalledThisRound, playerTricks, aiTricks, trickWinners, aiScore, playerScore, opponentModel, trucoLevel, mano } = state;
-    let reasoning: (string | MessageObject)[] = [];
-    let move: AiMove | null = null;
+interface EvaluatedMove extends AiMove {
+    baseEv: number;
+    modifiedEv: number;
+}
 
-    // --- NEW: Game Pressure Calculation ---
+const archetypeModifiers: Record<AiArchetype, Partial<Record<string, number>>> = {
+    Aggressive: {
+        CALL_ENVIDO: 1.4,
+        CALL_REAL_ENVIDO: 4.0,
+        CALL_FALTA_ENVIDO: 1.2,
+        call_truco_parda_y_gano: 2.0,
+        call_truco_certain_win: 2.0,
+        CALL_RETRUCO: 1.7,
+        CALL_VALE_CUATRO: 2.0,
+        escalate_truco_bluff: 1.5,
+        call_truco_bluff: 1.4,
+        DECLINE: 0.6,
+        discard_low: 0.8,
+    },
+    Cautious: {
+        CALL_ENVIDO: 2.0,
+        play_card_parda_y_gano: 1.5,
+        play_card_certain_win: 1.5,
+        DECLINE: 1.6, 
+        CALL_REAL_ENVIDO: 0.4,
+        CALL_FALTA_ENVIDO: 0.1,
+        call_truco_parda_y_gano: 0.4,
+        call_truco_certain_win: 0.4,
+        CALL_RETRUCO: 0.5,
+        call_truco_bluff: 0.1,
+        accept_truco_bluff_call: 0.3, 
+    },
+    Deceptive: {
+        call_envido_bluff: 2.2,
+        call_truco_bluff: 2.0,
+        play_card_parda_y_gano: 1.8, // slow-play bonus
+        play_card_certain_win: 1.8,   // slow-play bonus
+        call_truco_parda_y_gano: 0.6, // penalty for obvious move
+        call_truco_certain_win: 0.6,  // penalty for obvious move
+        bait_lopsided_hand: 2.5,
+        parda_y_canto: 1.8,
+        probe_low_value: 1.5,
+        secure_hand: 0.8,
+    },
+    Balanced: {
+        CALL_ENVIDO: 1.8,
+        CALL_REAL_ENVIDO: 1.2,
+    },
+};
+
+
+const cardPlayEvMap: Record<string, number> = {
+    play_card_parda_y_gano: 2.5,
+    play_card_certain_win: 2.5,
+    win_round_cheap: 1.5,
+    secure_hand: 1.2,
+    parda_y_canto: 0.8,
+    probe_low_value: 0.2,
+    probe_mid_value: 0.3,
+    probe_sacrificial: 0.5,
+    discard_low: -1.0,
+    play_last_card: 0.1,
+    default: 0,
+};
+
+function calculateBaseEV(move: AiMove, state: GameState, reasoningLog: MessageObject[], archetype: AiArchetype): number {
+    const { action, reasonKey } = move;
+    
+    switch (action.type) {
+        case ActionType.PLAY_CARD: {
+            const { initialAiHand, mano, currentTrick } = state;
+            const myEnvido = getEnvidoDetails(initialAiHand).value;
+            const trucoStrength = calculateHandStrength(initialAiHand);
+            const isLopsidedHand = myEnvido >= 30 && trucoStrength < 12;
+            const isBaitOpportunity = isLopsidedHand && mano === 'ai' && currentTrick === 0;
+
+            let strategicBaitBonus = 0;
+            if (isBaitOpportunity && (reasonKey === 'probe_low_value' || reasonKey === 'probe_mid_value' || reasonKey === 'bait_lopsided_hand')) {
+                strategicBaitBonus = 1.5;
+                reasoningLog.push({ key: 'ai_logic.strategic_bait_bonus_check' });
+                reasoningLog.push({ key: 'ai_logic.strategic_bait_bonus_applied', options: { bonus: strategicBaitBonus.toFixed(2) } });
+            }
+            
+            return (cardPlayEvMap[reasonKey || 'default'] || 0) + strategicBaitBonus;
+        }
+        
+        case ActionType.CALL_TRUCO:
+        case ActionType.CALL_RETRUCO:
+        case ActionType.CALL_VALE_CUATRO:
+             if (reasonKey === 'call_truco_parda_y_gano' || reasonKey === 'call_truco_certain_win') {
+                return 2.8; // High base value for a guaranteed win call
+            }
+            return calculateTrucoMoveEV(move, state);
+
+        case ActionType.CALL_ENVIDO:
+        case ActionType.CALL_REAL_ENVIDO:
+        case ActionType.CALL_FALTA_ENVIDO: {
+            const { value: myEnvido } = getEnvidoDetails(state.initialAiHand);
+            const context = state.mano === 'ai' ? 'pie' : 'mano';
+            const oppFoldRate = state.opponentModel.envidoBehavior[context].foldRate;
+            const pointsOnDecline = state.envidoPointsOnOffer > 0 ? state.envidoPointsOnOffer : 1;
+            
+            let ev_if_accepted;
+            const acceptanceChance = 1 - oppFoldRate;
+            let pointsOnWin;
+            let penaltyMultiplier = 0;
+
+            switch (action.type) {
+                case ActionType.CALL_REAL_ENVIDO:
+                    pointsOnWin = (state.envidoPointsOnOffer > 0 ? state.envidoPointsOnOffer : 0) + 3;
+                    penaltyMultiplier = 1.0;
+                    break;
+                case ActionType.CALL_FALTA_ENVIDO:
+                    pointsOnWin = 15 - Math.max(state.aiScore, state.playerScore);
+                    penaltyMultiplier = 2.0;
+                    break;
+                default: // CALL_ENVIDO
+                    pointsOnWin = (state.envidoPointsOnOffer > 0 ? state.envidoPointsOnOffer : 0) + 2;
+                    penaltyMultiplier = 0;
+                    break;
+            }
+
+            if (reasonKey?.includes('bluff')) {
+                ev_if_accepted = -pointsOnWin;
+            } else {
+                const estimatedOpponentPoints = state.opponentModel.envidoBehavior[context].callThreshold;
+                const winProb = (myEnvido > estimatedOpponentPoints) ? 0.8 : 0.3;
+                ev_if_accepted = (winProb * pointsOnWin) - ((1 - winProb) * pointsOnWin);
+            }
+
+            let trucoRiskPenalty = 0;
+            const trucoStrength = calculateHandStrength(state.initialAiHand);
+            if (trucoStrength < 12 && penaltyMultiplier > 0) {
+                reasoningLog.push({ key: 'ai_logic.truco_risk_penalty_check', options: { trucoStrength } });
+                const penaltyScale = (12 - trucoStrength) / 10;
+                trucoRiskPenalty = 1.8 * penaltyScale * penaltyMultiplier;
+                
+                if (archetype === 'Aggressive') {
+                    trucoRiskPenalty *= 0.1;
+                }
+
+                if (trucoRiskPenalty > 0) {
+                     reasoningLog.push({ key: 'ai_logic.truco_risk_penalty_applied', options: { penalty: trucoRiskPenalty.toFixed(2) } });
+                }
+            }
+            
+            const weightedEv = (acceptanceChance * ev_if_accepted) + ((1 - acceptanceChance) * pointsOnDecline);
+
+            return weightedEv - trucoRiskPenalty;
+        }
+
+        case ActionType.ACCEPT: {
+            if (state.gamePhase.includes('truco')) {
+                const { strength } = calculateTrucoStrength(state);
+                const pointsOnLine = state.trucoLevel === 0 ? 1 : state.trucoLevel;
+                const pointsOnWin = pointsOnLine + 1;
+                return (strength * pointsOnWin) - ((1 - strength) * pointsOnWin);
+            }
+            if (state.gamePhase.includes('envido')) {
+                const { value: myEnvido } = getEnvidoDetails(state.initialAiHand);
+                const context = state.mano === 'ai' ? 'pie' : 'mano';
+                const estimatedOpponentPoints = state.opponentModel.envidoBehavior[context].callThreshold;
+                const winProb = (myEnvido > estimatedOpponentPoints) ? 0.7 : 0.4;
+                return (winProb * state.envidoPointsOnOffer) - ((1 - winProb) * state.envidoPointsOnOffer);
+            }
+            return 0.1;
+        }
+
+        case ActionType.DECLINE: {
+             if (state.gamePhase.includes('truco')) {
+                return -(state.trucoLevel);
+            }
+            if (state.gamePhase.includes('envido')) {
+                return -(state.previousEnvidoPoints > 0 ? state.previousEnvidoPoints : 1);
+            }
+            return -0.1;
+        }
+        
+        default:
+            return 0;
+    }
+}
+
+function evaluateMoves(moves: AiMove[], state: GameState): AiMove {
+    const { aiArchetype } = state;
+    const modifiers = archetypeModifiers[aiArchetype];
+    
+    const evaluationReasoning: MessageObject[] = [];
+
+    const evaluatedMoves: EvaluatedMove[] = moves.map(move => {
+        const moveReasoningLog: MessageObject[] = [];
+        const baseEv = calculateBaseEV(move, state, moveReasoningLog, aiArchetype);
+        const modifierKey = move.reasonKey || move.action.type;
+        let modifier = modifiers[modifierKey] || 1.0;
+
+        if (move.action.type === ActionType.DECLINE && baseEv >= 0) {
+            modifier = 1.0;
+        }
+
+        const modifiedEv = baseEv * modifier;
+        
+        move.reasoning.push(...moveReasoningLog);
+        
+        return { ...move, baseEv, modifiedEv };
+    });
+
+    evaluatedMoves.sort((a, b) => b.modifiedEv - a.modifiedEv);
+    const bestMove = evaluatedMoves[0];
+
+    evaluationReasoning.push({ key: 'ai_logic.archetype_selection', options: { archetype: aiArchetype } });
+    evaluationReasoning.push({ key: 'ai_logic.best_move_selection' });
+    evaluationReasoning.push({ key: 'ai_logic.considering_options', options: { count: evaluatedMoves.length } });
+    
+    evaluatedMoves.forEach(m => {
+        const modifierKey = m.reasonKey || m.action.type;
+        const modifier = modifiers[modifierKey] || 1.0;
+        evaluationReasoning.push({ key: 'ai_logic.option_ev_detailed', options: { 
+            moveName: m.reasonKey || m.action.type, 
+            baseEv: m.baseEv.toFixed(2),
+            modifier: modifier.toFixed(2),
+            finalEv: m.modifiedEv.toFixed(2) 
+        }});
+    });
+    
+    evaluationReasoning.push({ key: 'ai_logic.final_decision', options: { moveName: bestMove.reasonKey || bestMove.action.type } });
+
+    bestMove.reasoning.push(...evaluationReasoning);
+
+    return bestMove;
+}
+
+
+export const getLocalAIMove = (state: GameState): AiMove => {
+    const { gamePhase, currentTurn, lastCaller, currentTrick, hasEnvidoBeenCalledThisRound, aiHasFlor, playerHasFlor, hasFlorBeenCalledThisRound, playerTricks, aiTricks, trickWinners, aiScore, playerScore, opponentModel, trucoLevel, mano, isFlorEnabled } = state;
+    let reasoning: (string | MessageObject)[] = [];
+    let moves: AiMove[] = [];
+
     const maxScore = Math.max(aiScore, playerScore);
     const scoreDiff = aiScore - playerScore;
     const isEndGame = maxScore >= 12;
-    let gamePressure = 0; // -1.0 (Cautious) to 1.0 (Desperate)
+    let gamePressure = 0;
 
     if (isEndGame) {
-        if (scoreDiff === 0) {
-            gamePressure = 1.0; // Max desperation in a tied endgame
-        } else {
-            // More sensitive scaling in endgame
-            gamePressure = -scoreDiff / 3.0; 
-        }
+        if (scoreDiff === 0) gamePressure = 1.0;
+        else gamePressure = -scoreDiff / 3.0; 
     } else {
-        // Standard scaling in early/mid game
         gamePressure = -scoreDiff / 15.0;
     }
     gamePressure = Math.max(-1.0, Math.min(1.0, gamePressure));
@@ -33,351 +259,97 @@ export const getLocalAIMove = (state: GameState): AiMove => {
     reasoning.push({ key: 'ai_logic.game_pressure', options: { pressure: gamePressure.toFixed(2), statusKey: pressureStatusKey } });
     reasoning.push({ key: 'ai_logic.separator' });
 
-    // Recap the previous trick if it's not the first trick
-    if (currentTrick > 0) {
-        const lastTrickIndex = currentTrick - 1;
-        const playerCard = playerTricks[lastTrickIndex];
-        const aiCard = aiTricks[lastTrickIndex];
-        const winner = trickWinners[lastTrickIndex];
-
-        if (playerCard && aiCard && winner) {
-            reasoning.push({ key: 'ai_logic.trick_summary', options: { trickNumber: lastTrickIndex + 1 } });
-            reasoning.push({ key: 'ai_logic.player_played', options: { cardName: getCardName(playerCard) } });
-            reasoning.push({ key: 'ai_logic.ai_played', options: { cardName: getCardName(aiCard) } });
-            reasoning.push({ key: 'ai_logic.result', options: { outcome: winner } });
-            reasoning.push({ key: 'ai_logic.separator' });
-        }
-    }
-
-    // 1. MUST RESPOND to a player's call
     if (gamePhase.includes('_called') && currentTurn === 'ai' && lastCaller === 'player') {
         reasoning.push({ key: 'ai_logic.response_logic' });
         reasoning.push({ key: 'ai_logic.player_called', options: { call: gamePhase.replace('_called', '').toUpperCase() } });
 
-        // Flor response logic
         if (gamePhase === 'flor_called' || gamePhase === 'contraflor_called') {
-            move = getFlorResponse(state, reasoning);
-            if (move) return move;
+            const florMove = getFlorResponse(state, reasoning);
+            if (florMove) return florMove; 
         }
         
-        // FIX: Broaden the condition for "Envido Primero". It can be called as long as the first trick isn't over.
-        const canCallEnvidoPrimero = gamePhase === 'truco_called' && currentTrick === 0 && !hasEnvidoBeenCalledThisRound;
-        if (canCallEnvidoPrimero) {
-            // If AI has flor, it must respond with flor.
-            if (aiHasFlor) {
+        if (gamePhase === 'truco_called' && currentTrick === 0 && !hasEnvidoBeenCalledThisRound) {
+            if (aiHasFlor && isFlorEnabled) {
+                const florReasoning: MessageObject[] = [{ key: 'ai_logic.flor_priority_on_truco' }];
                 const blurbText = getRandomPhrase(PHRASE_KEYS.FLOR);
-                return {
-                    action: { type: ActionType.DECLARE_FLOR, payload: { blurbText } },
-                    reasoning: [{ key: 'ai_logic.flor_priority_on_truco' }],
-                    reasonKey: 'respond_truco_with_flor'
-                };
+                return { action: { type: ActionType.DECLARE_FLOR, payload: { blurbText } }, reasoning: florReasoning, reasonKey: 'call_flor' };
             }
-            const envidoCallDecision = getEnvidoCall(state, gamePressure);
-            if (envidoCallDecision) {
-                 const blurbText = getRandomPhrase(PHRASE_KEYS.ENVIDO_PRIMERO);
-                 const updatedReasoning: (string | MessageObject)[] = [{ key: 'ai_logic.envido_primero_logic' }, ...envidoCallDecision.reasoning];
-                 // FIX: Preserve the original envido action type (Envido, Real Envido, Falta Envido)
-                 // instead of hardcoding it to a simple Envido.
-                 const originalAction = envidoCallDecision.action;
-                 let newAction: AiMove['action'];
-
-                 switch (originalAction.type) {
-                     case ActionType.CALL_ENVIDO:
-                         newAction = { type: ActionType.CALL_ENVIDO, payload: { blurbText } };
-                         break;
-                     case ActionType.CALL_REAL_ENVIDO:
-                         newAction = { type: ActionType.CALL_REAL_ENVIDO, payload: { blurbText } };
-                         break;
-                     case ActionType.CALL_FALTA_ENVIDO:
-                         newAction = { type: ActionType.CALL_FALTA_ENVIDO, payload: { blurbText } };
-                         break;
-                     default:
-                         newAction = { type: ActionType.CALL_ENVIDO, payload: { blurbText } };
-                         break;
-                 }
-                 return { ...envidoCallDecision, reasoning: updatedReasoning, action: newAction };
+             if (!(playerHasFlor && isFlorEnabled) && !(aiHasFlor && isFlorEnabled)) {
+                moves.push({ action: { type: ActionType.CALL_ENVIDO, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.ENVIDO) }}, reasoning: [], reasonKey: 'CALL_ENVIDO' });
+                moves.push({ action: { type: ActionType.CALL_REAL_ENVIDO, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.REAL_ENVIDO) }}, reasoning: [], reasonKey: 'CALL_REAL_ENVIDO' });
+                moves.push({ action: { type: ActionType.CALL_FALTA_ENVIDO, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.FALTA_ENVIDO) }}, reasoning: [], reasonKey: 'CALL_FALTA_ENVIDO' });
             }
         }
         
         if (gamePhase === 'envido_called') {
-            // Check for Flor response to Envido
-            if (aiHasFlor) {
+            if (aiHasFlor && isFlorEnabled) {
+                const florReasoning: MessageObject[] = [{ key: 'ai_logic.flor_priority_on_envido' }];
                 const blurbText = getRandomPhrase(PHRASE_KEYS.FLOR);
-                return {
-                    action: { type: ActionType.RESPOND_TO_ENVIDO_WITH_FLOR, payload: { blurbText } },
-                    reasoning: [{ key: 'ai_logic.flor_priority_on_envido' }],
-                    reasonKey: 'respond_with_flor'
-                };
+                return { action: { type: ActionType.RESPOND_TO_ENVIDO_WITH_FLOR, payload: { blurbText } }, reasoning: florReasoning, reasonKey: 'respond_with_flor' };
             }
-            move = getEnvidoResponse(state, gamePressure, reasoning);
+            moves.push(...getEnvidoResponseOptions(state, gamePressure, reasoning));
         }
 
         if (gamePhase.includes('truco') || gamePhase.includes('vale_cuatro')) {
-            move = getTrucoResponse(state, gamePressure, reasoning);
+            moves.push(...getTrucoResponseOptions(state, gamePressure, reasoning));
         }
-        if (move) return move;
+        
+        if (moves.length > 0) return evaluateMoves(moves, state);
     }
 
-    // 2. DECIDE TO MAKE A CALL
-    if (!gamePhase.includes('_called')) {
-        let singingMove: AiMove | null = null;
-        let trucoMove: AiMove | null = null;
+    let candidateMoves: AiMove[] = [];
+    
+    const cardPlayMove = findBestCardToPlay(state);
+    // FIX: Add a guard to handle the 'NO_OP' action returned when the AI has no cards.
+    if ((cardPlayMove.action as any).type === 'NO_OP') {
+        // This should not happen in a real game as the reducer would have ended the round.
+        // But as a safeguard in simulation, we return it.
+        return cardPlayMove;
+    }
+    candidateMoves.push(cardPlayMove);
+
+    const isPardaYGano = cardPlayMove.reasonKey === 'play_card_parda_y_gano';
+    const isCertainWin = cardPlayMove.reasonKey === 'play_card_certain_win';
+
+    if ((isPardaYGano || isCertainWin) && trucoLevel < 3 && lastCaller !== 'ai') {
+        let actionType: ActionType;
+        let phrases: string;
+        if (trucoLevel === 0) { actionType = ActionType.CALL_TRUCO; phrases = PHRASE_KEYS.TRUCO; } 
+        else if (trucoLevel === 1) { actionType = ActionType.CALL_RETRUCO; phrases = PHRASE_KEYS.RETRUCO; } 
+        else { actionType = ActionType.CALL_VALE_CUATRO; phrases = PHRASE_KEYS.VALE_CUATRO; }
         
-        const canSing = !hasEnvidoBeenCalledThisRound && currentTrick === 0 && state.aiTricks[0] === null;
-        if (canSing) {
-            singingMove = getFlorCallOrEnvidoCall(state, gamePressure);
-        }
-        
-        if (!gamePhase.includes('envido') && !gamePhase.includes('flor')) {
-            trucoMove = getTrucoCall(state, gamePressure);
-        }
+        const trucoContext = { strength: 1.0, isBluff: false };
+        const reasonKey = isPardaYGano ? 'call_truco_parda_y_gano' : 'call_truco_certain_win';
 
-        // --- NEW: Post-Envido Bait Tactic ---
-        // Overrides an immediate Truco call with a baiting card play if conditions are right.
-        if (trucoMove?.action.type === ActionType.CALL_TRUCO && hasEnvidoBeenCalledThisRound && currentTrick === 0 && mano === 'ai') {
-            const handStrength = calculateHandStrength(state.initialAiHand);
-            
-            // Condition: Strong hand and has a significantly weaker card to lead with.
-            if (handStrength > 20) {
-                const sortedHand = [...state.aiHand].sort((a, b) => getCardHierarchy(a) - getCardHierarchy(b));
-                const weakestCard = sortedHand[0];
-                const strongestCard = sortedHand[sortedHand.length - 1];
-
-                // Ensure there's a power gap to make the bait worthwhile
-                if (getCardHierarchy(strongestCard) - getCardHierarchy(weakestCard) > 2) {
-                    let baitProbability = 0.70; // High chance to try this tactic
-                    const baitReasoning: MessageObject[] = [
-                        { key: 'ai_logic.post_envido_bait_title' },
-                        { key: 'ai_logic.post_envido_bait_body', options: { strength: handStrength } },
-                    ];
-                    
-                    if (state.opponentModel.trucoFoldRate < 0.4) {
-                        baitProbability += 0.20;
-                        baitReasoning.push({ key: 'ai_logic.post_envido_bait_opponent_aggro' });
-                    }
-
-                    baitReasoning.push({ key: 'ai_logic.post_envido_bait_chance', options: { probability: (baitProbability * 100).toFixed(0) } });
-
-                    if (Math.random() < baitProbability) {
-                        const { index: baitCardIndex, card: baitCard, reasonKey: baitReasonKey, reason: baitReason } = findBaitCard(state.aiHand);
-                        baitReasoning.push(baitReason);
-                        baitReasoning.push({ key: 'ai_logic.post_envido_bait_decision', options: { cardName: getCardName(baitCard) } });
-                        
-                        // Override the Truco call with a baiting card play
-                        return {
-                            action: { type: ActionType.PLAY_CARD, payload: { player: 'ai', cardIndex: baitCardIndex } },
-                            reasoning: baitReasoning,
-                            reasonKey: baitReasonKey,
-                        };
-                    } else {
-                         trucoMove.reasoning.unshift({ key: 'ai_logic.post_envido_bait_skipped' });
-                    }
-                }
-            }
-        }
-        
-        // --- Corrected Priority: Strong Truco value bets should be considered over weak Envido bluffs ---
-        if (trucoMove && singingMove) {
-            let trucoStrength = 0;
-            // Fix: Added a type guard to ensure the action is a truco call with a payload before accessing it.
-            if (
-                trucoMove.action.type === ActionType.CALL_TRUCO ||
-                trucoMove.action.type === ActionType.CALL_RETRUCO ||
-                trucoMove.action.type === ActionType.CALL_VALE_CUATRO
-            ) {
-                 trucoStrength = trucoMove.action.payload?.trucoContext?.strength || 0;
-            }
-            const isEnvidoBluff = singingMove.reasonKey?.includes('bluff');
-            
-            if (trucoStrength > 0.7 && isEnvidoBluff) {
-                singingMove = null; // Discard the weak envido bluff in favor of the strong truco call.
-            }
-        }
-
-        // --- Advanced Strategic Baiting Logic ---
-        if (singingMove) {
-            const aiEnvidoDetails = getEnvidoDetails(state.initialAiHand);
-
-            // NEW: High Envido Bait (User Request)
-            if (aiEnvidoDetails.value >= 30 && singingMove.action.type.includes('ENVIDO')) {
-                const baitChance = 0.70;
-                let baitReasoning: (string | MessageObject)[] = [{ key: 'ai_logic.high_envido_bait_analysis', options: { envidoPoints: aiEnvidoDetails.value, chance: (baitChance * 100).toFixed(0) } }];
-
-                if (Math.random() < baitChance) {
-                    const { index: baitCardIndex, card: baitCard, reasonKey, reason: baitCardReason } = findBaitCard(state.aiHand);
-                    baitReasoning.push(baitCardReason);
-                    baitReasoning.push({ key: 'ai_logic.high_envido_bait_decision', options: { cardName: getCardName(baitCard) }});
-                    
-                    return { 
-                        action: { type: ActionType.PLAY_CARD, payload: { player: 'ai', cardIndex: baitCardIndex } },
-                        reasoning: baitReasoning,
-                        reasonKey: reasonKey,
-                    };
-                } else {
-                    singingMove.reasoning.unshift({ key: 'ai_logic.high_envido_bait_skipped' });
-                }
-            }
-
-            const handStrength = calculateHandStrength(state.initialAiHand);
-            const { opponentModel } = state;
-
-            // SCENARIO 1: MONSTER HAND BAIT (Strong Envido + Strong Truco)
-            // Goal: Set a Truco trap by hiding the high Envido/Flor score.
-            if (aiEnvidoDetails.value >= 31 && handStrength >= 20) {
-                const baseChance = 0.60;
-                const adjustedChance = baseChance + (opponentModel.trucoFoldRate * 0.1); 
-
-                if (Math.random() < adjustedChance && trucoMove) {
-                    const reasoningBait: (string | MessageObject)[] = [
-                        { key: 'ai_logic.monster_trap_title' },
-                        { key: 'ai_logic.monster_trap_body', options: { envidoPoints: aiEnvidoDetails.value, trucoStrength: handStrength } },
-                        { key: 'ai_logic.proceeding_with_truco' },
-                        ...trucoMove.reasoning
-                    ];
-                    return { ...trucoMove, reasoning: reasoningBait };
-                }
-            }
-            
-            // SCENARIO 2: LOPSIDED HAND BAIT (Strong Envido + Weak Truco)
-            else if (aiEnvidoDetails.value >= 29 && handStrength <= 11) {
-                let baitChance = 0.15; // Base 15% chance
-                let baitReasoning: (string | MessageObject)[] = [{ key: 'ai_logic.lopsided_bait_analysis', options: { envidoPoints: aiEnvidoDetails.value, trucoStrength: handStrength } }];
-                
-                if (opponentModel.envidoBehavior.pie.callThreshold < 27) { // Using 'pie' as a general proxy for player's aggression
-                    baitChance += 0.20;
-                    baitReasoning.push({ key: 'ai_logic.lopsided_bait_aggro' });
-                }
-                
-                if (opponentModel.envidoBehavior.pie.foldRate < 0.35) {
-                    baitChance += 0.15;
-                    baitReasoning.push({ key: 'ai_logic.lopsided_bait_low_fold' });
-                }
-
-                baitChance = Math.min(0.5, baitChance); // Cap at 50%
-                baitReasoning.push({ key: 'ai_logic.lopsided_bait_chance', options: { chance: (baitChance * 100).toFixed(0) } });
-
-                if (Math.random() < baitChance) {
-                    // If baiting, we DO NOT sing. We play a card instead and wait.
-                    const cardToPlayResult = findBestCardToPlay(state);
-                    const reasoningLopsided: (string | MessageObject)[] = [
-                        { key: 'ai_logic.envido_bait_title' },
-                        { key: 'ai_logic.envido_bait_body', options: { envidoPoints: aiEnvidoDetails.value, trucoStrength: handStrength } },
-                        { key: 'ai_logic.bait_probability_analysis', options: { baitReasoning: baitReasoning.map(r => typeof r === 'string' ? r : r.key).join(' ') } }, // Simplified for options
-                        { key: 'ai_logic.proceeding_silent_play' },
-                        ...cardToPlayResult.reasoning
-                    ];
-                    
-                    return { 
-                        action: { type: ActionType.PLAY_CARD, payload: { player: 'ai', cardIndex: cardToPlayResult.index } },
-                        reasoning: reasoningLopsided,
-                        reasonKey: 'bait_lopsided_hand',
-                    };
-                }
-            }
-
-            // DEFAULT: If no baiting strategy is triggered, the Envido/Flor call takes precedence.
-            return singingMove;
-        }
-        
-        // --- NEW: Pre-Truco "Feint" Tactic for Monster Hands ---
-        if (trucoMove?.action.type === ActionType.CALL_TRUCO && !hasEnvidoBeenCalledThisRound && currentTrick === 0) {
-            const handStrength = trucoMove.action.payload?.trucoContext?.strength || 0;
-            const isBluff = trucoMove.action.payload?.trucoContext?.isBluff || false;
-
-            // Condition: Very strong, non-bluff hand, and has a much weaker card to lead with as bait.
-            if (handStrength > 0.85 && !isBluff) {
-                const sortedHand = [...state.aiHand].sort((a, b) => getCardHierarchy(a) - getCardHierarchy(b));
-                const weakestCard = sortedHand[0];
-                const strongestCard = sortedHand[sortedHand.length - 1];
-
-                // Ensure there's a significant power gap to make the feint worthwhile
-                if (getCardHierarchy(strongestCard) - getCardHierarchy(weakestCard) > 2) {
-                    let feintProbability = 0.70; // Base 70% chance to try this tactic
-                    const feintReasoning: MessageObject[] = [
-                        { key: 'ai_logic.feint_tactic_title' },
-                        { key: 'ai_logic.feint_tactic_body', options: { strength: (handStrength * 100).toFixed(0) } },
-                    ];
-                    
-                    if (state.opponentModel.trucoFoldRate < 0.35) {
-                        feintProbability += 0.15; // More likely to bait aggressive players
-                         feintReasoning.push({ key: 'ai_logic.feint_tactic_opponent_aggro', options: { rate: (state.opponentModel.trucoFoldRate * 100).toFixed(0) } });
-                    }
-                    
-                    feintProbability = Math.min(0.9, feintProbability);
-                    feintReasoning.push({ key: 'ai_logic.feint_tactic_probability', options: { probability: (feintProbability * 100).toFixed(0) } });
-
-                    if (Math.random() < feintProbability) {
-                        const { index: baitCardIndex, card: baitCard, reason: baitReason } = findBaitCard(state.aiHand);
-                        feintReasoning.push(baitReason);
-                        feintReasoning.push({ key: 'ai_logic.feint_tactic_decision', options: { cardName: getCardName(baitCard) } });
-                        
-                        // Override the Truco call with a baiting card play
-                        return {
-                            action: { type: ActionType.PLAY_CARD, payload: { player: 'ai', cardIndex: baitCardIndex } },
-                            reasoning: feintReasoning,
-                            reasonKey: 'feint_pre_truco',
-                        };
-                    } else {
-                         trucoMove.reasoning.unshift({ key: 'ai_logic.feint_tactic_skipped' });
-                    }
-                }
-            }
-        }
-
-        if (trucoMove) return trucoMove;
+        const trucoCallMove: AiMove = {
+            action: { type: actionType, payload: { blurbText: getRandomPhrase(phrases), trucoContext } },
+            reasoning: cardPlayMove.reasoning, // Use the same base reasoning
+            reasonKey,
+            strategyCategory: 'aggressive'
+        };
+        candidateMoves.push(trucoCallMove);
     }
 
-    // --- NEW: Active Truco Feint Tactic ---
-    // Overrides default card play when a truco is already active and the AI has a monster hand.
-    if (trucoLevel > 0 && currentTrick === 0 && state.aiTricks[0] === null && state.currentTurn === 'ai' && mano === 'ai') {
-        // This is an expensive calculation, so only run it in this specific, high-stakes baiting scenario.
-        const strengthResult = calculateTrucoStrength(state);
-    
-        // Condition: Very strong, non-bluff hand, and has a much weaker card to lead with as bait.
-        if (strengthResult.strength > 0.80) {
-            const sortedHand = [...state.aiHand].sort((a, b) => getCardHierarchy(a) - getCardHierarchy(b));
-            const weakestCard = sortedHand[0];
-            const strongestCard = sortedHand[sortedHand.length - 1];
-    
-            // Ensure there's a significant power gap to make the feint worthwhile
-            if (getCardHierarchy(strongestCard) - getCardHierarchy(weakestCard) >= 3) {
-                let feintProbability = 0.85; // High probability to try this tactic in this situation
-                const feintReasoning: MessageObject[] = [
-                    { key: 'ai_logic.feint_tactic_title' },
-                    { key: 'ai_logic.feint_tactic_active_truco', options: { strength: (strengthResult.strength * 100).toFixed(0), trucoLevel } },
-                ];
-                
-                if (state.opponentModel.trucoFoldRate < 0.35) {
-                    feintProbability += 0.10; // More likely to bait aggressive players
-                     feintReasoning.push({ key: 'ai_logic.feint_tactic_opponent_aggro', options: { rate: (state.opponentModel.trucoFoldRate * 100).toFixed(0) } });
-                }
-                
-                feintProbability = Math.min(0.95, feintProbability);
-                feintReasoning.push({ key: 'ai_logic.feint_tactic_probability', options: { probability: (feintProbability * 100).toFixed(0) } });
-    
-                if (Math.random() < feintProbability) {
-                    const { index: baitCardIndex, card: baitCard, reason: baitReason } = findBaitCard(state.aiHand);
-                    feintReasoning.push(baitReason);
-                    feintReasoning.push({ key: 'ai_logic.feint_tactic_decision', options: { cardName: getCardName(baitCard) } });
-                    
-                    // Override the default play with a baiting card play
-                    return {
-                        action: { type: ActionType.PLAY_CARD, payload: { player: 'ai', cardIndex: baitCardIndex } },
-                        reasoning: [...reasoning, ...feintReasoning, ...strengthResult.reasoning],
-                        reasonKey: 'feint_active_truco',
-                    };
-                }
-            }
+    const canSing = !hasEnvidoBeenCalledThisRound && currentTrick === 0 && state.aiTricks[0] === null;
+    if (canSing) {
+        if (aiHasFlor && isFlorEnabled) {
+             const blurbText = getRandomPhrase(PHRASE_KEYS.FLOR);
+             candidateMoves.push({ action: { type: ActionType.DECLARE_FLOR, payload: { blurbText } }, reasoning: [{ key: 'ai_logic.flor_call_mandatory' }], reasonKey: 'call_flor' });
+        } else if (!(playerHasFlor && isFlorEnabled) && !(aiHasFlor && isFlorEnabled)) {
+             candidateMoves.push({ action: { type: ActionType.CALL_ENVIDO, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.ENVIDO) }}, reasoning: [], reasonKey: 'CALL_ENVIDO' });
+             candidateMoves.push({ action: { type: ActionType.CALL_REAL_ENVIDO, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.REAL_ENVIDO) }}, reasoning: [], reasonKey: 'CALL_REAL_ENVIDO' });
+             candidateMoves.push({ action: { type: ActionType.CALL_FALTA_ENVIDO, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.FALTA_ENVIDO) }}, reasoning: [], reasonKey: 'CALL_FALTA_ENVIDO' });
         }
     }
-
-    // 3. Just PLAY A CARD
-    const cardToPlayResult = findBestCardToPlay(state);
-    const finalReasoning = [...reasoning, ...cardToPlayResult.reasoning];
     
-    return { 
-        action: { type: ActionType.PLAY_CARD, payload: { player: 'ai', cardIndex: cardToPlayResult.index } },
-        reasoning: finalReasoning,
-        reasonKey: cardToPlayResult.reasonKey,
-    };
+    if (!gamePhase.includes('envido') && !gamePhase.includes('flor')) {
+        const trucoMove = getTrucoCall(state, gamePressure);
+        if (trucoMove) candidateMoves.push(trucoMove);
+    }
+    
+    candidateMoves = candidateMoves.filter((move, index, self) => 
+        index === self.findIndex((m) => JSON.stringify(m.action) === JSON.stringify(move.action))
+    );
+    
+    return evaluateMoves(candidateMoves, state);
 };

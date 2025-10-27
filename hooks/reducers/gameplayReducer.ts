@@ -1,5 +1,4 @@
-
-import { GameState, Action, ActionType, GamePhase, Case, OpponentModel, PlayerEnvidoActionEntry, PlayerPlayOrderEntry, RoundSummary, Card, PointNote, MessageObject } from '../../types';
+import { GameState, Action, ActionType, GamePhase, Case, OpponentModel, PlayerEnvidoActionEntry, PlayerPlayOrderEntry, RoundSummary, Card, PointNote, MessageObject, AiArchetype } from '../../types';
 import { createDeck, shuffleDeck, determineTrickWinner, determineRoundWinner, getCardName, hasFlor, getEnvidoValue, getCardHierarchy, calculateHandStrength, getCardCode, decodeCardFromCode } from '../../services/trucoLogic';
 import { initializeProbabilities, updateProbsOnPlay } from '../../services/ai/inferenceService';
 import { getRandomPhrase, PHRASE_KEYS } from '../../services/ai/phrases';
@@ -197,6 +196,48 @@ export function handleRestartGame(initialState: GameState, state: GameState, act
   return handleStartNewRound(resetState, { type: ActionType.START_NEW_ROUND });
 }
 
+// Fix: Export selectArchetype to be used in ScenarioTester.
+export const selectArchetype = (playerScore: number, aiScore: number): AiArchetype => {
+    const scoreDiff = aiScore - playerScore;
+    
+    const weights: Record<AiArchetype, number> = {
+        Balanced: 40,
+        Aggressive: 20,
+        Cautious: 20,
+        Deceptive: 20,
+    };
+
+    if (scoreDiff < -4) { // AI is losing badly
+        weights.Aggressive += 30;
+        weights.Deceptive += 30;
+        weights.Cautious = 5;
+        weights.Balanced = 10;
+    } else if (scoreDiff > 4) { // AI is winning comfortably
+        weights.Cautious += 40;
+        weights.Aggressive = 5;
+        weights.Deceptive = 5;
+        weights.Balanced = 20;
+    } else if (scoreDiff < 0) { // AI is slightly losing
+        weights.Aggressive += 15;
+        weights.Deceptive += 10;
+    } else if (scoreDiff > 0) { // AI is slightly winning
+        weights.Cautious += 15;
+    }
+
+    const totalWeight = Object.values(weights).reduce((sum, weight) => sum + weight, 0);
+    let random = Math.random() * totalWeight;
+
+    for (const key in weights) {
+        const archetype = key as AiArchetype;
+        if (random < weights[archetype]) {
+            return archetype;
+        }
+        random -= weights[archetype];
+    }
+    
+    return 'Balanced'; // Fallback
+};
+
 export function handleStartNewRound(state: GameState, action: { type: ActionType.START_NEW_ROUND }): GameState {
   if (state.playerScore >= 15 || state.aiScore >= 15) {
     return { 
@@ -222,6 +263,9 @@ export function handleStartNewRound(state: GameState, action: { type: ActionType
   // Initialize opponent hand probabilities
   const opponentUnseenCards = [...newDeck.slice(6), ...newPlayerHand];
   const initialProbs = initializeProbabilities(opponentUnseenCards);
+
+  // NEW: Select AI Archetype for the round
+  const newArchetype = selectArchetype(state.playerScore, state.aiScore);
 
   // Initialize the summary for the new round
   const newRoundSummary: RoundSummary = {
@@ -274,6 +318,7 @@ export function handleStartNewRound(state: GameState, action: { type: ActionType
     gamePhase: 'trick_1',
     round: state.round + 1,
     opponentModel: updatedOpponentModel,
+    aiArchetype: newArchetype,
     messageLog: initialMessage,
     turnBeforeInterrupt: null,
     pendingTrucoCaller: null,

@@ -1,4 +1,3 @@
-
 import { GameState, AiMove, ActionType, Card, Rank, Player, Action, AiTrucoContext, MessageObject } from '../../types';
 import { getCardHierarchy, getCardName, determineTrickWinner, determineRoundWinner, calculateHandStrength, getHandPercentile } from '../trucoLogic';
 import { getRandomPhrase, PHRASE_KEYS } from './phrases';
@@ -115,6 +114,43 @@ export interface TrucoStrengthResult {
     strength: number;
     // Fix: Changed type to allow MessageObjects.
     reasoning: (string | MessageObject)[];
+}
+
+export const calculateTrucoMoveEV = (move: AiMove, state: GameState): number => {
+    const { opponentModel, trucoLevel } = state;
+    
+    // Fix: Corrected type guard for trucoContext access.
+    // Type guard for action type to ensure payload has trucoContext
+    if (
+        move.action.type !== ActionType.CALL_TRUCO &&
+        move.action.type !== ActionType.CALL_RETRUCO &&
+        move.action.type !== ActionType.CALL_VALE_CUATRO
+    ) {
+        return -Infinity;
+    }
+    
+    // After the guard, TS knows move.action has a payload that can contain trucoContext.
+    // The payload itself can be optional, and trucoContext is optional on the payload.
+    const trucoContext = move.action.payload?.trucoContext;
+
+    if (!trucoContext) {
+        return -Infinity; // Should not happen if getTrucoCall always provides it
+    }
+
+    const strength = trucoContext.strength;
+
+    const currentPointsOnLine = trucoLevel === 0 ? 1 : (trucoLevel === 1 ? 2 : 3);
+    const pointsOnFold = currentPointsOnLine;
+    const pointsOnWin = currentPointsOnLine + 1;
+    const pointsOnLose = pointsOnWin;
+
+    const foldRate = opponentModel.trucoFoldRate;
+
+    // EV = (Prob Fold * Gain on Fold) + (Prob Accept * ( (Prob Win * Gain on Win) - (Prob Lose * Loss on Lose) ))
+    const ev = (foldRate * pointsOnFold) + 
+             ((1 - foldRate) * ( (strength * pointsOnWin) - ((1 - strength) * pointsOnLose) ));
+
+    return ev;
 }
 
 // Fix: Exported function to be used in BatchAnalyzer.
@@ -508,119 +544,54 @@ export const getTrucoResponse = (state: GameState, gamePressure: number, reasoni
   }
 };
 
-export const getTrucoCall = (state: GameState, gamePressure: number): AiMove | null => {
+// Fix: Add getTrucoResponseOptions to fix import error in localAiService.ts
+export const getTrucoResponseOptions = (state: GameState, gamePressure: number, reasoning: (string | MessageObject)[]): AiMove[] => {
+    const { trucoLevel } = state;
+    const moves: AiMove[] = [];
+
+    // All responses get a strength calculation for context
+    const strengthResult = calculateTrucoStrength(state);
+    const myStrength = strengthResult.strength;
+    // A bluff is more nuanced, but let's use a simple threshold for generating options.
+    const isBluff = myStrength < 0.45; 
+
+    // Base options: Accept and Decline
+    moves.push({
+        action: { type: ActionType.ACCEPT, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.QUIERO) } },
+        reasoning: [],
+        reasonKey: 'accept_truco_solid',
+        strategyCategory: 'safe'
+    });
+    moves.push({
+        action: { type: ActionType.DECLINE, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.NO_QUIERO) } },
+        reasoning: [],
+        reasonKey: 'decline_truco_weak',
+        strategyCategory: 'safe'
+    });
+
+    // Escalation options
+    if (trucoLevel < 3) {
+        const escalateType = trucoLevel === 1 ? ActionType.CALL_RETRUCO : ActionType.CALL_VALE_CUATRO;
+        const phrases = trucoLevel === 1 ? PHRASE_KEYS.RETRUCO : PHRASE_KEYS.VALE_CUATRO;
+        const trucoContext: AiTrucoContext = { strength: myStrength, isBluff };
+        
+        moves.push({
+            action: { type: escalateType, payload: { blurbText: getRandomPhrase(phrases), trucoContext } },
+            reasoning: [],
+            reasonKey: isBluff ? 'escalate_truco_bluff' : 'escalate_truco_strong',
+            strategyCategory: isBluff ? 'deceptive' : 'aggressive'
+        });
+    }
+    
+    return moves;
+};
+
+export const getTrucoCall = (state: GameState, gamePressure: number, precalculatedStrength?: TrucoStrengthResult): AiMove | null => {
   const { t } = i18nService;
   const { trucoLevel, gamePhase, aiScore, playerScore, playerCalledHighEnvido, opponentModel, 
           trickWinners, currentTrick, aiTricks, aiHand, playerHand, lastCaller, playerTricks, mano } = state;
   
-  if (aiTricks?.[currentTrick] !== null || gamePhase.includes('envido')) return null;
-
-  // --- "Parda y Gano" (Tie and Win) special scenario ---
-  if (currentTrick === 1 && trickWinners[0] === 'tie' && trucoLevel < 3 && lastCaller !== 'ai') {
-      const playerCardOnBoard = playerTricks[1];
-      let canWinForSure = false;
-      let winningCard: Card | undefined;
-      let reasoningText: (string | MessageObject)[] = [];
-
-      if (playerCardOnBoard) {
-          const playerCardValue = getCardHierarchy(playerCardOnBoard);
-          const winningCards = aiHand.filter(c => getCardHierarchy(c) > playerCardValue);
-          if (winningCards.length > 0) {
-              canWinForSure = true;
-              winningCard = winningCards.sort((a,b) => getCardHierarchy(a) - getCardHierarchy(b))[0]; 
-              reasoningText = [t('ai_logic.parda_gano_win_condition_response', { cardName: getCardName(playerCardOnBoard), myCardName: getCardName(winningCard!) })];
-          }
-      } else {
-          const myBestCard = aiHand.slice().sort((a, b) => getCardHierarchy(b) - getCardHierarchy(a))[0];
-          const unseenCards = state.opponentHandProbabilities?.unseenCards || [];
-
-          if (unseenCards.length > 0) {
-              const bestPossibleOpponentCard = unseenCards.slice().sort((a, b) => getCardHierarchy(b) - getCardHierarchy(a))[0];
-              if (getCardHierarchy(myBestCard) > getCardHierarchy(bestPossibleOpponentCard)) {
-                  canWinForSure = true; winningCard = myBestCard;
-                  reasoningText = [t('ai_logic.parda_gano_win_condition_lead', { myBestCard: getCardName(myBestCard), opponentBestCard: getCardName(bestPossibleOpponentCard) })];
-              }
-          } else if (getCardHierarchy(myBestCard) >= 14) {
-              canWinForSure = true; winningCard = myBestCard;
-              reasoningText = [t('ai_logic.parda_gano_win_condition_ace')];
-          }
-      }
-
-      if (canWinForSure) {
-          let actionType: ActionType; let phrases: string; let callName: string;
-          if (trucoLevel === 0) { actionType = ActionType.CALL_TRUCO; phrases = PHRASE_KEYS.TRUCO; callName = 'TRUCO';
-          } else if (trucoLevel === 1) { actionType = ActionType.CALL_RETRUCO; phrases = PHRASE_KEYS.RETRUCO; callName = 'RETRUCO';
-          } else { actionType = ActionType.CALL_VALE_CUATRO; phrases = PHRASE_KEYS.VALE_CUATRO; callName = 'VALE CUATRO'; }
-
-          const blurbText = getRandomPhrase(phrases);
-          const trucoContext: AiTrucoContext = { strength: 1.0, isBluff: false };
-          // Fix: Changed reasoning from a joined string to an array.
-          const reasoning = [t('ai_logic.opportunity_logic_parda_gano'), t('ai_logic.parda_gano_reasoning'), ...reasoningText, t('ai_logic.parda_gano_value_bet', { call: callName }), t('ai_logic.decision_parda_gano_escalate', { call: callName })];
-          return { action: { type: actionType, payload: { blurbText, trucoContext } }, reasoning: reasoning, reasonKey: 'call_truco_parda_y_gano', strategyCategory: 'aggressive' };
-      }
-  }
-
-  const isFinalTrickContext = (aiHand.length === 1 && playerHand.length === 1) || (aiHand.length === 1 && playerHand.length === 0 && playerTricks[currentTrick] !== null); 
-
-    if (isFinalTrickContext && trucoLevel < 3 && lastCaller !== 'ai') {
-        let winIsCertain = false;
-        const myCard = aiHand[0];
-        let reasoningElements: { opponentCard?: Card, myCard: Card, winProbability?: number } = { myCard };
-
-        if (playerHand.length === 0) { 
-            const opponentCard = playerTricks[currentTrick]!;
-            const simTrickWinner = determineTrickWinner(opponentCard, myCard);
-            const hypotheticalTrickWinners = [...trickWinners];
-            hypotheticalTrickWinners[currentTrick] = simTrickWinner;
-            const simRoundWinner = determineRoundWinner(hypotheticalTrickWinners, state.mano);
-            if (simRoundWinner === 'ai') { winIsCertain = true; reasoningElements.opponentCard = opponentCard; reasoningElements.winProbability = 1; }
-        } else {
-            const reasoningForCertainty: (string | MessageObject)[] = [];
-            const opponentSamples = generateConstrainedOpponentHand(state, reasoningForCertainty, { strong: 1, medium: 1, weak: 1 });
-            const possibleOpponentCards = [...opponentSamples.strong, ...opponentSamples.medium, ...opponentSamples.weak].flat();
-
-            if (possibleOpponentCards.length > 0) {
-                let wins = 0;
-                for (const oppCard of possibleOpponentCards) {
-                    const simTrickWinner = determineTrickWinner(oppCard, myCard);
-                    const hypotheticalTrickWinners = [...trickWinners];
-                    hypotheticalTrickWinners[currentTrick] = simTrickWinner;
-                    const simRoundWinner = determineRoundWinner(hypotheticalTrickWinners, state.mano);
-                    if (simRoundWinner === 'ai') wins++;
-                }
-                const winProbability = wins / possibleOpponentCards.length;
-                if (winProbability > 0.95) { winIsCertain = true; reasoningElements.winProbability = winProbability; }
-            }
-        }
-
-        if (winIsCertain && Math.random() < 0.85) {
-            let actionType: ActionType, phrases: string;
-            if (trucoLevel === 0) { actionType = ActionType.CALL_TRUCO; phrases = PHRASE_KEYS.TRUCO; } 
-            else if (trucoLevel === 1) { actionType = ActionType.CALL_RETRUCO; phrases = PHRASE_KEYS.RETRUCO; } 
-            else { actionType = ActionType.CALL_VALE_CUATRO; phrases = PHRASE_KEYS.VALE_CUATRO; }
-            
-            const blurbText = getRandomPhrase(phrases);
-            const trucoContext: AiTrucoContext = { strength: 1.0, isBluff: false };
-            let reasoning: (string | MessageObject)[];
-            
-            if (reasoningElements.opponentCard) {
-                reasoning = [
-                    t('ai_logic.escalation_guaranteed_win_logic'),
-                    t('ai_logic.escalation_guaranteed_win_reasoning', { opponentCardName: getCardName(reasoningElements.opponentCard), myCardName: getCardName(reasoningElements.myCard) }),
-                    t('ai_logic.decision_escalation_guaranteed_win', { call: actionType.replace('CALL_', '') })
-                ];
-            } else {
-                reasoning = [
-                    t('ai_logic.escalation_certainty_logic'),
-                    t('ai_logic.escalation_certainty_reasoning', { myCardName: getCardName(myCard), winProb: (reasoningElements.winProbability! * 100).toFixed(0) }),
-                    t('ai_logic.decision_escalation_certainty', { call: actionType.replace('CALL_', '') })
-                ];
-            }
-            return { action: { type: actionType, payload: { blurbText, trucoContext } }, reasoning, reasonKey: 'call_truco_certain_win', strategyCategory: 'aggressive' };
-        }
-    }
-
-  if (trucoLevel > 0) return null;
+  if (aiTricks?.[currentTrick] !== null || gamePhase.includes('envido') || trucoLevel > 0) return null;
 
   const envidoLeak = playerCalledHighEnvido ? 0.15 : 0;
   
@@ -631,7 +602,7 @@ export const getTrucoCall = (state: GameState, gamePressure: number): AiMove | n
   const envidoPrimeroBonus = envidoPrimeroRate > 0.4 ? envidoPrimeroRate * 0.3 : 0;
   const adjustedBluffChance = Math.min(0.55, 0.10 + (foldRate * 0.4) - (bluffSuccess * 0.2) + (opponentModel.playStyle.baitRate * 0.5) + envidoPrimeroBonus + (gamePressure > 0 ? gamePressure * 0.1 : 0));
 
-  const strengthResult = calculateTrucoStrength(state);
+  const strengthResult = precalculatedStrength || calculateTrucoStrength(state);
   const myStrength = strengthResult.strength;
 
   // Fix: Changed reasonPrefix type to allow MessageObjects.
@@ -639,7 +610,9 @@ export const getTrucoCall = (state: GameState, gamePressure: number): AiMove | n
   if (envidoPrimeroRate > 0.2) {
       reasonPrefix.push(t('ai_logic.envido_primero_bonus', { rate: (envidoPrimeroRate * 100).toFixed(0) }));
   }
-  reasonPrefix.push(`\n${t('ai_logic.strength_evaluation')}`, ...strengthResult.reasoning);
+  if (!precalculatedStrength) { // Only add strength eval if it wasn't pre-calculated
+      reasonPrefix.push(`\n${t('ai_logic.strength_evaluation')}`, ...strengthResult.reasoning);
+  }
 
   if (envidoLeak > 0) reasonPrefix.push(t('ai_logic.envido_penalty', { penalty: envidoLeak.toFixed(2) }));
 

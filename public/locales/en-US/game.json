@@ -3,22 +3,6 @@
     "envido_result": "Envido Result",
     "trick_result": "Trick Result"
   },
-  "mainMenu": {
-    "title": "TRUCO AI",
-    "subtitle": "A card game challenge against a strategic AI.",
-    "play_normal": "Play Against AI",
-    "play_with_help": "Play with Assistant",
-    "learn": "Learn to Play",
-    "manual": "Truco Manual",
-    "simulate": "Simulation Mode (AI vs AI)",
-    "options": "Options"
-  },
-  "continueGameModal": {
-    "title": "Saved Game Found",
-    "message": "We found a saved game. Would you like to continue or start a new one?",
-    "continue": "Continue Game",
-    "new_game": "New Game"
-  },
   "game": {
     "ai_thinking": "AI is thinking...",
     "mano_is": "Hand: {{player}}",
@@ -38,52 +22,6 @@
     "game_over_by_points_lose": "You lost the game! The round ended early because the AI has enough points to win.",
     "round_info": "Round {{round}} | Hand: {{player}}",
     "show_ai_logic_aria": "Show AI Logic"
-  },
-  "actionBar": {
-    "play_card": "Play Card",
-    "decline": "I don't want it",
-    "next_round": "Next Round",
-    "quiero": "I want it!",
-    "no_quiero": "I don't want it",
-    "envido_primero": "Envido Goes First",
-    "retruco": "Retruco!",
-    "vale_cuatro": "Vale Cuatro!",
-    "envido": "Envido!",
-    "real_envido": "Real Envido!",
-    "falta_envido": "Falta Envido!",
-    "truco": "Truco!",
-    "flor": "FLOR!",
-    "flor_ack": "OK (Yours are good)",
-    "flor_ack_mine_worse": "Mine are worse.",
-    "flor_ack_good": "They're good.",
-    "contraflor": "Contraflor!",
-    "contraflor_quiero": "With Flor, I want it!",
-    "contraflor_no_quiero": "With Flor, I fold"
-  },
-  "gameBoard": {
-    "ai_cards": "AI's Cards",
-    "player_cards": "Your Played Cards",
-    "empty_pile": "Empty Pile",
-    "round_over_title": "Round Over",
-    "points_summary_title": "Points",
-    "score_is": "The score is {{playerScore}} to {{aiScore}}",
-    "click_to_continue": "(Click to continue)",
-    "flor": "Flor",
-    "envido": "Envido",
-    "truco": "Truco",
-    "note_not_called": "Not called",
-    "note_flor_accepted": "Accepted",
-    "note_envido_accepted": "Accepted",
-    "note_declined": "{{decliner}} declined",
-    "note_truco_simple": "Simple Round",
-    "note_truco_truco": "Truco",
-    "note_truco_retruco": "Retruco",
-    "note_truco_vale_cuatro": "Vale Cuatro",
-    "note_contraflor_accepted": "Contraflor accepted",
-    "note_contraflor_declined": "Contraflor ({{decliner}} declined)",
-    "round_over_win": "You Won the Round",
-    "round_over_lose": "You Lost the Round",
-    "round_over_tie": "Round Tied"
   },
   "centralMessage": {
     "tie_envido": "Tie at {{points}}. {{winnerName}} wins for being hand.",
@@ -112,73 +50,5 @@
     "call_retruco": "{{caller}} calls RETRUCO!",
     "call_vale_cuatro": "{{caller}} calls VALE CUATRO!",
     "call_falta_truco": "{{caller}} calls FALTA TRUCO!"
-  },
-  "gameOverModal": {
-    "win_title": "You Won!",
-    "lose_title": "You Lost!",
-    "win_reason": "Congratulations, you are the Truco champion!",
-    "lose_reason": "Better luck next time!",
-    "play_again": "Play Again"
-  },
-  "logPanel": {
-    "game_log_title": "Game Log",
-    "ai_log_title": "AI Logic",
-    "hide_ai_log": "Hide AI Logic",
-    "game_start": "Game Start",
-    "game_log_button": "Log",
-    "ai_log_button": "AI Logic",
-    "no_log_for_round": "No AI logs for this round.",
-    "current_match": "Current Match",
-    "match_from": "Match from {{date}} ({{score}})"
-  },
-  "gameMenu": {
-    "menu": "MENU",
-    "main_menu": "Main Menu",
-    "view_data": "View Data",
-    "view_ai_cards": "View AI's Cards",
-    "sound_on_advice": "Listen to AI's advice",
-    "sound_on_verses": "Listen to AI's verses"
-  },
-  "soundHint": {
-    "activate_voice": "Activate the AI voice here"
-  },
-  "scoreboard": {
-    "title": "Score"
-  },
-  "assistantPanel": {
-    "title": "Strategic Options",
-    "show_logic": "Show Detailed Logic",
-    "hide_logic": "Hide Logic",
-    "open_aria_label": "Open AI Assistant",
-    "close_aria_label": "Close AI Assistant",
-    "summon_message": "You can summon me again by clicking my face on the bottom right.",
-    "confidence": "Confidence",
-    "strategy_safe_title": "The Safe Play",
-    "strategy_aggressive_title": "The Aggressive Play",
-    "strategy_deceptive_title": "The Deceptive Play",
-    "risk": "Risk",
-    "reward": "Reward",
-    "risk_low": "Low",
-    "risk_moderate": "Moderate",
-    "risk_high": "High",
-    "reward_low": "Low",
-    "reward_moderate": "Moderate",
-    "reward_high": "High",
-    "reward_very_high": "Very High",
-    "speech_intro": "Here are your strategic options:",
-    "speech_option": "Option {{number}}"
-  },
-  "settingsModal": {
-    "title": "Settings",
-    "language": "Language",
-    "sound": "Sound",
-    "opponent_voice": "Opponent (AI) Voice",
-    "assistant_voice": "Assistant Voice",
-    "test_voice": "Test",
-    "select_voice": "Auto (Browser Default)",
-    "test_phrase_opponent": "Hello, I'm TRUCAI! Let's hear that Envido!",
-    "test_phrase_assistant": "Hey! I'm going to help you play TRUCO today!",
-    "rules": "Game Rules",
-    "flor_enabled": "Enable 'Flor'"
   }
 }

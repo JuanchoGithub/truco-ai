@@ -1,3 +1,4 @@
+
 {
   "simulation": {
     "title": "Simulation Mode",
@@ -57,7 +58,9 @@
       "log_initial_setup": "Initial Setup",
       "log_ai_suggestion_title": "AI Suggestion",
       "log_action": "Action",
-      "log_event": "Event"
+      "log_event": "Event",
+      "scores_and_mano": "Scores & Hand",
+      "opponent_hand_title": "Opponent's Hand"
     },
     "gemini": {
       "title": "AI vs Gemini",
@@ -80,36 +83,6 @@
       "error_quota_retry": "API quota exceeded. Automatically retrying in 30 seconds...",
       "error_quota_manual": "Automatic retry failed. Please retry manually.",
       "retry_button": "Retry Move"
-    },
-    "batchAnalyzer": {
-      "title": "Hand Analyzer",
-      "description": "This tool calculates the heuristic strength ('Truco Value') and the AI's assessment (simulation strength) for {{count}} strategically unique hand combinations.",
-      "button_analyze": "Analyze All Hands",
-      "loading": "Analyzing... ({{progress}}%)",
-      "copy_button": "Copy TSV",
-      "copy_button_copied": "Copied!",
-      "copy_button_error": "Error",
-      "copy_tooltip": "Copy data as TSV (for spreadsheets)",
-      "header_hand": "Hand",
-      "header_truco_value": "Truco Value",
-      "header_ai_assessment": "AI Assessment",
-      "simple_card_names": {
-        "as_de_espadas": "Ace S",
-        "as_de_bastos": "Ace C",
-        "ancho_falso": "False Ace",
-        "siete_de_espadas": "7 S",
-        "siete_de_oros": "7 Cn",
-        "siete_falso": "False 7",
-        "tres": "3",
-        "dos": "2",
-        "rey": "King",
-        "caballo": "Knight",
-        "sota": "Jack",
-        "seis": "6",
-        "cinco": "5",
-        "cuatro": "4",
-        "default": "{{rank}} {{suit}}"
-      }
     }
   },
   "simulation_actions": {

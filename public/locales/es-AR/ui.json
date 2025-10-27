@@ -1,33 +1,5 @@
+
 {
-  "common": {
-    "player": "Jugador",
-    "ai": "IA",
-    "you": "Vos",
-    "you_short": "Vos",
-    "randomizer": "Randomizer",
-    "opponent": "Oponente",
-    "round": "Ronda",
-    "hand": "Mano",
-    "of": "de",
-    "gemini": "Gemini",
-    "card_ranks": {
-      "1": "As", "2": "2", "3": "3", "4": "4", "5": "5", "6": "6", "7": "7",
-      "10": "Sota", "11": "Caballo", "12": "Rey"
-    },
-    "card_suits": {
-      "espadas": "Espadas", "bastos": "Bastos", "oros": "Oros", "copas": "Copas"
-    },
-    "card_name_pattern": "{{rank}} de {{suit}}",
-    "close": "Cerrar",
-    "cancel": "Cancelar",
-    "loading": "Cargando...",
-    "na": "N/A",
-    "tie": "Empate"
-  },
-  "blurb_titles": {
-    "envido_result": "Resultado del Envido",
-    "trick_result": "Resultado de la Mano"
-  },
   "mainMenu": {
     "title": "TRUCO AI",
     "subtitle": "Un desafío de cartas contra una IA estratégica.",
@@ -35,33 +7,14 @@
     "play_with_help": "Jugar con Ayuda",
     "learn": "Aprender a Jugar",
     "manual": "Manual del Truco",
-    "simulate": "Modo Simulación (IA vs IA)"
+    "simulate": "Modo Simulación (IA vs IA)",
+    "options": "Opciones"
   },
   "continueGameModal": {
     "title": "Partida Guardada",
     "message": "Encontramos una partida guardada. ¿Deseas continuar o empezar una nueva?",
     "continue": "Continuar Partida",
     "new_game": "Nueva Partida"
-  },
-  "game": {
-    "ai_thinking": "IA está pensando...",
-    "mano_is": "Mano: {{player}}",
-    "new_game_log": "--- Nuevo Juego ---",
-    "new_game_started": "Un nuevo juego ha comenzado. {{player}} es mano.",
-    "new_round_log": "--- Ronda {{round}} ---",
-    "you_are_mano": "Eres mano.",
-    "ai_is_mano": "La IA es mano.",
-    "player_plays_card": "{{player}} juega {{cardName}}",
-    "trick_winner": "Ganador de la mano {{trickNumber}}: {{winner}}",
-    "round_winner_points": "Ganador de la ronda: {{winner}}. Gana {{points}} {{points, plural, one{punto} other{puntos}}}.",
-    "round_winner": "Ganador de la ronda: {{winner}}",
-    "error_ai": "Ocurrió un error con la IA. La IA pierde su turno.",
-    "session_restored": "--- Sesión Restaurada ---",
-    "profile_imported": "--- Perfil Importado ---",
-    "game_over_by_points_win": "¡Ganaste el juego! La ronda terminó antes porque ya tenés los puntos para ganar.",
-    "game_over_by_points_lose": "¡Perdiste el juego! La ronda terminó antes porque la IA ya tiene los puntos para ganar.",
-    "round_info": "Ronda {{round}} | Mano: {{player}}",
-    "show_ai_logic_aria": "Mostrar Lógica de la IA"
   },
   "actionBar": {
     "next_round": "Siguiente Ronda",
@@ -107,34 +60,6 @@
     "round_over_lose": "Perdiste la Ronda",
     "round_over_tie": "Ronda Empatada"
   },
-  "centralMessage": {
-    "tie_envido": "Empate en {{points}}. Gana {{winnerName}} por ser mano.",
-    "envido_result": "Tus tantos: {{playerPoints}}. IA: {{aiPoints}}. ¡Gana {{winnerName}}!",
-    "flor_result": "Tus puntos: {{playerPoints}}. IA: {{aiPoints}}. ¡Gana {{winnerName}} la Flor!"
-  },
-  "log": {
-    "welcome": "¡Bienvenido a Truco AI!",
-    "accept": "¡{{acceptor}} quiere!",
-    "decline": "{{decliner}} no quiere.",
-    "envido_showdown": "Jugador tiene {{playerPoints}}. La IA tiene {{aiPoints}}.",
-    "win_points": "{{winner}} gana {{points}} {{points, plural, one{punto} other{puntos}}}.",
-    "flor_win_points": "{{winner}} gana {{points}} puntos por la Flor.",
-    "accept_contraflor": "{{acceptor}}: \"¡Con Flor Quiero!\"",
-    "decline_contraflor": "{{decliner}}: \"Con Flor me achico.\"",
-    "flor_showdown_win": "{{winner}} gana {{points}} puntos.",
-    "call_envido_again": "{{caller}} canta ¡ENVIDO! de nuevo.",
-    "call_envido_primero": "{{caller}}: \"¡El envido está primero!\"",
-    "call_envido": "{{caller}} canta ¡ENVIDO!",
-    "call_real_envido": "{{caller}} sube a ¡REAL ENVIDO!",
-    "call_falta_envido": "{{caller}} canta ¡FALTA ENVIDO!",
-    "declare_flor": "{{caller}} canta ¡FLOR!",
-    "respond_envido_with_flor": "{{caller}} responde al Envido con ¡FLOR!",
-    "call_contraflor": "{{caller}} canta ¡CONTRAFLOR AL RESTO!",
-    "call_truco": "{{caller}} canta ¡TRUCO!",
-    "call_retruco": "{{caller}} canta ¡RETRUCO!",
-    "call_vale_cuatro": "{{caller}} canta ¡VALE CUATRO!",
-    "call_falta_truco": "{{caller}} canta ¡FALTA TRUCO!"
-  },
   "gameOverModal": {
     "win_title": "¡Ganaste!",
     "lose_title": "¡Perdiste!",
@@ -168,609 +93,69 @@
     "title": "Tantos"
   },
   "assistantPanel": {
-    "title": "Asistente de IA",
+    "title": "Opciones Estratégicas",
     "show_logic": "Ver Lógica Detallada",
     "hide_logic": "Ocultar Lógica",
     "open_aria_label": "Abrir Asistente de IA",
-    "close_aria_label": "Cerrar Asistente de IA"
+    "close_aria_label": "Cerrar Asistente de IA",
+    "summon_message": "Podés volver a llamarme haciendo clic en mi cara en la parte inferior derecha.",
+    "confidence": "Confianza",
+    "strategy_safe_title": "Jugada Segura",
+    "strategy_aggressive_title": "Jugada Agresiva",
+    "strategy_deceptive_title": "Jugada de Engaño",
+    "risk": "Riesgo",
+    "reward": "Recompensa",
+    "risk_low": "Bajo",
+    "risk_moderate": "Moderado",
+    "risk_high": "Alto",
+    "reward_low": "Baja",
+    "reward_moderate": "Moderada",
+    "reward_high": "Alta",
+    "reward_very_high": "Muy Alta",
+    "speech_intro": "Estas son tus opciones estratégicas:",
+    "speech_option": "Opción {{number}}"
   },
-  "suggestion": {
-    "play_card": "Jugar el {{cardName}}.",
-    "play_card_reason": "La mejor jugada es tirar el {{cardName}} {{reason}}.",
-    "consider_move": "Considerar el siguiente movimiento.",
-    "reason": {
-      "secure_hand": "para asegurar la mano.",
-      "see_opponent": "para ver qué juega la IA sin arriesgar una carta buena.",
-      "win_round_cheap": "para ganar la ronda gastando lo mínimo.",
-      "discard_low": "porque no podemos ganar esta mano y es mejor guardar las otras.",
-      "parda_y_canto": "para empatar, ocultar nuestra carta más fuerte y poder cantar Truco después.",
-      "probe_low_value": "para ocultar tu fuerza y ver qué juega el oponente.",
-      "probe_mid_value": "para parecer creíble y tentar al oponente a cometer un error.",
-      "bait_lopsided_hand": "para tender una trampa y maximizar los puntos del Envido, ya que tu mano es débil para el Truco.",
-      "feint_pre_truco": "para ocultar tu mano increíblemente fuerte y tentar a la IA a que cante Truco o haga un farol.",
-      "feint_active_truco": "para parecer débil y tentar a la IA a que suba la apuesta, ya que tu mano es muy fuerte.",
-      "default": "según la estrategia de la IA."
-    },
-    "respond_quiero_envido_good": "Tenemos {{points}} puntos. La IA cantó, pero nuestras chances de ganar son buenas. Deberíamos aceptar con 'Quiero'.",
-    "respond_quiero_envido_bluff": "Tenemos {{points}} puntos. Es arriesgado, pero la IA podría estar de farol. Podemos 'Querer' para ver sus cartas.",
-    "respond_quiero_envido_default": "La IA nos desafía, y nosotros tenemos {{points}} puntos. La recomendación es aceptar con 'Quiero'.",
-    "respond_quiero_truco_solid": "Nuestra mano es lo suficientemente buena como para competir. Deberíamos aceptar el desafío del Truco con 'Quiero'.",
-    "respond_quiero_truco_bluff": "Aunque nuestra mano no es ideal, la IA podría estar mintiendo. Acepta con 'Quiero' para no dejar que nos intimide.",
-    "respond_quiero_truco_default": "La IA subió la apuesta. La sugerencia es aceptar el desafío con 'Quiero'.",
-    "respond_no_quiero_envido_risk": "Tenemos {{points}} puntos, pero la IA cantó fuerte, y es probable que tengan más. Lo más seguro es retirarse con 'No Quiero'.",
-    "respond_no_quiero_envido_default": "Nuestros {{points}} puntos de envido probablemente no son suficientes. Es mejor decir 'No Quiero' para no perder puntos.",
-    "respond_no_quiero_truco_weak": "Nuestra mano es demasiado débil para este desafío. La mejor jugada es retirarse con 'No Quiero' para minimizar la pérdida de puntos.",
-    "respond_no_quiero_truco_default": "La IA subió la apuesta y no tenemos cartas para competir. Es mejor decir 'No Quiero'.",
-    "respond_escalate_truco_strong": "¡Nuestra mano es excelente! La IA cantó Truco, pero podemos redoblar la apuesta con '{{call}}' porque tenemos muchas chances de ganar.",
-    "respond_escalate_truco_bluff": "Estamos en una mala posición, pero podemos intentar un farol arriesgado. Sube la apuesta a '{{call}}' para ver si logramos que la IA se retire.",
-    "respond_escalate_truco_default": "Tenemos una mano muy fuerte. Es un buen momento para responder al Truco de la IA con un '{{call}}'.",
-    "respond_envido_primero_bluff": "La IA cantó Truco, pero podemos interrumpir con '{{call}}'. Aunque nuestros {{points}} puntos son bajos, es un buen farol.",
-    "respond_envido_primero": "{{context}}la IA cantó Truco. Tenemos {{points}} de envido ({{strengthText}}), así que deberíamos interrumpir con '{{call}}' para reclamar esos puntos.",
-    "respond_envido_primero_context": "Después de que la IA jugara el {{cardName}}, ",
-    "respond_escalate_envido": "¡Tenemos {{points}} puntos, {{strengthText}}! La IA cree que tiene una buena mano, pero la nuestra es superior. Deberíamos redoblar la apuesta con '{{call}}'.",
-    "respond_escalate_envido_default": "Tenemos {{points}} puntos ({{strengthText}}). La sugerencia es responder al 'Envido' de la IA subiendo la apuesta a '{{call}}'.",
-    "envido_strength_excellent": "un puntaje excelente",
-    "envido_strength_good": "un buen puntaje",
-    "envido_strength_decent": "un puntaje decente",
-    "envido_strength_low": "un puntaje bajo",
-    "proactive_truco_bluff": "Nuestra mano es débil, pero podemos intentar un farol cantando '{{call}}'.{{alternative}}",
-    "proactive_truco_strong": "¡Tenemos una mano muy fuerte! Es el momento ideal para cantar '{{call}}' y aumentar el valor de la ronda.{{alternative}}",
-    "proactive_truco_parda": "¡Jugada clave! La primera mano fue empate. Si ganas esta, ganas la ronda. Cantar 'Truco' es una jugada sin riesgo: si se retiran, ganas 1 punto. Si aceptan, ¡ganas 2!",
-    "proactive_envido_bluff": "Tenemos solo {{points}} puntos de envido, que es bajo. Sin embargo, {{opponentInfo}} Podemos intentar un farol (bluff) cantando '{{call}}'.{{alternative}}",
-    "proactive_envido_bluff_opponent_info": "la IA tiene una probabilidad de retirarse del {{rate}}%.",
-    "proactive_envido_bluff_opponent_info_default": "la IA podría retirarse.",
-    "proactive_envido_strong": "¡Tenemos {{points}} de envido! Es {{strengthText}}, deberíamos cantar '{{call}}'.",
-    "safe_play_alternative": " Si no te animás, la jugada más segura es tirar el {{cardName}}."
+  "settingsModal": {
+    "title": "Configuración",
+    "language": "Idioma",
+    "sound": "Sonido",
+    "opponent_voice": "Voz del Oponente (IA)",
+    "assistant_voice": "Voz del Asistente",
+    "test_voice": "Probar",
+    "select_voice": "Automático (Navegador)",
+    "test_phrase_opponent": "Hola soy TRUCAI! Cantate un envido",
+    "test_phrase_assistant": "Hey! te voy a ayudar a jugar al TRUCO hoy!",
+    "rules": "Reglas del Juego",
+    "flor_enabled": "Habilitar 'Flor'"
   },
-  "tutorial": {
-    "exit": "Salir del Tutorial",
-    "next": "Siguiente",
-    "previous": "Anterior",
-    "start_playing": "¡Empezar a Jugar!",
-    "feedback_correct": "¡Correcto!",
-    "feedback_try_again": "Inténtalo de nuevo. ¡Piensa en la jerarquía!",
-    "feedback_wrong_action": "Esa no es la acción que buscamos ahora. ¡Prueba otra vez!",
-    "feedback_well_done": "¡Bien Hecho!",
-    "step0": {
-      "title": "¡Bienvenido al Truco!",
-      "message": "Te enseñaré lo básico. El objetivo es ser el primero en llegar a 15 puntos. ¡Empecemos con lo más importante: las cartas!"
-    },
-    "step1": {
-      "title": "La Jerarquía de Cartas",
-      "message": "En el Truco, el poder de una carta no es su número. Hay una jerarquía especial. Estas son las 4 cartas más poderosas del juego. ¡Memorízalas!"
-    },
-    "step2": {
-      "title": "Prueba de Jerarquía (1/3)",
-      "message": "El 7 de Espadas y el 7 de Oros son cartas \"bravas\", ¡pero una es más fuerte que la otra! ¿Cuál crees que es la más poderosa?",
-      "success": "¡Correcto! El 7 de Espadas es más fuerte que el 7 de Oros. ¡Vamos con la siguiente!"
-    },
-    "step3": {
-      "title": "Prueba de Jerarquía (2/3)",
-      "message": "Ahora, los números comunes. En el Truco, todos los 3 son más fuertes que todos los 2. ¿Cuál de estas cartas gana?",
-      "success": "¡Exacto! Cualquier 3 le gana a cualquier 2. ¡Fácil!"
-    },
-    "step4": {
-      "title": "Prueba de Jerarquía (3/3)",
-      "message": "Cuidado con los \"anchos falsos\" (As de Oros y Copas). Son más débiles que los 3 y los 2. ¿Cuál de estas cartas es más fuerte?",
-      "success": "¡Perfecto! Cualquier 2 es más fuerte que los \"anchos falsos\". ¡Ya dominas lo básico de la jerarquía!"
-    },
-    "step5": {
-      "title": "El Envido: Apostar por Puntos",
-      "message": "Si tienes 2 cartas del mismo palo, puedes cantar \"Envido\". Sumas sus valores y le agregas 20. Las figuras (10, 11, 12) valen 0. ¡Aquí, tienes 5 + 6 + 20 = 31 puntos!"
-    },
-    "step6": {
-      "title": "¡A Cantar Envido!",
-      "message": "¡Tienes 7 + 6 + 20 = 33 puntos! ¡Es un Envido excelente! El botón de \"Envido\" está resaltado. Haz clic para cantar.",
-      "success": "¡Perfecto! Así se canta el Envido para ganar puntos."
-    },
-    "step7": {
-      "title": "El Truco: Apostar por la Ronda",
-      "message": "El \"Truco\" es una apuesta sobre quién ganará la ronda (2 de 3 manos). Puedes subir la apuesta con \"Retruco\" y \"Vale Cuatro\". Se trata de astucia y engaño."
-    },
-    "step8": {
-      "title": "¡A Cantar Truco!",
-      "message": "¡Menuda mano! Tienes el As de Espadas y el As de Bastos, las dos cartas más fuertes. ¡Es una mano perfecta para cantar \"Truco\" y meter presión! Haz clic en el botón.",
-      "success": "¡Excelente! Así se usa el Truco para apostar por la ronda."
-    },
-    "step9": {
-      "title": "¡Estás Listo!",
-      "message": "Has aprendido la jerarquía de cartas, el Envido y el Truco. Ya estás preparado para tu primera partida. ¡Mucha suerte!"
-    }
-  },
-  "dataModal": {
-    "title": "Análisis de Comportamiento",
-    "style_analysis_title": "Perfil de Personalidad (Según la IA)",
-    "no_data_message": "Juega unas cuantas rondas más para que la IA pueda generar un perfil detallado de tu estilo de juego.",
-    "behavior_profile_title": "Perfil de Comportamiento",
-    "truco_threshold": "Umbral de Truco (prom)",
-    "bluff_success": "Éxito de Farol en Truco",
-    "envido_primero_rate": "Tasa de 'Envido Primero'",
-    "envido_threshold": "Umbral de Envido (prom)",
-    "envido_fold_rate": "Tasa de Abandono en Envido (vs IA)",
-    "envido_preference": "Preferencia de Envido (Mano/Pie)",
-    "card_play_patterns_title": "Patrones de Juego de Cartas",
-    "card_play_header_type": "Tipo de Carta",
-    "card_play_header_plays": "Jugadas",
-    "card_play_header_win_rate": "% Victoria",
-    "card_play_header_trick1": "Mano 1",
-    "card_play_header_trick2": "Mano 2",
-    "card_play_header_trick3": "Mano 3",
-    "card_play_header_lead": "Liderando",
-    "card_play_header_response": "Respondiendo",
-    "round_history_title": "Historial de Rondas",
-    "round_history_summary": "Ronda {{round}} - {{winnerStatus}} ({{playerScore}} - {{aiScore}})",
-    "round_history_winner": "Ganador: {{winner}}",
-    "round_history_in_progress": "En progreso...",
-    "round_history_strength_envido": "Fuerza / Envido",
-    "round_history_calls": "Cantos",
-    "round_history_calls_none": "Ninguno",
-    "round_history_trick_winners": "Ganadores de Manos",
-    "round_history_trick_winner_pattern": "M{{trick}}: {{winner}}",
-    "round_history_played_cards": "Cartas Jugadas",
-    "round_history_played_cards_pattern": "Mano {{trick}}: Vos ({{playerCard}}) vs IA ({{aiCard}})",
-    "button_import": "Importar Perfil",
-    "button_export": "Exportar Perfil",
-    "import_success": "¡Perfil importado con éxito!",
-    "import_error": "Error: El archivo seleccionado no es un perfil válido.",
-    "import_error_format": "El archivo no tiene el formato esperado.",
-    "card_categories": {
-      "ancho_espada": "Ancho de Espada",
-      "ancho_basto": "Ancho de Basto",
-      "siete_espada": "Siete de Espada",
-      "siete_oro": "Siete de Oros",
-      "tres": "Tres",
-      "dos": "Dos",
-      "anchos_falsos": "Anchos Falsos",
-      "reyes": "Reyes",
-      "caballos": "Caballos",
-      "sotas": "Sotas",
-      "sietes_malos": "Sietes Falsos",
-      "seis": "Seis",
-      "cincos": "Cincos",
-      "cuatros": "Cuatros"
-    },
-    "confidence_level": "Nivel de Confianza",
-    "traits": {
-      "not_enough_data": {
-        "title": "Analizando...",
-        "description": "Juega unas cuantas rondas más para que la IA pueda generar un perfil detallado de tu estilo de juego."
-      },
-      "envido_aggressor": {
-        "title": "El Agresor del Envido",
-        "high": "La IA ha notado que cantas Envido con frecuencia, incluso con puntos modestos. Usas el Envido como una herramienta para aplicar presión constante.",
-        "medium": "Tiendes a ser proactivo con el Envido, sin esperar a tener una mano perfecta para cantar. La IA está aprendiendo a respetar tus cantos."
-      },
-      "envido_conservative": {
-        "title": "El Preciso del Envido",
-        "high": "Solo cantas Envido cuando tienes una mano muy fuerte. Esto te hace extremadamente creíble, y la IA tomará tus cantos muy en serio."
-      },
-      "envido_cautious": {
-        "title": "El Cauteloso del Envido",
-        "high": "La IA ha detectado que a menudo te retiras de las apuestas de Envido si no tienes una mano muy fuerte. Esto podría ser explotado con faroles."
-      },
-      "envido_bold": {
-        "title": "El Valiente del Envido",
-        "high": "Casi nunca te retiras de una apuesta de Envido, demostrando que estás dispuesto a desafiar a la IA hasta el final. ¡Cuidado con las manos sobrevaloradas!"
-      },
-      "truco_effective_bluffer": {
-        "title": "El Farolero Maestro",
-        "high": "Tus faroles en el Truco son muy efectivos. La IA ha notado que a menudo gana puntos apostando con manos débiles."
-      },
-      "truco_readable_bluffer": {
-        "title": "El Farolero Legible",
-        "high": "La IA cree que ha descifrado tu patrón de faroles. Ten cuidado, ya que podría no retirarse a tus apuestas arriesgadas."
-      },
-      "truco_frequent_bluffer": {
-        "title": "El Farolero Frecuente",
-        "high": "Intentas faroles en el Truco con regularidad. Esto te hace impredecible, pero también vulnerable si la IA decide pagar para ver."
-      },
-      "truco_conservative": {
-        "title": "El Reservado del Truco",
-        "high": "Eres extremadamente conservador en el Truco, apostando solo con manos de élite. La IA ha aprendido a temer y respetar mucho tus cantos."
-      },
-      "truco_aggressive": {
-        "title": "El Ariete del Truco",
-        "high": "No dudas en cantar Truco para aplicar presión, incluso con manos modestas. Esto te hace peligroso, pero a veces te expones a un contraataque."
-      },
-      "playstyle_predictable": {
-        "title": "El Predecible",
-        "high": "Cuando eres 'mano', casi siempre empiezas jugando tu carta más fuerte. La IA puede usar esta previsibilidad para planificar su estrategia."
-      },
-      "playstyle_unpredictable": {
-        "title": "El Táctico Variable",
-        "high": "Tus jugadas de apertura son variadas y difíciles de predecir. A veces juegas tu carta más fuerte, a veces una débil, manteniendo a la IA en vilo."
-      },
-      "envido_primero_specialist": {
-        "title": "El Especialista del 'Primero'",
-        "high": "Usas la táctica de 'Envido Primero' con frecuencia para interrumpir el Truco. La IA es consciente de esta preferencia y podría ajustar sus cantos de Truco en consecuencia."
-      },
-      "counter_puncher": {
-        "title": "El Contragolpeador",
-        "high": "Muestras una fuerte tendencia a guardar tus cartas más valiosas (como los Tres) para responder, en lugar de para iniciar una mano. Prefieres reaccionar antes que actuar."
-      }
-    }
-  },
-  "cardImageService": {
-    "errors": {
-      "remote_load_failed": "Error al cargar la hoja de sprites remota",
-      "local_load_failed": "Error al cargar la hoja de sprites local",
-      "local_load_failed_path": "Error al cargar la hoja de sprites desde la ruta local. Asegúrate de que 'cartas.png' exista en la carpeta 'public'.",
-      "invalid_card": "Carta inválida proporcionada: {{cardName}}",
-      "no_canvas_context": "No se pudo obtener el contexto 2D del canvas"
-    }
-  },
-  "manual": {
-    "title": "Truco Manual",
-    "exitButton": "Back to Menu",
-    "answer": "Answer:",
-    "basics": {
-      "title": "Game Basics",
-      "p1_strong": "Objective:",
-      "p1_text": " Be the first player to reach 15 points.",
-      "p2_strong": "Players:",
-      "p2_text": " One versus the AI.",
-      "p3_strong": "Hand (Mano):",
-      "p3_text": " The player who is 'mano' plays first in the first trick. In subsequent rounds, the winner of the previous round becomes 'mano'."
-    },
-    "errors": {
-      "title": "Common Mistakes to Avoid",
-      "table": {
-        "h1": "Mistake",
-        "h2": "Why It's a Mistake & What to Do Instead",
-        "r1c1_strong": "Calling Envido with low points (e.g., 23) when not 'mano'.",
-        "r1c1_text": "",
-        "r1c2": "Being 'pie' (second to speak), your opponent is very likely to have more points. You should only call Envido in this position if you have 27 points or more, or if you're attempting a calculated bluff. Otherwise, it's better not to call and wait.",
-        "r2c1_strong": "Calling 'Truco' just because you have one strong card.",
-        "r2c2": "Having the Ace of Swords is great, but if your other two cards are a 4 and a 5, your overall hand is weak. 'Truco' is a bet on the *entire round* (winning 2 of 3 tricks). Call Truco when you have at least two strong cards or a strategy to win two tricks (e.g., win the first and then tie the second).",
-        "r3c1_strong": "Always playing your strongest card first when you are 'mano'.",
-        "r3c2": "This makes you predictable. If you have a very strong hand (e.g., Ace of Swords and 7 of Swords), consider playing an intermediate card first. This might entice your opponent to call 'Truco', allowing you to counter with 'Retruco' and win more points. This tactic is called 'baiting'.",
-        "r4c1_strong": "Never folding (saying 'No Quiero').",
-        "r4c2": "Knowing when to fold is as important as knowing when to bet. If the AI calls 'Falta Envido' and you have 24 points, accepting is almost giving away the game. Learning to minimize losses by folding unfavorable hands is key to long-term victory."
-      }
-    },
-    "fundamentals": {
-      "title": "The Two Phases: Envido and Truco",
-      "p1": "Each round of Truco is divided into two separate betting phases. Understanding them is fundamental.",
-      "p2_strong": "Important!",
-      "p2_text": " Once the first card of the second trick is played, the window to call Envido or Flor closes for the rest of the round.",
-      "table": {
-        "h1": "Phase",
-        "h2": "What is it?",
-        "h3": "When does it happen?",
-        "h4": "Typical Points",
-        "r1c1": "Flor",
-        "r1c2": "A special, mandatory call if you have three cards of the same suit. It voids and has priority over Envido.",
-        "r1c3": "Only in the first trick, before playing your first card.",
-        "r1c4": "3-6 points",
-        "r2c1": "Envido",
-        "r2c2": "A bet on who has the highest score by combining two cards of the same suit (or the highest single card if no suit pairs).",
-        "r2c3": "Only in the first trick. Can be called before or after a 'Truco' call (this is called 'Envido Primero').",
-        "r2c4": "1-7 points, or the remaining points to win the game ('Falta Envido').",
-        "r3c1": "Truco",
-        "r3c2": "The main bet on who will win more tricks in the round (best of three).",
-        "r3c3": "Can be initiated at any time during the round, except during the resolution of Envido or Flor.",
-        "r3c4": "1-4 points.",
-        "r4c1": "Card Hierarchy",
-        "r4c2": "The value of the cards for winning the tricks of the Truco, from strongest to weakest.",
-        "r4c3": "Applies during the Truco.",
-        "r4c4": "Does not award points directly, but determines who wins the tricks.",
-        "r5c1": "Envido Calculation",
-        "r5c2": "Used for the 'tantos' bet.",
-        "r5c3": "Applies during the Envido.",
-        "r5c4": "Does not award points directly, but determines who wins the bet.",
-        "r6c1": "Truco Escalation",
-        "r6c2": "Truco is a bet on the round. If a player calls, the other can accept, refuse, or raise the bet.",
-        "r6c3": "Applies during the Truco.",
-        "r6c4": "1-4 points.",
-        "r7c1": "Hand (Mano)",
-        "r7c2": "The player who plays first in the first trick. In subsequent rounds, the winner of the previous round is 'mano'.",
-        "r7c3": "Applies throughout the game.",
-        "r7c4": "Does not award points directly, but breaks ties in Envido and Truco.",
-        "r8c1": "Foot (Pie)",
-        "r8c2": "The player who plays second in the first trick. In subsequent rounds, the loser of the previous round is 'pie'.",
-        "r8c3": "Applies throughout the game.",
-        "r8c4": "Does not award points directly.",
-        "r9c1": "Bluff (Farol)",
-        "r9c2": "A bet made with a weak hand to deceive the opponent into thinking you have a strong hand.",
-        "r9c3": "Applies during Envido and Truco.",
-        "r9c4": "Does not award points directly, but can win you points you would not otherwise win."
-      }
-    },
-    "glossary": {
-      "title": "Glossary and Variants",
-      "variants": {
-        "title": "Common Variants (Not in this game)",
-        "li1_strong": "Venezuelan Truco, Uruguayan Truco, etc.:",
-        "li1_text": " Many regional variations exist with different rules for Flor, Envido, and even different cards. This AI plays a common Argentine version.",
-        "li2_strong": "Game with Signs:",
-        "li2_text": " In multiplayer games, teammates communicate the strength of their cards through a system of facial signs. Obviously, this does not apply in a single-player game!"
-      },
-      "glossary": {
-        "title": "Glossary",
-        "li1_strong": "Parda:",
-        "li1_text": " A tie in a trick (when both players throw cards of the same hierarchical value).",
-        "li2_strong": "Irse al Mazo (Go to the Deck):",
-        "li2_text": " To give up on the round, either by saying 'No Quiero' to a call or simply folding.",
-        "li3_strong": "Las Bravas (The Brave Ones):",
-        "li3_text": " A colloquial term for the four strongest cards: the two Aces and the two Sevens.",
-        "li4_strong": "Cantar Primero (To Call First):",
-        "li4_text": " A strategic advantage. In Envido, if you call first, you have more control over the bet escalation."
-      }
-    },
-    "phases": {
-      "title": "Anatomy of a Round: Flor, Envido, and Truco",
-      "p1_1": "Each round unfolds in a specific order, with betting phases that open and close. The order is: ",
-      "p1_strong": "Flor → Envido → Truco",
-      "p1_2": ".",
-      "envido": {
-        "title": "The Envido (The Bet for Points)",
-        "p1": "The Envido is a bet on who has the best combination of cards. It can only be played during the first trick of the round. This is how it's calculated:",
-        "table": {
-          "h1": "Call",
-          "h2": "Points if Accepted",
-          "h3": "Points if Refused",
-          "h4": "Notes",
-          "r1c1": "Envido",
-          "r1c2": "2",
-          "r1c3": "1",
-          "r1c4": "The initial bet.",
-          "r2c1": "Real Envido",
-          "r2c2": "3",
-          "r2c3": "1",
-          "r2c4": "A direct escalation worth more.",
-          "r3c1": "Envido + Envido",
-          "r3c2": "4",
-          "r3c3": "2",
-          "r3c4": "Responding to an 'Envido' with another 'Envido'.",
-          "r4c1": "Falta Envido",
-          "r4c2": "The points the player with the highest score needs to win the game (to 15).",
-          "r4c3": "1",
-          "r4c4": "The maximum bet. Can end the game."
-        }
-      },
-      "flor": {
-        "title": "The Flor (The Perfect Hand)",
-        "p1_1": "If upon receiving your three cards, they are all of the same suit, you have ",
-        "p1_strong": "Flor",
-        "p1_2": ". You are obligated to call it on your first turn. It nullifies any Envido bet and automatically grants you 3 points. If your opponent also has Flor, they can call 'Contraflor', escalating the bet."
-      },
-      "tie": {
-        "title": "Tie Rules (Parda)",
-        "table": {
-          "h1": "Scenario",
-          "h2": "Who Wins",
-          "r1c1": "Tie in the 1st trick.",
-          "r1c2": "The winner of the 2nd trick wins the round. If the 2nd is also a tie, the winner of the 3rd wins.",
-          "r2c1": "A player wins the 1st trick, and the 2nd is a tie.",
-          "r2c2": "The player who won the 1st trick wins the round.",
-          "r3c1": "All tricks are ties, or the 1st and 3rd are ties.",
-          "r3c2": "The player who is 'mano' wins the round."
-        }
-      },
-      "truco": {
-        "title": "The Truco (The Bet for the Round)",
-        "p1": "The Truco is the bet on who will win 2 of the 3 tricks. Unlike Envido, it can be called at any time (except during the resolution of Envido/Flor).",
-        "li1_strong": "Truco (2 Points):",
-        "li1_text": " The initial bet. If the opponent doesn't want it, you win 1 point.",
-        "li2_strong": "Retruco (3 Points):",
-        "li2_text": " A counter-bet to Truco. If the opponent doesn't want it, you win 2 points.",
-        "li3_strong": "Vale Cuatro (4 Points):",
-        "li3_text": " The final bet. If the opponent doesn't want it, you win 3 points."
-      }
-    },
-    "scenarios": {
-      "title": "Practical Examples and Scenarios",
-      "p1": "Theory is fine, but Truco is learned by playing. Here are some common scenarios to illustrate strategy.",
-      "answer": "Answer:",
-      "quiz": "Quick Question:",
-      "ex1": {
-        "title": "Scenario 1: The Weak Envido",
-        "setup_1": " You have ",
-        "setup_2": ". Your Envido is 5+4 = 9 (the King is worth 0). The AI is 'mano' and calls ",
-        "setup_strong": "Envido",
-        "setup_3": ".",
-        "game": "Although it's tempting to accept to see what the AI has, your 9 points are extremely low. The probability that the AI has more than 9 (which is very easy) is very high.",
-        "result": "You say 'No Quiero'. You give 1 point to the AI, but you avoid losing 2 or more points on an almost lost bet.",
-        "lesson": "Don't cling to a low Envido, especially if you are not 'mano'. Minimizing losses is a long-term winning strategy.",
-        "quiz_q": "If instead of 9, you had 29 for Envido, what should you do?",
-        "quiz_a": " 'Quiero'! 29 is a good score and worth the risk."
-      },
-      "ex2": {
-        "title": "Scenario 2: The 'Envido Primero'",
-        "setup": " You are 'mano'. You have a decent hand for Truco: ",
-        "game": "The AI doesn't know what you have. The optimal play is to call 'Envido Primero'. This forces the AI to resolve the Envido bet before thinking about the Truco. If you win the Envido, you score points and also get information about the AI's cards (if they have high or low cards, or if they have suit pairs).",
-        "result": "You say 'Envido Primero'. The AI accepts, you have 28, the AI has 26. You win 2 points. Now the Truco phase continues, but you already have a point and information advantage.",
-        "lesson": "Whenever the situation allows, resolve the Envido first. It is a valuable source of points and information."
-      },
-      "ex3": {
-        "title": "Scenario 3: The Unexpected Flor!",
-        "setup_1": " You have a Flor: ",
-        "setup_2": ". Your Flor score is 20 + 7 + 4 + 3 = 34.",
-        "game": "You are obligated to call 'Flor' on your first turn. The AI does not have Flor.",
-        "result": "You call 'Flor'. The AI acknowledges it ('Son buenas'). You automatically win 3 points and the round ends to start a new one. The Envido and Truco are voided.",
-        "lesson": "The Flor is a powerful play that stops everything else. Don't forget to call it!",
-        "quiz_q": "If the AI also had Flor, what could it call in response to your 'Flor'?",
-        "quiz_a": " It could call 'Contraflor', escalating the bet to see who has the higher Flor score."
-      },
-      "ex4": {
-        "title": "Scenario 4: Winning with Cunning, not Strength",
-        "setup_1": " You are 'mano'. You have ",
-        "setup_2": ". A mediocre hand. The AI is 'pie'.",
-        "game": "You play your 3. The AI plays its 2. You win the first trick. Now it's your turn again.",
-        "result": "Although your 5 is weak, the AI doesn't know that. You call 'Truco'. The AI, having lost the first trick and not knowing your remaining card is low, might think you have a strong card saved and says 'No Quiero'. You win 1 point.",
-        "lesson": "Winning the first trick gives you a huge psychological advantage. Use it to bluff and steal points even with weak hands."
-      },
-      "ex5": {
-        "title": "Scenario 5: The Parda y Gano",
-        "setup": " You are 'mano'. You have tied the first trick (parda). In the second trick, you play your strongest card and win. You only have one card left: ",
-        "game": "You have won the second trick after tying the first. This means you have already won the round! The third trick is not played.",
-        "result": "You automatically win the round. If a 'Truco' was called, you win the corresponding points.",
-        "lesson": "Remember the tie-breaker rule: if you tie the first and win the second, the round is yours. Use this knowledge to bet with confidence.",
-        "quiz_q": "If instead, you had won the first and tied the second, who would win the round?",
-        "quiz_a": " You would! Winning the first and tying the second also gives you the round victory."
-      },
-      "ex6": {
-        "title": "Scenario 6: The Smart Sacrifice",
-        "setup_1": " You are 'mano'. You have a strong hand: ",
-        "setup_2": ". The AI is 'pie'.",
-        "game": "Instead of playing your strongest card (the 7 of Swords), you decide to play the 6 of Clubs. The AI, seeing a relatively low card, plays a 7 of Coins to win the trick.",
-        "result": "You lost the first trick on purpose. Now the AI feels confident and calls 'Truco'. This is your chance! You respond 'Quiero' and easily win the next two tricks with your 7 of Swords and your Ace of Swords (let's assume you had one), winning 2 points instead of just 1.",
-        "lesson": "Sometimes, intentionally losing the first trick (a 'sacrifice') is an advanced tactic to entice your opponent to bet, allowing you to win more points in the end."
-      },
-      "ex7": {
-        "title": "Scenario 7: The Envido Bluff",
-        "setup_1": " You are 'mano'. You have 27 for Envido: ",
-        "setup_2": ". Your opponent calls 'Envido'.",
-        "game": "27 is a good score, but not a guarantee. However, you decide to take a risk and bluff.",
-        "result": "You respond with 'Real Envido'. The AI, which might have had 28 or 29, now hesitates. Do you really have more than 30? Faced with uncertainty and the risk of losing more points, the AI says 'No Quiero'. You win 2 points with a successful bluff, even though you had fewer points.",
-        "lesson": "Envido is not just math. Escalating the bet can make an opponent with a slightly better hand fold for fear of a much stronger hand."
-      },
-      "ex8": {
-        "title": "Scenario 8: The Contraflor",
-        "setup_1": " You have a 38-point Flor: ",
-        "setup_2": ". You call 'Flor'. Surprisingly, the AI responds with 'Contraflor'.",
-        "game": "The 'Contraflor' is a bet to see who has the higher-scoring Flor. It's worth 6 points. With 38, you have one of the highest possible Flors. It is almost impossible for the AI to beat you.",
-        "result": "You respond 'Con Flor Quiero'. The cards are revealed. The AI had a 35-point Flor. You win the bet and 6 points.",
-        "lesson": "If you have a very high Flor (33+), do not hesitate to accept a 'Contraflor'. The odds are overwhelmingly in your favor."
-      }
-    },
-    "strategy": {
-      "title": "General Strategy and Tips",
-      "p1": "Truco is a game of incomplete information. Your goal is to make the best decision with the data you have, while deceiving your opponent.",
-      "tips": {
-        "title": "Key Tips:",
-        "li1_strong": "Position is Power:",
-        "li1_text": " Being 'mano' (playing first) is an advantage because it breaks ties in your favor. Being 'pie' (playing second) is also an advantage because you play with your opponent's card in view.",
-        "li2_strong": "Observe your Opponent:",
-        "li2_text": " This AI learns. If you always call Envido with 25 points, the AI will notice and challenge you more often. Vary your game.",
-        "li3_strong": "The Bluff is a Resource:",
-        "li3_text": " Don't be afraid to call 'Truco' with a mediocre hand if you won the first trick. The pressure can force the AI to fold.",
-        "li4_strong": "Don't Fall in Love with your Cards:",
-        "li4_text": " Sometimes, the right play is to fold and lose 1 point instead of accepting and risking losing more. Playing the long game is more important than winning every single hand."
-      }
-    },
-    "welcome": {
-      "title": "About the Game",
-      "p1_1": "Welcome to Truco AI! A single-player web application for the classic Argentine card game, ",
-      "p1_em": "Truco",
-      "p1_2": ". Face off against a strategic and adaptive AI opponent, learn the secrets of the game, and analyze your own play style.",
-      "p2_1": "Truco is a card game played with a Spanish deck. It is a game of deception, cunning, and psychology. Players compete to be the first to reach 15 points. Points are obtained through two main mechanisms: the ",
-      "p2_strong1": "Truco",
-      "p2_2": ", a bet on who will win the 'tricks' (rounds of cards), and the ",
-      "p2_strong2": "Envido",
-      "p2_3": ", a bet on who has the best combination of same-suited cards. This application simulates the Argentine variant of the game, with the particularity of the ",
-      "p2_strong3": "Flor",
-      "p2_4": "."
-    }
-  },
-  "card_picker": {
-    "title": "Select a Card"
-  },
-  "scenario_tester": {
-      "title": "Scenario Tester",
-      "setup": "Setup",
-      "describe_button": "Describe Scenarios",
-      "describe_button_aria": "View descriptions of predefined scenarios",
-      "select_scenario": "Select a predefined scenario...",
-      "or_create_custom": "Or create a custom one below",
-      "ai_score": "AI Score",
-      "opponent_score": "Opponent Score",
-      "mano": "Is Hand (Mano)",
-      "turn": "Current Turn",
-      "phase": "Game Phase",
-      "truco_level": "Truco Level",
-      "last_caller": "Last Caller",
-      "envido_called": "Envido already called",
-      "ai_envido_score": "AI Envido Points",
-      "opponent_envido_score": "Opponent Envido Points",
-      "phases": {
-        "trick_1": "Trick 1",
-        "trick_2": "Trick 2",
-        "trick_3": "Trick 3",
-        "envido_called": "Envido Called",
-        "truco_called": "Truco Called",
-        "retruco_called": "Retruco Called",
-        "flor_called": "Flor Called"
-      },
-      "run_test": "Run Test",
-      "regenerate_hands": "Regenerate Hands",
-      "regenerate_hands_tooltip": "For predefined scenarios only. Generates new random hands that fit the scenario's rules.",
-      "run_simulations": "Run {{count}} Simulations",
-      "simulating": "Simulating... ({{progress}}%)",
-      "cancel": "Cancel",
-      "ai_hand": "AI's Hand",
-      "clear": "Clear",
-      "opponent_hand": "Opponent's Hand",
-      "result": "Result",
-      "chosen_action": "Chosen Action",
-      "reasoning": "Reasoning",
-      "no_result": "Run a test to see the result.",
-      "simulation_results": "Simulation Results ({{count}} runs)",
-      "clear_results": "Clear",
-      "run_simulations_no_scenario_error": "Please select a predefined scenario to run bulk simulations.",
-      "descriptions": {
-        "title": "Scenario Descriptions",
-        "parda_y_gano": {
-          "title": "Parda y Gano (Tie and Win)",
-          "description": "The first trick was a tie. The AI is hand for the second and holds a strong hand. The goal is for the AI to recognize that winning this trick wins the round and to call Truco for maximum points."
-        },
-        "do_or_die": {
-          "title": "Do-or-Die",
-          "description": "The AI is about to lose the game. The opponent calls Truco. Folding is a certain loss. The AI must ignore its hand weakness and accept, as it's its only chance to win."
-        },
-        "lopsided_bait": {
-          "title": "Lopsided Hand Bait",
-          "description": "The AI has a very high Envido (31+) but very poor cards for Truco. The optimal strategy is to not call Envido and play a low card, hoping the opponent calls so it can be counter-attacked."
-        },
-        "envido_primero": {
-          "title": "Envido Primero",
-          "description": "The opponent calls Truco. The AI has an excellent Envido (33+). The correct rule/strategy is to interrupt with 'Envido is first' to secure those points before resolving the Truco."
-        },
-        "flor_vs_envido": {
-          "title": "Flor vs. Envido",
-          "description": "The opponent calls Envido. The AI has Flor. The rule is that Flor voids and beats Envido, so the AI must respond with 'Flor'."
-        },
-        "endgame_pressure_truco": {
-          "title": "Endgame Pressure",
-          "description": "The AI is about to win (14 points). It has a decent but not unbeatable hand. The goal is for the AI to play conservatively and avoid calling Truco, not risking the game unnecessarily."
-        }
-      },
-      "scenario_names": {
-        "parda_y_gano": "Parda y Gano (Tie and Win)",
-        "do_or_die": "Do-or-Die",
-        "lopsided_bait": "Lopsided Hand Bait",
-        "envido_primero": "Envido Primero",
-        "flor_vs_envido": "Flor vs. Envido",
-        "endgame_pressure_truco": "Endgame Pressure",
-        "dual_brava_probe": "Dual Brava Probe",
-        "ancho_feint_chain": "Ace Feint Chain",
-        "false_ace_bait": "False Ace Bait",
-        "tie_breaker_low": "Low Card Tie Breaker",
-        "signal_masked_depletion": "Masked Depletion Signal",
-        "post_envido_low_shift": "Post-Envido Low Shift",
-        "triple_brava_figure_probe": "Triple Brava Figure Probe",
-        "post_tie_retruco_response": "Post-Tie Retruco Response",
-        "false_7_deplete": "False 7 Deplete",
-        "envido_suit_misdirect": "Envido Suit Misdirect",
-        "brava_kiss_signal": "Brava \"Kiss\" Signal",
-        "mid_game_figure_low": "Mid-Game Low Figure",
-        "late_false_ace_chain": "Late False Ace Chain",
-        "parda_false_7": "Tie with False 7",
-        "tie_ancho_glimpse": "Ace Glimpse on Tie",
-        "banter_low_glimpse": "Banter Low Glimpse",
-        "ancho_deplete_post_tie": "Ace Deplete Post-Tie",
-        "dual_false_bait": "Dual False Bait",
-        "mid_low_signal_mask": "Mid-Low Signal Mask",
-        "figure_ancho_shift": "Figure-to-Ace Shift",
-        "endgame_low_balance": "Endgame Low Balance",
-        "retruco_response_with_ace": "Retruco Response with Ace",
-        "brava_mid_chain": "Brava-to-Mid Chain",
-        "signal_false_low": "False Low Signal",
-        "post_parda_figure": "Post-Tie Figure",
-        "false_brava_probe": "False Brava Probe",
-        "envido_low_unrelated": "Unrelated Low Envido",
-        "all_tie_mid_hint": "All-Tie Mid Hint",
-        "clutch_false_deplete": "Clutch False Deplete"
+  "batchAnalyzer": {
+    "title": "Analizador de Manos",
+    "description": "Esta herramienta calcula la fuerza heurística ('Valor Truco') y la evaluación de la IA (fuerza de simulación) para {{count}} combinaciones de manos estratégicamente únicas.",
+    "button_analyze": "Analizar Todas las Manos",
+    "loading": "Analizando... ({{progress}}%)",
+    "copy_button": "Copiar TSV",
+    "copy_button_copied": "¡Copiado!",
+    "copy_button_error": "Error",
+    "copy_tooltip": "Copiar datos como TSV (para hojas de cálculo)",
+    "header_hand": "Mano",
+    "header_truco_value": "Valor Truco",
+    "header_ai_assessment": "Evaluación IA",
+    "simple_card_names": {
+      "as_de_espadas": "As E",
+      "as_de_bastos": "As B",
+      "ancho_falso": "Ancho Falso",
+      "siete_de_espadas": "7 E",
+      "siete_de_oros": "7 O",
+      "siete_falso": "7 Falso",
+      "tres": "3",
+      "dos": "2",
+      "rey": "Rey",
+      "caballo": "Caballo",
+      "sota": "Sota",
+      "seis": "6",
+      "cinco": "5",
+      "cuatro": "4",
+      "default": "{{rank}} {{suit}}"
     }
   }
 }

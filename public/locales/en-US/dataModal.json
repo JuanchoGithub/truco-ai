@@ -107,11 +107,11 @@
       },
       "envido_aggressor": {
         "title": "The Envido Aggressor",
-        "high": "The AI has noticed that you frequently call Envido, even with modest points. You use the Envido as a tool to apply constant pressure.",
-        "medium": "You tend to be proactive with the Envido, not waiting for a perfect hand to call. The AI is learning to respect your calls."
+        "high": "The AI has noticed you frequently call Envido, even with modest points. You use Envido as a tool to apply constant pressure.",
+        "medium": "The AI perceives that you're willing to call Envido with decent scores, showing an aggressive tendency."
       },
       "envido_conservative": {
-        "title": "The Envido Precise",
+        "title": "The Envido Sharpshooter",
         "high": "You only call Envido when you have a very strong hand. This makes you extremely credible, and the AI will take your calls very seriously."
       },
       "envido_cautious": {
@@ -119,48 +119,48 @@
         "high": "The AI has detected that you often fold from Envido bets if you don't have a very strong hand. This could be exploited with bluffs."
       },
       "envido_bold": {
-        "title": "The Envido Bold",
-        "high": "You almost never fold from an Envido bet, showing that you are willing to challenge the AI to the end. Beware of overvalued hands!"
+        "title": "The Envido Challenger",
+        "high": "You almost never fold from an Envido bet, showing a willingness to challenge the AI to the end. Be wary of overvaluing your hands!"
       },
       "truco_effective_bluffer": {
         "title": "The Master Bluffer",
-        "high": "Your Truco bluffs are very effective. The AI has noticed that you often win points by betting with weak hands."
+        "high": "Your Truco bluffs are highly effective. The AI has noticed you often win points by betting with weak hands."
       },
       "truco_readable_bluffer": {
         "title": "The Readable Bluffer",
-        "high": "The AI believes it has figured out your bluffing pattern. Be careful, as it might not fold to your risky bets."
+        "high": "The AI believes it has figured out your bluffing pattern. Be careful, as it may call your risky bets more often."
       },
       "truco_frequent_bluffer": {
         "title": "The Frequent Bluffer",
-        "high": "You attempt Truco bluffs regularly. This makes you unpredictable, but also vulnerable if the AI decides to call."
+        "high": "You attempt Truco bluffs regularly. This makes you unpredictable but also vulnerable if the AI decides to call."
       },
       "truco_conservative": {
-        "title": "The Truco Reserved",
-        "high": "You are extremely conservative in Truco, betting only with elite hands. The AI has learned to fear and respect your calls greatly."
+        "title": "The Truco Rock",
+        "high": "You are extremely conservative in Truco, betting only with elite hands. The AI has learned to greatly fear and respect your calls."
       },
       "truco_aggressive": {
-        "title": "The Truco Ram",
-        "high": "You don't hesitate to call Truco to apply pressure, even with modest hands. This makes you dangerous, but sometimes exposes you to a counter-attack."
+        "title": "The Truco Brawler",
+        "high": "You don't hesitate to call Truco to apply pressure, even with modest hands. This makes you dangerous but sometimes leaves you open to a counter-attack."
       },
       "playstyle_predictable": {
-        "title": "The Predictable",
-        "high": "When you are 'mano', you almost always start by playing your strongest card. The AI can use this predictability to plan its strategy."
+        "title": "The By-the-Book Leader",
+        "high": "When you're 'mano', you almost always lead with your strongest card. The AI can use this predictability to plan its strategy."
       },
       "playstyle_unpredictable": {
-        "title": "The Variable Tactician",
-        "high": "Your opening plays are varied and hard to predict. Sometimes you play your strongest card, sometimes a weak one, keeping the AI on its toes."
+        "title": "The Unpredictable Tactician",
+        "high": "Your opening plays are varied and hard to predict. Sometimes you play your strongest card, other times a weak one, keeping the AI guessing."
       },
       "envido_primero_specialist": {
         "title": "The 'Primero' Specialist",
-        "high": "You use the 'Envido Primero' tactic frequently to interrupt the Truco. The AI is aware of this preference and might adjust its Truco calls accordingly."
+        "high": "You use the 'Envido Primero' tactic frequently to interrupt Truco. The AI is aware of this preference and might adjust its own Truco calls accordingly."
       },
       "counter_puncher": {
         "title": "The Counter-Puncher",
-        "high": "The AI has noticed that you respond aggressively to its high-value card plays, often attempting to win the trick rather than sacrificing a weak card. This indicates you are not easily intimidated."
+        "high": "The AI has noticed you respond aggressively to its high-value card plays, often trying to win the trick rather than sacrificing a weak card. This indicates you aren't easily intimidated."
       },
       "chain_bluffer": {
         "title": "The Chain Bluffer",
-        "high": "The AI has detected a pattern where you lead a round with a weak card and then follow up by calling Truco. It suspects you use this tactic to set traps or steal points with weak hands."
+        "high": "The AI has detected a pattern where you lead a round with a weak card, then follow up by calling Truco. It suspects you use this tactic to set traps or steal points with weak hands."
       }
     }
   }

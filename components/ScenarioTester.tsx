@@ -1,12 +1,12 @@
-
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Card, GameState, AiMove, Player, GamePhase, MessageObject, Action, ActionType } from '../types';
+import { Card, GameState, AiMove, Player, GamePhase, MessageObject, Action, ActionType, AiArchetype } from '../types';
 import { createDeck, getCardName, decodeCardFromCode, getEnvidoValue, hasFlor } from '../services/trucoLogic';
 import { initialState } from '../hooks/useGameReducer';
 import { getLocalAIMove } from '../services/localAiService';
 import { predefinedScenarios, PredefinedScenario } from '../services/scenarioService';
 import CardComponent from './Card';
 import { useLocalization } from '../context/LocalizationContext';
+import { selectArchetype } from '../hooks/reducers/gameplayReducer';
 
 const FULL_DECK = createDeck();
 
@@ -120,6 +120,8 @@ const ScenarioDescriptionsModal: React.FC<{ onExit: () => void }> = ({ onExit })
     );
 };
 
+type MultiArchetypeResult = { archetype: AiArchetype; result: AiMove };
+
 const ScenarioTester: React.FC = () => {
     const { t } = useLocalization();
 
@@ -146,18 +148,19 @@ const ScenarioTester: React.FC = () => {
     const [hasEnvidoBeenCalled, setHasEnvidoBeenCalled] = useState<boolean>(false);
     const [aiEnvidoValue, setAiEnvidoValue] = useState<number>(0);
     const [opponentEnvidoValue, setOpponentEnvidoValue] = useState<number>(0);
-
+    const [archetype, setArchetype] = useState<AiArchetype | 'Dynamic' | 'All'>('Dynamic');
     
     // UI state
     const [pickerState, setPickerState] = useState<{ open: boolean, hand: 'ai' | 'opponent', index: number }>({ open: false, hand: 'ai', index: 0 });
     const [testResult, setTestResult] = useState<AiMove | null>(null);
+    const [multiArchetypeResults, setMultiArchetypeResults] = useState<MultiArchetypeResult[] | null>(null);
     const [selectedScenario, setSelectedScenario] = useState<PredefinedScenario | null>(null);
     const [isDescriptionVisible, setIsDescriptionVisible] = useState(false);
     const [iterations, setIterations] = useState(1000);
     const [expandedResult, setExpandedResult] = useState<string | null>(null);
 
     // Simulation state
-    const [simulationResults, setSimulationResults] = useState<Record<string, number> | null>(null);
+    const [simulationResults, setSimulationResults] = useState<Record<string, Record<string, number>> | null>(null);
     const [isSimulating, setIsSimulating] = useState(false);
     const [simulationProgress, setSimulationProgress] = useState(0);
     const simulationCancelled = useRef(false);
@@ -251,18 +254,29 @@ const ScenarioTester: React.FC = () => {
         regenerateAndApplyHands(scenario);
         setTestResult(null); // Clear previous results
         setSimulationResults(null);
+        setMultiArchetypeResults(null);
     };
-    
-    const handleRunTest = () => {
+
+    const createScenarioState = (forcedArchetype?: AiArchetype): GameState | null => {
         const finalAiHand = aiHand.filter(c => c !== null) as Card[];
         const finalOpponentHand = opponentHand.filter(c => c !== null) as Card[];
         
         if (finalAiHand.length === 0) {
             alert("AI Hand cannot be empty for a test.");
-            return;
+            return null;
         }
 
-        const scenarioState: GameState = {
+        let calculatedArchetype: AiArchetype;
+        if (forcedArchetype) {
+            calculatedArchetype = forcedArchetype;
+        } else if (archetype === 'Dynamic') {
+            calculatedArchetype = selectArchetype(opponentScore, aiScore);
+        } else {
+            // 'All' is handled by the calling function, this will be one of the concrete types.
+            calculatedArchetype = archetype as AiArchetype;
+        }
+
+        return {
             ...initialState,
             aiScore,
             playerScore: opponentScore,
@@ -271,6 +285,7 @@ const ScenarioTester: React.FC = () => {
             gamePhase,
             trucoLevel,
             lastCaller,
+            aiArchetype: calculatedArchetype,
             aiHand: finalAiHand,
             initialAiHand: finalAiHand,
             playerHand: finalOpponentHand,
@@ -285,9 +300,30 @@ const ScenarioTester: React.FC = () => {
             aiEnvidoValue: hasEnvidoBeenCalled ? aiEnvidoValue : null,
             playerEnvidoValue: hasEnvidoBeenCalled ? opponentEnvidoValue : null,
         };
-        
-        const aiMove = getLocalAIMove(scenarioState);
-        setTestResult(aiMove);
+    };
+    
+    const handleRunTest = () => {
+        setSimulationResults(null);
+        if (archetype === 'All') {
+            setTestResult(null);
+            const archetypes: AiArchetype[] = ['Balanced', 'Aggressive', 'Cautious', 'Deceptive'];
+            const results: MultiArchetypeResult[] = [];
+
+            for (const arch of archetypes) {
+                const scenarioState = createScenarioState(arch);
+                if (!scenarioState) continue;
+                const result = getLocalAIMove(scenarioState);
+                results.push({ archetype: arch, result });
+            }
+            setMultiArchetypeResults(results);
+        } else {
+            setMultiArchetypeResults(null);
+            const scenarioState = createScenarioState();
+            if (!scenarioState) return;
+            
+            const aiMove = getLocalAIMove(scenarioState);
+            setTestResult(aiMove);
+        }
     };
 
     const handleRunSimulations = () => {
@@ -300,74 +336,87 @@ const ScenarioTester: React.FC = () => {
         setSimulationProgress(0);
         setSimulationResults(null);
         setTestResult(null);
+        setMultiArchetypeResults(null);
         simulationCancelled.current = false;
 
-        const results: Record<string, number> = {};
-        const totalSims = iterations;
-        const batchSize = 20; // Process in chunks to keep UI responsive
+        const archetypesToRun: (AiArchetype | 'Dynamic')[] = archetype === 'All'
+            ? ['Balanced', 'Aggressive', 'Cautious', 'Deceptive']
+            : [archetype];
 
-        const processSimChunk = (i: number) => {
-            if (i >= totalSims || simulationCancelled.current) {
+        const iterationsPerArchetype = Math.floor(iterations / archetypesToRun.length);
+        if (iterationsPerArchetype < 1) {
+            alert('Iterations must be at least the number of archetypes being tested.');
+            setIsSimulating(false);
+            return;
+        }
+        const totalSims = iterationsPerArchetype * archetypesToRun.length;
+
+        const newResults: Record<string, Record<string, number>> = {};
+
+        const processSimChunk = async (archIndex: number, iterIndex: number) => {
+            if (archIndex >= archetypesToRun.length || simulationCancelled.current) {
                 setIsSimulating(false);
-                setSimulationResults(results);
-                if (simulationCancelled.current) {
-                    setSimulationResults(null);
-                }
+                if (simulationCancelled.current) setSimulationResults(null);
                 return;
             }
 
-            for (let j = 0; j < batchSize && i + j < totalSims; j++) {
+            const currentArch = archetypesToRun[archIndex];
+            if (!newResults[currentArch]) {
+                newResults[currentArch] = {};
+            }
+
+            const batchSize = 50;
+            for (let k = 0; k < batchSize && iterIndex + k < iterationsPerArchetype; k++) {
                 const hands = selectedScenario.generateHands();
                 if (hands) {
                     const { aiHand: newAiHand, playerHand: newPlayerHand } = hands;
-                    
                     const baseState = selectedScenario.baseState;
-                    const isRespondingToTruco = (baseState.gamePhase || '').includes('truco_called');
-                    const envidoWindowClosed = (baseState.trucoLevel || 0) > 0 && !isRespondingToTruco;
+                    const scenarioState = createScenarioState(currentArch as AiArchetype); // createScenarioState handles 'Dynamic'
+                     if(scenarioState) {
+                        scenarioState.aiHand = newAiHand;
+                        scenarioState.initialAiHand = newAiHand;
+                        scenarioState.playerHand = newPlayerHand;
+                        scenarioState.initialPlayerHand = newPlayerHand;
+                        scenarioState.aiHasFlor = hasFlor(newAiHand);
+                        scenarioState.playerHasFlor = hasFlor(newPlayerHand);
 
-                    const scenarioState: GameState = {
-                        ...initialState,
-                        ...baseState,
-                        aiScore: baseState.aiScore || 0,
-                        playerScore: baseState.playerScore || 0,
-                        aiHand: newAiHand,
-                        initialAiHand: newAiHand,
-                        playerHand: newPlayerHand,
-                        initialPlayerHand: newPlayerHand,
-                        aiHasFlor: hasFlor(newAiHand),
-                        playerHasFlor: hasFlor(newPlayerHand),
-                        hasEnvidoBeenCalledThisRound: baseState.hasEnvidoBeenCalledThisRound || envidoWindowClosed,
-                    };
-
-                    const aiMove = getLocalAIMove(scenarioState);
-                    const reason = aiMove.reasonKey || 'unknown_action';
-                    results[reason] = (results[reason] || 0) + 1;
+                        const aiMove = getLocalAIMove(scenarioState);
+                        const reason = aiMove.reasonKey || 'unknown_action';
+                        newResults[currentArch][reason] = (newResults[currentArch][reason] || 0) + 1;
+                     }
                 }
             }
             
-            setSimulationProgress(Math.round(((i + batchSize) / totalSims) * 100));
-            setTimeout(() => processSimChunk(i + batchSize), 0); // Yield to main thread
+            setSimulationResults({ ...newResults }); // Update for real-time view
+
+            const newIterIndex = iterIndex + batchSize;
+            const totalCompleted = (archIndex * iterationsPerArchetype) + newIterIndex;
+            setSimulationProgress(Math.round((totalCompleted / totalSims) * 100));
+
+            await new Promise(resolve => setTimeout(resolve, 0));
+
+            if (newIterIndex >= iterationsPerArchetype) {
+                processSimChunk(archIndex + 1, 0);
+            } else {
+                processSimChunk(archIndex, newIterIndex);
+            }
         };
 
-        processSimChunk(0);
+        processSimChunk(0, 0);
     };
 
     const handleCancelSimulation = () => {
         simulationCancelled.current = true;
     };
-    
-    const sortedSimulationResults = useMemo(() => {
-        if (!simulationResults) return null;
-        return Object.entries(simulationResults).sort((a, b) => Number(b[1]) - Number(a[1]));
-    }, [simulationResults]);
-
 
     const finalAiHand = aiHand.filter(c => c !== null) as Card[];
     const finalOpponentHand = opponentHand.filter(c => c !== null) as Card[];
-    const actionDesc = testResult ? getActionDescription(testResult.action, { currentTurn, aiHand: finalAiHand, playerHand: finalOpponentHand }, t) : "";
-    const reasoningDesc = testResult ? renderReasoning(testResult.reasoning, t) : "";
-
-    const totalSimsRun = sortedSimulationResults ? sortedSimulationResults.reduce((sum, [, count]) => sum + count, 0) : 0;
+    
+    const totalSimsRun = useMemo(() => {
+        if (!simulationResults) return 0;
+        return Object.values(simulationResults).reduce((total, archResults) => 
+            total + Object.values(archResults).reduce((sum, count) => sum + count, 0), 0);
+    }, [simulationResults]);
     
     return (
         <div className="bg-stone-800/95 border-4 border-indigo-700/50 rounded-xl shadow-2xl w-full h-full flex flex-col">
@@ -413,6 +462,17 @@ const ScenarioTester: React.FC = () => {
                         <div className="space-y-2">
                             <div><label className="block text-sm font-medium text-gray-300">{t('scenario_tester.mano')}</label><select value={mano} onChange={e => {setMano(e.target.value as Player); setSelectedScenario(null);}} className="w-full p-1 bg-gray-800 border border-gray-600 rounded-md"><option value="ai">{t('common.ai')}</option><option value="player">{t('common.opponent')}</option></select></div>
                             <div><label className="block text-sm font-medium text-gray-300">{t('scenario_tester.turn')}</label><select value={currentTurn} onChange={e => {setCurrentTurn(e.target.value as Player); setSelectedScenario(null);}} className="w-full p-1 bg-gray-800 border border-gray-600 rounded-md"><option value="ai">{t('common.ai')}</option><option value="player">{t('common.opponent')}</option></select></div>
+                             <div>
+                                <label className="block text-sm font-medium text-gray-300">{t('scenario_tester.archetype_label')}</label>
+                                <select value={archetype} onChange={e => setArchetype(e.target.value as AiArchetype | 'Dynamic' | 'All')} className="w-full p-1 bg-gray-800 border border-gray-600 rounded-md">
+                                    <option value="Dynamic">{t('scenario_tester.archetype_dynamic')}</option>
+                                    <option value="All">{t('scenario_tester.archetype_all')}</option>
+                                    <option value="Balanced">{t('ai_logic.archetypes.Balanced')}</option>
+                                    <option value="Aggressive">{t('ai_logic.archetypes.Aggressive')}</option>
+                                    <option value="Cautious">{t('ai_logic.archetypes.Cautious')}</option>
+                                    <option value="Deceptive">{t('ai_logic.archetypes.Deceptive')}</option>
+                                </select>
+                            </div>
                         </div>
                          <div className="space-y-2">
                             <div>
@@ -438,7 +498,7 @@ const ScenarioTester: React.FC = () => {
                             </div>
                              <div>
                                 <label className="block text-sm font-medium text-gray-300">{t('scenario_tester.last_caller')}</label>
-                                <select value={lastCaller || ''} onChange={e => {setLastCaller(e.target.value as Player); setSelectedScenario(null);}} disabled={trucoLevel === 0} className="w-full p-1 bg-gray-800 border border-gray-600 rounded-md disabled:opacity-50">
+                                <select value={lastCaller || ''} onChange={e => {setLastCaller(e.target.value as Player); setSelectedScenario(null);}} disabled={trucoLevel === 0 && !gamePhase.includes('envido')} className="w-full p-1 bg-gray-800 border border-gray-600 rounded-md disabled:opacity-50">
                                     <option value="" disabled>{t('common.na')}</option>
                                     <option value="ai">{t('common.ai')}</option>
                                     <option value="player">{t('common.opponent')}</option>
@@ -509,48 +569,73 @@ const ScenarioTester: React.FC = () => {
                             <div className="space-y-2">
                                 <div>
                                     <h4 className="font-semibold text-gray-300">{t('scenario_tester.chosen_action')}</h4>
-                                    <p className="p-2 bg-black/50 rounded-md font-mono text-lg text-yellow-300">{actionDesc}</p>
+                                    <p className="p-2 bg-black/50 rounded-md font-mono text-lg text-yellow-300">{getActionDescription(testResult.action, { currentTurn, aiHand: finalAiHand, playerHand: finalOpponentHand }, t)}</p>
                                 </div>
                                 <details>
                                     <summary className="cursor-pointer font-semibold text-gray-300">{t('scenario_tester.reasoning')}</summary>
-                                    <pre className="mt-1 p-2 bg-black/50 rounded-md text-xs text-cyan-200 whitespace-pre-wrap font-mono max-h-40 overflow-y-auto">{reasoningDesc}</pre>
+                                    <pre className="mt-1 p-2 bg-black/50 rounded-md text-xs text-cyan-200 whitespace-pre-wrap font-mono max-h-40 overflow-y-auto">{renderReasoning(testResult.reasoning, t)}</pre>
                                 </details>
+                            </div>
+                        ) : multiArchetypeResults ? (
+                            <div className="space-y-2">
+                                {multiArchetypeResults.map(({ archetype, result }) => (
+                                    <details key={archetype} className="bg-black/20 p-2 rounded-md">
+                                        <summary className="cursor-pointer font-semibold text-gray-200 flex justify-between items-center">
+                                            <span>{t(`ai_logic.archetypes.${archetype}`)}: <span className="font-mono text-base text-yellow-300 ml-2">{getActionDescription(result.action, { currentTurn, aiHand: finalAiHand, playerHand: finalOpponentHand }, t)}</span></span>
+                                            <span className="text-xs text-gray-400">Details</span>
+                                        </summary>
+                                        <pre className="mt-2 p-2 bg-black/50 rounded-md text-xs text-cyan-200 whitespace-pre-wrap font-mono max-h-40 overflow-y-auto">{renderReasoning(result.reasoning, t)}</pre>
+                                    </details>
+                                ))}
                             </div>
                         ) : !simulationResults && (
                             <div className="flex items-center justify-center h-full text-gray-400">{t('scenario_tester.no_result')}</div>
                         )}
                     </div>
-                     {sortedSimulationResults && (
+                     {simulationResults && (
                         <div className="flex flex-col flex-grow overflow-hidden">
                             <div className="flex justify-between items-center mb-2 flex-shrink-0">
                                 <h3 className="text-lg font-bold text-indigo-200">{t('scenario_tester.simulation_results', { count: totalSimsRun })}</h3>
                                 <button onClick={() => setSimulationResults(null)} className="text-xs text-red-400">{t('scenario_tester.clear_results')}</button>
                             </div>
-                            <div className="flex-grow overflow-y-auto space-y-1 pr-2">
-                                {sortedSimulationResults.map(([reason, count]) => {
-                                    const percentage = totalSimsRun > 0 ? (count / totalSimsRun) * 100 : 0;
-                                    const reasonText = t(`ai_reason_keys.${reason}`, { defaultValue: reason });
-                                    const isExpanded = expandedResult === reason;
+                            <div className="flex-grow overflow-y-auto space-y-4 pr-2">
+                                {Object.entries(simulationResults).map(([arch, results]) => {
+                                    const sorted = Object.entries(results).sort((a, b) => b[1] - a[1]);
+                                    const totalForArch = sorted.reduce((sum, [, count]) => sum + count, 0);
+                                    if (totalForArch === 0) return null;
+
                                     return (
-                                        <div key={reason}>
-                                            <button 
-                                                onClick={() => setExpandedResult(isExpanded ? null : reason)}
-                                                className="w-full grid grid-cols-[1fr_auto] lg:grid-cols-[1fr_2fr_auto] items-center gap-2 text-sm p-2 rounded-md hover:bg-indigo-900/50 transition-colors"
-                                                aria-expanded={isExpanded}
-                                            >
-                                                <span className="truncate text-gray-300 text-left" title={reasonText}>{reasonText}</span>
-                                                <div className="w-full bg-gray-700 rounded-full h-4 hidden lg:block">
-                                                    <div className="bg-indigo-500 h-4 rounded-full text-right" style={{ width: `${percentage}%` }} />
-                                                </div>
-                                                <span className="font-mono text-white text-right">{count} ({percentage.toFixed(1)}%)</span>
-                                            </button>
-                                            {isExpanded && (
-                                                <div className="p-3 mt-1 bg-black/40 rounded-md border border-indigo-400/30 animate-fade-in-scale">
-                                                    <pre className="text-xs text-gray-200 whitespace-pre-wrap font-sans">
-                                                        {t(`scenario_tester.explanations.${reason}`, { defaultValue: "No explanation available." })}
-                                                    </pre>
-                                                </div>
-                                            )}
+                                        <div key={arch} className="bg-black/20 p-2 rounded-md">
+                                            <h4 className="font-bold text-indigo-300 text-base mb-2">{t(`ai_logic.archetypes.${arch}`, { defaultValue: arch })} ({totalForArch} runs)</h4>
+                                            <div className="space-y-1">
+                                                {sorted.map(([reason, count]) => {
+                                                    const percentage = totalForArch > 0 ? (count / totalForArch) * 100 : 0;
+                                                    const reasonText = t(`ai_reason_keys.${reason}`, { defaultValue: reason });
+                                                    const isExpanded = expandedResult === `${arch}-${reason}`;
+                                                    return (
+                                                        <div key={reason}>
+                                                            <button 
+                                                                onClick={() => setExpandedResult(isExpanded ? null : `${arch}-${reason}`)}
+                                                                className="w-full grid grid-cols-[1fr_auto] lg:grid-cols-[1fr_2fr_auto] items-center gap-2 text-sm p-2 rounded-md hover:bg-indigo-900/50 transition-colors"
+                                                                aria-expanded={isExpanded}
+                                                            >
+                                                                <span className="truncate text-gray-300 text-left" title={reasonText}>{reasonText}</span>
+                                                                <div className="w-full bg-gray-700 rounded-full h-4 hidden lg:block">
+                                                                    <div className="bg-indigo-500 h-4 rounded-full text-right" style={{ width: `${percentage}%` }} />
+                                                                </div>
+                                                                <span className="font-mono text-white text-right">{count} ({percentage.toFixed(1)}%)</span>
+                                                            </button>
+                                                            {isExpanded && (
+                                                                <div className="p-3 mt-1 bg-black/40 rounded-md border border-indigo-400/30 animate-fade-in-scale">
+                                                                    <pre className="text-xs text-gray-200 whitespace-pre-wrap font-sans">
+                                                                        {t(`scenario_tester.explanations.${reason}`, { defaultValue: "No explanation available." })}
+                                                                    </pre>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
                                         </div>
                                     );
                                 })}
