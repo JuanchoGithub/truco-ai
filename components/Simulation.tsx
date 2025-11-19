@@ -618,7 +618,7 @@ const ManualSimulator: React.FC = () => {
         });
     };
 
-    const handleRunSimulations = () => {
+    const handleRunSimulations = async () => {
         if (simPhase !== 'play') return;
 
         setIsSimulating(true);
@@ -629,34 +629,48 @@ const ManualSimulator: React.FC = () => {
 
         const results: Record<string, number> = {};
         const totalSims = 1000;
-        const batchSize = 20;
-
+        
         let stateToSimulate = state;
         if (state.currentTurn === 'player') {
             stateToSimulate = createMirroredState(state);
         }
 
-        const processSimChunk = (i: number) => {
-            if (i >= totalSims || simulationCancelled.current) {
-                setIsSimulating(false);
-                setSimulationResults(results);
-                if (simulationCancelled.current) {
-                    setSimulationResults(null);
-                }
-                return;
-            }
+        const processSims = async () => {
+             let completed = 0;
+             const TIME_BUDGET_MS = 40;
 
-            for (let j = 0; j < batchSize && i + j < totalSims; j++) {
-                const aiMove = getLocalAIMove(stateToSimulate);
-                const reason = aiMove.reasonKey || 'unknown_action';
-                results[reason] = (results[reason] || 0) + 1;
-            }
-            
-            setSimulationProgress(Math.round(((i + batchSize) / totalSims) * 100));
-            setTimeout(() => processSimChunk(i + batchSize), 0);
+             while(completed < totalSims && !simulationCancelled.current) {
+                 const startTime = performance.now();
+                 
+                 // Inner batch loop
+                 while (completed < totalSims && !simulationCancelled.current) {
+                    const aiMove = getLocalAIMove(stateToSimulate);
+                    const reason = aiMove.reasonKey || 'unknown_action';
+                    results[reason] = (results[reason] || 0) + 1;
+                    completed++;
+                    
+                    // Check time budget every 20 iterations
+                    if (completed % 20 === 0) {
+                        if (performance.now() - startTime > TIME_BUDGET_MS) {
+                            break;
+                        }
+                    }
+                 }
+                 
+                 setSimulationProgress(Math.round((completed / totalSims) * 100));
+                 // Yield
+                 await new Promise(resolve => setTimeout(resolve, 0));
+             }
+
+             setIsSimulating(false);
+             if (!simulationCancelled.current) {
+                 setSimulationResults(results);
+             } else {
+                 setSimulationResults(null);
+             }
         };
-
-        processSimChunk(0);
+        
+        processSims();
     };
 
     const handleCancelSimulation = () => {

@@ -252,58 +252,77 @@ const ScenarioRunner: React.FC = () => {
 
             const scenario = predefinedScenarios[i];
             
-            const byArchetype: Record<string, Record<string, number>> = {};
-            archetypesToRun.forEach(arch => { byArchetype[arch] = {}; });
-            const currentScenarioResult = { results: {}, byArchetype, totalRuns: 0 };
+            // Update progress text for scenario start
+            setProgress(prev => ({ ...prev, currentScenario: i + 1, scenarioName: t(scenario.nameKey) }));
+            
+            // Optimization: Pre-calculate static parts of state
+            const baseState = scenario.baseState;
+            const isRespondingToTruco = (baseState.gamePhase || '').includes('truco_called');
+            const envidoWindowClosed = (baseState.trucoLevel || 0) > 0 && !isRespondingToTruco;
+            const hasEnvidoBeenCalled = baseState.hasEnvidoBeenCalledThisRound || envidoWindowClosed;
 
-            for (const archetype of archetypesToRun) {
-                for (let j = 0; j < iterationsPerArchetype; j++) {
-                    if (cancelRef.current) break;
-
+            let sIndex = 0; // archetype index
+            let iter = 0;
+            
+            while (sIndex < archetypesToRun.length && !cancelRef.current) {
+                const batchStartTime = performance.now();
+                const TIME_BUDGET_MS = 40;
+                
+                // Inner loop for time-slicing
+                while (sIndex < archetypesToRun.length && !cancelRef.current) {
+                    const archetype = archetypesToRun[sIndex];
+                    
+                    // Run Sim
                     const hands = scenario.generateHands();
                     if (hands) {
-                        const { aiHand, playerHand } = hands;
-                        const baseState = scenario.baseState;
-                        const isRespondingToTruco = (baseState.gamePhase || '').includes('truco_called');
-                        const envidoWindowClosed = (baseState.trucoLevel || 0) > 0 && !isRespondingToTruco;
-
-                        const scenarioState: GameState = {
+                        // Optimization: Construct new object explicitly for speed
+                         const scenarioState: GameState = {
                             ...initialState, ...baseState,
                             aiArchetype: archetype,
                             aiScore: baseState.aiScore || 0, playerScore: baseState.playerScore || 0,
-                            aiHand, initialAiHand: aiHand,
-                            playerHand, initialPlayerHand: playerHand,
-                            aiHasFlor: hasFlor(aiHand), playerHasFlor: hasFlor(playerHand),
-                            hasEnvidoBeenCalledThisRound: baseState.hasEnvidoBeenCalledThisRound || envidoWindowClosed,
+                            aiHand: hands.aiHand, initialAiHand: hands.aiHand,
+                            playerHand: hands.playerHand, initialPlayerHand: hands.playerHand,
+                            aiHasFlor: hasFlor(hands.aiHand), playerHasFlor: hasFlor(hands.playerHand),
+                            hasEnvidoBeenCalledThisRound: hasEnvidoBeenCalled,
                         };
-
+                        
                         const aiMove = getLocalAIMove(scenarioState);
                         const reason = aiMove.reasonKey || 'unknown_action';
                         
-                        currentScenarioResult.results[reason] = (currentScenarioResult.results[reason] || 0) + 1;
-                        currentScenarioResult.byArchetype[archetype][reason] = (currentScenarioResult.byArchetype[archetype][reason] || 0) + 1;
-                        currentScenarioResult.totalRuns++;
+                        // Update accumulated results in place
+                        const res = accumulatedResults[i];
+                        res.results[reason] = (res.results[reason] || 0) + 1;
+                        res.byArchetype[archetype][reason] = (res.byArchetype[archetype][reason] || 0) + 1;
+                        res.totalRuns++;
                     }
-
+                    
+                    iter++;
                     simsCompleted++;
+                    
+                    if (iter >= iterationsPerArchetype) {
+                        iter = 0;
+                        sIndex++;
+                    }
+                    
+                    // Check time budget every 50 iterations to minimize overhead of performance.now()
+                    if (iter % 50 === 0) {
+                         if (performance.now() - batchStartTime > TIME_BUDGET_MS) {
+                             break; // Break inner loop to yield
+                         }
+                    }
                 }
-                if (cancelRef.current) break;
+                
+                // Yield update
+                const overallProgress = (simsCompleted / totalSims) * 100;
+                setProgress(prev => ({ ...prev, overallProgress }));
+                await new Promise(resolve => setTimeout(resolve, 0));
             }
-
-            const overallProgress = (simsCompleted / totalSims) * 100;
-            setProgress({ 
-                currentScenario: i + 1, 
-                totalScenarios: predefinedScenarios.length, 
-                scenarioName: t(scenario.nameKey), 
-                overallProgress 
-            });
-
-            accumulatedResults[i] = { ...accumulatedResults[i], ...currentScenarioResult };
+            
+            // Update results view after scenario finishes
             setResults([...accumulatedResults]);
             await new Promise(resolve => setTimeout(resolve, 0));
         }
         
-        setProgress(prev => ({ ...prev, overallProgress: cancelRef.current ? prev.overallProgress : 100, currentScenario: cancelRef.current ? prev.currentScenario : predefinedScenarios.length }));
         setIsRunning(false);
     };
 

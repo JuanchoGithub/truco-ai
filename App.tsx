@@ -25,7 +25,7 @@ import { speechService } from './services/speechService';
 import Simulation from './components/Simulation';
 import GameMenu from './components/GameMenu';
 import SoundHint from './components/SoundHint';
-import { useLocalization } from '../context/LocalizationContext';
+import { useLocalization } from './context/LocalizationContext';
 
 type GameMode = 'menu' | 'playing' | 'tutorial' | 'playing-with-help' | 'manual' | 'simulation';
 

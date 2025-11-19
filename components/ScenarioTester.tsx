@@ -354,56 +354,85 @@ const ScenarioTester: React.FC = () => {
 
         const newResults: Record<string, Record<string, number>> = {};
 
-        const processSimChunk = async (archIndex: number, iterIndex: number) => {
-            if (archIndex >= archetypesToRun.length || simulationCancelled.current) {
-                setIsSimulating(false);
-                if (simulationCancelled.current) setSimulationResults(null);
-                return;
-            }
+        const processSims = async () => {
+            let archIndex = 0;
+            let iterIndex = 0;
+            let totalCompleted = 0;
 
-            const currentArch = archetypesToRun[archIndex];
-            if (!newResults[currentArch]) {
-                newResults[currentArch] = {};
-            }
-
-            const batchSize = 50;
-            for (let k = 0; k < batchSize && iterIndex + k < iterationsPerArchetype; k++) {
-                const hands = selectedScenario.generateHands();
-                if (hands) {
-                    const { aiHand: newAiHand, playerHand: newPlayerHand } = hands;
-                    const baseState = selectedScenario.baseState;
-                    const scenarioState = createScenarioState(currentArch as AiArchetype); // createScenarioState handles 'Dynamic'
-                     if(scenarioState) {
-                        scenarioState.aiHand = newAiHand;
-                        scenarioState.initialAiHand = newAiHand;
-                        scenarioState.playerHand = newPlayerHand;
-                        scenarioState.initialPlayerHand = newPlayerHand;
-                        scenarioState.aiHasFlor = hasFlor(newAiHand);
-                        scenarioState.playerHasFlor = hasFlor(newPlayerHand);
-
-                        const aiMove = getLocalAIMove(scenarioState);
-                        const reason = aiMove.reasonKey || 'unknown_action';
-                        newResults[currentArch][reason] = (newResults[currentArch][reason] || 0) + 1;
-                     }
+            while (archIndex < archetypesToRun.length && !simulationCancelled.current) {
+                const batchStartTime = performance.now();
+                const TIME_BUDGET_MS = 40; // Target ~25fps budget
+                
+                const currentArch = archetypesToRun[archIndex];
+                if (!newResults[currentArch]) {
+                    newResults[currentArch] = {};
                 }
+                
+                // Pre-calculate the base state for this archetype once per chunk/archetype switch
+                // to avoid recreating the entire object graph 1000s of times.
+                // Note: 'createScenarioState' uses current UI state variables (aiScore, etc.)
+                // We must ensure we pass the specific archetype if it's 'All'.
+                const baseStateForArch = createScenarioState(currentArch === 'Dynamic' ? undefined : currentArch as AiArchetype);
+                
+                if (!baseStateForArch) {
+                    console.error("Failed to create base state for simulation");
+                    break;
+                }
+
+                // Inner loop for time-sliced batch
+                while (archIndex < archetypesToRun.length && !simulationCancelled.current) {
+                    
+                    // Generate hands - this is the random part
+                    const hands = selectedScenario.generateHands();
+                    if (hands) {
+                         const { aiHand: newAiHand, playerHand: newPlayerHand } = hands;
+                         
+                         // Optimization: Clone and mutate instead of deep spread for speed in tight loop
+                         const scenarioState = { ...baseStateForArch };
+                         
+                         scenarioState.aiHand = newAiHand;
+                         scenarioState.initialAiHand = newAiHand;
+                         scenarioState.playerHand = newPlayerHand;
+                         scenarioState.initialPlayerHand = newPlayerHand;
+                         scenarioState.aiHasFlor = hasFlor(newAiHand);
+                         scenarioState.playerHasFlor = hasFlor(newPlayerHand);
+
+                         const aiMove = getLocalAIMove(scenarioState);
+                         const reason = aiMove.reasonKey || 'unknown_action';
+                         newResults[currentArch][reason] = (newResults[currentArch][reason] || 0) + 1;
+                    }
+
+                    iterIndex++;
+                    totalCompleted++;
+
+                    if (iterIndex >= iterationsPerArchetype) {
+                        iterIndex = 0;
+                        archIndex++;
+                        // Break inner loop to re-init base state for next archetype or finish
+                        break;
+                    }
+
+                    // Check time budget every 20 iterations to minimize overhead
+                    if (iterIndex % 20 === 0) {
+                        if (performance.now() - batchStartTime > TIME_BUDGET_MS) {
+                            break; // Break inner loop to yield
+                        }
+                    }
+                }
+
+                // Update UI
+                setSimulationResults({ ...newResults });
+                setSimulationProgress(Math.round((totalCompleted / totalSims) * 100));
+
+                // Yield to main thread
+                await new Promise(resolve => setTimeout(resolve, 0));
             }
             
-            setSimulationResults({ ...newResults }); // Update for real-time view
-
-            const newIterIndex = iterIndex + batchSize;
-            const totalCompleted = (archIndex * iterationsPerArchetype) + newIterIndex;
-            setSimulationProgress(Math.round((totalCompleted / totalSims) * 100));
-
-            await new Promise(resolve => setTimeout(resolve, 0));
-
-            if (newIterIndex >= iterationsPerArchetype) {
-                processSimChunk(archIndex + 1, 0);
-            } else {
-                processSimChunk(archIndex, newIterIndex);
-            }
+            setIsSimulating(false);
+            if (simulationCancelled.current) setSimulationResults(null);
         };
 
-        processSimChunk(0, 0);
+        processSims();
     };
 
     const handleCancelSimulation = () => {

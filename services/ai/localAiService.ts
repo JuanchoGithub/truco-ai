@@ -195,7 +195,21 @@ function calculateBaseEV(move: AiMove, state: GameState, reasoningLog: MessageOb
                 const { value: myEnvido } = getEnvidoDetails(state.initialAiHand);
                 const context = state.mano === 'ai' ? 'pie' : 'mano';
                 const estimatedOpponentPoints = state.opponentModel.envidoBehavior[context].callThreshold;
-                const winProb = (myEnvido > estimatedOpponentPoints) ? 0.7 : 0.4;
+                
+                let winProb = 0.5; 
+                
+                if (myEnvido > estimatedOpponentPoints) {
+                    // We are above their average call threshold -> Good chance
+                    winProb = 0.7 + Math.min(0.25, (myEnvido - estimatedOpponentPoints) * 0.05);
+                } else {
+                    // We are below. How much below?
+                    const diff = estimatedOpponentPoints - myEnvido;
+                    // If we have very few points, chance is abysmal.
+                    if (myEnvido < 20) winProb = 0.05;
+                    else if (myEnvido < 24) winProb = 0.15;
+                    else winProb = Math.max(0.1, 0.4 - (diff * 0.05));
+                }
+
                 return (winProb * state.envidoPointsOnOffer) - ((1 - winProb) * state.envidoPointsOnOffer);
             }
             return 0.1;
