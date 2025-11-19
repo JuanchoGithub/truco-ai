@@ -98,16 +98,57 @@ const Manual: React.FC<ManualProps> = ({ onExit, isFlorEnabled }) => {
                     <Section title={t('manual.phases.title')}>
                         <p>{t('manual.phases.p1_1')}<strong className="text-amber-800">{t('manual.phases.p1_strong')}</strong>{t('manual.phases.p1_2')}</p>
                         
-                        {/* ... (Content continues, structure repeated) ... */}
-                        
-                        {/* Simplified for brevity in XML response, applying same style to rest */}
-                        <div className="mt-8 p-6 bg-stone-100 border-l-4 border-amber-700">
+                        {/* Envido Section */}
+                        <div className="mt-4">
+                            <h3 className="text-xl font-cinzel mb-2 text-amber-900">{t('manual.phases.envido.title')}</h3>
+                            <p>{t('manual.phases.envido.p1')}</p>
+                             <div className="overflow-x-auto mt-4 mb-4 border border-stone-400 shadow-sm rounded-sm">
+                                <table className="w-full text-left text-sm border-collapse bg-white">
+                                    <thead className="bg-stone-200 text-stone-800 font-cinzel">
+                                        <tr>
+                                            <th className="border-b border-stone-300 p-2">{t('manual.phases.envido.table.h1')}</th>
+                                            <th className="border-b border-stone-300 p-2 text-center">{t('manual.phases.envido.table.h2')}</th>
+                                            <th className="border-b border-stone-300 p-2 text-center">{t('manual.phases.envido.table.h3')}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-stone-200 text-stone-700">
+                                        <tr><td className="p-2 font-bold">{t('manual.phases.envido.table.r1c1')}</td><td className="p-2 text-center">2</td><td className="p-2 text-center">1</td></tr>
+                                        <tr><td className="p-2 font-bold">{t('manual.phases.envido.table.r2c1')}</td><td className="p-2 text-center">3</td><td className="p-2 text-center">1</td></tr>
+                                        <tr><td className="p-2 font-bold">{t('manual.phases.envido.table.r3c1')}</td><td className="p-2 text-center">4</td><td className="p-2 text-center">2</td></tr>
+                                        <tr><td className="p-2 font-bold">{t('manual.phases.envido.table.r4c1')}</td><td className="p-2 text-center">{t('manual.phases.envido.table.r4c2')}</td><td className="p-2 text-center">1</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        {/* Flor Section */}
+                        {isFlorEnabled && (
+                            <div className="mt-6">
+                                <h3 className="text-xl font-cinzel mb-2 text-amber-900">{t('manual.phases.flor.title')}</h3>
+                                <p>{t('manual.phases.flor.p1_1')}<strong>{t('manual.phases.flor.p1_strong')}</strong>{t('manual.phases.flor.p1_2')}</p>
+                            </div>
+                        )}
+
+                        {/* Truco Section */}
+                        <div className="mt-6">
+                            <h3 className="text-xl font-cinzel mb-2 text-amber-900">{t('manual.phases.truco.title')}</h3>
+                            <p>{t('manual.phases.truco.p1')}</p>
+                            <ul className="list-disc list-inside mt-2 ml-4">
+                                <li><strong>{t('manual.phases.truco.li1_strong')}</strong>{t('manual.phases.truco.li1_text')}</li>
+                                <li><strong>{t('manual.phases.truco.li2_strong')}</strong>{t('manual.phases.truco.li2_text')}</li>
+                                <li><strong>{t('manual.phases.truco.li3_strong')}</strong>{t('manual.phases.truco.li3_text')}</li>
+                            </ul>
+                        </div>
+                    </Section>
+                    
+                    <div className="mt-8 p-6 bg-stone-100 border-l-4 border-amber-700">
                              <h3 className="text-xl font-cinzel mb-2 text-amber-900">{t('manual.strategy.title')}</h3>
                              <p>{t('manual.strategy.p1')}</p>
                              <ul className="list-disc list-inside mt-4 space-y-2 marker:text-amber-600">
                                 <li><strong>{t('manual.strategy.tips.li1_strong')}</strong>{t('manual.strategy.tips.li1_text')}</li>
                                 <li><strong>{t('manual.strategy.tips.li2_strong')}</strong>{t('manual.strategy.tips.li2_text')}</li>
                                 <li><strong>{t('manual.strategy.tips.li3_strong')}</strong>{t('manual.strategy.tips.li3_text')}</li>
+                                <li><strong>{t('manual.strategy.tips.li4_strong')}</strong>{t('manual.strategy.tips.li4_text')}</li>
                             </ul>
                         </div>
 

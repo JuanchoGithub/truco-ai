@@ -1,4 +1,4 @@
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI, Type, Schema } from "@google/genai";
 // Fix: Added 'Card' to the import list to resolve 'Cannot find name' errors.
 import { GameState, Action, ActionType, AiMove, MessageObject, RoundSummary, AiReasoningEntry, Player, Card } from '../types';
 // Fix: Imported 'decodeCardFromCode' to resolve 'Cannot find name' error.
@@ -145,15 +145,24 @@ function formatStateForGemini(state: GameState, validActions: string[]): string 
     const opponentName = t('common.ai');
     const yourName = t('common.gemini');
 
-    const formatHand = (hand: Card[]) => hand.map(getCardName).join(', ');
-    const formatTricks = (tricks: (Card | null)[]) => tricks.map(c => c ? getCardName(c) : '_').join(' | ');
+    // Inject Hierarchy Strength directly into the string representation
+    const formatHand = (hand: Card[]) => hand.map(c => {
+        const hierarchy = getCardHierarchy(c);
+        return `${getCardName(c)} (Power: ${hierarchy})`;
+    }).join(', ');
+
+    const formatTricks = (tricks: (Card | null)[]) => tricks.map(c => {
+        if (!c) return '_';
+        const hierarchy = getCardHierarchy(c);
+        return `${getCardName(c)} [Pow:${hierarchy}]`;
+    }).join(' | ');
 
     return `
 ## Game State
 - Round: ${state.round}
 - Your Score (${yourName}): ${state.playerScore}
 - Opponent Score (${opponentName}): ${state.aiScore}
-- Hand (Mano): ${state.mano === 'player' ? yourName : opponentName}
+- Hand (Mano): ${state.mano === 'player' ? yourName : opponentName} (The 'Mano' wins ties)
 - Current Turn: ${state.currentTurn === 'player' ? yourName : opponentName}
 - Game Phase: ${state.gamePhase}
 - Your Hand: [${formatHand(state.playerHand)}]
@@ -166,11 +175,10 @@ function formatStateForGemini(state: GameState, validActions: string[]): string 
 - Opponent's Tricks: [${formatTricks(state.aiTricks)}]
 - Trick Winners: [${state.trickWinners.join(', ')}]
 
-## How to Calculate Envido
-- If you have two cards of the same suit, your points are 20 plus the sum of their values. (Face cards: 10, 11, 12 are worth 0 points for this).
-- If all cards are different suits, your points are the value of your highest non-face card.
-- Example 1: [6 of Coins, 4 of Coins, 2 of Clubs] -> 20 + 6 + 4 = 30 points.
-- Example 2: [7 of Swords, 3 of Clubs, 1 of Cups] -> 7 points.
+## Rules Reminder
+1. **Card Power (Higher is better):** 14 (Ace Swords) > 13 (Ace Clubs) > 12 (7 Swords) > 11 (7 Coins) > 10 (Threes) > 9 (Twos) > 8 (False Aces) > 7 (Kings) > 6 (Knights) > 5 (Jacks) > 4 (False 7s) > 3 (Sixes) > 2 (Fives) > 1 (Fours).
+2. **Truco:** Best 2 out of 3 tricks. If 1st trick is tied, 2nd trick decides winner.
+3. **Envido:** Points = 20 + card values (if same suit). High hand wins.
 
 ## Valid Actions
 You must choose one of the following actions:
@@ -178,7 +186,15 @@ You must choose one of the following actions:
 `.trim();
 }
 
-export const getGeminiMove = async (state: GameState): Promise<{ move: AiMove, prompt: string, rawResponse: string }> => {
+export interface GeminiMoveResult {
+    move: AiMove;
+    prompt: string;
+    rawResponse: string;
+    confidence?: number;
+    risk?: string;
+}
+
+export const getGeminiMove = async (state: GameState): Promise<GeminiMoveResult> => {
     const MAX_RETRIES = 3;
     const gemini = getAi();
     const validActions = getValidActionsForGemini(state);
@@ -193,19 +209,17 @@ export const getGeminiMove = async (state: GameState): Promise<{ move: AiMove, p
             prompt = `
 You are an expert Argentinian Truco player named 'Gemini'. Your opponent is a computer AI.
 Analyze the provided game state and choose the best possible action from the valid actions list.
-Provide a very brief, one-sentence justification for your choice, in ${lang}.
-${i > 0 ? `\n**IMPORTANT: Your previous response was invalid. You MUST choose one of the exact strings from the 'Valid Actions' list.**\n` : ''}
-**Card Hierarchy (Strongest to Weakest):**
-1. Ace of Swords
-2. Ace of Clubs
-3. 7 of Swords
-4. 7 of Coins
-5. Threes, Twos, False Aces (Coins/Cups), Kings, Knights, Jacks, False Sevens (Clubs/Cups), Sixes, Fives, Fours.
+
+**Strategy Tips:**
+1. If you are 'Mano' (played first in 1st trick), you win ties. Use this.
+2. If you have high 'Power' cards (11+), consider calling Truco.
+3. If you have very low cards, consider folding (DECLINE) to save points if the opponent bets.
+4. Provide a numerical confidence level (0.0 to 1.0) in your decision.
 
 ${context}
 `.trim();
 
-            const responseSchema = {
+            const responseSchema: Schema = {
                 type: Type.OBJECT,
                 properties: {
                     reasoning: {
@@ -215,6 +229,14 @@ ${context}
                     action: {
                         type: Type.STRING,
                         description: `The chosen action from the valid actions list.`
+                    },
+                    winProbability: {
+                        type: Type.NUMBER,
+                        description: "Estimated probability (0-1) that this action leads to winning the round/game.",
+                    },
+                    riskLevel: {
+                        type: Type.STRING,
+                        description: "Risk assessment: 'Low', 'Medium', 'High', or 'Bluff'.",
                     }
                 }
             };
@@ -259,7 +281,9 @@ ${context}
                     reasoning: [result.reasoning],
                 },
                 prompt,
-                rawResponse: jsonString
+                rawResponse: jsonString,
+                confidence: result.winProbability,
+                risk: result.riskLevel
             };
         } catch (error) {
             console.error(`Gemini move attempt ${i + 1} failed:`, error);

@@ -137,7 +137,16 @@ const GeminiSimulator: React.FC = () => {
             try {
                 const geminiResult = await getGeminiMove(state);
                 move = geminiResult.move;
-                setGeminiThoughts(geminiResult.rawResponse);
+                
+                // Format formatted thoughts for UI
+                const confidencePercent = geminiResult.confidence ? Math.round(geminiResult.confidence * 100) : '?';
+                const thoughtDisplay = 
+`Action: ${move.action.type}
+Confidence: ${confidencePercent}%
+Risk: ${geminiResult.risk || 'Unknown'}
+Reasoning: ${move.reasoning[0]}`;
+                
+                setGeminiThoughts(thoughtDisplay);
                 addToLog(geminiResult.prompt, 'prompt');
                 addToLog(geminiResult.rawResponse, 'response');
                 // Reset retry state on success
