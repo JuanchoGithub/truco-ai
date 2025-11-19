@@ -24,6 +24,8 @@ const archetypeModifiers: Record<AiArchetype, Partial<Record<string, number>>> =
         call_truco_bluff: 1.4,
         DECLINE: 0.6,
         discard_low: 0.8,
+        feint_pre_truco: 0.9, // High enough to prefer baiting with nuts, but can still call Truco if EV is massive
+        call_truco_value: 1.3, 
     },
     Cautious: {
         CALL_ENVIDO: 2.0,
@@ -37,24 +39,28 @@ const archetypeModifiers: Record<AiArchetype, Partial<Record<string, number>>> =
         CALL_RETRUCO: 0.5,
         call_truco_bluff: 0.1,
         accept_truco_bluff_call: 0.3, 
+        feint_pre_truco: 1.0, // Cautious players like traps
     },
     Deceptive: {
         call_envido_bluff: 2.2,
         call_truco_bluff: 2.0,
-        play_card_parda_y_gano: 1.8, // slow-play bonus
-        play_card_certain_win: 1.8,   // slow-play bonus
-        call_truco_parda_y_gano: 0.6, // penalty for obvious move
-        call_truco_certain_win: 0.6,  // penalty for obvious move
+        play_card_parda_y_gano: 1.8, 
+        play_card_certain_win: 1.8,
+        call_truco_parda_y_gano: 0.6,
+        call_truco_certain_win: 0.6,
         bait_lopsided_hand: 2.5,
         parda_y_canto: 1.8,
         probe_low_value: 1.5,
         secure_hand: 0.8,
-        accept_truco_trap: 5.0, // Huge bonus for smooth calling with the nuts
-        escalate_truco_dominant_card: 0.2, // Reduce aggressive escalation to favor trap
+        accept_truco_trap: 5.0,
+        escalate_truco_dominant_card: 0.2,
+        feint_pre_truco: 2.5, 
+        call_truco_value: 0.4, 
     },
     Balanced: {
         CALL_ENVIDO: 1.8,
         CALL_REAL_ENVIDO: 1.2,
+        feint_pre_truco: 1.2,
     },
 };
 
@@ -70,6 +76,7 @@ const cardPlayEvMap: Record<string, number> = {
     probe_sacrificial: 0.5,
     discard_low: -1.0,
     play_last_card: 0.1,
+    feint_pre_truco: 2.2, // Increased base EV to prioritize over standard calls with Monster Hand
     default: 0,
 };
 

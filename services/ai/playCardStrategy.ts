@@ -32,7 +32,7 @@ export const findBaitCard = (hand: Card[]): { index: number, card: Card, reasonK
 
 export const findBestCardToPlay = (state: GameState): AiMove => {
     const { t } = i18nService;
-    const { aiHand, playerTricks, currentTrick, trickWinners, mano, initialAiHand, playerEnvidoValue, roundHistory, round, trucoLevel, aiScore, playerScore, opponentModel, playerHand } = state;
+    const { aiHand, playerTricks, currentTrick, trickWinners, mano, initialAiHand, playerEnvidoValue, roundHistory, round, trucoLevel, aiScore, playerScore, opponentModel, playerHand, aiArchetype } = state;
     // FIX: Changed return type from PlayCardResult to AiMove and action to NO_OP for empty hand case.
     if (aiHand.length === 0) return { action: { type: 'NO_OP' as any }, reasoning: [{ key: 'ai_logic.no_cards_left' }]};
 
@@ -120,6 +120,35 @@ export const findBestCardToPlay = (state: GameState): AiMove => {
                     }
 
                     const sortedHand = [...aiHand].sort((a, b) => getCardHierarchy(b) - getCardHierarchy(a));
+                    
+                    // --- Monster Hand Bait Check (Two strong cards) ---
+                    // Detects if we have at least 2 cards with hierarchy >= 11 (Sietes or better)
+                    if (trucoLevel === 0 && sortedHand.length === 3 && getCardHierarchy(sortedHand[1]) >= 11) {
+                        // With such a strong hand (e.g., 2 Bravas), standard GTO strategy is to check (play a card) 
+                        // to induce a bluff or get value later, rather than betting immediately.
+                        // We set a very high bait chance for all archetypes.
+                        let baitChance = 0.95; 
+                        
+                        if (aiArchetype === 'Deceptive') baitChance = 1.0; 
+                        if (aiArchetype === 'Aggressive') baitChance = 0.9; // Even aggressive players should trap with the absolute nuts
+
+                        if (Math.random() < baitChance) {
+                            // Play the weakest card to feint
+                            const cardToPlay = sortedHand[2]; 
+                            const index = aiHand.findIndex(c => c.rank === cardToPlay.rank && c.suit === cardToPlay.suit);
+                            
+                            reasoning.push({ key: 'ai_logic.feint_pre_truco', options: { cardName: getCardName(cardToPlay) } });
+                            
+                            return { 
+                                action: { type: ActionType.PLAY_CARD, payload: { player: 'ai', cardIndex: index } }, 
+                                reasoning, 
+                                reasonKey: 'feint_pre_truco',
+                                strategyCategory: 'deceptive' 
+                            };
+                        }
+                    }
+
+                    // --- Top-Heavy Bait Check (One strong, two weak) ---
                     if (trucoLevel === 0 && sortedHand.length === 3 && getCardHierarchy(sortedHand[0]) >= 12 && getCardHierarchy(sortedHand[1]) <= 7) {
                         const baitChance = 0.75;
                         reasoning.push({ key: 'ai_logic.bait_tactic_check_title' });

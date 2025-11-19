@@ -15,42 +15,115 @@ import GeminiSimulator from './GeminiSimulator';
 
 const FULL_DECK = createDeck();
 
-// Helper to render the AI's reasoning log
+// --- Shared UI Components ---
+
+const SimHeaderHUD: React.FC<{ state: GameState }> = ({ state }) => {
+    const { t } = useLocalization();
+    return (
+        <div className="bg-black/60 backdrop-blur-sm border-b border-white/10 p-2 flex justify-between items-center text-xs lg:text-sm font-mono shadow-md">
+             <div className="flex items-center gap-4">
+                <div className="flex flex-col leading-none">
+                    <span className="text-stone-500 uppercase text-[10px]">{t('simulation.round')}</span>
+                    <span className="text-amber-400 font-bold">{state.round}</span>
+                </div>
+                <div className="w-px h-6 bg-white/10"></div>
+                <div className="flex flex-col leading-none">
+                    <span className="text-stone-500 uppercase text-[10px]">{t('simulation.phase')}</span>
+                    <span className="text-stone-300">{state.gamePhase}</span>
+                </div>
+                 <div className="w-px h-6 bg-white/10"></div>
+                <div className="flex flex-col leading-none">
+                    <span className="text-stone-500 uppercase text-[10px]">{t('simulation.turn')}</span>
+                    <span className={`font-bold ${state.currentTurn === 'player' ? 'text-green-400' : 'text-red-400'}`}>
+                        {state.currentTurn?.toUpperCase() || '-'}
+                    </span>
+                </div>
+             </div>
+             
+             <div className="flex items-center gap-6">
+                 <div className="flex items-center gap-2">
+                     <div className="text-right">
+                         <div className="text-stone-500 text-[10px] uppercase">{t('common.ai')}</div>
+                         <div className="text-red-400 font-bold text-lg leading-none">{state.aiScore}</div>
+                     </div>
+                     <div className="text-stone-600 font-bold">vs</div>
+                     <div>
+                         <div className="text-stone-500 text-[10px] uppercase">{t('common.opponent')}</div>
+                         <div className="text-green-400 font-bold text-lg leading-none">{state.playerScore}</div>
+                     </div>
+                 </div>
+                 {state.winner && (
+                     <div className="px-2 py-1 bg-yellow-600/20 border border-yellow-600/50 rounded text-yellow-400 text-xs font-bold animate-pulse">
+                         WINNER: {state.winner.toUpperCase()}
+                     </div>
+                 )}
+             </div>
+        </div>
+    );
+};
+
+const MiniCard: React.FC<{ card: CardType | null; onClick?: () => void; isClickable?: boolean }> = ({ card, onClick, isClickable }) => (
+    <div 
+        onClick={onClick} 
+        className={`
+            w-12 h-[78px] lg:w-16 lg:h-[104px] rounded border border-stone-600 bg-stone-800 shadow-lg flex items-center justify-center relative select-none
+            ${isClickable ? 'cursor-pointer hover:-translate-y-1 hover:border-amber-500 transition-transform' : ''}
+        `}
+    >
+        {card ? (
+             <CardComponent card={card} size="small" className="!w-full !h-full" />
+        ) : (
+            <div className="w-full h-full bg-white/5 flex items-center justify-center">
+                <div className="w-4 h-6 border-2 border-dashed border-white/10 rounded-sm"></div>
+            </div>
+        )}
+    </div>
+);
+
+const CompactHandDisplay: React.FC<{ 
+    cards: (CardType | null)[]; 
+    title: string; 
+    labelSide?: 'top' | 'bottom';
+    onCardClick?: (index: number) => void 
+}> = ({ cards, title, labelSide = 'top', onCardClick }) => (
+    <div className="flex flex-col items-center gap-1">
+        {labelSide === 'top' && <span className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">{title}</span>}
+        <div className="flex gap-2">
+            {cards.map((card, i) => (
+                <MiniCard 
+                    key={i} 
+                    card={card} 
+                    onClick={onCardClick ? () => onCardClick(i) : undefined} 
+                    isClickable={!!onCardClick} 
+                />
+            ))}
+        </div>
+        {labelSide === 'bottom' && <span className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">{title}</span>}
+    </div>
+);
+
+// --- Helpers ---
+
 const renderReasoning = (reasoningArray: (string | MessageObject)[], t: (key: string, options?: any) => string): string => {
     if (!reasoningArray) return "";
     return reasoningArray.map(reason => {
         if (typeof reason === 'string') return reason;
-
         const options: { [key: string]: any } = { ...reason.options };
-
-        if (options.statusKey) {
-            options.status = t(`ai_logic.statuses.${options.statusKey}`);
-        }
-        if (options.player) {
-            options.player = options.player === 'ai' ? t('common.ai') : t('common.randomizer');
-        }
-
+        if (options.statusKey) options.status = t(`ai_logic.statuses.${options.statusKey}`);
+        if (options.player) options.player = options.player === 'ai' ? t('common.ai') : t('common.randomizer');
         for (const key in options) {
             if (options[key] && typeof options[key] === 'object') {
-                if (Array.isArray(options[key])) {
-                    options[key] = options[key].map((c: any) => getCardName(c)).join(', ');
-                } else if ('rank' in options[key] && 'suit' in options[key]) {
-                    options[key] = getCardName(options[key] as CardType);
-                }
-            } else if (key === 'suit' && typeof options[key] === 'string') {
-                options[key] = t(`common.card_suits.${options[key]}`);
-            }
+                if (Array.isArray(options[key])) options[key] = options[key].map((c: any) => getCardName(c)).join(', ');
+                else if ('rank' in options[key] && 'suit' in options[key]) options[key] = getCardName(options[key] as CardType);
+            } else if (key === 'suit' && typeof options[key] === 'string') options[key] = t(`common.card_suits.${options[key]}`);
         }
-
         return t(reason.key, options);
     }).join('\n');
 };
 
-// Helper to describe an action, now with customizable player names
 const getActionDescription = (action: Action, state: Partial<GameState>, t: (key: string, options?: any) => string, playerNames: {ai: string, opponent: string}): string => {
     const playerInPayload = (action as any)?.payload?.player;
     const actor = playerInPayload || state.currentTurn;
-    
     const playerName = actor === 'ai' ? playerNames.ai : playerNames.opponent;
 
     switch (action.type) {
@@ -79,93 +152,14 @@ const getActionDescription = (action: Action, state: Partial<GameState>, t: (key
     }
 }
 
-// A simple card row display
-const HandDisplay: React.FC<{ cards: (CardType | null)[], title: string, onCardClick?: (index: number) => void }> = ({ cards, title, onCardClick }) => (
-    <div className="bg-black/20 p-3 rounded-lg border border-white/5">
-        <h3 className="text-xs font-bold text-amber-500 uppercase tracking-widest mb-2">{title}</h3>
-        <div className={`flex justify-center min-h-[124px] items-center ${onCardClick ? 'space-x-[-53px]' : 'gap-2'}`}>
-            {cards.map((card, index) => (
-                <button key={index} onClick={() => onCardClick && onCardClick(index)} disabled={!onCardClick} className={`disabled:cursor-default ${onCardClick ? 'transition-transform duration-200 ease-out hover:-translate-y-4 hover:z-20' : ''}`}>
-                     <CardComponent card={card || undefined} size="small" />
-                </button>
-            ))}
-        </div>
-    </div>
-);
-
-// Tab component for the main UI
-const Tab: React.FC<{ title: string; isActive: boolean; onClick: () => void }> = ({ title, isActive, onClick }) => (
-    <button
-        onClick={onClick}
-        className={`px-5 py-3 font-bold text-sm uppercase tracking-wider transition-all relative
-            ${isActive 
-                ? 'text-cyan-300 bg-stone-800 border-t-2 border-l-2 border-r-2 border-cyan-700/50 rounded-t-lg z-10' 
-                : 'text-stone-500 hover:text-stone-300 hover:bg-stone-800/50 border-b-2 border-cyan-700/50'
-            }
-        `}
-    >
-        {title}
-        {isActive && <div className="absolute bottom-[-2px] left-0 right-0 h-[2px] bg-stone-800"></div>}
-    </button>
-);
-
-const CardPickerModal: React.FC<{
-    availableCards: CardType[];
-    onSelect: (card: CardType) => void;
-    onExit: () => void;
-}> = ({ availableCards, onSelect, onExit }) => {
-    const { t } = useLocalization();
-    return (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4 backdrop-blur-sm">
-            <div className="bg-stone-900 border-2 border-amber-600/50 rounded-xl shadow-2xl w-full max-w-3xl max-h-[80vh] flex flex-col">
-                <div className="p-4 border-b border-amber-600/30 flex justify-between items-center bg-stone-950">
-                    <h3 className="text-lg font-bold text-amber-400 font-cinzel">{t('card_picker.title')}</h3>
-                    <button onClick={onExit} className="text-stone-400 hover:text-white transition-colors">&times;</button>
-                </div>
-                <div className="p-6 flex-grow overflow-y-auto">
-                    <div className="flex flex-wrap gap-3 justify-center">
-                        {availableCards.map(card => (
-                            <button key={`${card.rank}-${card.suit}`} onClick={() => onSelect(card)} className="transform transition-transform hover:scale-110 hover:z-10">
-                                <CardComponent card={card} size="small" />
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-const ManualLogModal: React.FC<{ log: string[], onClose: () => void }> = ({ log, onClose }) => {
-    const { t } = useLocalization();
-    return (
-        <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-[60] p-4 backdrop-blur-sm">
-            <div className="bg-stone-900 border-2 border-cyan-600/50 rounded-xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col">
-                <div className="p-4 border-b border-cyan-600/30 flex justify-between items-center bg-stone-950">
-                    <h3 className="text-lg font-bold text-cyan-400 font-cinzel">{t('simulation.manual.log_title')}</h3>
-                    <button onClick={onClose} className="text-stone-400 hover:text-white transition-colors">&times;</button>
-                </div>
-                <div className="p-4 flex-grow overflow-y-auto font-vt323 text-lg space-y-1 bg-black/50 rounded-b-xl">
-                    {log.map((entry, index) => {
-                         if (entry.startsWith('---')) return <p key={index} className="text-yellow-400 font-bold mt-2 pt-2 border-t border-yellow-400/20">{entry}</p>
-                         if (entry.startsWith('🤖')) return <pre key={index} className="whitespace-pre-wrap p-2 rounded bg-blue-900/20 text-blue-200 font-sans text-sm border-l-2 border-blue-500">{entry}</pre>
-                         return <p key={index} className="text-stone-300 flex gap-2"><span className="text-stone-600">&gt;</span> {entry}</p>
-                    })}
-                </div>
-            </div>
-        </div>
-    )
-}
-
-
 const getValidActions = (state: GameState): Action[] => {
+    // (Same logic as before, kept for ManualSimulator)
     const { gamePhase, currentTurn, lastCaller, trucoLevel, hasEnvidoBeenCalledThisRound, playerTricks, aiTricks, currentTrick, playerHasFlor, aiHasFlor, hasFlorBeenCalledThisRound, envidoPointsOnOffer, hasRealEnvidoBeenCalledThisSequence, playerHand, aiHand, isFlorEnabled } = state;
     if (!currentTurn) {
          if (state.gamePhase === 'round_end') return [{ type: ActionType.PROCEED_TO_NEXT_ROUND }];
          if (state.winner) return [{ type: ActionType.RESTART_GAME }];
          return [];
     }
-
     const validActions: Action[] = [];
     const hand = currentTurn === 'player' ? playerHand : aiHand;
     const hasFlor = currentTurn === 'player' ? playerHasFlor : aiHasFlor;
@@ -173,7 +167,6 @@ const getValidActions = (state: GameState): Action[] => {
     if (gamePhase.includes('_called') && lastCaller !== currentTurn) {
         validActions.push({ type: ActionType.ACCEPT });
         validActions.push({ type: ActionType.DECLINE });
-
         if (gamePhase === 'envido_called') {
             if (isFlorEnabled && hasFlor) validActions.push({ type: ActionType.RESPOND_TO_ENVIDO_WITH_FLOR });
             else {
@@ -205,7 +198,6 @@ const getValidActions = (state: GameState): Action[] => {
                 validActions.push({ type: ActionType.PLAY_CARD, payload: { player: currentTurn, cardIndex: index } });
             });
         }
-
         const canSing = currentTrick === 0;
         if (canSing) {
             if (isFlorEnabled && hasFlor) validActions.push({ type: ActionType.DECLARE_FLOR });
@@ -215,24 +207,22 @@ const getValidActions = (state: GameState): Action[] => {
                 validActions.push({ type: ActionType.CALL_FALTA_ENVIDO });
             }
         }
-        
         if (!gamePhase.includes('envido') && !gamePhase.includes('flor')) {
             if (trucoLevel === 0) validActions.push({ type: ActionType.CALL_TRUCO });
             else if (trucoLevel === 1 && lastCaller !== currentTurn) validActions.push({ type: ActionType.CALL_RETRUCO });
             else if (trucoLevel === 2 && lastCaller !== currentTurn) validActions.push({ type: ActionType.CALL_VALE_CUATRO });
         }
     }
-    
     return validActions;
 };
 
 const createMirroredState = (currentState: GameState): GameState => {
+     // (Same mirroring logic as before)
     const mirroredTrickWinners = currentState.trickWinners.map(winner => {
         if (winner === 'player') return 'ai';
         if (winner === 'ai') return 'player';
         return winner;
     });
-
     return {
         ...currentState,
         playerHand: currentState.aiHand,
@@ -257,7 +247,55 @@ const createMirroredState = (currentState: GameState): GameState => {
     };
 };
 
-// --- Child Components for Tabs ---
+const CardPickerModal: React.FC<{
+    availableCards: CardType[];
+    onSelect: (card: CardType) => void;
+    onExit: () => void;
+}> = ({ availableCards, onSelect, onExit }) => {
+    const { t } = useLocalization();
+    return (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[200] p-4 backdrop-blur-sm">
+            <div className="bg-stone-900 border-2 border-amber-600/50 rounded-xl shadow-2xl w-full max-w-3xl max-h-[80vh] flex flex-col">
+                <div className="p-4 border-b border-amber-600/30 flex justify-between items-center bg-stone-950">
+                    <h3 className="text-lg font-bold text-amber-400 font-cinzel">{t('card_picker.title')}</h3>
+                    <button onClick={onExit} className="text-stone-400 hover:text-white transition-colors">&times;</button>
+                </div>
+                <div className="p-6 flex-grow overflow-y-auto">
+                    <div className="flex flex-wrap gap-3 justify-center">
+                        {availableCards.map(card => (
+                            <button key={`${card.rank}-${card.suit}`} onClick={() => onSelect(card)} className="transform transition-transform hover:scale-110 hover:z-10">
+                                <CardComponent card={card} size="small" />
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const ManualLogModal: React.FC<{ log: string[], onClose: () => void }> = ({ log, onClose }) => {
+    const { t } = useLocalization();
+    return (
+        <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-[150] p-4 backdrop-blur-sm">
+            <div className="bg-stone-900 border-2 border-cyan-600/50 rounded-xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col">
+                <div className="p-4 border-b border-cyan-600/30 flex justify-between items-center bg-stone-950">
+                    <h3 className="text-lg font-bold text-cyan-400 font-cinzel">{t('simulation.manual.log_title')}</h3>
+                    <button onClick={onClose} className="text-stone-400 hover:text-white transition-colors">&times;</button>
+                </div>
+                <div className="p-4 flex-grow overflow-y-auto font-vt323 text-lg space-y-1 bg-black/50 rounded-b-xl">
+                    {log.map((entry, index) => {
+                         if (entry.startsWith('---')) return <p key={index} className="text-yellow-400 font-bold mt-2 pt-2 border-t border-yellow-400/20">{entry}</p>
+                         if (entry.startsWith('🤖')) return <pre key={index} className="whitespace-pre-wrap p-2 rounded bg-blue-900/20 text-blue-200 font-sans text-sm border-l-2 border-blue-500">{entry}</pre>
+                         return <p key={index} className="text-stone-300 flex gap-2"><span className="text-stone-600">&gt;</span> {entry}</p>
+                    })}
+                </div>
+            </div>
+        </div>
+    )
+}
+
+// --- Sub-Tools ---
 
 const AutoSimulator: React.FC = () => {
     const { t } = useLocalization();
@@ -265,21 +303,18 @@ const AutoSimulator: React.FC = () => {
     const [state, dispatch] = useReducer(useGameReducer, simInitialState);
     const [isRoundInProgress, setIsRoundInProgress] = useState(false);
     const [eventLog, setEventLog] = useState<string[]>([t('simulation.log_start_message')]);
-    const [copyButtonText, setCopyButtonText] = useState(t('simulation.button_copy'));
     const eventLogRef = useRef<HTMLDivElement>(null);
     const previousRoundRef = useRef<number>(0);
 
     useEffect(() => {
-        if (eventLogRef.current) {
-            eventLogRef.current.scrollTop = eventLogRef.current.scrollHeight;
-        }
+        if (eventLogRef.current) eventLogRef.current.scrollTop = eventLogRef.current.scrollHeight;
     }, [eventLog]);
 
-    useEffect(() => {
+    // ... (Keep existing AutoSimulator logic for useEffects: reset log, round start log, resolution actions, game loop) ...
+     useEffect(() => {
         if (!isRoundInProgress && (state.round === 0 || state.winner)) {
             setEventLog([t('simulation.log_start_message')]);
         }
-        setCopyButtonText(t('simulation.button_copy'));
     }, [t, isRoundInProgress, state.round, state.winner]);
 
     useEffect(() => {
@@ -303,7 +338,7 @@ const AutoSimulator: React.FC = () => {
         }
     }, [state.round, state.initialAiHand, state.initialPlayerHand, state.mano, t]);
 
-    useEffect(() => {
+     useEffect(() => {
         if (!isRoundInProgress) return;
         let resolutionAction: Action | null = null;
         switch (state.gamePhase) {
@@ -363,6 +398,7 @@ const AutoSimulator: React.FC = () => {
 
     }, [isRoundInProgress, state, t]);
 
+
     const handleNextRound = () => {
         if (state.winner) {
             setEventLog([t('simulation.log_new_simulation')]);
@@ -376,62 +412,44 @@ const AutoSimulator: React.FC = () => {
         setIsRoundInProgress(true);
     };
 
-    const handleCopy = () => {
-        const logText = eventLog.map(log => {
-            if (log.startsWith('---')) return `\n${log}\n`;
-            if (log.startsWith('[Lógica') || log.startsWith('[AI Logic')) return log.split('\n').map(line => line.trim()).join('\n');
-            return log;
-        }).join('\n');
-        navigator.clipboard.writeText(logText).then(() => {
-            setCopyButtonText(t('simulation.button_copied'));
-            setTimeout(() => setCopyButtonText(t('simulation.button_copy')), 2000);
-        });
-    };
-
     return (
-        <div className="w-full h-full flex flex-col gap-4 animate-fade-in-scale">
-            <div className="flex-shrink-0 flex gap-4 bg-stone-900/50 p-4 rounded-lg border border-cyan-800/30">
-                <button onClick={handleNextRound} disabled={isRoundInProgress} className="px-6 py-2 rounded-lg font-bold text-white bg-gradient-to-b from-green-600 to-green-700 border-b-4 border-green-900 hover:from-green-500 hover:to-green-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg transition-all">
-                    {isRoundInProgress ? t('simulation.button_simulating') : (state.winner ? t('simulation.button_restart') : t('simulation.button_simulate_round'))}
-                </button>
-                <button onClick={handleCopy} className="px-6 py-2 rounded-lg font-bold text-white bg-gradient-to-b from-cyan-600 to-cyan-700 border-b-4 border-cyan-900 hover:from-cyan-500 hover:to-cyan-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg transition-all">
-                    {copyButtonText}
-                </button>
-            </div>
-            <div className="flex-grow grid grid-cols-1 lg:grid-cols-3 gap-4 overflow-hidden">
-                <div className="col-span-1 flex flex-col gap-4 overflow-y-auto pr-2">
-                    <div className="bg-stone-900/80 p-4 rounded-lg border border-cyan-800/30">
-                        <h2 className="text-sm font-bold text-cyan-400 uppercase tracking-widest mb-3 border-b border-cyan-800/50 pb-1">{t('simulation.scoreboard_title')}</h2>
-                        <div className="flex justify-between items-center mb-1">
-                            <span className="text-stone-300">{t('common.ai')}</span>
-                            <span className="font-mono text-2xl text-amber-400">{state.aiScore}</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                            <span className="text-stone-300">{t('common.randomizer')}</span>
-                            <span className="font-mono text-2xl text-stone-400">{state.playerScore}</span>
-                        </div>
-                    </div>
-                    <div className="bg-stone-900/80 p-4 rounded-lg border border-cyan-800/30">
-                         <h2 className="text-sm font-bold text-cyan-400 uppercase tracking-widest mb-3 border-b border-cyan-800/50 pb-1">{t('simulation.round_status_title', { round: state.round })}</h2>
-                         <div className="grid grid-cols-2 gap-2 text-xs">
-                            <p className="text-stone-400">{t('simulation.phase')}</p> <p className="text-right text-stone-200">{state.gamePhase}</p>
-                            <p className="text-stone-400">{t('simulation.turn')}</p> <p className="text-right text-stone-200">{state.currentTurn?.toUpperCase() ?? t('common.na')}</p>
-                            <p className="text-stone-400">{t('simulation.mano')}</p> <p className="text-right text-stone-200">{state.mano.toUpperCase()}</p>
-                         </div>
-                    </div>
-                     <div className="bg-stone-900/80 p-4 rounded-lg border border-cyan-800/30 space-y-4">
-                        <HandDisplay cards={state.initialAiHand} title={t('simulation.initial_hand_ai')} />
-                        <HandDisplay cards={state.initialPlayerHand} title={t('simulation.initial_hand_randomizer')} />
-                    </div>
-                </div>
-                <div ref={eventLogRef} className="col-span-2 bg-black/80 p-4 rounded-lg overflow-y-auto font-vt323 text-lg border-2 border-cyan-900/50 shadow-inner">
-                    {eventLog.map((log, index) => {
-                        if (log.startsWith('---')) return <p key={index} className="text-yellow-400 font-bold mt-2 pt-2 border-t border-yellow-400/20">{log}</p>;
-                        if (log.startsWith('[Lógica') || log.startsWith('[AI Logic')) return <pre key={index} className="whitespace-pre-wrap text-cyan-300 bg-cyan-900/10 p-2 rounded mt-1 mb-3 border-l-2 border-cyan-600 font-sans text-sm">{log}</pre>;
-                        return <p key={index} className="whitespace-pre-wrap text-stone-300 flex gap-2"><span className="text-stone-600">&gt;</span> {log}</p>;
-                    })}
-                </div>
-            </div>
+        <div className="flex flex-col h-full w-full bg-stone-900">
+             <SimHeaderHUD state={state} />
+             <div className="flex flex-grow overflow-hidden relative">
+                 {/* Game Board Area */}
+                 <div className="w-2/3 relative bg-[#0f5132] shadow-inner flex flex-col justify-between p-4" style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/felt.png')" }}>
+                      <div className="absolute inset-0 bg-black/20 pointer-events-none"></div>
+                      
+                      <div className="relative z-10 flex justify-center pt-4">
+                          <CompactHandDisplay cards={state.aiHand} title={t('simulation.initial_hand_ai')} labelSide="bottom" />
+                      </div>
+
+                      <div className="relative z-10 flex justify-center gap-12 opacity-90">
+                           <CompactHandDisplay cards={state.aiTricks} title={t('simulation.manual.ai_tricks')} labelSide="bottom" />
+                           <CompactHandDisplay cards={state.playerTricks} title={t('simulation.manual.opponent_tricks')} labelSide="bottom" />
+                      </div>
+
+                      <div className="relative z-10 flex justify-center pb-4">
+                          <CompactHandDisplay cards={state.playerHand} title={t('simulation.initial_hand_randomizer')} />
+                      </div>
+                 </div>
+
+                 {/* Log & Controls */}
+                 <div className="w-1/3 bg-stone-950 border-l border-stone-700 flex flex-col">
+                     <div ref={eventLogRef} className="flex-grow overflow-y-auto p-3 font-vt323 text-sm text-stone-300 space-y-1 custom-scrollbar">
+                         {eventLog.map((log, index) => {
+                            if (log.startsWith('---')) return <p key={index} className="text-amber-400 font-bold mt-2 border-t border-white/10 pt-1">{log}</p>;
+                            if (log.startsWith('[Lógica') || log.startsWith('[AI Logic')) return <pre key={index} className="whitespace-pre-wrap text-cyan-600/80 text-[10px] font-sans mb-1">{log}</pre>;
+                            return <p key={index} className="whitespace-pre-wrap"><span className="text-stone-600">&gt;</span> {log}</p>;
+                        })}
+                     </div>
+                     <div className="p-3 border-t border-white/10 bg-stone-900">
+                        <button onClick={handleNextRound} disabled={isRoundInProgress} className="w-full py-3 rounded bg-green-700 hover:bg-green-600 text-white font-bold text-sm uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-lg">
+                            {isRoundInProgress ? t('simulation.button_simulating') : (state.winner ? t('simulation.button_restart') : t('simulation.button_simulate_round'))}
+                        </button>
+                     </div>
+                 </div>
+             </div>
         </div>
     );
 };
@@ -445,17 +463,10 @@ const ManualSimulator: React.FC = () => {
     const [manualEventLog, setManualEventLog] = useState<string[]>([]);
     const [isLogModalOpen, setIsLogModalOpen] = useState(false);
     
-    // State for central message display
+    // Central message state
     const [localMessage, setLocalMessage] = useState<string | null>(null);
     const [isMessageVisible, setIsMessageVisible] = useState(false);
     const messageTimers = useRef<{ fadeOutTimerId?: number; clearTimerId?: number }>({});
-    
-    // New state for bulk simulation
-    const [simulationResults, setSimulationResults] = useState<Record<string, number> | null>(null);
-    const [isSimulating, setIsSimulating] = useState(false);
-    const [simulationProgress, setSimulationProgress] = useState(0);
-    const simulationCancelled = useRef(false);
-    const [expandedResult, setExpandedResult] = useState<string | null>(null);
 
     const [setupState, setSetupState] = useState({
         aiScore: 0,
@@ -465,7 +476,7 @@ const ManualSimulator: React.FC = () => {
         playerHand: [null, null, null] as (CardType | null)[]
     });
 
-    // Automatically handle resolution phases like ENVIDO_ACCEPTED
+    // ... (Keep existing ManualSimulator logic: useEffects for resolution, central message, available cards, picker handlers) ...
     useEffect(() => {
         if (simPhase !== 'play') return;
         let resolutionAction: Action | null = null;
@@ -476,22 +487,15 @@ const ManualSimulator: React.FC = () => {
             case 'FLOR_SHOWDOWN': resolutionAction = { type: ActionType.RESOLVE_FLOR_SHOWDOWN }; break;
             case 'CONTRAFLOR_DECLINED': resolutionAction = { type: ActionType.RESOLVE_CONTRAFLOR_DECLINE }; break;
         }
-
         if (resolutionAction) {
             const logMessage = `--- ${t('simulation.log_resolving', { phase: state.gamePhase })} ---`;
             setManualEventLog(prev => [...prev, logMessage]);
-            const timeoutId = setTimeout(() => {
-                dispatch(resolutionAction!);
-            }, 300); // A short delay to make the resolution noticeable
+            const timeoutId = setTimeout(() => { dispatch(resolutionAction!); }, 300);
             return () => clearTimeout(timeoutId);
         }
     }, [state.gamePhase, simPhase, t]);
 
-    // Handlers for central message
-    const clearMessageState = () => {
-        dispatch({ type: ActionType.CLEAR_CENTRAL_MESSAGE });
-        setLocalMessage(null);
-    };
+    const clearMessageState = () => { dispatch({ type: ActionType.CLEAR_CENTRAL_MESSAGE }); setLocalMessage(null); };
     const handleDismissMessage = () => {
         clearTimeout(messageTimers.current.fadeOutTimerId);
         clearTimeout(messageTimers.current.clearTimerId);
@@ -499,37 +503,27 @@ const ManualSimulator: React.FC = () => {
         messageTimers.current.clearTimerId = window.setTimeout(clearMessageState, 500);
     };
 
-    // Effect to display central messages (like Envido results)
     useEffect(() => {
         if (simPhase !== 'play' || !state.centralMessage) return;
-
         const options = { ...state.centralMessage.options };
         if (options.winnerName) options.winnerName = translatePlayerName(options.winnerName);
         if (options.winner) options.winner = translatePlayerName(options.winner);
-        
         const translatedMessage = t(state.centralMessage.key, options);
         setLocalMessage(translatedMessage);
         setIsMessageVisible(true);
-
-        const logMessage = `--- ${t('simulation.manual.log_event')}: ${translatedMessage} ---`;
-        setManualEventLog(prev => [...prev, logMessage]);
-
+        setManualEventLog(prev => [...prev, `--- ${t('simulation.manual.log_event')}: ${translatedMessage} ---`]);
         if (!state.isCentralMessagePersistent) {
             messageTimers.current.fadeOutTimerId = window.setTimeout(() => setIsMessageVisible(false), 1500);
             messageTimers.current.clearTimerId = window.setTimeout(clearMessageState, 2000);
         }
     }, [state.centralMessage, simPhase, t, translatePlayerName]);
 
-
     const availableCards = useMemo(() => {
         const selected = [...setupState.aiHand, ...setupState.playerHand].filter(c => c !== null);
-        return FULL_DECK.filter(deckCard => 
-            !selected.some(sel => sel && sel.rank === deckCard.rank && sel.suit === deckCard.suit)
-        );
+        return FULL_DECK.filter(deckCard => !selected.some(sel => sel && sel.rank === deckCard.rank && sel.suit === deckCard.suit));
     }, [setupState.aiHand, setupState.playerHand]);
 
     const handleOpenPicker = (hand: 'ai' | 'player', index: number) => setPickerState({ open: true, hand, index });
-
     const handleCardSelect = (card: CardType) => {
         const { hand, index } = pickerState;
         setSetupState(prev => {
@@ -539,10 +533,7 @@ const ManualSimulator: React.FC = () => {
         });
         setPickerState({ open: false, hand: 'ai', index: 0 });
     };
-
-    const isSetupComplete = useMemo(() => {
-        return setupState.aiHand.every(c => c !== null) && setupState.playerHand.every(c => c !== null);
-    }, [setupState.aiHand, setupState.playerHand]);
+    const isSetupComplete = useMemo(() => setupState.aiHand.every(c => c !== null) && setupState.playerHand.every(c => c !== null), [setupState.aiHand, setupState.playerHand]);
 
     const handleStartRound = () => {
         const aiHandCards = setupState.aiHand.filter(c => c) as CardType[];
@@ -564,26 +555,17 @@ const ManualSimulator: React.FC = () => {
         dispatch({ type: ActionType.LOAD_PERSISTED_STATE, payload: partialState });
         setManualEventLog([
             `--- ${t('simulation.manual.log_round_start')} ---`,
-            `${t('simulation.manual.log_initial_setup')}:`,
-            `  ${t('simulation.manual.scores_mano')}: ${t('common.ai')} ${setupState.aiScore} - ${t('common.opponent')} ${setupState.playerScore}`,
-            `  ${t('simulation.manual.mano')}: ${setupState.mano.toUpperCase()}`,
-            `  ${t('simulation.manual.ai_hand')}: ${aiHandCards.map(getCardName).join(', ')}`,
-            `  ${t('simulation.manual.opponent_hand')}: ${playerHandCards.map(getCardName).join(', ')}`
+            `${t('simulation.manual.scores_mano')}: AI ${setupState.aiScore} - OPP ${setupState.playerScore} | Mano: ${setupState.mano.toUpperCase()}`
         ]);
         setSimPhase('play');
         setAiSuggestion(null);
-        setSimulationResults(null);
     };
 
-    const validActions = useMemo(() => {
-        if (simPhase === 'play' && !state.winner) return getValidActions(state);
-        return [];
-    }, [state, simPhase]);
+    const validActions = useMemo(() => (simPhase === 'play' && !state.winner ? getValidActions(state) : []), [state, simPhase]);
 
     const handleActionClick = (action: Action) => {
         if (state.isCentralMessagePersistent) handleDismissMessage();
         setAiSuggestion(null);
-        setSimulationResults(null);
         const actionDesc = getActionDescription(action, state, t, {ai: t('common.ai'), opponent: t('common.opponent')});
         setManualEventLog(prev => [...prev, actionDesc]);
         dispatch(action);
@@ -592,254 +574,133 @@ const ManualSimulator: React.FC = () => {
     const handleAskAi = () => {
         let suggestion: AiMove;
         let stateToSimulate = state;
-        if (state.currentTurn === 'player') {
-            stateToSimulate = createMirroredState(state);
-        }
-
+        if (state.currentTurn === 'player') stateToSimulate = createMirroredState(state);
         suggestion = getLocalAIMove(stateToSimulate);
-        
         if (state.currentTurn === 'player') {
-             if (suggestion.action.type === ActionType.PLAY_CARD && suggestion.action.payload.player === 'ai') {
-                suggestion.action.payload.player = 'player';
-            }
-            if (suggestion.action.type === ActionType.DECLARE_FLOR && suggestion.action.payload?.player === 'ai') {
-                suggestion.action.payload.player = 'player';
-            }
+             if (suggestion.action.type === ActionType.PLAY_CARD && suggestion.action.payload.player === 'ai') suggestion.action.payload.player = 'player';
+            if (suggestion.action.type === ActionType.DECLARE_FLOR && suggestion.action.payload?.player === 'ai') suggestion.action.payload.player = 'player';
         }
         setAiSuggestion(suggestion);
-        setSimulationResults(null);
-        
         const actionDesc = getActionDescription(suggestion.action, state, t, {ai: t('common.ai'), opponent: t('common.opponent')});
         const reasoningDesc = renderReasoning(suggestion.reasoning, t);
         setManualEventLog(prev => {
             const filteredLog = prev.filter(entry => !entry.startsWith('🤖'));
-            const suggestionLog = `🤖 ${t('simulation.manual.log_ai_suggestion_title')}:\n- ${t('simulation.manual.log_action')}: ${actionDesc}\n- ${t('scenario_tester.reasoning')}:\n${reasoningDesc.split('\n').map(l => `  ${l}`).join('\n')}`;
-            return [...filteredLog, suggestionLog];
+            return [...filteredLog, `🤖 AI Suggests: ${actionDesc}\n${reasoningDesc.split('\n').map(l => `  ${l}`).join('\n')}`];
         });
-    };
-
-    const handleRunSimulations = async () => {
-        if (simPhase !== 'play') return;
-
-        setIsSimulating(true);
-        setSimulationProgress(0);
-        setSimulationResults(null);
-        setAiSuggestion(null);
-        simulationCancelled.current = false;
-
-        const results: Record<string, number> = {};
-        const totalSims = 1000;
-        
-        let stateToSimulate = state;
-        if (state.currentTurn === 'player') {
-            stateToSimulate = createMirroredState(state);
-        }
-
-        const processSims = async () => {
-             let completed = 0;
-             const TIME_BUDGET_MS = 40;
-
-             while(completed < totalSims && !simulationCancelled.current) {
-                 const startTime = performance.now();
-                 
-                 // Inner batch loop
-                 while (completed < totalSims && !simulationCancelled.current) {
-                    const aiMove = getLocalAIMove(stateToSimulate);
-                    const reason = aiMove.reasonKey || 'unknown_action';
-                    results[reason] = (results[reason] || 0) + 1;
-                    completed++;
-                    
-                    // Check time budget every 20 iterations
-                    if (completed % 20 === 0) {
-                        if (performance.now() - startTime > TIME_BUDGET_MS) {
-                            break;
-                        }
-                    }
-                 }
-                 
-                 setSimulationProgress(Math.round((completed / totalSims) * 100));
-                 // Yield
-                 await new Promise(resolve => setTimeout(resolve, 0));
-             }
-
-             setIsSimulating(false);
-             if (!simulationCancelled.current) {
-                 setSimulationResults(results);
-             } else {
-                 setSimulationResults(null);
-             }
-        };
-        
-        processSims();
-    };
-
-    const handleCancelSimulation = () => {
-        simulationCancelled.current = true;
-    };
-
-    const sortedSimulationResults = useMemo(() => {
-        if (!simulationResults) return null;
-        return Object.entries(simulationResults).sort((a, b) => Number(b[1]) - Number(a[1]));
-    }, [simulationResults]);
-    
-    const totalSimsRun = sortedSimulationResults ? sortedSimulationResults.reduce((sum, [, count]) => sum + Number(count), 0) : 0;
-
-    const resetToSetup = () => {
-        setSimPhase('setup');
-        setAiSuggestion(null);
-        setSimulationResults(null);
-        setManualEventLog([]);
     };
 
     if (simPhase === 'setup') {
         return (
-            <div className="w-full h-full flex flex-col items-center justify-center gap-8 p-4 animate-fade-in-scale">
-                <h2 className="text-3xl font-bold text-cyan-300 font-cinzel tracking-widest drop-shadow-lg">{t('simulation.manual.setup_title')}</h2>
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 w-full max-w-5xl">
-                    <div className="bg-stone-900/80 border border-amber-700/30 p-6 rounded-xl shadow-lg">
-                        <h3 className="font-bold text-xl text-amber-500 mb-4 border-b border-amber-700/30 pb-2">{t('simulation.manual.scores_mano')}</h3>
-                        <div className="space-y-4">
-                            <div><label className="block text-xs uppercase tracking-wider text-gray-400 mb-1">{t('simulation.manual.ai_score')}</label><input type="number" value={setupState.aiScore} onChange={e => setSetupState(s => ({...s, aiScore: parseInt(e.target.value)}))} className="w-full p-3 bg-black/30 border border-stone-600 rounded-lg text-white focus:border-amber-500 outline-none transition-colors"/></div>
-                            <div><label className="block text-xs uppercase tracking-wider text-gray-400 mb-1">{t('simulation.manual.opponent_score')}</label><input type="number" value={setupState.playerScore} onChange={e => setSetupState(s => ({...s, playerScore: parseInt(e.target.value)}))} className="w-full p-3 bg-black/30 border border-stone-600 rounded-lg text-white focus:border-amber-500 outline-none transition-colors"/></div>
-                            <div><label className="block text-xs uppercase tracking-wider text-gray-400 mb-1">{t('simulation.manual.mano')}</label><select value={setupState.mano} onChange={e => setSetupState(s => ({...s, mano: e.target.value as Player}))} className="w-full p-3 bg-black/30 border border-stone-600 rounded-lg text-white focus:border-amber-500 outline-none transition-colors"><option value="player">{t('common.opponent')}</option><option value="ai">{t('common.ai')}</option></select></div>
+            <div className="h-full flex flex-col items-center justify-center p-4 bg-stone-900">
+                <h2 className="text-xl font-bold text-cyan-400 font-cinzel tracking-widest mb-6 uppercase border-b border-cyan-900 pb-2">{t('simulation.manual.setup_title')}</h2>
+                
+                <div className="w-full max-w-4xl bg-stone-800 rounded-xl p-6 shadow-2xl border border-stone-700 grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* Config */}
+                    <div className="space-y-4">
+                        <h3 className="text-xs font-bold text-stone-500 uppercase tracking-wider mb-2">{t('simulation.manual.scores_mano')}</h3>
+                        <div className="grid grid-cols-2 gap-2">
+                            <div><label className="text-[10px] text-stone-400 block uppercase">AI Score</label><input type="number" value={setupState.aiScore} onChange={e => setSetupState(s => ({...s, aiScore: parseInt(e.target.value)}))} className="w-full bg-black/30 border border-stone-600 rounded p-2 text-white"/></div>
+                            <div><label className="text-[10px] text-stone-400 block uppercase">Opp Score</label><input type="number" value={setupState.playerScore} onChange={e => setSetupState(s => ({...s, playerScore: parseInt(e.target.value)}))} className="w-full bg-black/30 border border-stone-600 rounded p-2 text-white"/></div>
+                        </div>
+                        <div>
+                            <label className="text-[10px] text-stone-400 block uppercase mb-1">{t('simulation.manual.mano')}</label>
+                            <div className="flex bg-black/30 rounded border border-stone-600 overflow-hidden">
+                                <button onClick={() => setSetupState(s => ({...s, mano: 'ai'}))} className={`flex-1 py-2 text-xs font-bold ${setupState.mano === 'ai' ? 'bg-amber-600 text-white' : 'text-stone-500 hover:text-stone-300'}`}>{t('common.ai')}</button>
+                                <button onClick={() => setSetupState(s => ({...s, mano: 'player'}))} className={`flex-1 py-2 text-xs font-bold ${setupState.mano === 'player' ? 'bg-amber-600 text-white' : 'text-stone-500 hover:text-stone-300'}`}>{t('common.opponent')}</button>
+                            </div>
                         </div>
                     </div>
-                     <div className="bg-stone-900/80 border border-amber-700/30 p-6 rounded-xl shadow-lg flex flex-col justify-center"><HandDisplay title={t('simulation.manual.ai_hand')} cards={setupState.aiHand} onCardClick={(i) => handleOpenPicker('ai', i)} /></div>
-                     <div className="bg-stone-900/80 border border-amber-700/30 p-6 rounded-xl shadow-lg flex flex-col justify-center"><HandDisplay title={t('simulation.manual.opponent_hand')} cards={setupState.playerHand} onCardClick={(i) => handleOpenPicker('player', i)} /></div>
+                    
+                    {/* Hands */}
+                    <div className="bg-black/20 rounded-lg border border-white/5 p-4 flex flex-col justify-center items-center">
+                         <h3 className="text-xs font-bold text-stone-500 uppercase tracking-wider mb-3">{t('simulation.manual.ai_hand')}</h3>
+                         <div className="flex gap-2">
+                             {setupState.aiHand.map((c, i) => <MiniCard key={i} card={c} onClick={() => handleOpenPicker('ai', i)} isClickable />)}
+                         </div>
+                    </div>
+                     <div className="bg-black/20 rounded-lg border border-white/5 p-4 flex flex-col justify-center items-center">
+                         <h3 className="text-xs font-bold text-stone-500 uppercase tracking-wider mb-3">{t('simulation.manual.opponent_hand')}</h3>
+                         <div className="flex gap-2">
+                             {setupState.playerHand.map((c, i) => <MiniCard key={i} card={c} onClick={() => handleOpenPicker('player', i)} isClickable />)}
+                         </div>
+                    </div>
                 </div>
-                <button onClick={handleStartRound} disabled={!isSetupComplete} className="px-8 py-4 rounded-lg font-bold text-white bg-gradient-to-b from-green-600 to-green-700 border-b-4 border-green-900 hover:from-green-500 hover:to-green-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-xl transition-all text-xl uppercase tracking-wider">{t('simulation.manual.start_round')}</button>
+
+                <button onClick={handleStartRound} disabled={!isSetupComplete} className="mt-8 px-10 py-3 rounded bg-green-600 text-white font-bold uppercase tracking-wider shadow-lg hover:bg-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-105">
+                    {t('simulation.manual.start_round')}
+                </button>
+                
                 {pickerState.open && <CardPickerModal availableCards={availableCards} onSelect={handleCardSelect} onExit={() => setPickerState({ ...pickerState, open: false })} />}
             </div>
         );
     }
-    
-    // Play Phase
-    const actionDesc = aiSuggestion ? getActionDescription(aiSuggestion.action, state, t, {ai: t('common.ai'), opponent: t('common.opponent')}) : "";
-    const reasoningDesc = aiSuggestion ? renderReasoning(aiSuggestion.reasoning, t) : "";
 
+    // Play Phase
     return (
-        <div className="w-full h-full flex flex-col gap-4 relative animate-fade-in-scale">
+        <div className="flex flex-col h-full w-full bg-stone-900 relative">
             <CentralMessage message={localMessage} isVisible={isMessageVisible} onDismiss={handleDismissMessage} />
             {isLogModalOpen && <ManualLogModal log={manualEventLog} onClose={() => setIsLogModalOpen(false)} />}
-            <div className="flex-grow grid grid-cols-1 lg:grid-cols-3 gap-6 overflow-hidden">
-                {/* Left Panel: Actions & AI Suggestion */}
-                <div className="col-span-1 lg:col-span-1 flex flex-col gap-6 overflow-y-auto pr-2">
-                    <div className="bg-stone-900/80 p-4 rounded-lg border border-cyan-800/30">
-                        <h2 className="text-sm font-bold text-cyan-400 uppercase tracking-widest mb-3 border-b border-cyan-800/50 pb-1">{t('simulation.manual.valid_actions_for')} {(state.currentTurn ?? '').toUpperCase()}</h2>
-                        <div className="space-y-2 max-h-64 overflow-y-auto">
+            
+            <SimHeaderHUD state={state} />
+            
+            <div className="flex flex-grow overflow-hidden">
+                {/* LEFT: Actions & Controls */}
+                <div className="w-64 flex-shrink-0 bg-stone-950 border-r border-stone-700 flex flex-col">
+                     <div className="p-3 border-b border-stone-800">
+                         <h3 className="text-[10px] font-bold text-stone-500 uppercase tracking-wider mb-2">{t('simulation.manual.valid_actions_for')} <span className="text-cyan-400">{state.currentTurn?.toUpperCase()}</span></h3>
+                         <div className="grid grid-cols-2 gap-2">
                             {validActions.map((action, i) => (
-                                <button key={i} onClick={() => handleActionClick(action)} className="w-full text-left px-4 py-3 bg-cyan-900/20 border border-cyan-700/30 hover:bg-cyan-800/40 hover:border-cyan-500 rounded-md text-cyan-100 transition-all text-sm font-medium">
+                                <button key={i} onClick={() => handleActionClick(action)} className="px-2 py-3 bg-cyan-900/20 border border-cyan-700/30 hover:bg-cyan-800/40 hover:border-cyan-500 rounded text-cyan-100 text-[10px] font-medium leading-tight transition-all active:scale-95">
                                     {getActionDescription(action, state, t, {ai: t('common.ai'), opponent: t('common.opponent')})}
                                 </button>
                             ))}
-                        </div>
-                    </div>
-                     <div className="bg-stone-900/80 p-4 rounded-lg border border-purple-800/30 flex-grow flex flex-col">
-                        <div className="flex-shrink-0">
-                            <h2 className="text-sm font-bold text-purple-400 uppercase tracking-widest mb-3 border-b border-purple-800/50 pb-1">{t('simulation.manual.ai_suggestion')}</h2>
-                            <div className="flex gap-2 mb-3">
-                                <button onClick={handleAskAi} disabled={isSimulating} className="flex-1 px-3 py-2 text-sm rounded-md font-bold text-white bg-blue-600 hover:bg-blue-500 disabled:bg-gray-600 transition-colors shadow-md">{t('simulation.manual.ask_ai')}</button>
-                                {!isSimulating ? (
-                                    <button onClick={handleRunSimulations} className="flex-1 px-3 py-2 text-sm rounded-md font-bold text-white bg-purple-600 hover:bg-purple-500 transition-colors shadow-md">{t('scenario_tester.run_simulations')}</button>
-                                ) : (
-                                    <button onClick={handleCancelSimulation} className="flex-1 px-3 py-2 text-sm rounded-md font-bold text-white bg-red-600 hover:bg-red-500 transition-colors shadow-md">{t('scenario_tester.cancel')}</button>
-                                )}
-                            </div>
-                            {isSimulating && (
-                                <div className="w-full bg-gray-800 rounded-full h-2 relative overflow-hidden my-2">
-                                    <div className="bg-purple-500 h-2 rounded-full" style={{ width: `${simulationProgress}%`, transition: 'width 0.1s' }}></div>
-                                </div>
-                            )}
-                        </div>
-                        <div className="flex-grow overflow-y-auto">
-                            {aiSuggestion ? (
-                                <div className="space-y-3 bg-black/30 p-3 rounded-md border border-white/5">
-                                    <p className="font-mono text-lg text-yellow-300">{actionDesc}</p>
-                                    <details className="text-xs">
-                                        <summary className="cursor-pointer font-semibold text-gray-400 hover:text-white transition-colors">{t('scenario_tester.reasoning')}</summary>
-                                        <pre className="mt-2 p-2 bg-black/50 rounded border border-white/10 text-cyan-200 whitespace-pre-wrap font-mono max-h-40 overflow-y-auto">{reasoningDesc}</pre>
-                                    </details>
-                                </div>
-                            ) : !simulationResults && !isSimulating && <p className="text-sm text-gray-500 italic text-center py-4">{t('simulation.manual.ask_ai_prompt')}</p>}
-
-                            {sortedSimulationResults && (
-                                <div className="flex flex-col flex-grow overflow-hidden mt-2">
-                                    <div className="flex justify-between items-center mb-2 flex-shrink-0">
-                                        <h3 className="text-xs font-bold text-purple-300 uppercase tracking-wider">{t('scenario_tester.simulation_results', { count: totalSimsRun })}</h3>
-                                        <button onClick={() => setSimulationResults(null)} className="text-[10px] uppercase font-bold text-red-400 hover:text-red-300">{t('scenario_tester.clear_results')}</button>
-                                    </div>
-                                    <div className="flex-grow overflow-y-auto space-y-1 pr-2">
-                                        {sortedSimulationResults.map(([reason, count]) => {
-                                            const percentage = totalSimsRun > 0 ? (count / totalSimsRun) * 100 : 0;
-                                            const reasonText = t(`ai_reason_keys.${reason}`, { defaultValue: reason });
-                                            const isExpanded = expandedResult === reason;
-                                            return (
-                                                <div key={reason}>
-                                                    <button onClick={() => setExpandedResult(isExpanded ? null : reason)} className="w-full flex items-center gap-2 text-xs p-2 rounded hover:bg-purple-900/30 transition-colors group">
-                                                        <div className="flex-grow relative h-6 bg-black/40 rounded overflow-hidden">
-                                                            <div className="absolute top-0 left-0 h-full bg-purple-600/40 group-hover:bg-purple-600/60 transition-colors" style={{ width: `${percentage}%` }}></div>
-                                                            <div className="absolute inset-0 flex items-center justify-between px-2">
-                                                                <span className="truncate text-gray-200 z-10">{reasonText}</span>
-                                                                <span className="font-mono text-white z-10">{percentage.toFixed(1)}%</span>
-                                                            </div>
-                                                        </div>
-                                                    </button>
-                                                    {isExpanded && (
-                                                        <div className="p-3 mt-1 bg-black/40 rounded border-l-2 border-purple-500 animate-fade-in-scale">
-                                                            <p className="text-xs text-gray-300 font-sans">{t(`scenario_tester.explanations.${reason}`, { defaultValue: "No explanation available." })}</p>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-
-                {/* Right Panel: Game State */}
-                 <div className="col-span-1 lg:col-span-2 flex flex-col gap-6 overflow-y-auto pr-2">
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="bg-stone-900/80 p-4 rounded-lg border border-cyan-800/30">
-                            <h2 className="text-sm font-bold text-cyan-400 uppercase tracking-widest mb-3 border-b border-cyan-800/50 pb-1">{t('simulation.scoreboard_title')}</h2>
-                            <div className="flex justify-between items-center mb-1">
-                                <span className="text-stone-300">{t('common.ai')}</span>
-                                <span className="font-mono text-2xl text-amber-400">{state.aiScore}</span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                                <span className="text-stone-300">{t('common.opponent')}</span>
-                                <span className="font-mono text-2xl text-stone-400">{state.playerScore}</span>
-                            </div>
-                        </div>
-                         <div className="bg-stone-900/80 p-4 rounded-lg border border-cyan-800/30 relative">
-                             <div className="absolute top-4 right-4 flex gap-2">
-                                 <button onClick={() => setIsLogModalOpen(true)} className="text-xs font-bold uppercase text-cyan-400 hover:text-cyan-200 border border-cyan-400/50 px-2 py-1 rounded hover:bg-cyan-900/20 transition-colors">{t('simulation.manual.view_log')}</button>
-                                 <button onClick={resetToSetup} className="text-xs font-bold uppercase text-yellow-400 hover:text-yellow-200 border border-yellow-400/50 px-2 py-1 rounded hover:bg-yellow-900/20 transition-colors">{t('simulation.manual.reset')}</button>
-                            </div>
-                             <h2 className="text-sm font-bold text-cyan-400 uppercase tracking-widest mb-3 border-b border-cyan-800/50 pb-1">{t('simulation.round_status_title', { round: state.round })}</h2>
-                             <div className="grid grid-cols-2 gap-2 text-xs">
-                                <p className="text-stone-400">{t('simulation.phase')}</p> <p className="text-right text-stone-200">{state.gamePhase}</p>
-                                <p className="text-stone-400">{t('simulation.turn')}</p> <p className="text-right text-stone-200">{state.currentTurn?.toUpperCase() ?? t('common.na')}</p>
-                                <p className="text-stone-400">{t('simulation.mano')}</p> <p className="text-right text-stone-200">{state.mano.toUpperCase()}</p>
-                             </div>
-                        </div>
+                         </div>
                      </div>
-                    <div className="space-y-4 bg-stone-900/50 p-4 rounded-xl border border-white/5">
-                        <HandDisplay title={t('simulation.manual.ai_hand')} cards={[...state.aiHand, null, null, null].slice(0,3)} />
-                        <div className="grid grid-cols-2 gap-4 items-center px-2">
-                            <HandDisplay title={t('simulation.manual.ai_tricks')} cards={state.aiTricks} />
-                            <HandDisplay title={t('simulation.manual.opponent_tricks')} cards={state.playerTricks} />
-                        </div>
-                        <HandDisplay title={t('simulation.manual.opponent_hand')} cards={[...state.playerHand, null, null, null].slice(0,3)} />
-                    </div>
+                     
+                     <div className="p-3 flex-grow flex flex-col overflow-hidden">
+                         <h3 className="text-[10px] font-bold text-purple-500 uppercase tracking-wider mb-2">AI Brain</h3>
+                         <button onClick={handleAskAi} className="w-full py-2 mb-3 bg-purple-700 hover:bg-purple-600 text-white text-xs font-bold uppercase rounded shadow-md transition-colors">
+                             {t('simulation.manual.ask_ai')}
+                         </button>
+                         {aiSuggestion && (
+                             <div className="flex-grow overflow-y-auto bg-black/30 rounded border border-purple-900/50 p-2 custom-scrollbar">
+                                 <div className="text-xs text-purple-200 font-bold mb-1">{getActionDescription(aiSuggestion.action, state, t, {ai: t('common.ai'), opponent: t('common.opponent')})}</div>
+                                 <pre className="text-[10px] text-purple-300/70 font-mono whitespace-pre-wrap leading-tight">{renderReasoning(aiSuggestion.reasoning, t)}</pre>
+                             </div>
+                         )}
+                     </div>
+
+                     <div className="p-3 border-t border-stone-800 flex gap-2">
+                         <button onClick={() => setIsLogModalOpen(true)} className="flex-1 py-2 bg-stone-800 text-stone-400 hover:text-white text-[10px] font-bold uppercase rounded">{t('simulation.manual.view_log')}</button>
+                         <button onClick={() => { setSimPhase('setup'); setManualEventLog([]); setAiSuggestion(null); }} className="flex-1 py-2 bg-red-900/30 text-red-400 hover:bg-red-900/50 text-[10px] font-bold uppercase rounded">{t('simulation.manual.reset')}</button>
+                     </div>
                 </div>
+                
+                {/* RIGHT: Game Table */}
+                <div className="flex-grow relative bg-[#0f5132] shadow-inner flex flex-col justify-between p-6" style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/felt.png')" }}>
+                      <div className="absolute inset-0 bg-black/20 pointer-events-none"></div>
+                      
+                      <div className="relative z-10 flex justify-center">
+                          <CompactHandDisplay cards={state.aiHand} title={t('simulation.manual.ai_hand')} labelSide="bottom" />
+                      </div>
+
+                      <div className="relative z-10 flex justify-center gap-16 opacity-90">
+                           <CompactHandDisplay cards={state.aiTricks} title={t('simulation.manual.ai_tricks')} labelSide="bottom" />
+                           <CompactHandDisplay cards={state.playerTricks} title={t('simulation.manual.opponent_tricks')} labelSide="bottom" />
+                      </div>
+
+                      <div className="relative z-10 flex justify-center">
+                          <CompactHandDisplay cards={state.playerHand} title={t('simulation.manual.opponent_hand')} />
+                      </div>
+                 </div>
             </div>
+            
+            {pickerState.open && <CardPickerModal availableCards={availableCards} onSelect={handleCardSelect} onExit={() => setPickerState({ ...pickerState, open: false })} />}
         </div>
     );
 };
 
+// --- Main Simulation Component ---
 
 type SimTab = 'auto' | 'manual' | 'tester' | 'analyzer' | 'runner' | 'gemini';
 
@@ -847,47 +708,51 @@ const Simulation: React.FC<{ onExit: () => void }> = ({ onExit }) => {
     const { t } = useLocalization();
     const [activeTab, setActiveTab] = useState<SimTab>('auto');
 
-    return (
-        <div className="h-screen bg-stone-950 text-white font-sans flex flex-col items-center relative overflow-hidden">
-             {/* Background Texture */}
-            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-30 z-0"></div>
-            <div className="absolute inset-0 bg-gradient-to-b from-stone-900/80 via-stone-900/50 to-stone-950 z-0"></div>
+    const NavButton: React.FC<{ tab: SimTab, label: string }> = ({ tab, label }) => (
+        <button
+            onClick={() => setActiveTab(tab)}
+            className={`px-4 py-2 text-xs font-bold uppercase tracking-wider transition-all border-b-2 ${
+                activeTab === tab 
+                ? 'text-cyan-300 border-cyan-500 bg-white/5' 
+                : 'text-stone-500 border-transparent hover:text-stone-300 hover:bg-white/5'
+            }`}
+        >
+            {label}
+        </button>
+    );
 
-            <div className="w-full max-w-[1600px] flex justify-between items-center p-4 z-10 border-b border-cyan-900/30 bg-stone-900/80 backdrop-blur-sm">
-                <div className="flex items-center gap-3">
-                    <span className="text-3xl">🧪</span>
-                    <h1 className="text-2xl font-cinzel font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-500 tracking-widest shadow-cyan-500/50 drop-shadow-sm">
-                        {t('simulation.title')}
-                    </h1>
+    return (
+        <div className="h-screen bg-stone-950 text-white font-sans flex flex-col overflow-hidden">
+             {/* Header */}
+            <div className="flex-shrink-0 h-12 bg-stone-900 border-b border-stone-800 flex items-center justify-between px-4 select-none z-20">
+                <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.6)]"></div>
+                    <span className="font-cinzel font-bold text-stone-200 tracking-widest text-sm">TRUCO SIMULATOR</span>
                 </div>
-                <button onClick={onExit} className="px-4 py-2 rounded text-sm font-bold uppercase tracking-wider text-stone-400 hover:text-white border border-stone-700 hover:border-stone-500 hover:bg-stone-800 transition-all">
-                    {t('simulation.button_exit')}
+                <div className="flex h-full">
+                    <NavButton tab="auto" label={t('simulation.tab_auto_hand')} />
+                    <NavButton tab="gemini" label={t('simulation.tab_gemini')} />
+                    <NavButton tab="manual" label={t('simulation.tab_manual_hand')} />
+                    <NavButton tab="tester" label={t('simulation.tab_scenario_test')} />
+                    <NavButton tab="analyzer" label={t('simulation.tab_batch_analysis')} />
+                    <NavButton tab="runner" label={t('simulation.tab_runner')} />
+                </div>
+                <button onClick={onExit} className="text-stone-500 hover:text-red-400 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
             </div>
             
-            <div className="w-full max-w-[1600px] flex-grow flex flex-col min-h-0 z-10 p-4">
-                {/* Tab Bar */}
-                <div className="flex-shrink-0 flex gap-1 overflow-x-auto custom-scrollbar pb-0 mb-[-2px]">
-                    <Tab title={t('simulation.tab_auto_hand')} isActive={activeTab === 'auto'} onClick={() => setActiveTab('auto')} />
-                    <Tab title={t('simulation.tab_gemini')} isActive={activeTab === 'gemini'} onClick={() => setActiveTab('gemini')} />
-                    <Tab title={t('simulation.tab_manual_hand')} isActive={activeTab === 'manual'} onClick={() => setActiveTab('manual')} />
-                    <Tab title={t('simulation.tab_scenario_test')} isActive={activeTab === 'tester'} onClick={() => setActiveTab('tester')} />
-                    <Tab title={t('simulation.tab_batch_analysis')} isActive={activeTab === 'analyzer'} onClick={() => setActiveTab('analyzer')} />
-                    <Tab title={t('simulation.tab_runner')} isActive={activeTab === 'runner'} onClick={() => setActiveTab('runner')} />
-                </div>
-
-                {/* Content Area */}
-                <div className="w-full flex-grow bg-stone-800 border-2 border-cyan-700/50 rounded-b-xl rounded-tr-xl shadow-2xl overflow-hidden relative">
-                     <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/felt.png')] opacity-10 pointer-events-none"></div>
-                     <div className="absolute inset-0 p-6 overflow-y-auto">
-                        {activeTab === 'auto' && <AutoSimulator />}
-                        {activeTab === 'gemini' && <GeminiSimulator />}
-                        {activeTab === 'manual' && <ManualSimulator />}
-                        {activeTab === 'tester' && <ScenarioTester />}
-                        {activeTab === 'analyzer' && <BatchAnalyzer />}
-                        {activeTab === 'runner' && <ScenarioRunner />}
-                     </div>
-                </div>
+            {/* Content Area */}
+            <div className="flex-grow relative overflow-hidden bg-stone-900">
+                 <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-5 pointer-events-none"></div>
+                 <div className="absolute inset-0 p-0">
+                    {activeTab === 'auto' && <AutoSimulator />}
+                    {activeTab === 'gemini' && <GeminiSimulator />}
+                    {activeTab === 'manual' && <ManualSimulator />}
+                    {activeTab === 'tester' && <ScenarioTester />}
+                    {activeTab === 'analyzer' && <BatchAnalyzer />}
+                    {activeTab === 'runner' && <ScenarioRunner />}
+                 </div>
             </div>
         </div>
     );

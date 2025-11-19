@@ -8,23 +8,76 @@ import CardComponent from './Card';
 import { getCardName } from '../services/trucoLogic';
 import { useLocalization } from '../context/LocalizationContext';
 
-const HandDisplay: React.FC<{ cards: CardType[], title: string, isVisible: boolean }> = ({ cards, title, isVisible }) => (
-    <div className="bg-black/20 p-3 rounded-lg border border-white/5">
-        <h3 className="text-xs font-bold text-amber-500 uppercase tracking-widest mb-2">{title}</h3>
-        <div className="flex justify-center min-h-[124px] items-center gap-2">
-            {cards.map((card, index) => (
-                <CardComponent key={index} card={card} size="small" isFaceDown={!isVisible} />
-            ))}
-        </div>
+// Reuse mini components from Simulation via copy (or common component extraction in future refactor)
+const MiniCard: React.FC<{ card: CardType | null; isVisible?: boolean }> = ({ card, isVisible = true }) => (
+    <div className="w-12 h-[78px] lg:w-16 lg:h-[104px] rounded border border-stone-600 bg-stone-800 shadow-lg flex items-center justify-center relative select-none">
+        {card ? (
+             <CardComponent card={card} size="small" className="!w-full !h-full" isFaceDown={!isVisible} />
+        ) : (
+            <div className="w-full h-full bg-white/5 flex items-center justify-center">
+                <div className="w-4 h-6 border-2 border-dashed border-white/10 rounded-sm"></div>
+            </div>
+        )}
     </div>
 );
+
+const CompactHandDisplay: React.FC<{ cards: (CardType | null)[]; title: string; isVisible?: boolean; labelSide?: 'top' | 'bottom' }> = ({ cards, title, isVisible = true, labelSide = 'top' }) => (
+    <div className="flex flex-col items-center gap-1">
+        {labelSide === 'top' && <span className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">{title}</span>}
+        <div className="flex gap-2">
+            {cards.map((card, i) => (
+                <MiniCard key={i} card={card} isVisible={isVisible} />
+            ))}
+        </div>
+        {labelSide === 'bottom' && <span className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">{title}</span>}
+    </div>
+);
+
+const SimHeaderHUD: React.FC<{ state: GameState }> = ({ state }) => {
+    const { t } = useLocalization();
+    return (
+        <div className="bg-black/60 backdrop-blur-sm border-b border-white/10 p-2 flex justify-between items-center text-xs lg:text-sm font-mono shadow-md">
+             <div className="flex items-center gap-4">
+                <div className="flex flex-col leading-none">
+                    <span className="text-stone-500 uppercase text-[10px]">{t('simulation.round')}</span>
+                    <span className="text-amber-400 font-bold">{state.round}</span>
+                </div>
+                <div className="w-px h-6 bg-white/10"></div>
+                <div className="flex flex-col leading-none">
+                    <span className="text-stone-500 uppercase text-[10px]">{t('simulation.phase')}</span>
+                    <span className="text-stone-300">{state.gamePhase}</span>
+                </div>
+                 <div className="w-px h-6 bg-white/10"></div>
+                <div className="flex flex-col leading-none">
+                    <span className="text-stone-500 uppercase text-[10px]">{t('simulation.turn')}</span>
+                    <span className={`font-bold ${state.currentTurn === 'player' ? 'text-green-400' : 'text-red-400'}`}>
+                        {state.currentTurn === 'player' ? 'GEMINI' : 'LOCAL AI'}
+                    </span>
+                </div>
+             </div>
+             
+             <div className="flex items-center gap-6">
+                 <div className="flex items-center gap-2">
+                     <div className="text-right">
+                         <div className="text-stone-500 text-[10px] uppercase">{t('common.ai')}</div>
+                         <div className="text-red-400 font-bold text-lg leading-none">{state.aiScore}</div>
+                     </div>
+                     <div className="text-stone-600 font-bold">vs</div>
+                     <div>
+                         <div className="text-stone-500 text-[10px] uppercase">{t('common.gemini')}</div>
+                         <div className="text-green-400 font-bold text-lg leading-none">{state.playerScore}</div>
+                     </div>
+                 </div>
+             </div>
+        </div>
+    );
+};
 
 type LogEntry = {
     type: 'info' | 'event' | 'prompt' | 'response' | 'analysis_prompt' | 'analysis_response';
     content: string;
 };
 
-// Helper to describe an action, now with customizable player names
 const getActionDescription = (action: Action, state: Partial<GameState>, t: (key: string, options?: any) => string, playerNames: {ai: string, opponent: string}): string => {
     const actor = (action as any)?.payload?.player || state.currentTurn;
     const playerName = actor === 'ai' ? playerNames.ai : playerNames.opponent;
@@ -138,43 +191,31 @@ const GeminiSimulator: React.FC = () => {
                 const geminiResult = await getGeminiMove(state);
                 move = geminiResult.move;
                 
-                // Format formatted thoughts for UI
                 const confidencePercent = geminiResult.confidence ? Math.round(geminiResult.confidence * 100) : '?';
-                const thoughtDisplay = 
-`Action: ${move.action.type}
-Confidence: ${confidencePercent}%
-Risk: ${geminiResult.risk || 'Unknown'}
-Reasoning: ${move.reasoning[0]}`;
+                const thoughtDisplay = `Action: ${move.action.type}\nConfidence: ${confidencePercent}%\nRisk: ${geminiResult.risk || 'Unknown'}\nReasoning: ${move.reasoning[0]}`;
                 
                 setGeminiThoughts(thoughtDisplay);
                 addToLog(geminiResult.prompt, 'prompt');
                 addToLog(geminiResult.rawResponse, 'response');
-                // Reset retry state on success
                 hasAutoRetried.current = false;
                 setShowRetryButton(false);
             } catch (error) {
                 const errorMessage = (error as Error).message || '';
                 console.error("Error getting Gemini move:", error);
-
                 setIsLoading(null);
-
                 if (errorMessage.includes('RESOURCE_EXHAUSTED') || errorMessage.includes('429')) {
                     if (!hasAutoRetried.current) {
                         hasAutoRetried.current = true;
                         addToLog(t('simulation.gemini.error_quota_retry'), 'info');
                         setIsQuotaPaused(true);
-                        setTimeout(() => {
-                            if (!cancelSimRef.current) {
-                                setIsQuotaPaused(false); // This will re-trigger the game loop
-                            }
-                        }, 30000);
+                        setTimeout(() => { if (!cancelSimRef.current) setIsQuotaPaused(false); }, 30000);
                     } else {
                         addToLog(t('simulation.gemini.error_quota_manual'), 'info');
                         setShowRetryButton(true);
                     }
                 } else {
                     addToLog(t('simulation.gemini.error_gemini_move'), 'info');
-                    dispatch({ type: 'NO_OP' as any }); // Skip turn for other errors
+                    dispatch({ type: 'NO_OP' as any });
                 }
                 return;
             }
@@ -188,14 +229,11 @@ Reasoning: ${move.reasoning[0]}`;
 
     const handleManualRetry = () => {
         setShowRetryButton(false);
-        hasAutoRetried.current = false; // Reset the auto-retry flag
-        // The useEffect will pick up the change and re-trigger handleTurn
+        hasAutoRetried.current = false;
     };
 
-    // Auto-resolve intermediate game phases
     useEffect(() => {
         if (!isSimulating) return;
-
         let resolutionAction: Action | null = null;
         switch (state.gamePhase) {
             case 'ENVIDO_ACCEPTED': resolutionAction = { type: ActionType.RESOLVE_ENVIDO_ACCEPT }; break;
@@ -204,44 +242,32 @@ Reasoning: ${move.reasoning[0]}`;
             case 'FLOR_SHOWDOWN': resolutionAction = { type: ActionType.RESOLVE_FLOR_SHOWDOWN }; break;
             case 'CONTRAFLOR_DECLINED': resolutionAction = { type: ActionType.RESOLVE_CONTRAFLOR_DECLINE }; break;
         }
-
         if (resolutionAction) {
             const timeoutId = setTimeout(() => {
                 if (cancelSimRef.current) return;
                 addToLog(t('simulation.log_resolving', { phase: state.gamePhase }), 'info');
                 dispatch(resolutionAction!);
-            }, 300); // short delay for resolution
+            }, 300);
             return () => clearTimeout(timeoutId);
         }
     }, [state.gamePhase, isSimulating, addToLog, t]);
 
-    // Game Loop
     useEffect(() => {
-        if (!isSimulating || state.winner || cancelSimRef.current || isQuotaPaused || showRetryButton || isLoading) {
-            return;
-        }
-        
+        if (!isSimulating || state.winner || cancelSimRef.current || isQuotaPaused || showRetryButton || isLoading) return;
         const isResolving = state.gamePhase.includes('ACCEPT') || state.gamePhase.includes('DECLINE');
         if (isResolving) return;
-
         const timeoutId = setTimeout(handleTurn, 500);
-        return () => {
-            clearTimeout(timeoutId);
-        };
+        return () => clearTimeout(timeoutId);
     }, [isSimulating, state, isQuotaPaused, showRetryButton, isLoading, handleTurn]);
     
-    // Handle game over
     useEffect(() => {
         if (isSimulating && state.winner) {
-            const winnerLog = state.winner === 'ai' 
-                ? t('simulation.log_game_winner_ai') 
-                : t('simulation.gemini.log_game_winner_gemini');
+            const winnerLog = state.winner === 'ai' ? t('simulation.log_game_winner_ai') : t('simulation.gemini.log_game_winner_gemini');
             addToLog(winnerLog, 'info');
-            setIsSimulating(false); // Unlock the UI
+            setIsSimulating(false);
         }
     }, [isSimulating, state.winner, addToLog, t]);
     
-    // Auto-proceed after round ends (but not game over)
     useEffect(() => {
         if (isSimulating && state.gamePhase === 'round_end' && !state.winner) {
             addToLog(t('simulation.log_round_end', { round: state.round }), 'info');
@@ -250,11 +276,8 @@ Reasoning: ${move.reasoning[0]}`;
 
             if (simMode === 'round') {
                 setIsSimulating(false);
-            } else { // simMode === 'match'
-                 setTimeout(() => {
-                    if (cancelSimRef.current) return;
-                    dispatch({ type: ActionType.PROCEED_TO_NEXT_ROUND });
-                 }, 1500);
+            } else { 
+                 setTimeout(() => { if (cancelSimRef.current) return; dispatch({ type: ActionType.PROCEED_TO_NEXT_ROUND }); }, 1500);
             }
         }
     }, [isSimulating, simMode, state.gamePhase, state.winner, state.round, state.lastRoundWinner, state.aiScore, state.playerScore, addToLog, t]);
@@ -283,89 +306,92 @@ Reasoning: ${move.reasoning[0]}`;
     );
     
     return (
-        <div className="w-full h-full flex flex-col gap-4 text-white overflow-y-auto animate-fade-in-scale">
+        <div className="flex flex-col h-full w-full bg-stone-900">
             {isLogModalOpen && <LogModal />}
-            <div className="flex-shrink-0 bg-stone-900/80 p-4 rounded-lg border border-cyan-800/30 shadow-lg">
-                <h2 className="text-xl font-bold text-cyan-300 font-cinzel tracking-widest mb-2">{t('simulation.gemini.title')}</h2>
-                <p className="text-sm text-stone-400 max-w-3xl mb-4">{t('simulation.gemini.description')}</p>
-                <div className="flex flex-wrap items-center gap-4">
-                    {!isSimulating ? (
-                        <>
-                            <button onClick={() => handleStart('round')} className="px-4 py-2 rounded-lg font-bold text-white bg-gradient-to-b from-green-600 to-green-700 border-b-4 border-green-900 hover:from-green-500 hover:to-green-600 transition-all shadow-md">{t('simulation.gemini.start_round_sim')}</button>
-                            <button onClick={() => handleStart('match')} className="px-4 py-2 rounded-lg font-bold text-white bg-gradient-to-b from-blue-600 to-blue-700 border-b-4 border-blue-900 hover:from-blue-500 hover:to-blue-600 transition-all shadow-md">{t('simulation.gemini.start_match_sim')}</button>
-                        </>
-                    ) : (
-                        <button onClick={handleStop} className="px-4 py-2 rounded-lg font-bold text-white bg-red-700 border-b-4 border-red-900 hover:bg-red-600 transition-colors shadow-md animate-pulse">{t('simulation.gemini.stop_sim')}</button>
-                    )}
-                    {showRetryButton && (
-                        <button onClick={handleManualRetry} className="px-4 py-2 rounded-lg font-bold text-white bg-yellow-600 border-b-4 border-yellow-800 hover:bg-yellow-500 transition-colors animate-pulse">
-                            {t('simulation.gemini.retry_button')}
-                        </button>
-                    )}
-                     <button onClick={() => setIsLogModalOpen(true)} className="px-4 py-2 rounded-lg font-bold text-white bg-stone-700 border-b-4 border-stone-900 hover:bg-stone-600 transition-all shadow-md">{t('simulation.manual.view_log')}</button>
-                </div>
-            </div>
+            
+            <SimHeaderHUD state={state} />
+            
+            <div className="flex flex-grow overflow-hidden relative">
+                 {/* Game Board Area */}
+                 <div className="w-2/3 relative bg-[#0f5132] shadow-inner flex flex-col justify-between p-4" style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/felt.png')" }}>
+                      <div className="absolute inset-0 bg-black/20 pointer-events-none"></div>
+                      
+                      <div className="relative z-10 flex justify-center pt-4">
+                          <CompactHandDisplay cards={state.aiHand} title={t('simulation.gemini.local_ai_hand')} isVisible={true} labelSide="bottom" />
+                      </div>
 
-            <div className="flex-grow grid grid-cols-1 lg:grid-cols-3 gap-6 overflow-hidden">
-                {/* Left Panel: Game State */}
-                <div className="flex flex-col gap-6">
-                    <div className="bg-stone-900/80 p-4 rounded-lg border border-cyan-800/30">
-                        <h2 className="text-sm font-bold text-cyan-400 uppercase tracking-widest mb-3 border-b border-cyan-800/50 pb-1">{t('simulation.scoreboard_title')}</h2>
-                        <div className="flex justify-between items-center mb-1">
-                            <span className="text-stone-300">{t('common.ai')}</span>
-                            <span className="font-mono text-2xl text-amber-400">{state.aiScore}</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                            <span className="text-stone-300">{t('common.gemini')}</span>
-                            <span className="font-mono text-2xl text-stone-400">{state.playerScore}</span>
-                        </div>
-                    </div>
-                     <div className="bg-stone-900/80 p-4 rounded-lg border border-cyan-800/30 space-y-4">
-                        <HandDisplay cards={state.initialAiHand} title={t('simulation.gemini.local_ai_hand')} isVisible={true} />
-                        <HandDisplay cards={state.initialPlayerHand} title={t('simulation.gemini.gemini_hand')} isVisible={isSimulating} />
-                    </div>
-                </div>
+                      <div className="relative z-10 flex justify-center gap-12 opacity-90">
+                           <CompactHandDisplay cards={state.aiTricks} title={t('simulation.manual.ai_tricks')} labelSide="bottom" />
+                           <CompactHandDisplay cards={state.playerTricks} title={t('simulation.manual.opponent_tricks')} labelSide="bottom" />
+                      </div>
 
-                {/* Middle Panel: Log & Gemini Thoughts */}
-                <div className="flex flex-col gap-4 overflow-hidden">
-                    <div ref={eventLogRef} className="flex-grow bg-black/60 p-4 rounded-lg overflow-y-auto font-vt323 text-lg border-2 border-cyan-900/50 shadow-inner">
-                        <h3 className="text-sm font-bold text-cyan-500 uppercase tracking-widest mb-2 sticky top-0 bg-black/80 backdrop-blur-sm p-1 rounded">{t('simulation.gemini.game_log')}</h3>
-                        {eventLog.filter(e => e.type === 'event' || e.type === 'info').map((log, index) => (
-                            <p key={index} className={`whitespace-pre-wrap ${log.type === 'info' ? 'text-yellow-300 my-2 font-bold' : 'text-cyan-100'}`}>
-                                {log.content}
-                            </p>
-                        ))}
-                    </div>
-                     <div className="flex-shrink-0 h-48 bg-stone-900/80 p-4 rounded-lg overflow-y-auto font-mono text-xs border border-purple-800/30 shadow-lg">
-                        <h3 className="text-xs font-bold text-purple-400 uppercase tracking-widest mb-2 sticky top-0 bg-stone-900/90 p-1">{t('simulation.gemini.gemini_thoughts')}</h3>
-                        {isLoading === 'gemini_move' ? <p className="animate-pulse text-purple-300">{t('simulation.gemini.waiting_for_gemini')}</p> : <pre className="whitespace-pre-wrap text-purple-200/80">{geminiThoughts}</pre>}
-                    </div>
-                </div>
+                      <div className="relative z-10 flex justify-center pb-4">
+                          <CompactHandDisplay cards={state.playerHand} title={t('simulation.gemini.gemini_hand')} isVisible={isSimulating} />
+                      </div>
+                 </div>
 
-                {/* Right Panel: Analysis */}
-                <div className="bg-stone-900/80 p-4 rounded-lg border border-green-800/30 flex flex-col shadow-lg">
-                    <div className="flex justify-between items-center mb-3 flex-shrink-0 border-b border-green-800/30 pb-2">
-                        <h3 className="text-sm font-bold text-green-400 uppercase tracking-widest">{t('simulation.gemini.gemini_analysis')}</h3>
-                        {((!isSimulating && simMode === 'round' && (state.gamePhase === 'round_end' || state.winner)) || (!isSimulating && state.winner)) && !analysis && (
-                            <button onClick={handleGetAnalysis} disabled={isLoading === 'analysis'} className="px-3 py-1 text-xs font-bold uppercase rounded bg-green-700 hover:bg-green-600 text-white transition-colors disabled:opacity-50">{t('simulation.gemini.get_analysis')}</button>
-                        )}
-                    </div>
-                    <div className="flex-grow overflow-y-auto custom-scrollbar pr-2">
-                        {isLoading === 'analysis' ? (
-                            <div className="flex items-center justify-center h-full">
-                                <p className="animate-pulse text-green-300 font-mono">{t('simulation.gemini.analyzing')}</p>
+                 {/* Right Sidebar: Analysis & Controls */}
+                 <div className="w-1/3 bg-stone-950 border-l border-stone-700 flex flex-col">
+                     
+                     {/* Tabs for Log vs Analysis vs Thoughts */}
+                     <div className="flex-grow flex flex-col overflow-hidden">
+                        <div className="p-3 space-y-3 overflow-y-auto custom-scrollbar flex-grow">
+                            {/* Gemini Thoughts Panel */}
+                            <div className="bg-purple-900/10 border border-purple-500/30 rounded p-2">
+                                <h3 className="text-[10px] font-bold text-purple-400 uppercase tracking-wider mb-1">{t('simulation.gemini.gemini_thoughts')}</h3>
+                                {isLoading === 'gemini_move' ? 
+                                    <p className="animate-pulse text-purple-300 text-xs">{t('simulation.gemini.waiting_for_gemini')}</p> : 
+                                    <pre className="whitespace-pre-wrap text-purple-200/80 text-[10px] font-mono">{geminiThoughts || "Waiting for turn..."}</pre>
+                                }
                             </div>
-                        ) : (analysis ? (
-                            <div className="prose prose-invert prose-sm max-w-none prose-p:text-stone-300 prose-headings:text-green-300 prose-strong:text-white prose-pre:bg-black/30 prose-code:text-amber-200">
-                                <pre className="whitespace-pre-wrap font-sans text-sm">{analysis}</pre>
+
+                            {/* Gemini Analysis Panel (Only shows when analysis is available or requested) */}
+                            <div className="bg-green-900/10 border border-green-500/30 rounded p-2">
+                                <div className="flex justify-between items-center mb-1">
+                                    <h3 className="text-[10px] font-bold text-green-400 uppercase tracking-wider">{t('simulation.gemini.gemini_analysis')}</h3>
+                                    {((!isSimulating && simMode === 'round' && (state.gamePhase === 'round_end' || state.winner)) || (!isSimulating && state.winner)) && !analysis && (
+                                        <button onClick={handleGetAnalysis} disabled={isLoading === 'analysis'} className="px-2 py-0.5 text-[10px] font-bold uppercase rounded bg-green-700 hover:bg-green-600 text-white disabled:opacity-50">Get</button>
+                                    )}
+                                </div>
+                                {isLoading === 'analysis' ? (
+                                    <p className="animate-pulse text-green-300 font-mono text-xs">{t('simulation.gemini.analyzing')}</p>
+                                ) : (
+                                    <div className="prose prose-invert prose-sm max-w-none prose-p:text-stone-300 prose-headings:text-green-300 prose-strong:text-white prose-pre:bg-black/30 prose-code:text-amber-200">
+                                        <pre className="whitespace-pre-wrap font-sans text-[10px] max-h-40 overflow-y-auto">{analysis || t('simulation.gemini.analysis_prompt')}</pre>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Event Log Stream */}
+                            <div className="bg-black/30 border border-white/5 rounded p-2">
+                                <h3 className="text-[10px] font-bold text-stone-500 uppercase tracking-wider mb-1">{t('simulation.gemini.game_log')}</h3>
+                                <div className="font-vt323 text-xs text-stone-300 space-y-1 max-h-48 overflow-y-auto custom-scrollbar">
+                                    {eventLog.filter(e => e.type === 'event' || e.type === 'info').map((log, index) => (
+                                        <p key={index} className={`whitespace-pre-wrap ${log.type === 'info' ? 'text-yellow-400 font-bold' : 'text-cyan-100'}`}>
+                                            {log.content}
+                                        </p>
+                                    ))}
+                                </div>
+                                <button onClick={() => setIsLogModalOpen(true)} className="w-full mt-2 text-[10px] text-stone-500 hover:text-stone-300 uppercase text-center">View Full Debug Log</button>
+                            </div>
+                        </div>
+                     </div>
+
+                     {/* Footer Controls */}
+                     <div className="p-3 border-t border-white/10 bg-stone-900">
+                        {!isSimulating ? (
+                            <div className="flex gap-2">
+                                <button onClick={() => handleStart('round')} className="flex-1 py-2 rounded bg-green-700 hover:bg-green-600 text-white font-bold text-xs uppercase shadow-md transition-colors">{t('simulation.gemini.start_round_sim')}</button>
+                                <button onClick={() => handleStart('match')} className="flex-1 py-2 rounded bg-blue-700 hover:bg-blue-600 text-white font-bold text-xs uppercase shadow-md transition-colors">{t('simulation.gemini.start_match_sim')}</button>
                             </div>
                         ) : (
-                            <div className="flex items-center justify-center h-full text-stone-500 text-center italic text-sm p-4">
-                                {t('simulation.gemini.analysis_prompt')}
-                            </div>
-                        ))}
-                    </div>
-                </div>
+                            <button onClick={handleStop} className="w-full py-2 rounded bg-red-700 hover:bg-red-600 text-white font-bold text-xs uppercase shadow-md animate-pulse">{t('simulation.gemini.stop_sim')}</button>
+                        )}
+                        {showRetryButton && (
+                             <button onClick={handleManualRetry} className="w-full mt-2 py-2 rounded bg-yellow-600 hover:bg-yellow-500 text-white font-bold text-xs uppercase animate-pulse">{t('simulation.gemini.retry_button')}</button>
+                        )}
+                     </div>
+                 </div>
             </div>
         </div>
     );
