@@ -125,12 +125,13 @@ export const findBestCardToPlay = (state: GameState): AiMove => {
                     // Conditions:
                     // 1. Have at least 2 cards with hierarchy >= 11 (Two 7s/Aces)
                     // OR
-                    // 2. Have an Ace (13+) and a decent 2nd card (3s or better, hierarchy >= 10)
+                    // 2. Have an Ace (13+) and a decent 2nd card (2s or better, hierarchy >= 9)
                     const hasTwoBravas = sortedHand.length === 3 && getCardHierarchy(sortedHand[1]) >= 11;
-                    const hasAceAndThree = sortedHand.length === 3 && getCardHierarchy(sortedHand[0]) >= 13 && getCardHierarchy(sortedHand[1]) >= 10;
+                    const hasAceAndGoodSupport = sortedHand.length === 3 && getCardHierarchy(sortedHand[0]) >= 13 && getCardHierarchy(sortedHand[1]) >= 9;
 
-                    if (trucoLevel === 0 && (hasTwoBravas || hasAceAndThree)) {
-                        // With such a strong hand (e.g., 2 Bravas, or Ace+3), standard GTO strategy is to check (play a card) 
+                    // Allows baiting even if Truco is already called (level > 0), as a feint to induce Retruco.
+                    if (hasTwoBravas || hasAceAndGoodSupport) {
+                        // With such a strong hand (e.g., 2 Bravas, or Ace+2), standard GTO strategy is to check (play a card) 
                         // to induce a bluff or get value later, rather than betting immediately.
                         // We set a very high bait chance for all archetypes.
                         let baitChance = 0.95; 
@@ -138,17 +139,26 @@ export const findBestCardToPlay = (state: GameState): AiMove => {
                         if (aiArchetype === 'Deceptive') baitChance = 1.0; 
                         if (aiArchetype === 'Aggressive') baitChance = 0.9; // Even aggressive players should trap with the absolute nuts
 
+                        // If Truco is already level 2 or 3 (Retruco/ValeCuatro), playing safe might be preferred to secure points.
+                        // But at Level 0 or 1, baiting is prime.
+                        if (trucoLevel >= 2) baitChance = 0.3;
+
                         if (Math.random() < baitChance) {
                             // Play the weakest card to feint
-                            const cardToPlay = sortedHand[2]; 
-                            const index = aiHand.findIndex(c => c.rank === cardToPlay.rank && c.suit === cardToPlay.suit);
+                            // If we have Ace, 2, False Ace. Weakest is False Ace (8).
+                            // But if we have 7E, 7O, 4. Weakest is 4.
+                            // Smart bait: If the middle card is also strongish (like a 2), keep it?
+                            // Actually, findBaitCard logic is better here.
                             
-                            reasoning.push({ key: 'ai_logic.feint_pre_truco', options: { cardName: getCardName(cardToPlay) } });
+                            const key = trucoLevel > 0 ? 'feint_active_truco' : 'feint_pre_truco';
+                            const { index: baitCardIndex, card: baitCard } = findBaitCard(aiHand);
+                            
+                            reasoning.push({ key: `ai_logic.${key}`, options: { cardName: getCardName(baitCard) } });
                             
                             return { 
-                                action: { type: ActionType.PLAY_CARD, payload: { player: 'ai', cardIndex: index } }, 
+                                action: { type: ActionType.PLAY_CARD, payload: { player: 'ai', cardIndex: baitCardIndex } }, 
                                 reasoning, 
-                                reasonKey: 'feint_pre_truco',
+                                reasonKey: key,
                                 strategyCategory: 'deceptive' 
                             };
                         }

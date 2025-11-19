@@ -1,3 +1,4 @@
+
 {
   "scenario_tester": {
     "title": "Probador de Escenarios",
@@ -70,7 +71,22 @@
       "endgame_pressure_truco": {
         "title": "Presión de Fin de Juego",
         "description": "La IA está a punto de ganar (14 puntos). Tiene una mano decente pero no imbatible. El objetivo es que la IA juegue de forma conservadora y evite cantar Truco, no arriesgando el juego innecesariamente."
-      }
+      },
+      "mid_low_signal_mask": {
+        "title": "Máscara de Señal Media-Baja",
+        "description": "La IA tiene un buen Envido oculto por una carta baja (que parece un descarte o una señal). El objetivo es verificar si la IA reconoce la fuerza de su Envido y lo canta antes de que sea tarde, o si intenta cebar."
+      },
+      "dual_brava_probe": { "title": "Sondeo con Doble Brava", "description": "La IA tiene dos cartas fuertes (Bravas). Debería considerar jugar la carta más débil primero para cebar o sondear." },
+      "ancho_feint_chain": { "title": "Cadena de Finta con Ancho", "description": "La IA intenta usar un Ancho Falso como señuelo." },
+      "false_ace_bait": { "title": "Cebo con Ancho Falso", "description": "Uso estratégico de un As falso para provocar al oponente." },
+      "tie_breaker_low": { "title": "Desempate con Carta Baja", "description": "Situación de empate donde una carta baja podría definir la ronda." },
+      "signal_masked_depletion": { "title": "Señal de Agotamiento Enmascarada", "description": "La IA simula quedarse sin cartas buenas." },
+      "post_envido_low_shift": { "title": "Cambio Bajo Post-Envido", "description": "Cambio de estrategia a cartas bajas tras ganar el Envido." },
+      "triple_brava_figure_probe": { "title": "Sondeo de Figura con Triple Brava", "description": "Mano extremadamente fuerte. La IA debe decidir cómo extraer el máximo valor." },
+      "post_tie_retruco_response": { "title": "Respuesta de Retruco Post-Empate", "description": "Evalúa la respuesta a un Retruco después de un empate." },
+      "false_7_deplete": { "title": "Agotamiento con 7 Falso", "description": "Jugar un 7 falso para agotar recursos del oponente." },
+      "envido_suit_misdirect": { "title": "Despiste de Palo de Envido", "description": "Jugar una carta de un palo diferente al del Envido fuerte para engañar." },
+      "brava_kiss_signal": { "title": "Señal de 'Beso' con Brava", "description": "Jugar una carta fuerte acompañada de una señal (si se implementara) o patrón de apuesta." }
     },
     "scenario_names": {
       "parda_y_gano": "Parda y Gano",
@@ -296,7 +312,7 @@
       "parda_y_canto": "La IA puede empatar la mano actual y tiene una carta muy fuerte guardada. Elige empatar para ocultar su fuerza y cantar 'Truco' en la siguiente mano.",
       "play_last_card": "Es la última mano, y la IA solo tiene una carta para jugar.",
       "probe_envido_hide": "La IA tiene un Envido fuerte y está jugando una carta no relacionada para ocultar qué palo forma su Envido.",
-      "probe_low_value": "La IA está jugando su carta más baja. Es una jugada de sondeo para ver qué juega el oponente sin arriesgar una carta fuerte. A menudo se usa cuando la IA no es 'mano' (juega segundo) o para preparar un cebo.",
+      "probe_low_value": "La IA está jugando su carta más baja. Es una jugada de sondeo para ver qué juega el oponente sin arriesgar una carta fuerte. A menudo se usa cuando la IA no es 'mano' (playing second) o para preparar un cebo.",
       "probe_mid_value": "La IA está jugando su carta del medio. Este es un cebo más convincente, que oculta tanto su carta más fuerte como la más débil.",
       "probe_sacrificial": "La IA tiene el As de Espadas y otra carta de primer nivel. Está 'sacrificando' la segunda mejor carta para parecer fuerte pero vencible, esperando una escalada en el Truco.",
       "respond_truco_with_flor": "El oponente cantó Truco, pero la IA tiene Flor. La Flor tiene prioridad y debe ser declarada.",

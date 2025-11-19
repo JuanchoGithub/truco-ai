@@ -122,10 +122,7 @@ export const updateProbsOnEnvido = (
 
     const { suitDist, rankProbs } = calculateProbabilitiesFromHands(validHands, k);
 
-    // FIX: Replaced error-prone JSON stringify/parse method with a type-safe Map to find unique cards.
-    // This resolves an error where the resulting array was not correctly typed as Card[].
     const uniqueCards = new Map<string, Card>();
-    // FIX: The type assertion was moved to the `combinations` call to fix type inference at the source.
     for (const hand of validHands) {
         for (const card of hand) {
             uniqueCards.set(`${card.rank}-${card.suit}`, card);
@@ -137,6 +134,35 @@ export const updateProbsOnEnvido = (
         suitDist,
         rankProbs,
         unseenCards: validUnseenCards,
+    };
+};
+
+/**
+ * Updates opponent hand probabilities when they FOLD to an Envido call.
+ * Filters out hands that would have very likely called (e.g., > 28 points).
+ */
+export const updateProbsOnEnvidoFold = (
+    currentProbs: OpponentHandProbabilities,
+    callThreshold: number = 27
+): OpponentHandProbabilities => {
+    const k = 3;
+    const possibleHands = combinations(currentProbs.unseenCards, k) as Card[][];
+
+    // We assume the player would NOT fold if they had a very strong hand (e.g., > 28).
+    // So we filter to keep hands that are "weak enough to fold".
+    // We allow some margin for error/bluffing (keeping a small % of strong hands), 
+    // but for simplicity in this deterministic filter, we'll just cut the top end.
+    const plausibleHands = possibleHands.filter(hand => getEnvidoValue(hand) <= callThreshold + 1);
+    
+    if (plausibleHands.length === 0) return currentProbs; // If logic eliminates everything, assume we know nothing to prevent crash.
+
+    const { suitDist, rankProbs } = calculateProbabilitiesFromHands(plausibleHands, k);
+
+    // We don't reduce 'unseenCards' here because the cards themselves aren't impossible, just certain *combinations* are.
+    return {
+        suitDist,
+        rankProbs,
+        unseenCards: currentProbs.unseenCards,
     };
 };
 

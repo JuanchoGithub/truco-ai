@@ -51,11 +51,14 @@ function checkConstraints(hand: Card[], constraints: HandConstraints): boolean {
     return true;
 }
 
-function generateHands(aiConstraints: HandConstraints, playerConstraints: HandConstraints): { aiHand: Card[], playerHand: Card[] } | null {
+function generateHands(aiConstraints: HandConstraints, playerConstraints: HandConstraints, excludedCards: Card[] = []): { aiHand: Card[], playerHand: Card[] } | null {
     const MAX_ATTEMPTS = 500;
     
     for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-        const deck = shuffle(createDeck());
+        // Create deck and remove excluded cards first
+        const fullDeck = createDeck();
+        const deck = shuffle(fullDeck.filter(c => !excludedCards.some(ex => ex.rank === c.rank && ex.suit === c.suit)));
+        
         let aiHand: Card[] | null = null;
 
         // --- AI Hand Generation ---
@@ -123,6 +126,19 @@ export interface PredefinedScenario {
     generateHands: () => { aiHand: Card[], playerHand: Card[] } | null;
 }
 
+// Helper to extract played cards from base state for exclusion
+const getExcludedCards = (baseState: Partial<GameState>): Card[] => {
+    const cards: Card[] = [];
+    if (baseState.aiTricks) {
+        baseState.aiTricks.forEach(c => { if (c) cards.push(c); });
+    }
+    if (baseState.playerTricks) {
+        baseState.playerTricks.forEach(c => { if (c) cards.push(c); });
+    }
+    return cards;
+};
+
+
 const baseScenarios: PredefinedScenario[] = [
     {
         nameKey: 'scenario_tester.scenario_names.parda_y_gano',
@@ -137,10 +153,13 @@ const baseScenarios: PredefinedScenario[] = [
             aiScore: 5,
             playerScore: 5
         },
-        generateHands: () => generateHands(
-            { numCards: 2, minTrucoStrength: 18 }, // Needs a strong 2-card hand (e.g., 7-espada + 6)
-            { numCards: 2, maxTrucoStrength: 15 }  // Opponent has a weaker 2-card hand
-        )
+        generateHands: function() {
+             return generateHands(
+                { numCards: 2, minTrucoStrength: 18 },
+                { numCards: 2, maxTrucoStrength: 15 },
+                getExcludedCards(this.baseState)
+            );
+        }
     },
     {
         nameKey: 'scenario_tester.scenario_names.do_or_die',
@@ -258,7 +277,13 @@ const baseScenarios: PredefinedScenario[] = [
     {
         nameKey: 'scenario_tester.scenario_names.tie_breaker_low',
         baseState: { aiScore: 10, playerScore: 9, trickWinners: ['tie', null, null], currentTrick: 1, mano: 'ai', currentTurn: 'ai', gamePhase: 'trick_2' },
-        generateHands: () => generateHands({ numCards: 2, minTrucoStrength: 18 }, { numCards: 2 })
+        generateHands: function() {
+             return generateHands(
+                { numCards: 2, minTrucoStrength: 18 },
+                { numCards: 2 },
+                getExcludedCards(this.baseState)
+            );
+        }
     },
     {
         nameKey: 'scenario_tester.scenario_names.signal_masked_depletion',
@@ -288,7 +313,13 @@ const baseScenarios: PredefinedScenario[] = [
             trucoLevel: 2,
             lastCaller: 'player'
         },
-        generateHands: () => generateHands({ numCards: 2, cardComposition: [{ minHierarchy: 13, maxHierarchy: 13 }, { maxHierarchy: 2 }] }, { numCards: 2, cardComposition: [{ minHierarchy: 10, maxHierarchy: 10 }, { maxHierarchy: 8 }] })
+        generateHands: function() {
+             return generateHands(
+                { numCards: 2, cardComposition: [{ minHierarchy: 13, maxHierarchy: 13 }, { maxHierarchy: 2 }] },
+                { numCards: 2, cardComposition: [{ minHierarchy: 10, maxHierarchy: 10 }, { maxHierarchy: 8 }] },
+                getExcludedCards(this.baseState)
+             );
+        }
     },
     {
         nameKey: 'scenario_tester.scenario_names.false_7_deplete',
@@ -316,7 +347,13 @@ const baseScenarios: PredefinedScenario[] = [
     {
         nameKey: 'scenario_tester.scenario_names.mid_game_figure_low',
         baseState: { aiScore: 6, playerScore: 5, currentTrick: 1, trickWinners: ['ai', null, null], mano: 'ai', currentTurn: 'ai', gamePhase: 'trick_2' },
-        generateHands: () => generateHands({ numCards: 2, minTrucoStrength: 12 }, { numCards: 2 })
+        generateHands: function() {
+            return generateHands(
+                { numCards: 2, minTrucoStrength: 12 },
+                { numCards: 2 },
+                getExcludedCards(this.baseState)
+            );
+        }
     },
     {
         nameKey: 'scenario_tester.scenario_names.late_false_ace_chain',
@@ -326,12 +363,24 @@ const baseScenarios: PredefinedScenario[] = [
     {
         nameKey: 'scenario_tester.scenario_names.parda_false_7',
         baseState: { aiScore: 2, playerScore: 1, trickWinners: ['tie', null, null], currentTrick: 1, mano: 'ai', currentTurn: 'ai', gamePhase: 'trick_2' },
-        generateHands: () => generateHands({ numCards: 2, minTrucoStrength: 13, maxTrucoStrength: 15 }, { numCards: 2 })
+        generateHands: function() {
+            return generateHands(
+                { numCards: 2, minTrucoStrength: 13, maxTrucoStrength: 15 },
+                { numCards: 2 },
+                getExcludedCards(this.baseState)
+            );
+        }
     },
     {
         nameKey: 'scenario_tester.scenario_names.tie_ancho_glimpse',
         baseState: { aiScore: 5, playerScore: 4, trickWinners: ['tie', null, null], currentTrick: 1, mano: 'ai', currentTurn: 'ai', gamePhase: 'trick_2' },
-        generateHands: () => generateHands({ numCards: 2, cardComposition: [{ minHierarchy: 12, maxHierarchy: 12 }, { maxHierarchy: 2 }] }, { numCards: 2, cardComposition: [{ minHierarchy: 10, maxHierarchy: 10 }, { maxHierarchy: 8 }] })
+        generateHands: function() {
+            return generateHands(
+                { numCards: 2, cardComposition: [{ minHierarchy: 12, maxHierarchy: 12 }, { maxHierarchy: 2 }] },
+                { numCards: 2, cardComposition: [{ minHierarchy: 10, maxHierarchy: 10 }, { maxHierarchy: 8 }] },
+                getExcludedCards(this.baseState)
+            );
+        }
     },
     {
         nameKey: 'scenario_tester.scenario_names.banter_low_glimpse',
@@ -350,7 +399,13 @@ const baseScenarios: PredefinedScenario[] = [
     {
         nameKey: 'scenario_tester.scenario_names.ancho_deplete_post_tie',
         baseState: { aiScore: 7, playerScore: 6, trickWinners: ['tie', 'tie', null], currentTrick: 2, mano: 'ai', currentTurn: 'ai', gamePhase: 'trick_3' },
-        generateHands: () => generateHands({ numCards: 1, minTrucoStrength: 10 }, { numCards: 1 })
+        generateHands: function() {
+            return generateHands(
+                { numCards: 1, minTrucoStrength: 10 },
+                { numCards: 1 },
+                getExcludedCards(this.baseState)
+            );
+        }
     },
     {
         nameKey: 'scenario_tester.scenario_names.dual_false_bait',
@@ -365,7 +420,13 @@ const baseScenarios: PredefinedScenario[] = [
     {
         nameKey: 'scenario_tester.scenario_names.figure_ancho_shift',
         baseState: { aiScore: 9, playerScore: 8, trickWinners: ['ai', null, null], currentTrick: 1, mano: 'ai', currentTurn: 'ai', gamePhase: 'trick_2' },
-        generateHands: () => generateHands({ numCards: 2, minTrucoStrength: 15 }, { numCards: 2 })
+        generateHands: function() {
+            return generateHands(
+                { numCards: 2, minTrucoStrength: 15 },
+                { numCards: 2 },
+                getExcludedCards(this.baseState)
+            );
+        }
     },
     {
         nameKey: 'scenario_tester.scenario_names.endgame_low_balance',
@@ -397,7 +458,13 @@ const baseScenarios: PredefinedScenario[] = [
     {
         nameKey: 'scenario_tester.scenario_names.post_parda_figure',
         baseState: { aiScore: 6, playerScore: 5, trickWinners: ['tie', null, null], currentTrick: 1, mano: 'ai', currentTurn: 'ai', gamePhase: 'trick_2' },
-        generateHands: () => generateHands({ numCards: 2, minTrucoStrength: 13 }, { numCards: 2 })
+        generateHands: function() {
+            return generateHands(
+                { numCards: 2, minTrucoStrength: 13 },
+                { numCards: 2 },
+                getExcludedCards(this.baseState)
+            );
+        }
     },
     {
         nameKey: 'scenario_tester.scenario_names.dual_ancho_bait',
@@ -424,7 +491,13 @@ const baseScenarios: PredefinedScenario[] = [
     {
         nameKey: 'scenario_tester.scenario_names.all_tie_mid_hint',
         baseState: { aiScore: 11, playerScore: 10, trickWinners: ['tie', 'tie', null], currentTrick: 2, mano: 'ai', currentTurn: 'ai', gamePhase: 'trick_3' },
-        generateHands: () => generateHands({ numCards: 1, minTrucoStrength: 5 }, { numCards: 1 })
+        generateHands: function() {
+            return generateHands(
+                { numCards: 1, minTrucoStrength: 5 },
+                { numCards: 1 },
+                getExcludedCards(this.baseState)
+            );
+        }
     },
     {
         nameKey: 'scenario_tester.scenario_names.clutch_false_deplete',
@@ -489,10 +562,13 @@ const envidoTestScenarios: PredefinedScenario[] = [];
                 mano: 'player', currentTurn: 'ai', gamePhase: 'trick_1',
                 playerTricks: [{ rank: 6, suit: 'bastos' }, null, null],
             },
-            generateHands: () => generateHands(
-                { ...constraints, mustNotHaveFlor: true, numCards: 3 },
-                { mustNotHaveFlor: true, numCards: 2 }
-            ),
+            generateHands: function() {
+                return generateHands(
+                    { ...constraints, mustNotHaveFlor: true, numCards: 3 },
+                    { mustNotHaveFlor: true, numCards: 2 },
+                    getExcludedCards(this.baseState)
+                );
+            }
         });
 
         // 3. Opponent is mano, calls Envido

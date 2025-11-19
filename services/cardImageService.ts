@@ -10,9 +10,9 @@ const CARD_HEIGHT = 320;
 const ROW_SPACING = 320;
 
 let remoteSpriteSheet: HTMLImageElement;
-let remoteSpriteSheetPromise: Promise<HTMLImageElement>;
+let remoteSpriteSheetPromise: Promise<HTMLImageElement> | null = null;
 let localSpriteSheet: HTMLImageElement;
-let localSpriteSheetPromise: Promise<HTMLImageElement>;
+let localSpriteSheetPromise: Promise<HTMLImageElement> | null = null;
 
 const suitToRow: Record<Suit, number> = {
     'oros': 0,
@@ -54,6 +54,8 @@ function getSpriteSheet(mode: 'image' | 'local-image'): Promise<HTMLImageElement
             };
             img.onerror = (err) => {
                 console.error(i18nService.t('cardImageService.errors.remote_load_failed'), err);
+                // Clear the promise so it can be retried later
+                remoteSpriteSheetPromise = null;
                 reject(new Error(i18nService.t('cardImageService.errors.remote_load_failed')));
             };
             img.src = SPRITE_SHEET_URL_REMOTE;
@@ -77,6 +79,8 @@ function getSpriteSheet(mode: 'image' | 'local-image'): Promise<HTMLImageElement
             };
             img.onerror = (err) => {
                 console.error(i18nService.t('cardImageService.errors.local_load_failed'), err);
+                // Clear the promise so it can be retried later
+                localSpriteSheetPromise = null;
                 reject(new Error(i18nService.t('cardImageService.errors.local_load_failed_path')));
             };
             img.src = SPRITE_SHEET_URL_LOCAL;

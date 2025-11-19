@@ -21,29 +21,48 @@ const archetypeModifiers: Record<AiArchetype, Partial<Record<string, number>>> =
         CALL_RETRUCO: 1.7,
         CALL_VALE_CUATRO: 2.0,
         escalate_truco_bluff: 1.5,
+        escalate_truco_weak_bluff: 1.5,
+        escalate_truco_mixed_bluff: 1.5,
         call_truco_bluff: 1.4,
-        DECLINE: 0.6,
+        DECLINE: 0.6, // Dislike declining (0.6 < 1.0)
         discard_low: 0.8,
-        feint_pre_truco: 0.9, // High enough to prefer baiting with nuts, but can still call Truco if EV is massive
+        feint_pre_truco: 0.9, 
+        feint_active_truco: 0.9,
         call_truco_value: 1.3, 
     },
     Cautious: {
         CALL_ENVIDO: 2.0,
         play_card_parda_y_gano: 1.5,
         play_card_certain_win: 1.5,
-        DECLINE: 1.6, 
+        DECLINE: 2.5, // Prefer declining (2.5 > 1.0 -> Reduces pain of loss)
         CALL_REAL_ENVIDO: 0.4,
         CALL_FALTA_ENVIDO: 0.1,
         call_truco_parda_y_gano: 0.4,
         call_truco_certain_win: 0.4,
         CALL_RETRUCO: 0.5,
+        CALL_VALE_CUATRO: 0.5,
+        
+        // Explicitly penalize bluffs (0.1 < 1.0 -> Amplifies pain of potential loss)
         call_truco_bluff: 0.1,
+        escalate_truco_bluff: 0.1,
+        escalate_truco_weak_bluff: 0.1,
+        escalate_truco_mixed_bluff: 0.1,
+        escalate_truco_desperation_bluff: 0.1,
+        
         accept_truco_bluff_call: 0.3, 
-        feint_pre_truco: 1.0, // Cautious players like traps
+        feint_pre_truco: 1.0,
+        feint_active_truco: 1.1,
     },
     Deceptive: {
         call_envido_bluff: 2.2,
         call_truco_bluff: 2.0,
+        
+        // Explicitly boost escalation bluffs (2.2 > 1.0 -> Reduces pain of risk)
+        escalate_truco_bluff: 2.2,
+        escalate_truco_weak_bluff: 2.2,
+        escalate_truco_mixed_bluff: 2.2,
+        escalate_truco_desperation_bluff: 2.0,
+
         play_card_parda_y_gano: 1.8, 
         play_card_certain_win: 1.8,
         call_truco_parda_y_gano: 0.6,
@@ -55,12 +74,15 @@ const archetypeModifiers: Record<AiArchetype, Partial<Record<string, number>>> =
         accept_truco_trap: 5.0,
         escalate_truco_dominant_card: 0.2,
         feint_pre_truco: 2.5, 
+        feint_active_truco: 2.8, 
         call_truco_value: 0.4, 
     },
     Balanced: {
         CALL_ENVIDO: 1.8,
         CALL_REAL_ENVIDO: 1.2,
         feint_pre_truco: 1.2,
+        feint_active_truco: 1.2,
+        DECLINE: 1.0,
     },
 };
 
@@ -76,7 +98,8 @@ const cardPlayEvMap: Record<string, number> = {
     probe_sacrificial: 0.5,
     discard_low: -1.0,
     play_last_card: 0.1,
-    feint_pre_truco: 2.2, // Increased base EV to prioritize over standard calls with Monster Hand
+    feint_pre_truco: 2.2, 
+    feint_active_truco: 2.4,
     default: 0,
 };
 
@@ -117,19 +140,25 @@ function calculateBaseEV(move: AiMove, state: GameState, reasoningLog: MessageOb
             const oppFoldRate = state.opponentModel.envidoBehavior[context].foldRate;
             const pointsOnDecline = state.envidoPointsOnOffer > 0 ? state.envidoPointsOnOffer : 1;
             
-            let ev_if_accepted;
-            const acceptanceChance = 1 - oppFoldRate;
             let pointsOnWin;
             let penaltyMultiplier = 0;
+            
+            // Dynamic acceptance chance based on aggression of the call.
+            // Higher bets are folded more often by the opponent.
+            let effectiveFoldRate = oppFoldRate;
 
             switch (action.type) {
                 case ActionType.CALL_REAL_ENVIDO:
                     pointsOnWin = (state.envidoPointsOnOffer > 0 ? state.envidoPointsOnOffer : 0) + 3;
                     penaltyMultiplier = 1.0;
+                    // Real Envido is scarier than Envido, fold rate increases
+                    effectiveFoldRate = Math.min(0.9, oppFoldRate * 1.5); 
                     break;
                 case ActionType.CALL_FALTA_ENVIDO:
                     pointsOnWin = 15 - Math.max(state.aiScore, state.playerScore);
                     penaltyMultiplier = 2.0;
+                    // Falta Envido is very scary, fold rate is very high
+                    effectiveFoldRate = Math.min(0.95, oppFoldRate * 2.5);
 
                     // --- SAFETY CHECK FOR FALTA ENVIDO ---
                     // Prevent suicide calls in early game with mediocre hands
@@ -149,8 +178,12 @@ function calculateBaseEV(move: AiMove, state: GameState, reasoningLog: MessageOb
                 default: // CALL_ENVIDO
                     pointsOnWin = (state.envidoPointsOnOffer > 0 ? state.envidoPointsOnOffer : 0) + 2;
                     penaltyMultiplier = 0;
+                    // Standard fold rate for base Envido
                     break;
             }
+            
+            const acceptanceChance = 1 - effectiveFoldRate;
+            let ev_if_accepted;
 
             if (reasonKey?.includes('bluff')) {
                 ev_if_accepted = -pointsOnWin;
@@ -176,6 +209,7 @@ function calculateBaseEV(move: AiMove, state: GameState, reasoningLog: MessageOb
                 }
             }
             
+            // Expected Value: (Chance they accept * EV of showdown) + (Chance they fold * Points we get now)
             let weightedEv = (acceptanceChance * ev_if_accepted) + ((1 - acceptanceChance) * pointsOnDecline);
             
              // Boost for round 1 aggressive/deceptive opening (Loose Table Image)
@@ -237,6 +271,32 @@ function calculateBaseEV(move: AiMove, state: GameState, reasoningLog: MessageOb
     }
 }
 
+/**
+ * Calculates the modified EV based on archetype preferences.
+ * 
+ * Logic:
+ * - If Base EV > 0 (Positive/Gain):
+ *    - Modifier > 1.0: Boosts the gain (Prefer).
+ *    - Modifier < 1.0: Reduces the gain (Dislike).
+ * 
+ * - If Base EV < 0 (Negative/Loss/Risk):
+ *    - Modifier > 1.0: Reduces the pain of loss (Prefer/Tolerate Risk).
+ *      e.g., EV -2 * Mod 2.0 = -1.0 (Less negative).
+ *    - Modifier < 1.0: Amplifies the pain of loss (Hate/Avoid Risk).
+ *      e.g., EV -2 * Mod 0.1 = -20.0 (Very negative).
+ */
+function calculateModifiedEv(baseEv: number, modifier: number): number {
+    if (baseEv >= 0) {
+        return baseEv * modifier;
+    } else {
+        // Prevent division by zero or effectively zero modifiers
+        const safeModifier = Math.max(0.01, modifier);
+        
+        // Inverse logic for negative values to correctly represent "Hating" a risk
+        return baseEv * (1 / safeModifier);
+    }
+}
+
 function evaluateMoves(moves: AiMove[], state: GameState): AiMove {
     const { aiArchetype } = state;
     const modifiers = archetypeModifiers[aiArchetype];
@@ -249,11 +309,13 @@ function evaluateMoves(moves: AiMove[], state: GameState): AiMove {
         const modifierKey = move.reasonKey || move.action.type;
         let modifier = modifiers[modifierKey] || 1.0;
 
+        // Special case: DECLINE is usually the baseline "safe loss".
+        // We don't want to inadvertently boost it too much unless explicit.
         if (move.action.type === ActionType.DECLINE && baseEv >= 0) {
             modifier = 1.0;
         }
 
-        const modifiedEv = baseEv * modifier;
+        const modifiedEv = calculateModifiedEv(baseEv, modifier);
         
         move.reasoning.push(...moveReasoningLog);
         

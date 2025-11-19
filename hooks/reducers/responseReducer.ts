@@ -1,7 +1,7 @@
 
 import { GameState, ActionType, Player, GamePhase, Case, PlayerEnvidoActionEntry, MessageObject } from '../../types';
 import { getEnvidoValue, getFlorValue, getCardCode } from '../../services/trucoLogic';
-import { updateProbsOnEnvido } from '../../services/ai/inferenceService';
+import { updateProbsOnEnvido, updateProbsOnEnvidoFold } from '../../services/ai/inferenceService';
 // Fix: Replaced direct phrase array imports with the PHRASE_KEYS object to match the refactored phrases service.
 import { getRandomPhrase, PHRASE_KEYS } from '../../services/ai/phrases';
 import { handleStartNewRound } from './gameplayReducer';
@@ -209,6 +209,13 @@ export function handleResolveEnvidoDecline(state: GameState): GameState {
         ? [...state.playerEnvidoFoldHistory, true]
         : state.playerEnvidoFoldHistory;
 
+    // --- INFERENCE UPDATE ---
+    // If the AI called Envido and the Player declined, we can infer the Player's hand is likely weak.
+    let updatedProbs = state.opponentHandProbabilities;
+    if (isPlayerRespondingToAI && updatedProbs) {
+        updatedProbs = updateProbsOnEnvidoFold(updatedProbs);
+    }
+
     let points = 1; // Default for declining a simple Envido.
     // If previousEnvidoPoints > 0, it was an escalation. Points are from the previous bet.
     if (state.previousEnvidoPoints > 0) {
@@ -262,6 +269,7 @@ export function handleResolveEnvidoDecline(state: GameState): GameState {
             centralMessage: null,
             isCentralMessagePersistent: false,
             roundHistory: newRoundHistory,
+            opponentHandProbabilities: updatedProbs,
         };
     }
 
@@ -288,6 +296,7 @@ export function handleResolveEnvidoDecline(state: GameState): GameState {
         ...postEnvidoState,
         aiBlurb: finalBlurb,
         roundHistory: newRoundHistory,
+        opponentHandProbabilities: updatedProbs,
     };
 }
 
