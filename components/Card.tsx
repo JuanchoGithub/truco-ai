@@ -68,80 +68,41 @@ const Card: React.FC<CardProps> = ({ card, isFaceDown = false, isPlayable = fals
 
   const isSmall = size === 'small';
 
-  // Adjusted sizes for new aspect ratio (approx 1:1.54)
-  const cardBaseClasses = `rounded-lg shadow-lg border-2 flex items-center justify-center transition-all duration-300 transform relative select-none ${isSmall ? 'w-20 h-[124px]' : 'w-28 h-[174px] lg:w-36 lg:h-[222px]'}`;
-  const playableClasses = isPlayable ? "cursor-pointer hover:shadow-2xl hover:border-yellow-400" : "";
+  // Size Classes
+  // Normal: Player Hand (Large on desktop, med on mobile)
+  // Small: AI Hand, Logs, Piles
+  const sizeClasses = isSmall 
+    ? 'w-20 h-[124px] lg:w-24 lg:h-[149px]' 
+    : 'w-[110px] h-[170px] lg:w-40 lg:h-[248px]';
+    
+  // Base styles including 3D perspective hints
+  const cardBaseClasses = `rounded-lg shadow-lg border border-gray-300 flex items-center justify-center select-none relative bg-white transition-all duration-200 transform-style-3d`;
+  const playableClasses = isPlayable ? "cursor-pointer" : "";
   
-  if (isFaceDown) {
-    return (
-      <div className={`${cardBaseClasses} bg-slate-900 border-slate-700 p-1 ${className}`}>
-        <svg width="100%" height="100%" viewBox="0 0 100 154" fill="none" xmlns="http://www.w3.org/2000/svg" className="rounded-md">
-          {/* Background pattern definition */}
-          <defs>
-            <pattern id="arg-pattern" patternUnits="userSpaceOnUse" width="8" height="8" patternTransform="rotate(45)">
-              <path d="M 0,4 l 8,0" stroke="#1e293b" strokeWidth="1"/>
-              <path d="M 4,0 l 0,8" stroke="#1e293b" strokeWidth="1"/>
-            </pattern>
-          </defs>
+  // Back of card pattern - Modernized
+  const backPattern = (
+      <div className={`${sizeClasses} bg-gradient-to-br from-slate-800 to-black border-2 border-slate-700 p-1 rounded-lg shadow-md ${className}`}>
+        <div className="w-full h-full rounded border border-white/10 bg-[url('/assets/pattern.png')] bg-repeat opacity-80 flex items-center justify-center relative overflow-hidden">
+            {/* Geometric Pattern Fallback if image fails */}
+             <svg width="100%" height="100%" viewBox="0 0 100 154" fill="none" xmlns="http://www.w3.org/2000/svg" className="absolute inset-0 opacity-30">
+                <pattern id="arg-pattern" patternUnits="userSpaceOnUse" width="20" height="20" patternTransform="rotate(45)">
+                    <rect width="10" height="10" fill="#ffffff" fillOpacity="0.1"/>
+                </pattern>
+                <rect width="100%" height="100%" fill="url(#arg-pattern)" />
+             </svg>
 
-          {/* Base and pattern fill */}
-          <rect width="100" height="154" rx="6" fill="#0f172a" />
-          <rect width="100" height="154" rx="6" fill="url(#arg-pattern)" />
-          
-          {/* Ornate Frame */}
-          <rect x="4" y="4" width="92" height="146" rx="3" stroke="#facc15" strokeOpacity="0.5" strokeWidth="1" />
-          <g stroke="#facc15" strokeWidth="1.5">
-            {/* Top-left corner */}
-            <path d="M 15,5 L 5,5 L 5,15" />
-            <path d="M 12,8 C 10,10 10,10 8,12" />
-            
-            {/* Top-right corner */}
-            <path d="M 85,5 L 95,5 L 95,15" />
-            <path d="M 88,8 C 90,10 90,10 92,12" />
-            
-            {/* Bottom-left corner */}
-            <path d="M 15,149 L 5,149 L 5,139" />
-            <path d="M 12,146 C 10,144 10,144 8,142" />
-            
-            {/* Bottom-right corner */}
-            <path d="M 85,149 L 95,149 L 95,139" />
-            <path d="M 88,146 C 90,144 90,144 92,142" />
-          </g>
-          
-          {/* Sol de Mayo */}
-          <g transform="translate(50 77)">
-            {/* Rays */}
-            <g fill="#fde047">
-              {[0, 45, 90, 135, 180, 225, 270, 315].map(angle => (
-                <g key={`rays-${angle}`} transform={`rotate(${angle})`}>
-                  {/* Straight Ray */}
-                  <path d="M -3, -25 l 6,0 l -3, -18 z" />
-                  {/* Wavy Ray */}
-                  <path d="M 0, -24 c 4,-3 2,-8 -2,-10 c -4,-2 -6,3 -2,6 c 4,3 2,8 -2,10" transform="rotate(22.5)" />
-                </g>
-              ))}
-            </g>
-
-            {/* Face */}
-            <circle r="22" fill="#fde047" stroke="#b45309" strokeWidth="1.5" />
-            <g stroke="#1e293b" strokeWidth="1.2" strokeLinecap="round" fill="none">
-              {/* Eyes */}
-              <path d="M -11, -5 C -9, -9 -5,-9 -3,-5" />
-              <path d="M 11, -5 C 9, -9 5,-9 3,-5" />
-              {/* Nose */}
-              <path d="M -2, -2 L 0,2 L 2,-2" />
-              {/* Mouth */}
-              <path d="M -7, 6 Q 0,10 7,6" />
-            </g>
-          </g>
-        </svg>
+             <div className="w-12 h-12 rounded-full border-2 border-yellow-500/50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                 <span className="text-xl">🌞</span>
+             </div>
+        </div>
       </div>
-    );
-  }
+  );
+
+  if (isFaceDown) return backPattern;
 
   if (!card) {
     return (
-      <div className={`${cardBaseClasses} bg-black/20 border-gray-400/30 border-dashed ${className}`} />
+      <div className={`${sizeClasses} bg-white/5 border-2 border-dashed border-white/20 rounded-lg ${className}`} />
     );
   }
 
@@ -151,60 +112,57 @@ const Card: React.FC<CardProps> = ({ card, isFaceDown = false, isPlayable = fals
     return (
       <div
         onClick={onClick}
-        className={`${cardBaseClasses} ${playableClasses} ${className} overflow-hidden bg-amber-50 border-gray-400`}
+        className={`${sizeClasses} ${cardBaseClasses} ${playableClasses} ${className} overflow-hidden`}
         aria-label={getCardName(card)}
       >
         <img src={cardImageUrl} alt={getCardName(card)} className="w-full h-full object-cover" />
+        {/* Glossy sheen */}
+        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-white/30 pointer-events-none mix-blend-overlay"></div>
+        {/* Inner border for depth */}
+        <div className="absolute inset-0 border border-black/10 rounded-lg pointer-events-none"></div>
       </div>
     );
   }
   
   if (useImage && imageStatus === 'loading') {
     return (
-      <div className={`${cardBaseClasses} bg-gray-200 border-gray-300 animate-pulse ${className}`} />
+      <div className={`${sizeClasses} bg-gray-300 border-gray-400 animate-pulse rounded-lg ${className}`} />
     );
   }
 
-  // --- Fallback to original emoji card on error ---
+  // Fallback Rendering
   let rankDisplay: string | number | undefined;
   if (card) {
       const rankKey = `common.card_ranks.${card.rank}`;
       const translatedRank = t(rankKey);
-      // Fallback if key doesn't exist
-      if (translatedRank === rankKey) {
-          rankDisplay = card.rank;
-      } else {
-          rankDisplay = translatedRank;
-      }
+      rankDisplay = translatedRank === rankKey ? card.rank : translatedRank;
   }
 
-  const cardBgColor = 'bg-amber-50';
-
   const renderCenterArt = () => {
-    const baseFigureClass = isSmall ? 'text-5xl' : 'text-7xl lg:text-8xl';
+    const baseFigureClass = isSmall ? 'text-5xl' : 'text-6xl lg:text-8xl';
     const heldSuitClass = `absolute ${isSmall ? 'text-2xl' : 'text-4xl lg:text-5xl'}`;
     const shadowStyle = { textShadow: '1px 1px 2px rgba(0,0,0,0.3)' };
 
     switch (card.rank) {
-      case 10: // Sota (Jack)
+      case 10:
         return (
           <div className="relative flex items-center justify-center">
             <span className={baseFigureClass} style={shadowStyle}>🧑</span>
-            <SuitIcon suit={card.suit} className={`${heldSuitClass} ${isSmall ? 'top-2 -right-1' : 'top-5 -right-2 lg:top-7 lg:-right-3'}`} style={shadowStyle} />
+            <SuitIcon suit={card.suit} className={`${heldSuitClass} top-5 -right-2`} style={shadowStyle} />
           </div>
         );
-      case 11: // Caballo (Knight/Horse)
+      case 11:
         return (
           <div className="relative flex items-center justify-center">
             <span className={baseFigureClass} style={shadowStyle}>🐎</span>
-            <SuitIcon suit={card.suit} className={`${heldSuitClass} ${isSmall ? '-top-2 right-0' : '-top-2 right-0 lg:-top-3 lg:right-1'}`} style={shadowStyle} />
+            <SuitIcon suit={card.suit} className={`${heldSuitClass} -top-2 right-0`} style={shadowStyle} />
           </div>
         );
-      case 12: // Rey (King)
+      case 12:
         return (
           <div className="relative flex items-center justify-center">
             <span className={baseFigureClass} style={shadowStyle}>🤴</span>
-            <SuitIcon suit={card.suit} className={`${heldSuitClass} ${isSmall ? 'top-0 -right-1' : 'top-1 -right-3 lg:top-1 lg:-right-4'}`} style={shadowStyle} />
+            <SuitIcon suit={card.suit} className={`${heldSuitClass} top-0 -right-1`} style={shadowStyle} />
           </div>
         );
       default:
@@ -215,7 +173,7 @@ const Card: React.FC<CardProps> = ({ card, isFaceDown = false, isPlayable = fals
   return (
     <div
       onClick={onClick}
-      className={`${cardBaseClasses} ${cardBgColor} border-gray-400 shadow-inner shadow-black/20 ${playableClasses} ${className}`}
+      className={`${sizeClasses} ${cardBaseClasses} ${playableClasses} ${className} bg-amber-50`}
       aria-label={getCardName(card)}
     >
         <div className={`absolute text-center leading-none ${isSmall ? 'top-1 left-1.5' : 'top-2 left-2.5 lg:top-3 lg:left-3'}`}>
@@ -223,7 +181,7 @@ const Card: React.FC<CardProps> = ({ card, isFaceDown = false, isPlayable = fals
             <SuitIcon suit={card.suit} className={`${isSmall ? 'text-lg' : 'text-2xl lg:text-3xl'} mx-auto`}/>
         </div>
 
-        <div className="flex items-center justify-center">
+        <div className="flex items-center justify-center w-full h-full">
             {renderCenterArt()}
         </div>
         

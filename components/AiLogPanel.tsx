@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { AiReasoningEntry, Action, ActionType, MessageObject, Card, RoundSummary, MatchLog } from '../types';
 import { useLocalization } from '../context/LocalizationContext';
@@ -16,32 +17,31 @@ const getTopicStyling = (topic: string) => {
     switch (topic) {
         case 'truco':
             return {
-                bg: 'bg-yellow-900/30',
-                border: 'border-yellow-600/50',
-                title: 'text-yellow-300',
-                text: 'text-yellow-200'
+                bg: 'bg-amber-900/20',
+                border: 'border-amber-600/30',
+                title: 'text-amber-400',
+                text: 'text-amber-100'
             };
         case 'envido':
             return {
-                bg: 'bg-blue-900/30',
-                border: 'border-blue-600/50',
-                title: 'text-blue-300',
-                text: 'text-blue-200'
+                bg: 'bg-cyan-900/20',
+                border: 'border-cyan-600/30',
+                title: 'text-cyan-400',
+                text: 'text-cyan-100'
             };
         case 'flor':
             return {
-                bg: 'bg-purple-900/30',
-                border: 'border-purple-600/50',
-                title: 'text-purple-300',
-                text: 'text-purple-200'
+                bg: 'bg-purple-900/20',
+                border: 'border-purple-600/30',
+                title: 'text-purple-400',
+                text: 'text-purple-100'
             };
-        case 'play_card':
         default:
             return {
-                bg: 'bg-black/30',
-                border: 'border-cyan-800/50',
-                title: 'text-cyan-300',
-                text: 'text-cyan-100'
+                bg: 'bg-stone-800/30',
+                border: 'border-stone-600/30',
+                title: 'text-stone-400',
+                text: 'text-stone-300'
             };
     }
 };
@@ -75,23 +75,20 @@ const AiLogPanel: React.FC<AiLogPanelProps> = ({ log, dispatch, isModal, roundHi
   const [selectedRound, setSelectedRound] = useState(currentRound);
 
   useEffect(() => {
-    // Load historical logs when the panel is shown or a new round/game starts.
     const storedLogs = loadMatchLogs();
     if (storedLogs) {
         setHistoricalLogs(storedLogs);
     }
-  }, [isModal, currentRound]); // Reload when panel is opened or when the current round changes (a new game will reset round to 1).
+  }, [isModal, currentRound]); 
 
   const handleMatchChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newMatchId = e.target.value;
     setSelectedMatchId(newMatchId);
-    // Reset round selection to the latest round of the selected match
     if (newMatchId === 'current') {
         setSelectedRound(currentRound);
     } else {
         const match = historicalLogs.find(m => String(m.matchId) === newMatchId);
         if (match && match.roundHistory.length > 0) {
-            // Select the last round of that match
             setSelectedRound(match.roundHistory[match.roundHistory.length - 1].round);
         } else if (match) {
             setSelectedRound(match.aiReasoningLog[match.aiReasoningLog.length - 1]?.round || 0);
@@ -104,7 +101,6 @@ const AiLogPanel: React.FC<AiLogPanelProps> = ({ log, dispatch, isModal, roundHi
   };
 
   useEffect(() => {
-    // This effect ensures the dropdown for rounds follows the current game when active
     if (selectedMatchId === 'current') {
         setSelectedRound(currentRound);
     }
@@ -112,10 +108,7 @@ const AiLogPanel: React.FC<AiLogPanelProps> = ({ log, dispatch, isModal, roundHi
 
   const selectedMatchData = useMemo(() => {
     if (selectedMatchId === 'current') {
-        return {
-            aiReasoningLog: log,
-            roundHistory: roundHistory
-        };
+        return { aiReasoningLog: log, roundHistory: roundHistory };
     }
     return historicalLogs.find(m => String(m.matchId) === selectedMatchId);
   }, [selectedMatchId, log, roundHistory, historicalLogs]);
@@ -130,11 +123,10 @@ const AiLogPanel: React.FC<AiLogPanelProps> = ({ log, dispatch, isModal, roundHi
       .sort((a, b) => b - a)
   }, [selectedMatchData]);
   
-  // Fix: Changed return type from `(JSX.Element | null)[]` to `React.ReactNode[]` to resolve TypeScript error.
   const renderReasoningJsx = (reasoningArray: (string | MessageObject)[], styling: ReturnType<typeof getTopicStyling>): React.ReactNode[] => {
     return reasoningArray.map((reason, index) => {
         let text: string;
-        let className = styling.text; // Use topic-based text color
+        let className = styling.text;
         let key: string | undefined;
 
         if (typeof reason === 'string') {
@@ -155,80 +147,84 @@ const AiLogPanel: React.FC<AiLogPanelProps> = ({ log, dispatch, isModal, roundHi
             key = reason.key;
         }
         
-        // Apply styles based on key
         if (key) {
-             if (key.includes('separator')) {
-                return <hr key={index} className={`border-t border-dashed ${styling.border}/50 my-2`} />;
-            }
+             if (key.includes('separator')) return <hr key={index} className={`border-t border-dashed ${styling.border} opacity-30 my-2`} />;
             if (key.includes('strategic_analysis') || key.includes('response_logic') || key.includes('play_card_logic') || key.includes('envido_call_logic') || key.includes('truco_call_logic') || key.includes('evaluation') || key.includes('_title') || key.includes('header')) {
-                className = `${styling.title} font-bold mt-2 pt-2 border-t ${styling.border}/70`;
+                className = `${styling.title} font-bold uppercase text-xs tracking-wider mt-3 mb-1 pb-1 border-b ${styling.border}`;
             } else if (key.includes('_called')) {
-                className = 'text-orange-400 italic';
-            } else if (key.includes('decision_')) {
-                className = 'text-green-300 font-bold';
+                className = 'text-amber-500 italic';
+            } else if (key.includes('decision_') || key.includes('final_decision')) {
+                className = 'text-green-400 font-bold bg-green-900/20 p-1 rounded border border-green-900/30';
             } else if (key.includes('penalty') || key.includes('error')) {
                 className = 'text-red-400';
             }
         }
         
-        return <p key={index} className={className}>{text}</p>;
+        return <p key={index} className={`${className} leading-relaxed`}>{text}</p>;
     });
   };
 
-  const wrapperClasses = isModal ? "fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" : "h-full w-full";
-  const containerClasses = "bg-blue-900/95 border-4 border-cyan-400/50 rounded-xl shadow-2xl w-full h-full flex flex-col" + (isModal ? " max-w-2xl max-h-[90vh]" : "");
+  const wrapperClasses = isModal ? "fixed inset-0 bg-black/90 flex items-center justify-center z-[60] p-4 backdrop-blur-sm" : "h-full w-full";
+  const containerClasses = "bg-stone-900/95 border-l-4 border-r-4 border-cyan-900/40 shadow-2xl w-full h-full flex flex-col " + (isModal ? " max-w-2xl max-h-[80vh] rounded-xl border-t-4 border-b-4" : "");
 
   return (
     <div className={wrapperClasses}>
       <div className={containerClasses}>
-        <div className="p-3 border-b-2 border-cyan-400/30 flex justify-between items-center flex-shrink-0 gap-2 flex-wrap">
-          <h2 className="text-xl lg:text-2xl font-bold text-cyan-300 font-cinzel tracking-widest flex-shrink-0" style={{ textShadow: '2px 2px 3px rgba(0,0,0,0.7)' }}>
-            {t('logPanel.ai_log_title')}
+        <div className="p-3 bg-stone-950 border-b border-cyan-900/30 flex justify-between items-center flex-shrink-0 gap-2">
+          <h2 className="text-lg lg:text-xl font-bold text-cyan-500 font-cinzel tracking-widest uppercase flex items-center gap-2 flex-shrink-0">
+            <span>🧠</span> {t('logPanel.ai_log_title')}
           </h2>
-          <div className="flex-grow flex items-center gap-2 min-w-[200px]">
-            <select value={selectedMatchId} onChange={handleMatchChange} className="bg-blue-900/80 border border-cyan-400/50 text-white text-xs rounded-md p-1 w-full">
+          
+          <div className="flex-grow flex justify-end items-center gap-2 max-w-xs">
+            <select value={selectedMatchId} onChange={handleMatchChange} className="bg-stone-800 border border-stone-600 text-stone-300 text-xs rounded p-1 w-24 truncate focus:outline-none focus:border-cyan-500">
                 <option value="current">{t('logPanel.current_match')}</option>
                 {historicalLogs.map(match => (
                     <option key={match.matchId} value={match.matchId}>
-                        {t('logPanel.match_from', { date: match.date, score: `${match.playerScore}-${match.aiScore}` })}
+                        {match.date}
                     </option>
                 ))}
             </select>
              {displayRounds.length > 0 && (
-                <select value={selectedRound} onChange={handleRoundChange} className="bg-blue-900/80 border border-cyan-400/50 text-white text-xs rounded-md p-1 w-28">
+                <select value={selectedRound} onChange={handleRoundChange} className="bg-stone-800 border border-stone-600 text-stone-300 text-xs rounded p-1 w-20 focus:outline-none focus:border-cyan-500">
                     {displayRounds.map(roundNumber => ( <option key={roundNumber} value={roundNumber}>{t('common.round')} {roundNumber}</option> ))}
                 </select>
             )}
           </div>
-          <button
-            onClick={() => dispatch({ type: ActionType.TOGGLE_AI_LOG_EXPAND })}
-            className="text-cyan-200 font-bold hover:text-white transition-colors p-1 rounded-md hover:bg-white/10"
-            aria-label={isModal ? t('common.close') : t('logPanel.hide_ai_log')}
-          >
-            {isModal ? (
-              <span className="text-2xl lg:text-3xl">&times;</span>
-            ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+
+          {isModal ? (
+            <button onClick={() => dispatch({ type: ActionType.TOGGLE_AI_LOG_EXPAND })} className="text-stone-500 hover:text-cyan-400 transition-colors">
+                 <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+          ) : (
+             <button
+                onClick={() => dispatch({ type: ActionType.TOGGLE_AI_LOG_EXPAND })}
+                className="text-stone-500 hover:text-cyan-400 transition-colors p-1"
+                aria-label={t('logPanel.hide_ai_log')}
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-              </svg>
-            )}
-          </button>
+                </svg>
+            </button>
+          )}
         </div>
-        <div className="p-4 flex-grow overflow-y-auto">
+        
+        <div className="p-4 flex-grow overflow-y-auto font-mono text-xs lg:text-sm bg-stone-900">
           {roundLog && roundLog.length > 0 ? (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {roundLog.map((entry, index) => {
                 const topic = getReasoningTopic(entry.reasoning);
                 const styling = getTopicStyling(topic);
                 return (
-                  <div key={index} className={`p-3 rounded-md font-mono text-xs lg:text-sm border ${styling.bg} ${styling.border}`}>
+                  <div key={index} className={`p-3 rounded border-l-2 ${styling.bg} ${styling.border}`}>
                     {renderReasoningJsx(entry.reasoning, styling)}
                   </div>
                 );
               })}
             </div>
           ) : (
-            <p className="text-gray-400 text-center">{t('logPanel.no_log_for_round')}</p>
+            <div className="flex items-center justify-center h-full text-stone-600 italic">
+                {t('logPanel.no_log_for_round')}
+            </div>
           )}
         </div>
       </div>

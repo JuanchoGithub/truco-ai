@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { loadStateFromStorage } from '../services/storageService';
 import ContinueGameModal from './ContinueGameModal';
@@ -12,7 +13,7 @@ interface MainMenuProps {
 }
 
 const ARFlag = () => (
-    <svg width="40" height="30" viewBox="0 0 32 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="rounded-sm shadow-md">
+    <svg width="32" height="24" viewBox="0 0 32 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="rounded-sm shadow-sm">
         <path d="M0 0H32V24H0V0Z" fill="#75AADB"/>
         <path d="M0 8H32V16H0V8Z" fill="white"/>
         <path d="M16 9.5C17.3807 9.5 18.5 10.6193 18.5 12C18.5 13.3807 17.3807 14.5 16 14.5C14.6193 14.5 13.5 13.3807 13.5 12C13.5 10.6193 14.6193 9.5 16 9.5Z" fill="#F9B423" stroke="#845421" strokeWidth="0.5"/>
@@ -20,7 +21,7 @@ const ARFlag = () => (
 );
 
 const USFlag = () => (
-    <svg width="40" height="30" viewBox="0 0 72 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="rounded-sm shadow-md">
+    <svg width="32" height="24" viewBox="0 0 72 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="rounded-sm shadow-sm">
         <path d="M0 0H72V48H0V0Z" fill="#B22234"/>
         <path d="M0 8H72V16H0V8Z" fill="white"/>
         <path d="M0 24H72V32H0V24Z" fill="white"/>
@@ -109,72 +110,89 @@ const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onLearn, onManual, onS
       setConfirmModal({ isOpen: false, mode: null });
     }
   };
+  
+  const MenuButton: React.FC<{ onClick: () => void; children: React.ReactNode; variant?: 'primary' | 'secondary' | 'tertiary' }> = ({ onClick, children, variant = 'primary' }) => {
+      let bgClasses = "bg-gradient-to-b from-yellow-600 to-yellow-700 border-yellow-900 hover:from-yellow-500 hover:to-yellow-600 text-white";
+      if (variant === 'secondary') bgClasses = "bg-gradient-to-b from-stone-700 to-stone-800 border-stone-950 hover:from-stone-600 hover:to-stone-700 text-stone-100";
+      if (variant === 'tertiary') bgClasses = "bg-transparent border-transparent hover:bg-black/20 text-yellow-200 !shadow-none !border-none";
+      
+      return (
+          <button
+            onClick={onClick}
+            className={`w-full px-8 py-4 text-lg lg:text-xl uppercase tracking-wider font-bold shadow-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] border-b-4 rounded-sm font-cinzel ${bgClasses}`}
+            style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}
+          >
+            {children}
+          </button>
+      );
+  }
 
   return (
-    <div className="h-screen bg-green-900 text-white font-sans flex items-center justify-center" style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/felt.png')"}}>
-      <div className="relative text-center p-8 bg-black/40 border-4 border-yellow-800/60 rounded-xl shadow-2xl animate-fade-in-scale">
-        <div className="absolute top-4 right-4 flex gap-3">
-            <button onClick={() => setLanguage('es-AR')} className={`transition-opacity duration-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black/50 focus:ring-yellow-400 ${language === 'es-AR' ? 'opacity-100' : 'opacity-60 hover:opacity-100'}`} aria-label="Cambiar a Español">
+    <div className="h-[100dvh] bg-stone-950 text-white font-sans flex items-center justify-center relative overflow-hidden">
+      {/* Background */}
+      <div className="absolute inset-0 z-0">
+           <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/felt.png')] opacity-50"></div>
+           <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/80"></div>
+           {/* Decorative floating cards (simple circles for now or css shapes) */}
+           <div className="absolute top-10 left-10 w-32 h-48 border-4 border-white/5 rounded-lg rotate-[-12deg]"></div>
+           <div className="absolute bottom-20 right-10 w-32 h-48 border-4 border-white/5 rounded-lg rotate-[12deg]"></div>
+      </div>
+
+      {/* Content Panel */}
+      <div className="relative z-10 max-w-md w-full p-8 bg-stone-900/90 border-[6px] border-double border-yellow-700/50 shadow-2xl rounded-lg backdrop-blur-sm animate-fade-in-scale flex flex-col items-center">
+        
+        {/* Language Toggles */}
+        <div className="absolute top-4 right-4 flex gap-2">
+            <button onClick={() => setLanguage('es-AR')} className={`transition-all duration-200 hover:scale-110 ${language === 'es-AR' ? 'opacity-100 grayscale-0' : 'opacity-50 grayscale'}`} aria-label="Español">
                 <ARFlag />
             </button>
-            <button onClick={() => setLanguage('en-US')} className={`transition-opacity duration-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black/50 focus:ring-yellow-400 ${language === 'en-US' ? 'opacity-100' : 'opacity-60 hover:opacity-100'}`} aria-label="Change to English">
+            <button onClick={() => setLanguage('en-US')} className={`transition-all duration-200 hover:scale-110 ${language === 'en-US' ? 'opacity-100 grayscale-0' : 'opacity-50 grayscale'}`} aria-label="English">
                 <USFlag />
             </button>
         </div>
         
-        <h1 className="text-6xl lg:text-8xl font-cinzel font-bold tracking-wider text-yellow-300 mb-2" style={{ textShadow: '4px 4px 6px rgba(0,0,0,0.8)' }}>
-          {t('mainMenu.title')}
-        </h1>
-        <p className="text-gray-300 mb-12">{t('mainMenu.subtitle')}</p>
-        <div className="flex flex-col gap-6">
-          <button
-            onClick={() => handlePlayClick('playing')}
-            className="px-8 py-4 text-xl lg:text-2xl rounded-lg font-bold text-white shadow-lg transition-transform transform hover:scale-105 border-b-4 bg-gradient-to-b from-yellow-600 to-yellow-700 border-yellow-900 hover:from-yellow-500 hover:to-yellow-600"
-            style={{ textShadow: '1px 1px 3px rgba(0,0,0,0.5)' }}
-          >
+        {/* Logo / Title */}
+        <div className="mb-10 text-center">
+            <div className="inline-block mb-2 border-b-2 border-yellow-500/50 pb-2">
+                <span className="text-yellow-500 text-sm font-bold tracking-[0.3em] uppercase">La Tradición</span>
+            </div>
+            <h1 className="text-6xl lg:text-7xl font-cinzel font-bold text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 to-yellow-600 drop-shadow-md">
+            TRUCO
+            </h1>
+            <p className="text-stone-400 font-lora italic mt-2">{t('mainMenu.subtitle')}</p>
+        </div>
+
+        {/* Buttons */}
+        <div className="flex flex-col gap-4 w-full">
+          <MenuButton onClick={() => handlePlayClick('playing')}>
             {t('mainMenu.play_normal')}
-          </button>
-          <button
-            onClick={() => handlePlayClick('playing-with-help')}
-            className="px-8 py-4 text-xl lg:text-2xl rounded-lg font-bold text-white shadow-lg transition-transform transform hover:scale-105 border-b-4 bg-gradient-to-b from-green-600 to-green-700 border-green-900 hover:from-green-500 hover:to-green-600"
-            style={{ textShadow: '1px 1px 3px rgba(0,0,0,0.5)' }}
-          >
+          </MenuButton>
+          
+          <MenuButton onClick={() => handlePlayClick('playing-with-help')} variant="secondary">
             {t('mainMenu.play_with_help')}
-          </button>
-          <button
-            onClick={onLearn}
-            className="px-8 py-4 text-xl lg:text-2xl rounded-lg font-bold text-white shadow-lg transition-transform transform hover:scale-105 border-b-4 bg-gradient-to-b from-blue-600 to-blue-700 border-blue-900 hover:from-blue-500 hover:to-blue-600"
-            style={{ textShadow: '1px 1px 3px rgba(0,0,0,0.5)' }}
-          >
-            {t('mainMenu.learn')}
-          </button>
-           <button
-            onClick={onManual}
-            className="px-8 py-4 text-xl lg:text-2xl rounded-lg font-bold text-white shadow-lg transition-transform transform hover:scale-105 border-b-4 bg-gradient-to-b from-slate-600 to-slate-700 border-slate-900 hover:from-slate-500 hover:to-slate-600"
-            style={{ textShadow: '1px 1px 3px rgba(0,0,0,0.5)' }}
-          >
-            {t('mainMenu.manual')}
-          </button>
-          <button
-              onClick={() => setIsSettingsOpen(true)}
-              className="flex items-center justify-center gap-3 px-8 py-4 text-xl lg:text-2xl rounded-lg font-bold text-white shadow-lg transition-transform transform hover:scale-105 border-b-4 bg-gradient-to-b from-slate-600 to-slate-700 border-slate-900 hover:from-slate-500 hover:to-slate-600"
-              style={{ textShadow: '1px 1px 3px rgba(0,0,0,0.5)' }}
-          >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              <span>{t('mainMenu.options')}</span>
-          </button>
-           <button
-            onClick={onSimulate}
-            className="px-8 py-3 text-lg rounded-lg font-bold text-cyan-200 shadow-lg transition-transform transform hover:scale-105 border-b-4 bg-gradient-to-b from-gray-700 to-gray-800 border-gray-900 hover:from-gray-600 hover:to-gray-700"
-            style={{ textShadow: '1px 1px 3px rgba(0,0,0,0.5)' }}
-          >
-            {t('mainMenu.simulate')}
-          </button>
+          </MenuButton>
+          
+          <div className="grid grid-cols-2 gap-4">
+              <MenuButton onClick={onLearn} variant="secondary">
+                {t('mainMenu.learn')}
+              </MenuButton>
+               <MenuButton onClick={onManual} variant="secondary">
+                {t('mainMenu.manual')}
+              </MenuButton>
+          </div>
+
+          <div className="flex justify-between mt-4 px-4 w-full border-t border-white/10 pt-4">
+              <button onClick={() => setIsSettingsOpen(true)} className="text-stone-400 hover:text-yellow-300 transition-colors flex items-center gap-2 text-sm font-bold uppercase tracking-widest">
+                  <span className="text-xl">⚙️</span> {t('mainMenu.options')}
+              </button>
+               <button onClick={onSimulate} className="text-stone-400 hover:text-cyan-300 transition-colors flex items-center gap-2 text-sm font-bold uppercase tracking-widest">
+                  <span className="text-xl">🧪</span> {t('mainMenu.simulate')}
+              </button>
+          </div>
         </div>
       </div>
+      
+      {/* Modals */}
       {confirmModal.isOpen && (
         <ContinueGameModal
           onContinue={handleContinue}

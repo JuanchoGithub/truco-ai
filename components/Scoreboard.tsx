@@ -10,41 +10,55 @@ const TallyMarks: React.FC<{ score: number }> = ({ score }) => {
 
   for (let i = 0; i < fullGroups; i++) {
     groups.push(
-      // Use flex to center the vertical bars, which will also center the absolute positioned slash
-      <div key={`group-${i}`} className="relative w-8 h-8 mr-2 flex items-center justify-center text-xl lg:text-2xl font-mono text-amber-50 not-italic" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.5)'}}>
+      <div key={`group-${i}`} className="relative w-8 h-8 mr-2 flex items-center justify-center text-xl lg:text-2xl font-mono text-white/90" style={{textShadow: '1px 1px 0 rgba(0,0,0,0.5)'}}>
         <span className="tracking-tighter" style={{ letterSpacing: '-0.15em' }}>||||</span>
-        {/* This slash is now perfectly centered relative to the centered bars */}
-        <div className="absolute top-1/2 left-1/2 w-[155%] h-[3px] bg-red-500 transform -translate-x-1/2 -translate-y-1/2 -rotate-45 rounded-full" />
+        <div className="absolute top-1/2 left-1/2 w-[140%] h-[2px] bg-red-500/90 transform -translate-x-1/2 -translate-y-1/2 -rotate-45 shadow-sm" />
       </div>
     );
   }
 
   if (remainder > 0) {
     groups.push(
-      // Use flex here as well for consistent vertical alignment with the full groups
-      <div key="remainder" className="relative h-8 flex items-center justify-center text-xl lg:text-2xl font-mono text-amber-50 not-italic" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.5)'}}>
+      <div key="remainder" className="relative h-8 flex items-center justify-center text-xl lg:text-2xl font-mono text-white/90" style={{textShadow: '1px 1px 0 rgba(0,0,0,0.5)'}}>
         <span className="tracking-tighter" style={{ letterSpacing: '-0.15em' }}>{'|'.repeat(remainder)}</span>
       </div>
     );
   }
 
-  return <div className="flex items-center h-8">{groups.length > 0 ? <>{groups}</> : <span className="text-amber-50 text-xl lg:text-2xl">0</span>}</div>;
+  return <div className="flex items-center h-8 pl-1">{groups.length > 0 ? <>{groups}</> : <span className="text-white/50 text-xl lg:text-2xl opacity-50">0</span>}</div>;
 };
 
 
 const Scoreboard: React.FC<{ playerScore: number; aiScore: number; className?: string }> = ({ playerScore, aiScore, className = '' }) => {
   const { t } = useLocalization();
   return (
-    <div className={`bg-black/30 p-2 lg:p-4 rounded-lg shadow-xl border-2 border-yellow-700/30 w-40 lg:w-48 shadow-inner shadow-black/30 ${className}`}>
-      <h2 className="text-base lg:text-lg font-bold text-center mb-2 lg:mb-3 text-yellow-300 font-cinzel tracking-widest" style={{ textShadow: '2px 2px 3px rgba(0,0,0,0.7)' }}>{t('scoreboard.title')}</h2>
-      <div className="flex justify-between items-center mb-1 lg:mb-2">
-        <span className="font-semibold text-amber-50 text-sm lg:text-base">{t('common.you')}:</span>
-        <TallyMarks score={playerScore} />
+    // Wood Frame Container
+    <div className={`bg-gradient-to-b from-amber-800 to-amber-950 p-1.5 rounded-lg shadow-xl border border-amber-950 w-44 lg:w-52 ${className}`}>
+      {/* Inner Slate/Chalkboard */}
+      <div className="bg-stone-900/90 border border-white/10 rounded-md p-2 shadow-inner inset-shadow-black">
+        <h2 className="text-xs font-bold text-center mb-2 text-amber-400/80 font-cinzel tracking-[0.2em] uppercase border-b border-white/10 pb-1">
+            {t('scoreboard.title')}
+        </h2>
+        <div className="space-y-1">
+            <div className="flex justify-between items-center">
+                <span className="font-bold text-amber-100 text-xs uppercase tracking-wider w-16 text-right pr-2 border-r border-white/10 mr-2">{t('common.you_short')}</span>
+                <div className="flex-grow">
+                    <TallyMarks score={playerScore} />
+                </div>
+            </div>
+            <div className="flex justify-between items-center">
+                <span className="font-bold text-amber-100 text-xs uppercase tracking-wider w-16 text-right pr-2 border-r border-white/10 mr-2">{t('common.ai')}</span>
+                 <div className="flex-grow">
+                    <TallyMarks score={aiScore} />
+                </div>
+            </div>
+        </div>
       </div>
-      <div className="flex justify-between items-center">
-        <span className="font-semibold text-amber-50 text-sm lg:text-base">{t('common.ai')}:</span>
-        <TallyMarks score={aiScore} />
-      </div>
+      {/* Screw heads for decoration */}
+      <div className="absolute top-1 left-1 w-1.5 h-1.5 rounded-full bg-amber-950/50 shadow-inner"></div>
+      <div className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-amber-950/50 shadow-inner"></div>
+      <div className="absolute bottom-1 left-1 w-1.5 h-1.5 rounded-full bg-amber-950/50 shadow-inner"></div>
+      <div className="absolute bottom-1 right-1 w-1.5 h-1.5 rounded-full bg-amber-950/50 shadow-inner"></div>
     </div>
   );
 };

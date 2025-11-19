@@ -1,5 +1,4 @@
 
-
 import React from 'react';
 import { GameState, Action, ActionType } from '../types';
 import { useLocalization } from '../context/LocalizationContext';
@@ -10,13 +9,30 @@ interface ActionBarProps {
   onPlayerAction: () => void;
 }
 
-const ActionButton: React.FC<{ onClick: () => void; disabled?: boolean; children: React.ReactNode, className?: string }> = ({ onClick, disabled = false, children, className = '' }) => {
-  const baseClasses = "px-3 py-1.5 text-xs lg:px-4 lg:py-2 lg:text-sm rounded-lg font-bold text-white shadow-lg transition-transform transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none border-b-4";
-  const enabledClasses = "bg-gradient-to-b from-yellow-600 to-yellow-700 border-yellow-900 hover:from-yellow-500 hover:to-yellow-600";
-  const disabledClasses = "bg-gray-600 border-gray-800";
+const ActionButton: React.FC<{ onClick: () => void; disabled?: boolean; children: React.ReactNode, className?: string, variant?: 'primary' | 'secondary' | 'danger' | 'special' }> = ({ onClick, disabled = false, children, className = '', variant = 'primary' }) => {
   
+  // Default (Truco/Gold)
+  let gradientClasses = "bg-gradient-to-b from-yellow-500 via-yellow-600 to-yellow-700 border-yellow-800 text-yellow-50 hover:from-yellow-400 hover:to-yellow-600";
+  let shadowColor = "shadow-yellow-900/50";
+
+  if (variant === 'secondary') { // Envido (Blue)
+      gradientClasses = "bg-gradient-to-b from-blue-600 via-blue-700 to-blue-800 border-blue-900 text-blue-50 hover:from-blue-500 hover:to-blue-700";
+      shadowColor = "shadow-blue-900/50";
+  } else if (variant === 'danger') { // Decline (Red)
+      gradientClasses = "bg-gradient-to-b from-red-600 via-red-700 to-red-800 border-red-900 text-red-50 hover:from-red-500 hover:to-red-700";
+      shadowColor = "shadow-red-900/50";
+  } else if (variant === 'special') { // Flor (Purple)
+      gradientClasses = "bg-gradient-to-b from-purple-600 via-purple-700 to-purple-800 border-purple-900 text-purple-50 hover:from-purple-500 hover:to-purple-700";
+      shadowColor = "shadow-purple-900/50";
+  } else if (className.includes('green')) { // Accept (Green)
+      gradientClasses = "bg-gradient-to-b from-green-600 via-green-700 to-green-800 border-green-900 text-green-50 hover:from-green-500 hover:to-green-700";
+      shadowColor = "shadow-green-900/50";
+  }
+  
+  const baseClasses = "w-full h-full min-h-[48px] lg:min-h-[44px] px-2 py-2 lg:px-4 lg:py-2 text-xs lg:text-sm font-bold uppercase tracking-wider rounded-lg shadow-md active:shadow-inner active:translate-y-[2px] transition-all border-b-[3px] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none";
+
   return (
-    <button onClick={onClick} disabled={disabled} className={`${baseClasses} ${disabled ? disabledClasses : enabledClasses} ${className}`} style={{ textShadow: '1px 1px 3px rgba(0,0,0,0.5)' }}>
+    <button onClick={onClick} disabled={disabled} className={`${baseClasses} ${gradientClasses} ${shadowColor} ${className}`} style={{ textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>
       {children}
     </button>
   );
@@ -47,115 +63,128 @@ const ActionBar: React.FC<ActionBarProps> = ({ dispatch, gameState, onPlayerActi
     // --- Render Logic ---
     if (gamePhase === 'round_end') {
       return (
-        <div className="flex justify-center items-center">
-            <ActionButton onClick={() => dispatchAction({ type: ActionType.PROCEED_TO_NEXT_ROUND })} className="font-cinzel tracking-wider text-base lg:text-lg !px-5 lg:!px-6">
+        <div className="flex justify-center items-center w-full">
+            <ActionButton onClick={() => dispatchAction({ type: ActionType.PROCEED_TO_NEXT_ROUND })} className="font-cinzel tracking-wider text-base lg:text-lg !px-8 !py-3">
                 {t('actionBar.next_round')}
             </ActionButton>
         </div>
       )
     }
 
+    // New Responsive Grid Layout
+    const ActionGrid: React.FC<{children: React.ReactNode}> = ({ children }) => (
+        <div className="grid grid-cols-2 gap-2 w-full md:flex md:flex-wrap md:justify-center md:gap-2">
+            {children}
+        </div>
+    );
+
     // --- Flor Response Buttons ---
     if (isPlayerTurn && gamePhase === 'flor_called') {
         return (
-            <>
+            <ActionGrid>
                 {playerHasFlor ? (
-                    <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_CONTRAFLOR })} className="!from-purple-600 !to-purple-700 !border-purple-900 hover:!from-purple-500 hover:!to-purple-600">
+                    <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_CONTRAFLOR })} variant="special" className="col-span-2 md:col-span-1">
                         {t('actionBar.contraflor')}
                     </ActionButton>
                 ) : (
-                    <ActionButton onClick={() => dispatchAction({ type: ActionType.ACKNOWLEDGE_FLOR })} className="!from-green-600 !to-green-700 !border-green-900 hover:!from-green-500 hover:!to-green-600">
+                    <ActionButton onClick={() => dispatchAction({ type: ActionType.ACKNOWLEDGE_FLOR })} className="green col-span-2 md:col-span-1">
                         {t('actionBar.flor_ack')}
                     </ActionButton>
                 )}
-            </>
+            </ActionGrid>
         )
     }
     if (isPlayerTurn && gamePhase === 'contraflor_called') {
         return (
-            <>
-                <ActionButton onClick={() => dispatchAction({ type: ActionType.ACCEPT_CONTRAFLOR })} className="!from-green-600 !to-green-700 !border-green-900 hover:!from-green-500 hover:!to-green-600">
+            <ActionGrid>
+                <ActionButton onClick={() => dispatchAction({ type: ActionType.ACCEPT_CONTRAFLOR })} className="green">
                     {t('actionBar.contraflor_quiero')}
                 </ActionButton>
-                <ActionButton onClick={() => dispatchAction({ type: ActionType.DECLINE_CONTRAFLOR })} className="!from-red-700 !to-red-800 !border-red-900 hover:!from-red-600 hover:!to-red-700">
+                <ActionButton onClick={() => dispatchAction({ type: ActionType.DECLINE_CONTRAFLOR })} variant="danger">
                     {t('actionBar.contraflor_no_quiero')}
                 </ActionButton>
-            </>
+            </ActionGrid>
         )
     }
 
-
     const renderResponseButtons = () => {
-        // FIX: Broadened condition. "Envido Primero" is possible as long as the envido window is open.
         const canCallEnvidoPrimero = gamePhase === 'truco_called' && envidoWindowIsOpen && !playerHasFlor;
         const canDeclareFlorOnTruco = gamePhase === 'truco_called' && envidoWindowIsOpen && playerHasFlor;
         
-        // New: Player can respond to Envido with Flor
         if (gamePhase === 'envido_called' && playerHasFlor) {
              return (
-                 <ActionButton onClick={() => dispatchAction({ type: ActionType.RESPOND_TO_ENVIDO_WITH_FLOR })} className="!from-purple-600 !to-purple-700 !border-purple-900 hover:!from-purple-500 hover:!to-purple-600">
-                    {t('actionBar.flor')}
-                </ActionButton>
+                <ActionGrid>
+                    <ActionButton onClick={() => dispatchAction({ type: ActionType.RESPOND_TO_ENVIDO_WITH_FLOR })} variant="special" className="col-span-2 md:w-auto">
+                        {t('actionBar.flor')}
+                    </ActionButton>
+                 </ActionGrid>
              )
         }
         
         return (
-          <>
+          <ActionGrid>
             {canDeclareFlorOnTruco && (
-                <ActionButton onClick={() => dispatchAction({ type: ActionType.DECLARE_FLOR })} className="!from-purple-600 !to-purple-700 !border-purple-900 hover:!from-purple-500 hover:!to-purple-600">
+                <ActionButton onClick={() => dispatchAction({ type: ActionType.DECLARE_FLOR })} variant="special" className="col-span-2 md:col-span-1">
                     {t('actionBar.flor')}
                 </ActionButton>
             )}
-            <ActionButton onClick={() => dispatchAction({ type: ActionType.ACCEPT })} className="!from-green-600 !to-green-700 !border-green-900 hover:!from-green-500 hover:!to-green-600">
+            {canCallEnvidoPrimero && <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_ENVIDO })} variant="secondary" className="col-span-2 md:col-span-1">{t('actionBar.envido_primero')}</ActionButton>}
+            
+            <ActionButton onClick={() => dispatchAction({ type: ActionType.ACCEPT })} className="green">
                 {t('actionBar.quiero')}
             </ActionButton>
-            <ActionButton onClick={() => dispatchAction({ type: ActionType.DECLINE })} className="!from-red-700 !to-red-800 !border-red-900 hover:!from-red-600 hover:!to-red-700">
+            <ActionButton onClick={() => dispatchAction({ type: ActionType.DECLINE })} variant="danger">
                 {t('actionBar.no_quiero')}
             </ActionButton>
-            {canCallEnvidoPrimero && <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_ENVIDO })} className="!from-blue-600 !to-blue-700 !border-blue-900 hover:!from-blue-500 hover:!to-blue-600">{t('actionBar.envido_primero')}</ActionButton>}
-            {gamePhase === 'truco_called' && <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_RETRUCO })}>{t('actionBar.retruco')}</ActionButton>}
-            {gamePhase === 'retruco_called' && <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_VALE_CUATRO })}>{t('actionBar.vale_cuatro')}</ActionButton>}
+
+            {gamePhase === 'truco_called' && <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_RETRUCO })} className="col-span-2 md:col-span-1">{t('actionBar.retruco')}</ActionButton>}
+            {gamePhase === 'retruco_called' && <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_VALE_CUATRO })} className="col-span-2 md:col-span-1">{t('actionBar.vale_cuatro')}</ActionButton>}
             
-            {gamePhase === 'envido_called' && envidoPointsOnOffer === 2 && !hasFaltaEnvidoBeenCalledThisSequence && <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_ENVIDO })} className="!from-blue-600 !to-blue-700 !border-blue-900 hover:!from-blue-500 hover:!to-blue-600">{t('actionBar.envido')}</ActionButton>}
-            {gamePhase === 'envido_called' && !hasRealEnvidoBeenCalledThisSequence && !hasFaltaEnvidoBeenCalledThisSequence && <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_REAL_ENVIDO })} className="!from-sky-600 !to-sky-700 !border-sky-900 hover:!from-sky-500 hover:!to-sky-600">{t('actionBar.real_envido')}</ActionButton>}
-            {gamePhase === 'envido_called' && !hasFaltaEnvidoBeenCalledThisSequence && <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_FALTA_ENVIDO })} className="!from-indigo-600 !to-indigo-700 !border-indigo-900 hover:!from-indigo-500 hover:!to-indigo-600">{t('actionBar.falta_envido')}</ActionButton>}
-          </>
+            {/* Envido Escalation - Grouped for cleaner mobile layout */}
+            {gamePhase === 'envido_called' && (
+                <>
+                     {envidoPointsOnOffer === 2 && !hasFaltaEnvidoBeenCalledThisSequence && <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_ENVIDO })} variant="secondary">{t('actionBar.envido')}</ActionButton>}
+                     {!hasRealEnvidoBeenCalledThisSequence && !hasFaltaEnvidoBeenCalledThisSequence && <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_REAL_ENVIDO })} variant="secondary">{t('actionBar.real_envido')}</ActionButton>}
+                     {!hasFaltaEnvidoBeenCalledThisSequence && <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_FALTA_ENVIDO })} variant="secondary" className="col-span-2 md:col-span-1">{t('actionBar.falta_envido')}</ActionButton>}
+                </>
+            )}
+          </ActionGrid>
         )
     }
 
     const renderActionButtons = () => {
         return (
-            <>
+            <ActionGrid>
                 {canCallFlor && (
-                    <ActionButton onClick={() => dispatchAction({ type: ActionType.DECLARE_FLOR })} className="!from-purple-600 !to-purple-700 !border-purple-900 hover:!from-purple-500 hover:!to-purple-600">
+                    <ActionButton onClick={() => dispatchAction({ type: ActionType.DECLARE_FLOR })} variant="special" className="col-span-2 md:w-auto">
                         {t('actionBar.flor')}
                     </ActionButton>
                 )}
-                {canCallEnvido ? (
+                
+                {/* Truco Actions */}
+                { canCallTruco && <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_TRUCO })} className={canCallFlor || canCallEnvido ? "col-span-2 md:col-span-1" : "col-span-2 md:w-auto"}>{t('actionBar.truco')}</ActionButton> }
+                { lastCaller === 'ai' && canEscalateToRetruco && <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_RETRUCO })} className="col-span-2 md:w-auto">{t('actionBar.retruco')}</ActionButton> }
+                { lastCaller === 'ai' && canEscalateToValeCuatro && <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_VALE_CUATRO })} className="col-span-2 md:w-auto">{t('actionBar.vale_cuatro')}</ActionButton> }
+                
+                {/* Envido Actions - Shown if possible */}
+                {canCallEnvido && (
                     <>
-                        <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_ENVIDO })} className="!from-blue-600 !to-blue-700 !border-blue-900 hover:!from-blue-500 hover:!to-blue-600">
+                        <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_ENVIDO })} variant="secondary">
                             {t('actionBar.envido')}
                         </ActionButton>
-                        <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_REAL_ENVIDO })} className="!from-sky-600 !to-sky-700 !border-sky-900 hover:!from-sky-500 hover:!to-sky-600">
+                        <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_REAL_ENVIDO })} variant="secondary">
                             {t('actionBar.real_envido')}
                         </ActionButton>
-                        <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_FALTA_ENVIDO })} className="!from-indigo-600 !to-indigo-700 !border-indigo-900 hover:!from-indigo-500 hover:!to-indigo-600">
+                        <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_FALTA_ENVIDO })} variant="secondary" className="col-span-2 md:col-span-1">
                             {t('actionBar.falta_envido')}
                         </ActionButton>
                     </>
-                ) : null}
-                { canCallTruco && <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_TRUCO })}>{t('actionBar.truco')}</ActionButton> }
-                { lastCaller === 'ai' && canEscalateToRetruco && <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_RETRUCO })}>{t('actionBar.retruco')}</ActionButton> }
-                { lastCaller === 'ai' && canEscalateToValeCuatro && <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_VALE_CUATRO })}>{t('actionBar.vale_cuatro')}</ActionButton> }
-            </>
+                )}
+            </ActionGrid>
         )
     }
 
-    return (
-        <div className="flex flex-wrap justify-center items-center gap-2">
-            {isPlayerRespondingToCall ? renderResponseButtons() : renderActionButtons()}
-        </div>
-    );
+    return isPlayerRespondingToCall ? renderResponseButtons() : renderActionButtons();
 };
 
 export default ActionBar;

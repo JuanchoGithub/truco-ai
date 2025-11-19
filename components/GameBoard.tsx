@@ -1,5 +1,4 @@
 
-
 import React from 'react';
 import { Card as CardType, Player, GameState, Action, ActionType, PointNote } from '../types';
 import Card from './Card';
@@ -11,7 +10,7 @@ interface GameBoardProps {
 }
 
 const Crown = () => (
-    <div className="absolute -top-2 -right-2 text-3xl lg:-top-3 lg:-right-3 lg:text-4xl text-yellow-400 z-20" style={{ textShadow: '0 0 6px rgba(250, 204, 21, 0.9)' }}>
+    <div className="absolute -top-6 -right-4 text-5xl lg:text-6xl text-yellow-400 z-20 drop-shadow-lg animate-bounce-slow" style={{ filter: 'drop-shadow(0 0 10px rgba(234, 179, 8, 0.8))' }}>
         👑
     </div>
 );
@@ -27,37 +26,61 @@ const CardPile: React.FC<CardPileProps> = ({ cards, trickWinners, owner, label }
     const { t } = useLocalization();
     const playedCards = cards.map((card, index) => ({ card, index })).filter(item => item.card !== null);
     const renderPlaceholder = playedCards.length === 0;
-    const cardSizeClasses = "!w-24 !h-[150px] lg:!w-28 lg:!h-[174px]";
+    const cardSizeClasses = "!w-20 !h-[124px] lg:!w-28 lg:!h-[174px]";
 
     return (
-        <div className="relative w-full h-56 flex items-center justify-center">
-            <p className="absolute -top-2 text-center text-sm lg:text-base text-gray-300 font-bold tracking-wider">{label}</p>
+        <div className="relative w-full h-44 lg:h-64 flex items-center justify-center">
+             {/* Zone Marker */}
+            <div className="absolute inset-x-8 top-1/2 -translate-y-1/2 h-32 border-2 border-dashed border-white/5 rounded-xl pointer-events-none" />
+            
+             {/* Label */}
+            <div className={`absolute ${owner === 'ai' ? 'top-0' : 'bottom-0'} left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/40 backdrop-blur-sm px-4 py-1 rounded-full border border-white/10 shadow-sm z-0`}>
+                 <p className="text-center text-[10px] lg:text-xs text-white/50 font-bold tracking-[0.2em] uppercase">{label}</p>
+            </div>
+           
             {renderPlaceholder && (
-                 <div className={`rounded-lg border-2 border-dashed border-gray-400/30 bg-black/20 ${cardSizeClasses} flex items-center justify-center`}>
-                    <span className="text-gray-400/50 text-xs">{t('gameBoard.empty_pile')}</span>
+                 <div className={`rounded-lg border-2 border-dashed border-white/10 bg-white/5 ${cardSizeClasses} flex items-center justify-center rotate-6 opacity-50`}>
+                    <span className="text-white/20 text-xs font-cinzel">{t('gameBoard.empty_pile')}</span>
                  </div>
             )}
             {playedCards.map(({ card, index }) => {
                 if (!card) return null;
                 const isWinner = trickWinners[index] === owner;
                 
-                // Deterministic "messy" transform based on card index to create a fanned pile
-                const rotation = (index * 25) - 25; // -25deg, 0deg, 25deg
-                const translateX = (index * 15) - 15; // -15px, 0px, 15px
-                const translateY = Math.abs(index - 1) * -5; // creates a slight arc
+                // Stabilized "Messy Pile" Logic
+                // Using fixed values instead of Math.random() prevents jitter on re-renders
+                // and ensures the drop animation plays smoothly to a target destination.
+                let rotation = 0;
+                let translateX = 0;
+                let translateY = 0;
+
+                if (index === 0) {
+                    rotation = -3;
+                    translateX = -5;
+                } else if (index === 1) {
+                    rotation = 8;
+                    translateX = 25;
+                    translateY = -5;
+                } else if (index === 2) {
+                    rotation = -8;
+                    translateX = -25;
+                    translateY = 5;
+                }
                 
                 return (
                     <div 
                         key={`${owner}-card-${index}`} 
-                        className="absolute transition-all duration-500"
+                        className="absolute"
                         style={{ 
-                            transform: `translateX(${translateX}px) translateY(${translateY}px) rotate(${rotation}deg)`,
-                            zIndex: index 
+                            transform: `translate(${translateX}px, ${translateY}px) rotate(${rotation}deg)`,
+                            zIndex: index + 10
                         }}
                     >
-                        <div className="relative">
-                            <Card card={card} className={cardSizeClasses} />
-                            {isWinner && <Crown />}
+                        <div className="animate-drop-in">
+                            <div className="relative group">
+                                <Card card={card} className={`${cardSizeClasses} shadow-2xl ring-1 ring-black/20`} />
+                                {isWinner && <Crown />}
+                            </div>
                         </div>
                     </div>
                 );
@@ -111,7 +134,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState, dispatch }) => {
             </h3>
             <div className="grid grid-cols-[1fr_auto_auto] gap-x-4 text-left mb-2 border-b border-yellow-300/30 pb-2">
                 <span className="font-bold">{t('gameBoard.points_summary_title')}</span>
-                <span className="font-bold text-center w-16">{t('common.player')}</span>
+                <span className="font-bold text-center w-16">{t('common.you')}</span>
                 <span className="font-bold text-center w-16">{t('common.ai')}</span>
             </div>
             <div className="space-y-2">
@@ -145,35 +168,45 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState, dispatch }) => {
   };
   
   return (
-    <div className="relative w-full flex flex-row justify-around items-center space-x-2 lg:space-x-4 p-4 bg-black/20 rounded-2xl shadow-inner shadow-black/50 min-h-[280px]">
-      <div className="w-1/2">
-        <CardPile 
-          cards={aiTricks}
-          trickWinners={trickWinners}
-          owner="ai"
-          label={t('gameBoard.ai_cards')}
-        />
-      </div>
-      <div className="self-stretch border-l-2 border-yellow-700/30"></div>
-      <div className="w-1/2">
-        <CardPile 
-          cards={playerTricks}
-          trickWinners={trickWinners}
-          owner="player"
-          label={t('gameBoard.player_cards')}
-        />
-      </div>
+    <div className="relative w-full max-w-4xl mx-auto px-2">
+        {/* The Mat - Defines the play area */}
+        <div className="bg-green-900/80 rounded-[3rem] border-[16px] border-yellow-950 shadow-[inset_0_0_80px_rgba(0,0,0,0.8),0_20px_50px_rgba(0,0,0,0.5)] relative overflow-hidden">
+            {/* Mat Texture Overlay */}
+            <div className="absolute inset-0 opacity-30" style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/felt.png')" }} />
+            
+            {/* Center Divider Line */}
+            <div className="absolute top-1/2 left-8 right-8 h-px bg-white/10 border-t border-dashed border-white/20"></div>
+            
+            {/* Table Logo / Decoration */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 rounded-full border-4 border-white/5 flex items-center justify-center pointer-events-none">
+                 <div className="text-white/5 font-cinzel text-4xl font-bold">TRUCO</div>
+            </div>
+
+            <div className="relative z-10 flex flex-col py-4 gap-2 lg:gap-8 min-h-[360px] lg:min-h-[450px] justify-center">
+                <CardPile 
+                    cards={aiTricks}
+                    trickWinners={trickWinners}
+                    owner="ai"
+                    label={t('gameBoard.ai_cards')}
+                />
+                <CardPile 
+                    cards={playerTricks}
+                    trickWinners={trickWinners}
+                    owner="player"
+                    label={t('gameBoard.player_cards')}
+                />
+            </div>
+        </div>
 
       {isRoundOver && (
         <div 
-          className="absolute inset-0 flex items-center justify-center z-30 rounded-2xl bg-black/70 cursor-pointer animate-fade-in-scale"
+          className="absolute inset-0 flex items-center justify-center z-30 cursor-pointer animate-fade-in-scale backdrop-blur-sm"
           onClick={handleDismiss}
           onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleDismiss()}
           role="button"
           tabIndex={0}
-          aria-label={`Round over. Click to continue.`}
         >
-          <div className="text-center p-4 lg:p-6 rounded-lg bg-yellow-400/30 border-2 border-yellow-300 shadow-2xl shadow-black">
+          <div className="text-center p-6 lg:p-8 rounded-xl bg-gradient-to-br from-stone-900 to-black border-4 border-yellow-600 shadow-2xl transform scale-105 max-w-md w-full mx-4">
             {renderRoundSummary()}
           </div>
         </div>

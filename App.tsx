@@ -16,7 +16,6 @@ import CentralMessage from './components/CentralMessage';
 import { saveStateToStorage, loadStateFromStorage, clearStateFromStorage, loadMatchLogs, MATCH_LOG_KEY } from './services/storageService';
 import DataModal from './components/DataModal';
 import { getCardName } from './services/trucoLogic';
-// Fix: Removed unused import causing an error.
 import MainMenu from './components/MainMenu';
 import Tutorial from './components/Tutorial';
 import Manual from './components/Manual';
@@ -79,25 +78,19 @@ const App: React.FC = () => {
     const isPlaying = gameMode === 'playing' || gameMode === 'playing-with-help';
     if (isPlaying) {
         if (justStartedNewGame.current) {
-            justStartedNewGame.current = false; // Consume the flag
-            return; // Do nothing, RESTART_GAME already correctly set up the new game state
+            justStartedNewGame.current = false;
+            return;
         }
         
         const persistedState = loadStateFromStorage(gameMode);
         if (persistedState) {
             dispatch({ type: ActionType.LOAD_PERSISTED_STATE, payload: persistedState });
         } else {
-            // This handles two cases:
-            // 1. User clicks "Continue Game" but the save file was deleted between menu load and click.
-            // 2. A brand new user starts a game in a mode for which no save file exists.
-            // It does NOT run for "New Game" because `handleStartGame` already dispatched RESTART_GAME,
-            // so the state is already initialized with round > 0.
             if (state.round === 0) {
                  dispatch({ type: ActionType.RESTART_GAME });
             }
         }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameMode]);
 
 
@@ -149,7 +142,6 @@ const App: React.FC = () => {
     }
   }, [state.currentTurn, state.isThinking, state.winner, state.round, state, gameMode]);
 
-  // New useEffect to generate suggestions for the player
   useEffect(() => {
     const isResolving = state.gamePhase.includes('_ACCEPTED') ||
                         state.gamePhase.includes('_DECLINED') ||
@@ -159,7 +151,7 @@ const App: React.FC = () => {
 
     const canSuggest = gameMode === 'playing-with-help' &&
                        state.currentTurn === 'player' &&
-                       (state.playerHand.length > 0 || isPlayerRespondingToCall) && // Allow suggestions on response even with 0 cards
+                       (state.playerHand.length > 0 || isPlayerRespondingToCall) &&
                        !state.winner &&
                        !state.isThinking &&
                        !isResolving &&
@@ -170,7 +162,7 @@ const App: React.FC = () => {
           const mirroredTrickWinners = currentState.trickWinners.map(winner => {
               if (winner === 'player') return 'ai';
               if (winner === 'ai') return 'player';
-              return winner; // 'tie' or null
+              return winner;
           });
 
           const mirroredState: GameState = {
@@ -189,16 +181,12 @@ const App: React.FC = () => {
               aiHasFlor: currentState.playerHasFlor,
               mano: currentState.mano === 'player' ? 'ai' : 'player',
               lastRoundWinner: currentState.lastRoundWinner === 'player' ? 'ai' : currentState.lastRoundWinner === 'ai' ? 'player' : currentState.lastRoundWinner,
-              // The assistant is playing against the main AI. To make its advice objective,
-              // it should use a neutral opponent model, not the one tailored to the human player.
               opponentModel: initialState.opponentModel,
-              // Flip context-sensitive properties
               lastCaller: currentState.lastCaller === 'player' ? 'ai' : (currentState.lastCaller === 'ai' ? 'player' : null),
               turnBeforeInterrupt: currentState.turnBeforeInterrupt === 'player' ? 'ai' : (currentState.turnBeforeInterrupt === 'ai' ? 'player' : null),
               pendingTrucoCaller: currentState.pendingTrucoCaller === 'player' ? 'ai' : (currentState.pendingTrucoCaller === 'ai' ? 'player' : null),
-              // Mirror the revealed envido values. The assistant AI needs to see the real AI's score as the opponent's score.
-              playerEnvidoValue: currentState.aiEnvidoValue, // The assistant's opponent (real AI) has aiEnvidoValue
-              aiEnvidoValue: currentState.playerEnvidoValue, // The assistant AI itself has playerEnvidoValue
+              playerEnvidoValue: currentState.aiEnvidoValue,
+              aiEnvidoValue: currentState.playerEnvidoValue,
           };
           const suggestion = getLocalAIMove(mirroredState);
           
@@ -220,7 +208,6 @@ const App: React.FC = () => {
           const summary = generateSuggestionSummary(suggestion, state);
           let suggestionWithSummary: AiMove = { ...suggestion, summary };
           
-          // NEW: If the suggestion has alternatives, generate summaries for them too.
           if (suggestionWithSummary.alternatives) {
               suggestionWithSummary.alternatives = suggestionWithSummary.alternatives.map(alt => ({
                   ...alt,
@@ -238,7 +225,6 @@ const App: React.FC = () => {
     }
   }, [gameMode, state]);
 
-  // New useEffect to handle delayed resolutions after an AI response
   useEffect(() => {
     const isPlaying = gameMode === 'playing' || gameMode === 'playing-with-help';
     if (!isPlaying) return;
@@ -266,7 +252,7 @@ const App: React.FC = () => {
     if (resolutionAction) {
         const timeoutId = setTimeout(() => {
             dispatch(resolutionAction!);
-        }, 1200); // 1.2 second delay for a natural pause
+        }, 1200);
         return () => clearTimeout(timeoutId);
     }
   }, [state.gamePhase, dispatch, gameMode]);
@@ -279,8 +265,8 @@ const App: React.FC = () => {
   const handleDismissMessage = () => {
       clearTimeout(messageTimers.current.fadeOutTimerId);
       clearTimeout(messageTimers.current.clearTimerId);
-      setIsMessageVisible(false); // Start fade-out animation
-      messageTimers.current.clearTimerId = window.setTimeout(clearMessageState, 500); // Clear state after fade-out
+      setIsMessageVisible(false);
+      messageTimers.current.clearTimerId = window.setTimeout(clearMessageState, 500);
   };
 
   useEffect(() => {
@@ -303,7 +289,7 @@ const App: React.FC = () => {
                 setIsMessageVisible(false);
             }, 1500);
 
-            messageTimers.current.clearTimerId = window.setTimeout(clearMessageState, 2000); // 1500ms visible + 500ms fadeout
+            messageTimers.current.clearTimerId = window.setTimeout(clearMessageState, 2000);
         }
 
         return () => {
@@ -313,7 +299,6 @@ const App: React.FC = () => {
     }
   }, [state.centralMessage, state.isCentralMessagePersistent, dispatch, gameMode, t, translatePlayerName]);
 
-  // Automatically clear the player's blurb after a short delay
   useEffect(() => {
     const isPlaying = gameMode === 'playing' || gameMode === 'playing-with-help';
     if (!isPlaying) return;
@@ -325,12 +310,11 @@ const App: React.FC = () => {
     }
   }, [state.playerBlurb, dispatch, gameMode]);
 
-  // Effect to trigger AI speech for opponent or assistant
   useEffect(() => {
     const isPlaying = gameMode === 'playing' || gameMode === 'playing-with-help';
     if (!isPlaying) {
-      speechService.cancel(); // Stop speech if we exit to menu
-      lastSpokenSummary.current = null; // Reset on exit
+      speechService.cancel();
+      lastSpokenSummary.current = null;
       return;
     }
 
@@ -342,7 +326,6 @@ const App: React.FC = () => {
                 ))
             );
 
-        // Create a unique key for this set of suggestions to avoid re-speaking
         const suggestionsKey = allMoves.map(m => m.action.type).join('_');
 
         if (suggestionsKey !== lastSpokenSummary.current) {
@@ -361,10 +344,8 @@ const App: React.FC = () => {
         }
     } else if (gameMode === 'playing' && state.aiBlurb?.isVisible && state.aiBlurb.text) {
         speechService.speak(state.aiBlurb.text, 'opponent');
-        // Clear last summary so the assistant speaks again if mode is switched back.
         lastSpokenSummary.current = null;
     } else {
-        // When there's no active suggestion (e.g., turn ended), reset the tracker.
         if (gameMode === 'playing-with-help' && !assistantMove) {
             lastSpokenSummary.current = null;
         }
@@ -372,7 +353,6 @@ const App: React.FC = () => {
   }, [state.aiBlurb, assistantMove, gameMode, t]);
 
   const handlePlayerAction = () => {
-    // If a persistent message is showing (like Envido results), clear it when the player acts.
     if (state.isCentralMessagePersistent) {
         handleDismissMessage();
     }
@@ -386,17 +366,15 @@ const App: React.FC = () => {
   };
 
   const LogButton: React.FC<{onClick: () => void, children: React.ReactNode, className?: string}> = ({ onClick, children, className = '' }) => (
-    <button onClick={onClick} className={`px-3 py-1.5 text-xs lg:px-4 lg:py-2 lg:text-sm rounded-lg font-semibold text-yellow-200 bg-black/40 border-2 border-yellow-800/80 shadow-md hover:bg-black/60 hover:border-yellow-600 transition-colors ${className}`}>
+    <button onClick={onClick} className={`px-3 py-2 text-xs lg:text-sm rounded-lg font-bold uppercase tracking-wider text-yellow-100 bg-gradient-to-t from-stone-800 to-stone-700 border border-yellow-600/50 shadow-md hover:bg-stone-600 hover:text-white transition-all ${className}`}>
       {children}
     </button>
   );
 
   const saveCurrentGame = () => {
-    // Slice the history arrays to get data only for the match that is ending.
     const roundsForThisMatch = state.roundHistory.slice(state.matchStartRoundIndex);
     const reasoningForThisMatch = state.aiReasoningLog.slice(state.matchStartAiLogIndex);
 
-    // If a game was in progress and has history, save its logs.
     if (state.round > 0 && roundsForThisMatch.length > 0) {
         const newLog: MatchLog = {
             matchId: Date.now(),
@@ -407,7 +385,7 @@ const App: React.FC = () => {
             roundHistory: roundsForThisMatch,
         };
         const existingLogs = loadMatchLogs() || [];
-        const updatedLogs = [newLog, ...existingLogs].slice(0, 5); // Keep last 5 matches
+        const updatedLogs = [newLog, ...existingLogs].slice(0, 5);
         localStorage.setItem(MATCH_LOG_KEY, JSON.stringify(updatedLogs));
     }
   };
@@ -461,47 +439,50 @@ const App: React.FC = () => {
       () => setIsAssistantSoundEnabled(v => !v);
 
   return (
-    <div className="h-screen bg-green-900 text-white font-sans overflow-hidden" style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/felt.png')"}}>
-      <div className="w-full h-full max-w-screen-2xl mx-auto flex flex-row gap-4 p-2 lg:p-4">
+    <div className="h-[100dvh] w-full bg-felt text-white font-sans overflow-hidden flex flex-col relative">
+      {/* Vignette Overlay */}
+      <div className="absolute inset-0 table-vignette z-0 pointer-events-none" />
 
-        {/* Left Panel */}
-        <div className="hidden lg:flex w-full max-w-xs flex-shrink-0">
+      <div className="flex-grow flex flex-row h-full max-w-[1600px] mx-auto w-full relative z-10">
+
+        {/* Left Panel (Desktop Only) - Logs */}
+        <div className="hidden xl:flex w-72 flex-col border-r-4 border-yellow-900/30 bg-black/20 backdrop-blur-sm">
           <MessageLog messages={state.messageLog} dispatch={dispatch} isModal={false} />
         </div>
 
-        {/* Center Game Column */}
-        <div className="flex-1 flex flex-col relative overflow-hidden h-full">
-          <Scoreboard playerScore={state.playerScore} aiScore={state.aiScore} className="absolute top-0 left-0 z-40" />
+        {/* Center Game Area */}
+        <div className="flex-1 flex flex-col relative h-full">
           
-          <div className="absolute top-2 right-2 z-50">
-              <GameMenu
-                gameMode={gameMode as 'playing' | 'playing-with-help'}
-                isSoundEnabled={isSoundOnForMenu}
-                isDebugMode={state.isDebugMode}
-                onToggleSound={() => {
-                  toggleSoundForMenu();
-                  if (showSoundHint) handleDismissSoundHint();
-                }}
-                onToggleDebug={() => dispatch({ type: ActionType.TOGGLE_DEBUG_MODE })}
-                onShowData={() => dispatch({ type: ActionType.TOGGLE_DATA_MODAL })}
-                onGoToMainMenu={() => setGameMode('menu')}
-                onOpenMenu={handleDismissSoundHint}
-              />
-              <SoundHint isVisible={showSoundHint} onDismiss={handleDismissSoundHint} />
+          {/* Header: Score & Menu */}
+          <div className="flex justify-between items-start p-2 lg:p-4 absolute top-0 w-full z-30 pointer-events-none">
+             <div className="pointer-events-auto">
+               <Scoreboard playerScore={state.playerScore} aiScore={state.aiScore} />
+             </div>
+             <div className="pointer-events-auto flex flex-col items-end gap-2">
+               <GameMenu
+                  gameMode={gameMode as 'playing' | 'playing-with-help'}
+                  isSoundEnabled={isSoundOnForMenu}
+                  isDebugMode={state.isDebugMode}
+                  onToggleSound={() => {
+                    toggleSoundForMenu();
+                    if (showSoundHint) handleDismissSoundHint();
+                  }}
+                  onToggleDebug={() => dispatch({ type: ActionType.TOGGLE_DEBUG_MODE })}
+                  onShowData={() => dispatch({ type: ActionType.TOGGLE_DATA_MODAL })}
+                  onGoToMainMenu={() => setGameMode('menu')}
+                  onOpenMenu={handleDismissSoundHint}
+                />
+                <SoundHint isVisible={showSoundHint} onDismiss={handleDismissSoundHint} />
+             </div>
           </div>
 
-          {/* Main Game Layout */}
-          <div className="relative flex flex-col flex-grow w-full max-w-4xl mx-auto h-full">
+          {/* Game Play Area */}
+          <div className="flex-grow flex flex-col justify-between w-full max-w-4xl mx-auto h-full">
             
             {/* TOP: Title & AI Hand */}
-            <div className="flex-shrink-0 flex flex-col items-center justify-start pt-1 lg:pt-2">
-                <div className="text-center">
-                    <h1 className="text-3xl lg:text-4xl font-cinzel font-bold tracking-wider text-yellow-300" style={{ textShadow: '3px 3px 5px rgba(0,0,0,0.8)' }}>TRUCO</h1>
-                    <p className="text-xs lg:text-sm text-gray-200 tracking-widest">
-                        {t('game.round_info', { round: state.round, player: translatePlayerName(state.mano) })}
-                    </p>
-                </div>
-                <div className="flex items-center">
+            <div className="flex-shrink-0 flex flex-col items-center justify-start pt-2 lg:pt-6">
+                <h1 className="hidden lg:block text-4xl font-cinzel font-bold tracking-widest text-yellow-400/80 mb-2 drop-shadow-lg">TRUCO</h1>
+                <div className="flex items-center justify-center w-full">
                     <PlayerHand 
                         cards={state.aiHand} 
                         playerType="ai" 
@@ -511,87 +492,69 @@ const App: React.FC = () => {
                 </div>
             </div>
 
-            {/* AI Speech Blurb */}
-            <AiBlurb 
-              titleKey={state.aiBlurb?.titleKey ?? ''}
-              text={state.aiBlurb?.text ?? ''} 
-              isVisible={!!state.aiBlurb?.isVisible} 
-              dispatch={dispatch} 
-            />
-            
-            {/* Player Speech Blurb */}
-            <PlayerBlurb text={state.playerBlurb?.text ?? ''} isVisible={!!state.playerBlurb?.isVisible} />
+            {/* Overlay Messages (Blurbs, Central) */}
+            <div className="absolute inset-0 pointer-events-none z-40 flex items-center justify-center">
+               <CentralMessage message={localMessage} isVisible={isMessageVisible} onDismiss={handleDismissMessage} />
+               <AiBlurb 
+                  titleKey={state.aiBlurb?.titleKey ?? ''}
+                  text={state.aiBlurb?.text ?? ''} 
+                  isVisible={!!state.aiBlurb?.isVisible} 
+                  dispatch={dispatch} 
+               />
+               <PlayerBlurb text={state.playerBlurb?.text ?? ''} isVisible={!!state.playerBlurb?.isVisible} />
+            </div>
 
+            {/* MIDDLE: Board (The Mat) */}
+            <div className="flex-grow flex items-center justify-center py-2 lg:py-4 min-h-0 relative z-10">
+                <GameBoard gameState={state} dispatch={dispatch} />
+            </div>
 
-            {/* Central Message Display */}
-            <CentralMessage message={localMessage} isVisible={isMessageVisible} onDismiss={handleDismissMessage} />
-
-            {/* MIDDLE: Board */}
-            <div className="flex-grow flex items-center justify-center py-2 lg:py-4 min-h-0">
-                <GameBoard 
-                  gameState={state}
-                  dispatch={dispatch}
+            {/* BOTTOM: Player Hand & Controls */}
+            <div className="flex-shrink-0 w-full z-50 flex flex-col items-center bg-gradient-to-t from-black/90 via-black/60 to-transparent pb-0 pt-8 lg:pt-4">
+              <div className="w-full max-w-2xl -mb-8 z-20">
+                 <PlayerHand 
+                    cards={state.playerHand} 
+                    onCardPlay={handlePlayCard} 
+                    playerType="player" 
+                    isMyTurn={state.currentTurn === 'player' && state.playerTricks[state.currentTrick] === null && !state.gamePhase.includes('_called')}
                 />
-            </div>
+              </div>
 
-            {/* PLAYER HAND AREA */}
-            <div className="flex-shrink-0 w-full z-10 pb-2">
-              <PlayerHand 
-                  cards={state.playerHand} 
-                  onCardPlay={handlePlayCard} 
-                  playerType="player" 
-                  isMyTurn={state.currentTurn === 'player' && state.playerTricks[state.currentTrick] === null && !state.gamePhase.includes('_called')}
-              />
-            </div>
-
-
-            {/* BOTTOM: Status Bar */}
-            <div className="flex-shrink-0 w-full z-20">
-                <div className="bg-black/40 border-2 border-yellow-900/50 shadow-lg rounded-lg p-2 flex justify-between lg:justify-center items-center gap-4">
-                    <LogButton onClick={() => dispatch({ type: ActionType.TOGGLE_GAME_LOG_EXPAND })} className="lg:hidden">
-                      {t('logPanel.game_log_button')}
-                    </LogButton>
+              <div className="w-full bg-stone-900 border-t-[6px] border-yellow-800 shadow-[0_-4px_20px_rgba(0,0,0,0.7)] px-2 py-2 lg:px-6 lg:py-4 flex items-center justify-between gap-2 lg:justify-center relative z-30">
+                  {/* Mobile Log Buttons */}
+                  <LogButton onClick={() => dispatch({ type: ActionType.TOGGLE_GAME_LOG_EXPAND })} className="xl:hidden">
+                    {t('logPanel.game_log_button')}
+                  </LogButton>
+                  
+                  {/* Action Bar (Center) */}
+                  <div className="flex-grow flex justify-center max-w-md lg:max-w-none">
                     <ActionBar dispatch={dispatch} gameState={state} onPlayerAction={handlePlayerAction} />
-                    <LogButton onClick={() => dispatch({ type: ActionType.TOGGLE_AI_LOG_EXPAND })} className="lg:hidden">
-                      {t('logPanel.ai_log_button')}
-                    </LogButton>
-                </div>
+                  </div>
+
+                  {/* Mobile AI Log Button */}
+                  <LogButton onClick={() => dispatch({ type: ActionType.TOGGLE_AI_LOG_EXPAND })} className="xl:hidden">
+                    {t('logPanel.ai_log_button')}
+                  </LogButton>
+              </div>
             </div>
 
           </div>
         </div>
         
-        {/* Right Panel */}
-        <div className="hidden lg:flex w-full max-w-xs flex-shrink-0 items-start justify-center">
-          {state.isLogExpanded ? (
-              <div className="w-full h-full animate-fade-in-scale">
-                <AiLogPanel 
-                  log={state.aiReasoningLog} 
-                  dispatch={dispatch} 
-                  isModal={false} 
-                  roundHistory={state.roundHistory}
-                  currentRound={state.round}
-                />
-              </div>
-          ) : (
-            <div className="pt-4">
-              <button 
-                onClick={() => dispatch({ type: ActionType.TOGGLE_AI_LOG_EXPAND })}
-                className="px-3 py-1.5 text-xs lg:px-4 lg:py-2 lg:text-sm rounded-lg font-semibold text-cyan-200 bg-black/40 border-2 border-cyan-800/80 shadow-md hover:bg-black/60 hover:border-cyan-600 transition-colors flex items-center gap-2"
-                aria-label={t('game.show_ai_logic_aria')}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-                </svg>
-                <span>{t('logPanel.ai_log_button')}</span>
-              </button>
-            </div>
-          )}
+        {/* Right Panel (Desktop Only) - AI Logic */}
+        <div className="hidden xl:flex w-80 flex-shrink-0 flex-col border-l-4 border-yellow-900/30 bg-black/20 backdrop-blur-sm">
+            <AiLogPanel 
+                log={state.aiReasoningLog} 
+                dispatch={dispatch} 
+                isModal={false} 
+                roundHistory={state.roundHistory}
+                currentRound={state.round}
+            />
         </div>
       </div>
 
       {/* MODALS for smaller screens */}
-      <div className="lg:hidden">
+      <div className="xl:hidden">
         {state.isGameLogExpanded && <MessageLog messages={state.messageLog} dispatch={dispatch} isModal={true} />}
         {state.isLogExpanded && <AiLogPanel 
             log={state.aiReasoningLog} 

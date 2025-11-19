@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useLocalization } from '../context/LocalizationContext';
 import { speechService } from '../services/speechService';
@@ -16,6 +17,15 @@ interface SettingsModalProps {
   onToggleFlor: () => void;
 }
 
+const ToggleSwitch: React.FC<{ isEnabled: boolean; onToggle: () => void }> = ({ isEnabled, onToggle }) => (
+    <button
+        onClick={onToggle}
+        className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-stone-900 focus:ring-amber-500 border ${ isEnabled ? 'bg-green-700 border-green-600' : 'bg-stone-700 border-stone-600' }`}
+    >
+        <span className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform shadow-md ${ isEnabled ? 'translate-x-6' : 'translate-x-1' }`} />
+    </button>
+);
+
 const VoiceSelector: React.FC<{
     label: string;
     isEnabled: boolean;
@@ -32,21 +42,16 @@ const VoiceSelector: React.FC<{
     };
 
     return (
-        <div>
-            <div className="flex items-center justify-between mb-2">
-                <span className="text-gray-200">{label}</span>
-                <button
-                    onClick={onToggle}
-                    className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-yellow-500 ${ isEnabled ? 'bg-green-600' : 'bg-gray-600' }`}
-                >
-                    <span className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${ isEnabled ? 'translate-x-6' : 'translate-x-1' }`} />
-                </button>
+        <div className="p-3 bg-black/20 rounded-lg border border-white/5">
+            <div className="flex items-center justify-between mb-3">
+                <span className="text-stone-200 font-cinzel text-sm font-semibold tracking-wide">{label}</span>
+                <ToggleSwitch isEnabled={isEnabled} onToggle={onToggle} />
             </div>
             <div className="flex items-center gap-2">
                 <select
                     value={selectedVoiceURI}
                     onChange={(e) => onVoiceChange(e.target.value)}
-                    className="w-full p-2 bg-gray-700/50 border border-yellow-700/40 rounded-md text-white focus:outline-none focus:ring-1 focus:ring-yellow-500 disabled:opacity-50"
+                    className="flex-grow p-2 bg-stone-800 border border-stone-600 rounded-md text-stone-200 text-sm focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 disabled:opacity-50 transition-colors"
                     disabled={!isEnabled}
                 >
                     <option value="auto">{t('settingsModal.select_voice')}</option>
@@ -59,7 +64,7 @@ const VoiceSelector: React.FC<{
                 <button 
                     onClick={handleTest}
                     disabled={!isEnabled}
-                    className="px-3 py-2 text-sm rounded-lg font-semibold text-yellow-200 bg-black/40 border-2 border-yellow-800/80 shadow-md hover:bg-black/60 hover:border-yellow-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-3 py-2 text-xs font-bold uppercase tracking-wider rounded-md text-amber-100 bg-gradient-to-b from-stone-600 to-stone-700 border border-stone-500 shadow-sm hover:from-stone-500 hover:to-stone-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 >
                     {t('settingsModal.test_voice')}
                 </button>
@@ -101,32 +106,42 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 animate-fade-in-scale">
-      <div className="bg-green-800 border-4 border-yellow-500 rounded-xl shadow-2xl p-6 lg:p-8 text-left w-full max-w-md">
-        <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl lg:text-3xl font-bold text-yellow-300 font-cinzel">
+    <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-[100] animate-fade-in-scale backdrop-blur-sm p-4">
+      <div className="bg-stone-900 border-4 border-double border-amber-700/50 rounded-xl shadow-2xl w-full max-w-lg flex flex-col overflow-hidden max-h-[90vh]">
+        
+        {/* Header */}
+        <div className="bg-gradient-to-b from-amber-900/40 to-stone-900 p-6 border-b border-amber-700/30 flex justify-between items-center flex-shrink-0">
+            <h2 className="text-2xl font-bold text-amber-400 font-cinzel tracking-widest drop-shadow-md">
               {t('settingsModal.title')}
             </h2>
-            <button onClick={onClose} className="text-yellow-200 text-3xl font-bold hover:text-white transition-colors">&times;</button>
+            <button onClick={onClose} className="text-stone-400 hover:text-white transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
         </div>
 
-        <div className="space-y-6">
-            <div>
-                <label htmlFor="language-select" className="block text-lg font-semibold text-gray-200 mb-2">{t('settingsModal.language')}</label>
+        {/* Content */}
+        <div className="p-6 space-y-6 overflow-y-auto text-stone-200 custom-scrollbar">
+            
+            {/* Language */}
+            <section>
+                 <h3 className="text-xs font-bold text-amber-600 uppercase tracking-[0.15em] mb-3 border-b border-white/5 pb-1">{t('settingsModal.language')}</h3>
                 <select
                     id="language-select"
                     value={language}
                     onChange={(e) => setLanguage(e.target.value)}
-                    className="w-full p-2 bg-gray-900/50 border-2 border-yellow-700/60 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                    className="w-full p-3 bg-stone-800 border border-stone-600 rounded-lg text-white font-lora text-lg focus:outline-none focus:border-amber-500 transition-colors"
                 >
-                    <option value="es-AR">Español (Argentina)</option>
-                    <option value="en-US">English (US)</option>
+                    <option value="es-AR">🇦🇷 Español (Argentina)</option>
+                    <option value="en-US">🇺🇸 English (US)</option>
                 </select>
-            </div>
+            </section>
             
-            <div>
-                <h3 className="text-lg font-semibold text-gray-200 mb-2">{t('settingsModal.sound')}</h3>
-                <div className="space-y-6 bg-black/20 p-4 rounded-md">
+            {/* Sound */}
+            <section>
+                <h3 className="text-xs font-bold text-amber-600 uppercase tracking-[0.15em] mb-3 border-b border-white/5 pb-1">{t('settingsModal.sound')}</h3>
+                <div className="space-y-3">
                     <VoiceSelector
                         label={t('settingsModal.opponent_voice')}
                         isEnabled={isOpponentSoundEnabled}
@@ -146,28 +161,23 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                         testPhrase={t('settingsModal.test_phrase_assistant')}
                     />
                 </div>
-            </div>
+            </section>
             
-            <div>
-                <h3 className="text-lg font-semibold text-gray-200 mb-2">{t('settingsModal.rules')}</h3>
-                <div className="bg-black/20 p-4 rounded-md">
-                    <div className="flex items-center justify-between">
-                        <span className="text-gray-200">{t('settingsModal.flor_enabled')}</span>
-                        <button
-                            onClick={onToggleFlor}
-                            className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-yellow-500 ${ isFlorEnabled ? 'bg-green-600' : 'bg-gray-600' }`}
-                        >
-                            <span className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${ isFlorEnabled ? 'translate-x-6' : 'translate-x-1' }`} />
-                        </button>
-                    </div>
+            {/* Rules */}
+            <section>
+                <h3 className="text-xs font-bold text-amber-600 uppercase tracking-[0.15em] mb-3 border-b border-white/5 pb-1">{t('settingsModal.rules')}</h3>
+                <div className="p-4 bg-black/20 rounded-lg border border-white/5 flex items-center justify-between">
+                    <span className="text-stone-200 font-cinzel font-semibold">{t('settingsModal.flor_enabled')}</span>
+                    <ToggleSwitch isEnabled={isFlorEnabled} onToggle={onToggleFlor} />
                 </div>
-            </div>
+            </section>
         </div>
 
-        <div className="text-center mt-8">
+        {/* Footer */}
+        <div className="p-4 border-t border-white/10 bg-stone-900 flex justify-end">
             <button
                 onClick={onClose}
-                className="px-8 py-3 text-lg bg-yellow-600 text-white font-bold rounded-lg shadow-lg hover:bg-yellow-500 transition-colors duration-200 border-b-4 border-yellow-800"
+                className="px-8 py-2 bg-gradient-to-b from-amber-600 to-amber-700 border-b-4 border-amber-900 rounded-lg text-white font-bold uppercase tracking-wider shadow-lg hover:from-amber-500 hover:to-amber-600 active:border-b-0 active:translate-y-1 transition-all"
             >
                 {t('common.close')}
             </button>
