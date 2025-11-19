@@ -1,3 +1,4 @@
+
 import { GameState, ActionType, Player, GamePhase, Case, PlayerEnvidoActionEntry, MessageObject } from '../../types';
 import { getEnvidoValue, getFlorValue, getCardCode } from '../../services/trucoLogic';
 import { updateProbsOnEnvido } from '../../services/ai/inferenceService';
@@ -584,7 +585,7 @@ export function handleResolveFlorShowdown(state: GameState): GameState {
         aiScore: newAiScore,
         messageLog: [...state.messageLog, logMessage],
         centralMessage, // Show the result
-        isCentralMessagePersistent: false, // Let it fade
+        isCentralMessagePersistent: true, // Force user to dismiss
         lastRoundWinner: winner,
         gamePhase: 'round_end',
         currentTurn: null,

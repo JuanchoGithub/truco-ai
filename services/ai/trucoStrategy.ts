@@ -1,3 +1,4 @@
+
 import { GameState, AiMove, ActionType, Card, Rank, Player, Action, AiTrucoContext, MessageObject } from '../../types';
 import { getCardHierarchy, getCardName, determineTrickWinner, determineRoundWinner, calculateHandStrength, getHandPercentile } from '../trucoLogic';
 import { getRandomPhrase, PHRASE_KEYS } from './phrases';
@@ -11,6 +12,7 @@ import { findBestCardToPlay, findBaitCard } from './playCardStrategy';
  * leading to inaccurate strength assessments. This version simulates optimal card play (using the lowest card necessary to win a trick),
  * providing a much more realistic evaluation of the AI's chances and preventing illogical folds from positions of strength.
  * ENHANCEMENT: The simulation now uses the player's specific opponent model to simulate their tendencies.
+ * FIX V2: Now accounts for cards already played on the table for the current trick.
  */
 const simulateRoundWin = (
   myHand: Card[], 
@@ -18,7 +20,7 @@ const simulateRoundWin = (
   options: { state: GameState, iterations?: number; amILeading: boolean; }
 ): number => {
   const { state, iterations = 100, amILeading } = options;
-  const { currentTrick, trickWinners, mano, opponentModel } = state;
+  const { currentTrick, trickWinners, mano, opponentModel, aiTricks, playerTricks } = state;
   let wins = 0;
 
   for (let i = 0; i < iterations; i++) {
@@ -26,57 +28,87 @@ const simulateRoundWin = (
     // Sort high to low. shift() gets highest, pop() gets lowest.
     let remainingMy = [...myHand].sort((a, b) => getCardHierarchy(b) - getCardHierarchy(a));
     let remainingOpp = [...oppHand].sort((a, b) => getCardHierarchy(b) - getCardHierarchy(a));
-    let isMyTurnToLead = amILeading;
 
     for (let trick = currentTrick; trick < 3; trick++) {
-      if (remainingMy.length === 0 || remainingOpp.length === 0) break;
+      // FIX: Check if cards are already played for this trick (e.g., AI played As de Bastos and is waiting for response)
+      // We cast to Card | undefined to handle the 'null' in the array from GameState
+      let myCard: Card | undefined = (aiTricks[trick]) || undefined;
+      let oppCard: Card | undefined = (playerTricks[trick]) || undefined;
 
-      let myCard: Card, oppCard: Card;
+      // Determine who has the lead/initiative for this simulation step
+      let aiHasInitiative = false;
 
-      if (isMyTurnToLead) { // I (the AI) am leading
-        // My strategy: lead with highest card to exert pressure
-        myCard = remainingMy.shift()!;
-        
-        // Opponent responds optimally: play lowest winning card, else throw lowest card
-        const oppWinningCards = remainingOpp.filter(c => getCardHierarchy(c) > getCardHierarchy(myCard));
-        if (oppWinningCards.length > 0) {
-            oppCard = oppWinningCards[oppWinningCards.length - 1]; // Lowest winning card
-            remainingOpp.splice(remainingOpp.findIndex(c => c === oppCard), 1);
-        } else {
-            oppCard = remainingOpp.pop()!; // Throw lowest card
+      if (trick === currentTrick) {
+          // If cards are on table, the 'lead' logic is about who resolves their play next in the sim.
+          // If AI played, AI 'led'. If Opp played, Opp 'led'.
+          if (myCard && !oppCard) aiHasInitiative = true;
+          else if (!myCard && oppCard) aiHasInitiative = false;
+          else if (myCard && oppCard) aiHasInitiative = true; // Order irrelevant if both played
+          else aiHasInitiative = amILeading; // Neither played, use game state
+      } else {
+          // Future tricks: determine based on previous winner
+          const prevWinner = simTrickWinners[trick - 1];
+          if (prevWinner === 'ai') aiHasInitiative = true;
+          else if (prevWinner === 'player') aiHasInitiative = false;
+          else aiHasInitiative = mano === 'ai'; // Tie: mano leads
+      }
+
+      if (aiHasInitiative) { 
+        // AI Plays First (or already played)
+        if (!myCard) {
+             if (remainingMy.length === 0) break;
+             // Strategy: Lead with highest card to exert pressure (simplified for sim)
+             myCard = remainingMy.shift()!; 
         }
-      } else { // Opponent is leading
-          // --- ENHANCED CONTEXTUAL LOGIC FOR SIMULATED OPPONENT ---
-          // The opponent's card choice depends on the trick and their learned playstyle.
-          if (trick === 0) {
-              const leadRoll = Math.random();
-              if (mano === 'player' && leadRoll < opponentModel.playStyle.leadWithHighestRate) {
-                  oppCard = remainingOpp.shift()!; // Lead high as per tendency
-              } else {
-                  oppCard = remainingOpp.pop()!; // Lead low (represents baiting or a weak hand)
+        
+        // Opponent Responds
+        if (!oppCard) {
+             if (remainingOpp.length === 0) break;
+             // Opponent responds optimally: play lowest winning card, else throw lowest card
+             const winningCards = remainingOpp.filter(c => getCardHierarchy(c) > getCardHierarchy(myCard!));
+             if (winningCards.length > 0) {
+                 oppCard = winningCards[winningCards.length - 1]; // Lowest winning card
+                 remainingOpp.splice(remainingOpp.indexOf(oppCard), 1);
+             } else {
+                 oppCard = remainingOpp.pop()!; // Throw lowest card
+             }
+        }
+      } else { 
+          // Opponent Plays First (or already played)
+          if (!oppCard) {
+             if (remainingOpp.length === 0) break;
+              // --- ENHANCED CONTEXTUAL LOGIC FOR SIMULATED OPPONENT ---
+              if (trick === 0) {
+                  const leadRoll = Math.random();
+                  if (mano === 'player' && leadRoll < opponentModel.playStyle.leadWithHighestRate) {
+                      oppCard = remainingOpp.shift()!; // Lead high
+                  } else {
+                      oppCard = remainingOpp.pop()!; // Lead low
+                  }
+              } else { 
+                  // Trick 1 or 2
+                    const oppLostFirstTrick = simTrickWinners[0] === 'ai';
+                    const baitRoll = Math.random();
+                    // If opponent lost first trick but has a monster, maybe bait?
+                    if (oppLostFirstTrick && remainingOpp.length === 2 && getCardHierarchy(remainingOpp[0]) >= 13 && baitRoll < opponentModel.playStyle.baitRate) {
+                        oppCard = remainingOpp.pop()!;
+                    } else {
+                        oppCard = remainingOpp.shift()!;
+                    }
               }
-          } else { // trick === 1 or 2
-                const oppLostFirstTrick = simTrickWinners[0] === 'ai';
-                const baitRoll = Math.random();
-                
-                // If opponent lost the first trick but has a monster card left, they might save it for trick 3
-                if (oppLostFirstTrick && remainingOpp.length === 2 && getCardHierarchy(remainingOpp[0]) >= 13 && baitRoll < opponentModel.playStyle.baitRate) {
-                    // Bait: play lowest card, save the monster
-                    oppCard = remainingOpp.pop()!;
-                } else {
-                    // Default: play highest card to win the current trick
-                    oppCard = remainingOpp.shift()!;
-                }
           }
-          // --- END ENHANCED LOGIC ---
 
-          // I respond optimally: play lowest winning card, else throw lowest card
-          const myWinningCards = remainingMy.filter(c => getCardHierarchy(c) > getCardHierarchy(oppCard));
-          if (myWinningCards.length > 0) {
-              myCard = myWinningCards[myWinningCards.length - 1]; // Lowest winning card
-              remainingMy.splice(remainingMy.findIndex(c => c === myCard), 1);
-          } else {
-              myCard = myWinningCards.pop()!; // throw lowest card
+          // AI Responds
+          if (!myCard) {
+              if (remainingMy.length === 0) break;
+              // I respond optimally: play lowest winning card, else throw lowest card
+              const myWinningCards = remainingMy.filter(c => getCardHierarchy(c) > getCardHierarchy(oppCard!));
+              if (myWinningCards.length > 0) {
+                  myCard = myWinningCards[myWinningCards.length - 1]; // Lowest winning card
+                  remainingMy.splice(remainingMy.indexOf(myCard), 1);
+              } else {
+                  myCard = remainingMy.pop()!; // throw lowest card
+              }
           }
       }
       
@@ -87,10 +119,6 @@ const simulateRoundWin = (
       // Determine winner. `oppCard` is the 'player', `myCard` is the 'ai'.
       const winner = determineTrickWinner(oppCard, myCard);
       simTrickWinners[trick] = winner;
-
-      // Determine who leads next trick based on game rules
-      const nextLeader = (winner === 'tie') ? mano : winner;
-      isMyTurnToLead = (nextLeader === 'ai');
       
       const roundIsOver = determineRoundWinner(simTrickWinners, mano);
       if (roundIsOver) break;

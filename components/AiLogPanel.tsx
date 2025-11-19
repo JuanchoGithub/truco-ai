@@ -170,42 +170,42 @@ const AiLogPanel: React.FC<AiLogPanelProps> = ({ log, dispatch, isModal, roundHi
   return (
     <div className={wrapperClasses}>
       <div className={containerClasses}>
-        <div className="p-3 bg-stone-950 border-b border-cyan-900/30 flex justify-between items-center flex-shrink-0 gap-2">
-          <h2 className="text-lg lg:text-xl font-bold text-cyan-500 font-cinzel tracking-widest uppercase flex items-center gap-2 flex-shrink-0">
-            <span>🧠</span> {t('logPanel.ai_log_title')}
-          </h2>
-          
-          <div className="flex-grow flex justify-end items-center gap-2 max-w-xs">
-            <select value={selectedMatchId} onChange={handleMatchChange} className="bg-stone-800 border border-stone-600 text-stone-300 text-xs rounded p-1 w-24 truncate focus:outline-none focus:border-cyan-500">
-                <option value="current">{t('logPanel.current_match')}</option>
-                {historicalLogs.map(match => (
-                    <option key={match.matchId} value={match.matchId}>
-                        {match.date}
-                    </option>
-                ))}
-            </select>
-             {displayRounds.length > 0 && (
-                <select value={selectedRound} onChange={handleRoundChange} className="bg-stone-800 border border-stone-600 text-stone-300 text-xs rounded p-1 w-20 focus:outline-none focus:border-cyan-500">
-                    {displayRounds.map(roundNumber => ( <option key={roundNumber} value={roundNumber}>{t('common.round')} {roundNumber}</option> ))}
+        <div className="bg-stone-950 border-b border-cyan-900/30 flex-shrink-0">
+            <div className="p-3 flex justify-between items-center">
+                <h2 className="text-lg lg:text-xl font-bold text-cyan-500 font-cinzel tracking-widest uppercase flex items-center gap-2">
+                    <span>🧠</span> {t('logPanel.ai_log_title')}
+                </h2>
+                {isModal ? (
+                    <button onClick={() => dispatch({ type: ActionType.TOGGLE_AI_LOG_EXPAND })} className="text-stone-500 hover:text-cyan-400 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                ) : (
+                    <button
+                        onClick={() => dispatch({ type: ActionType.TOGGLE_AI_LOG_EXPAND })}
+                        className="text-stone-500 hover:text-cyan-400 transition-colors p-1"
+                        aria-label={t('logPanel.hide_ai_log')}
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                        </svg>
+                    </button>
+                )}
+            </div>
+            <div className="px-3 pb-3 flex gap-2 w-full">
+                <select value={selectedMatchId} onChange={handleMatchChange} className="flex-1 bg-stone-800 border border-stone-600 text-stone-300 text-xs rounded p-1 truncate focus:outline-none focus:border-cyan-500">
+                    <option value="current">{t('logPanel.current_match')}</option>
+                    {historicalLogs.map(match => (
+                        <option key={match.matchId} value={match.matchId}>
+                            {match.date}
+                        </option>
+                    ))}
                 </select>
-            )}
-          </div>
-
-          {isModal ? (
-            <button onClick={() => dispatch({ type: ActionType.TOGGLE_AI_LOG_EXPAND })} className="text-stone-500 hover:text-cyan-400 transition-colors">
-                 <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-            </button>
-          ) : (
-             <button
-                onClick={() => dispatch({ type: ActionType.TOGGLE_AI_LOG_EXPAND })}
-                className="text-stone-500 hover:text-cyan-400 transition-colors p-1"
-                aria-label={t('logPanel.hide_ai_log')}
-            >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-                </svg>
-            </button>
-          )}
+                {displayRounds.length > 0 && (
+                    <select value={selectedRound} onChange={handleRoundChange} className="bg-stone-800 border border-stone-600 text-stone-300 text-xs rounded p-1 w-24 focus:outline-none focus:border-cyan-500">
+                        {displayRounds.map(roundNumber => ( <option key={roundNumber} value={roundNumber}>{t('common.round')} {roundNumber}</option> ))}
+                    </select>
+                )}
+            </div>
         </div>
         
         <div className="p-4 flex-grow overflow-y-auto font-mono text-xs lg:text-sm bg-stone-900">

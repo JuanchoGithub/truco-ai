@@ -25,7 +25,7 @@ import { speechService } from './services/speechService';
 import Simulation from './components/Simulation';
 import GameMenu from './components/GameMenu';
 import SoundHint from './components/SoundHint';
-import { useLocalization } from './context/LocalizationContext';
+import { useLocalization } from '../context/LocalizationContext';
 
 type GameMode = 'menu' | 'playing' | 'tutorial' | 'playing-with-help' | 'manual' | 'simulation';
 
@@ -438,6 +438,15 @@ const App: React.FC = () => {
       () => setIsOpponentSoundEnabled(v => !v) :
       () => setIsAssistantSoundEnabled(v => !v);
 
+  // Determine if AI cards should be revealed based on central message key
+  const showOpponentCards = state.isDebugMode || (
+      !!state.centralMessage && (
+        state.centralMessage.key === 'centralMessage.envido_result' ||
+        state.centralMessage.key === 'centralMessage.tie_envido' ||
+        state.centralMessage.key === 'centralMessage.flor_result'
+      )
+  );
+
   return (
     <div className="h-[100dvh] w-full bg-felt text-white font-sans overflow-hidden flex flex-col relative">
       {/* Vignette Overlay */}
@@ -487,7 +496,7 @@ const App: React.FC = () => {
                         cards={state.aiHand} 
                         playerType="ai" 
                         isThinking={state.isThinking} 
-                        isDebugMode={state.isDebugMode} 
+                        isDebugMode={showOpponentCards} 
                     />
                 </div>
             </div>
