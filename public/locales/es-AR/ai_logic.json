@@ -72,6 +72,7 @@
     "trap_check_body": "Tengo la mano ganadora (Fuerza: {{strength}}) y estoy en modo Engañoso.",
     "decision_accept_trap": "Decisión: Aceptando suavemente para atrapar al oponente y ganar más puntos.",
     "falta_suicide_prevention": "Prevención de Suicidio con Falta Envido: Puntaje bajo y mano ({{points}}) no es de élite. Penalizando jugada.",
+    "low_envido_penalty": "Penalización por Envido extremadamente bajo ({{points}}). Forzando retirada para evitar faroles irracionales.",
     "statuses": {
       "desperate": "Desesperado",
       "cautious": "Cauteloso",

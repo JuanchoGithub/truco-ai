@@ -72,6 +72,7 @@
     "trap_check_body": "I have the nuts (Strength: {{strength}}) and am configured to be Deceptive.",
     "decision_accept_trap": "Decision: Smooth calling (Accept) to trap the opponent for future points.",
     "falta_suicide_prevention": "Falta Envido Suicide Prevention: Score is low and hand ({{points}}) is not elite. Penalizing move.",
+    "low_envido_penalty": "Penalty for extremely low envido ({{points}}). Forcing fold to prevent irrational bluffing.",
     "statuses": {
       "desperate": "Desperate",
       "cautious": "Cautious",

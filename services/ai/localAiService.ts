@@ -189,7 +189,20 @@ function calculateBaseEV(move: AiMove, state: GameState, reasoningLog: MessageOb
                 ev_if_accepted = -pointsOnWin;
             } else {
                 const estimatedOpponentPoints = state.opponentModel.envidoBehavior[context].callThreshold;
-                const winProb = (myEnvido > estimatedOpponentPoints) ? 0.8 : 0.3;
+                
+                // Improved Win Probability calculation
+                let winProb;
+                if (myEnvido > estimatedOpponentPoints) {
+                    // Above threshold
+                    winProb = 0.7 + Math.min(0.25, (myEnvido - estimatedOpponentPoints) * 0.05);
+                } else {
+                    // Below threshold
+                    const diff = estimatedOpponentPoints - myEnvido;
+                    if (myEnvido < 22) winProb = 0.02; // Almost zero chance with 20-21 points
+                    else if (myEnvido < 24) winProb = 0.08;
+                    else winProb = Math.max(0.1, 0.4 - (diff * 0.05));
+                }
+
                 ev_if_accepted = (winProb * pointsOnWin) - ((1 - winProb) * pointsOnWin);
             }
 
@@ -217,6 +230,14 @@ function calculateBaseEV(move: AiMove, state: GameState, reasoningLog: MessageOb
                  const bonus = 0.6;
                  weightedEv += bonus;
                  reasoningLog.push({ key: 'ai_logic.table_image_bonus', options: { bonus: bonus.toFixed(1) } });
+            }
+            
+            // Fix: Heavy penalty for raising with extremely low points (20-22) for non-Deceptive archetypes
+            // This prevents the "Math says raising (-0.2) is better than folding (-1.0)" loop for bad hands.
+            if (myEnvido < 23 && archetype !== 'Deceptive' && archetype !== 'Aggressive') {
+                 const hopelessnessPenalty = 2.5; // Effectively ensures weightedEv < -1.0 (Decline)
+                 weightedEv -= hopelessnessPenalty;
+                 reasoningLog.push({ key: 'ai_logic.low_envido_penalty', options: { points: myEnvido } });
             }
 
             return weightedEv - trucoRiskPenalty;
