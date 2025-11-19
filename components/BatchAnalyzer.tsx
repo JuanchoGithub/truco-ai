@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { Card, GameState, Suit, Rank } from '../types';
 import { calculateHandStrength, getCardHierarchy } from '../services/trucoLogic';
@@ -137,8 +138,14 @@ const SortableHeader: React.FC<{
     const isSorted = sortConfig?.key === sortKey;
     const arrow = isSorted ? (sortConfig?.direction === 'asc' ? '▲' : '▼') : '';
     return (
-        <th className="p-2 cursor-pointer" onClick={() => requestSort(sortKey)}>
-            {title} {arrow}
+        <th 
+            className="p-3 cursor-pointer bg-stone-900 sticky top-0 z-10 border-b-2 border-cyan-800 hover:bg-stone-800 transition-colors text-xs uppercase tracking-wider font-bold text-cyan-400" 
+            onClick={() => requestSort(sortKey)}
+        >
+            <div className="flex items-center gap-1">
+                {title} 
+                <span className={`text-xs ${isSorted ? 'text-cyan-300' : 'text-stone-700'}`}>{arrow || '▼'}</span>
+            </div>
         </th>
     );
 };
@@ -171,8 +178,6 @@ const BatchAnalyzer: React.FC = () => {
         const hand = hands[index];
 
         // FIX: Provide a dummy opponent hand so the simulation knows the opponent has 3 cards.
-        // The actual cards don't matter, as they will be simulated by `generateConstrainedOpponentHand`.
-        // The key is that `playerHand.length` must be 3.
         const dummyOpponentHand: Card[] = [
             { rank: 4, suit: 'copas' },
             { rank: 5, suit: 'bastos' },
@@ -260,84 +265,94 @@ const BatchAnalyzer: React.FC = () => {
     };
 
     return (
-        <div className="bg-stone-800/95 border-4 border-amber-700/50 rounded-xl shadow-2xl w-full h-full flex flex-col">
-            <div className="p-4 border-b-2 border-amber-700/30 flex justify-between items-center flex-shrink-0">
-                <h2 className="text-xl lg:text-2xl font-bold text-amber-300 font-cinzel tracking-widest">
-                    {t('batchAnalyzer.title')}
-                </h2>
-            </div>
-
-            <div className="p-4 lg:p-6 flex-grow overflow-y-auto text-amber-50 space-y-4">
-                <p className="text-sm text-gray-300">
-                    {t('batchAnalyzer.description', { count: totalCombinations })}
-                </p>
-                
-                {!isLoading && !analysisResults && (
-                    <div className="text-center py-8">
-                         <button onClick={runAnalysis} disabled={isLoading} className="px-6 py-3 rounded-lg font-bold text-white bg-green-600 border-b-4 border-green-800 hover:bg-green-500 disabled:bg-gray-500 disabled:border-gray-700 transition-colors text-lg">
+        <div className="w-full h-full flex flex-col animate-fade-in-scale">
+            <div className="bg-stone-900/80 p-6 rounded-lg border border-cyan-800/30 mb-4 flex justify-between items-center">
+                <div>
+                    <h2 className="text-xl font-bold text-cyan-300 font-cinzel tracking-widest">{t('batchAnalyzer.title')}</h2>
+                    <p className="text-xs text-gray-400 mt-1">{t('batchAnalyzer.description', { count: totalCombinations })}</p>
+                </div>
+                <div className="flex items-center gap-4">
+                     {!isLoading && !analysisResults && (
+                         <button onClick={runAnalysis} disabled={isLoading} className="px-6 py-2 rounded-lg font-bold text-white bg-gradient-to-b from-green-600 to-green-700 border-b-4 border-green-900 hover:from-green-500 hover:to-green-600 transition-all shadow-lg">
                             {t('batchAnalyzer.button_analyze')}
                         </button>
-                    </div>
-                )}
-                
+                     )}
+                    {sortedResults && (
+                        <div className="relative group">
+                            <button
+                                onClick={handleCopy}
+                                className="px-4 py-2 rounded-lg font-bold text-white bg-cyan-700 hover:bg-cyan-600 border border-cyan-600 transition-all flex items-center gap-2"
+                                aria-label={t('batchAnalyzer.copy_tooltip')}
+                            >
+                                <CopyIcon /> {copyStatus}
+                            </button>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            <div className="flex-grow bg-black/40 rounded-lg border border-cyan-800/30 overflow-hidden relative">
                 {isLoading && (
-                    <div className="w-full bg-gray-700 rounded-full h-4 my-4">
-                        <div className="bg-green-500 h-4 rounded-full" style={{ width: `${progress}%`, transition: 'width 0.1s' }}></div>
-                        <p className="text-center text-xs mt-1">{t('batchAnalyzer.loading', { progress })}</p>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 z-20 backdrop-blur-sm">
+                        <div className="w-64 bg-stone-800 rounded-full h-4 mb-2 border border-stone-600">
+                            <div className="bg-green-500 h-full rounded-full shadow-[0_0_10px_rgba(34,197,94,0.5)]" style={{ width: `${progress}%`, transition: 'width 0.1s' }}></div>
+                        </div>
+                        <p className="text-green-300 font-mono">{t('batchAnalyzer.loading', { progress })}</p>
                     </div>
                 )}
 
-                {sortedResults && (
-                    <div>
-                        <div className="flex justify-end items-center mb-2">
-                            <div className="relative group">
-                                <button
-                                    onClick={handleCopy}
-                                    className="p-2 rounded-md text-gray-300 bg-black/40 border border-amber-700/80 hover:bg-black/60 hover:text-white transition-colors"
-                                    aria-label={t('batchAnalyzer.copy_tooltip')}
-                                >
-                                    <CopyIcon />
-                                </button>
-                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
-                                    {copyStatus}
-                                </div>
-                            </div>
-                        </div>
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left text-xs lg:text-sm">
-                                <thead className="bg-black/40 text-amber-100">
-                                    <tr>
-                                        <SortableHeader sortKey="hand" title={t('batchAnalyzer.header_hand')} sortConfig={sortConfig} requestSort={() => requestSort('trucoValue')} />
-                                        <SortableHeader sortKey="trucoValue" title={t('batchAnalyzer.header_truco_value')} sortConfig={sortConfig} requestSort={requestSort} />
-                                        <SortableHeader sortKey="aiAssessment" title={t('batchAnalyzer.header_ai_assessment')} sortConfig={sortConfig} requestSort={requestSort} />
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-black/20">
-                                    {sortedResults.map((result, index) => (
-                                        <tr key={index} className="border-b border-stone-700">
-                                            <td className="p-2">
-                                                <div className="flex items-center gap-2">
-                                                    <div className="flex gap-1 flex-shrink-0">
-                                                        {result.hand.map(card => <CardComponent key={`${card.rank}-${card.suit}`} card={card} size="small" />)}
-                                                    </div>
-                                                    <span className="text-gray-300 text-[11px] lg:text-xs pl-2">
-                                                        {result.hand.map(card => getSimpleCardName(card, t)).join(', ')}
-                                                    </span>
+                <div className="h-full overflow-y-auto custom-scrollbar">
+                    {sortedResults ? (
+                        <table className="w-full text-left text-sm border-collapse">
+                            <thead className="bg-stone-900 sticky top-0 z-10 shadow-md">
+                                <tr>
+                                    <SortableHeader sortKey="hand" title={t('batchAnalyzer.header_hand')} sortConfig={sortConfig} requestSort={() => requestSort('trucoValue')} />
+                                    <SortableHeader sortKey="trucoValue" title={t('batchAnalyzer.header_truco_value')} sortConfig={sortConfig} requestSort={requestSort} />
+                                    <SortableHeader sortKey="aiAssessment" title={t('batchAnalyzer.header_ai_assessment')} sortConfig={sortConfig} requestSort={requestSort} />
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-stone-800">
+                                {sortedResults.map((result, index) => (
+                                    <tr key={index} className="hover:bg-cyan-900/20 transition-colors">
+                                        <td className="p-3">
+                                            <div className="flex items-center gap-3">
+                                                <div className="flex -space-x-6">
+                                                    {result.hand.map(card => (
+                                                        <div key={`${card.rank}-${card.suit}`} className="transform scale-75 origin-left hover:z-10 transition-all hover:-translate-y-2">
+                                                             <CardComponent card={card} size="small" />
+                                                        </div>
+                                                    ))}
                                                 </div>
-                                            </td>
-                                            <td className="p-2 font-mono text-lg">{result.trucoValue}</td>
-                                            <td className="p-2 font-mono text-lg">
+                                                <span className="text-gray-400 text-xs font-mono">
+                                                    {result.hand.map(card => getSimpleCardName(card, t)).join(', ')}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td className="p-3 font-mono text-base text-amber-200">{result.trucoValue}</td>
+                                        <td className="p-3 font-mono text-base">
+                                            <div className="flex items-center gap-2">
+                                                 <div className="w-16 bg-stone-800 rounded-full h-1.5 overflow-hidden">
+                                                    <div 
+                                                        className={`h-full rounded-full ${result.aiAssessment > 0.75 ? 'bg-green-500' : result.aiAssessment > 0.5 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                                                        style={{ width: `${result.aiAssessment * 100}%` }}
+                                                    ></div>
+                                                 </div>
                                                 <span className={result.aiAssessment > 0.75 ? 'text-green-400' : result.aiAssessment > 0.5 ? 'text-yellow-400' : 'text-red-400'}>
                                                     {result.aiAssessment.toFixed(2)}
                                                 </span>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    ) : (
+                         <div className="flex flex-col items-center justify-center h-full text-stone-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mb-2 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                            <p>{t('scenario_runner.no_results')}</p>
                         </div>
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
         </div>
     );

@@ -29,7 +29,10 @@ const ActionButton: React.FC<{ onClick: () => void; disabled?: boolean; children
       shadowColor = "shadow-green-900/50";
   }
   
-  const baseClasses = "w-full h-full min-h-[48px] lg:min-h-[44px] px-2 py-2 lg:px-4 lg:py-2 text-xs lg:text-sm font-bold uppercase tracking-wider rounded-lg shadow-md active:shadow-inner active:translate-y-[2px] transition-all border-b-[3px] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none";
+  // Optimized Base Classes:
+  // - Mobile: w-full, min-h-[48px] (Touch targets)
+  // - Desktop (md+): w-auto, min-w-[100px] (Compact), min-h-[36px] (Sleek), no vertical stretch
+  const baseClasses = "w-full md:w-auto md:min-w-[100px] min-h-[48px] md:min-h-[36px] px-2 py-2 md:px-4 text-xs md:text-sm font-bold uppercase tracking-wider rounded-lg shadow-md active:shadow-inner active:translate-y-[2px] transition-all border-b-[3px] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none flex items-center justify-center";
 
   return (
     <button onClick={onClick} disabled={disabled} className={`${baseClasses} ${gradientClasses} ${shadowColor} ${className}`} style={{ textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>
@@ -64,7 +67,7 @@ const ActionBar: React.FC<ActionBarProps> = ({ dispatch, gameState, onPlayerActi
     if (gamePhase === 'round_end') {
       return (
         <div className="flex justify-center items-center w-full">
-            <ActionButton onClick={() => dispatchAction({ type: ActionType.PROCEED_TO_NEXT_ROUND })} className="font-cinzel tracking-wider text-base lg:text-lg !px-8 !py-3">
+            <ActionButton onClick={() => dispatchAction({ type: ActionType.PROCEED_TO_NEXT_ROUND })} className="font-cinzel tracking-wider text-base lg:text-lg !px-8 !py-3 md:!w-auto">
                 {t('actionBar.next_round')}
             </ActionButton>
         </div>
@@ -72,8 +75,10 @@ const ActionBar: React.FC<ActionBarProps> = ({ dispatch, gameState, onPlayerActi
     }
 
     // New Responsive Grid Layout
+    // md:flex makes it a row on desktop, avoiding the grid stretching.
+    // md:items-center prevents buttons from stretching vertically to match tallest element
     const ActionGrid: React.FC<{children: React.ReactNode}> = ({ children }) => (
-        <div className="grid grid-cols-2 gap-2 w-full md:flex md:flex-wrap md:justify-center md:gap-2">
+        <div className="grid grid-cols-2 gap-2 w-full md:flex md:flex-wrap md:justify-center md:items-center md:gap-3">
             {children}
         </div>
     );
@@ -83,11 +88,11 @@ const ActionBar: React.FC<ActionBarProps> = ({ dispatch, gameState, onPlayerActi
         return (
             <ActionGrid>
                 {playerHasFlor ? (
-                    <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_CONTRAFLOR })} variant="special" className="col-span-2 md:col-span-1">
+                    <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_CONTRAFLOR })} variant="special" className="col-span-2">
                         {t('actionBar.contraflor')}
                     </ActionButton>
                 ) : (
-                    <ActionButton onClick={() => dispatchAction({ type: ActionType.ACKNOWLEDGE_FLOR })} className="green col-span-2 md:col-span-1">
+                    <ActionButton onClick={() => dispatchAction({ type: ActionType.ACKNOWLEDGE_FLOR })} className="green col-span-2">
                         {t('actionBar.flor_ack')}
                     </ActionButton>
                 )}
@@ -97,10 +102,10 @@ const ActionBar: React.FC<ActionBarProps> = ({ dispatch, gameState, onPlayerActi
     if (isPlayerTurn && gamePhase === 'contraflor_called') {
         return (
             <ActionGrid>
-                <ActionButton onClick={() => dispatchAction({ type: ActionType.ACCEPT_CONTRAFLOR })} className="green">
+                <ActionButton onClick={() => dispatchAction({ type: ActionType.ACCEPT_CONTRAFLOR })} className="green col-span-2 md:w-auto">
                     {t('actionBar.contraflor_quiero')}
                 </ActionButton>
-                <ActionButton onClick={() => dispatchAction({ type: ActionType.DECLINE_CONTRAFLOR })} variant="danger">
+                <ActionButton onClick={() => dispatchAction({ type: ActionType.DECLINE_CONTRAFLOR })} variant="danger" className="col-span-2 md:w-auto">
                     {t('actionBar.contraflor_no_quiero')}
                 </ActionButton>
             </ActionGrid>
@@ -114,7 +119,7 @@ const ActionBar: React.FC<ActionBarProps> = ({ dispatch, gameState, onPlayerActi
         if (gamePhase === 'envido_called' && playerHasFlor) {
              return (
                 <ActionGrid>
-                    <ActionButton onClick={() => dispatchAction({ type: ActionType.RESPOND_TO_ENVIDO_WITH_FLOR })} variant="special" className="col-span-2 md:w-auto">
+                    <ActionButton onClick={() => dispatchAction({ type: ActionType.RESPOND_TO_ENVIDO_WITH_FLOR })} variant="special" className="col-span-2">
                         {t('actionBar.flor')}
                     </ActionButton>
                  </ActionGrid>
@@ -124,28 +129,28 @@ const ActionBar: React.FC<ActionBarProps> = ({ dispatch, gameState, onPlayerActi
         return (
           <ActionGrid>
             {canDeclareFlorOnTruco && (
-                <ActionButton onClick={() => dispatchAction({ type: ActionType.DECLARE_FLOR })} variant="special" className="col-span-2 md:col-span-1">
+                <ActionButton onClick={() => dispatchAction({ type: ActionType.DECLARE_FLOR })} variant="special" className="col-span-2">
                     {t('actionBar.flor')}
                 </ActionButton>
             )}
-            {canCallEnvidoPrimero && <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_ENVIDO })} variant="secondary" className="col-span-2 md:col-span-1">{t('actionBar.envido_primero')}</ActionButton>}
+            {canCallEnvidoPrimero && <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_ENVIDO })} variant="secondary" className="col-span-2">{t('actionBar.envido_primero')}</ActionButton>}
             
-            <ActionButton onClick={() => dispatchAction({ type: ActionType.ACCEPT })} className="green">
+            <ActionButton onClick={() => dispatchAction({ type: ActionType.ACCEPT })} className="green col-span-1">
                 {t('actionBar.quiero')}
             </ActionButton>
-            <ActionButton onClick={() => dispatchAction({ type: ActionType.DECLINE })} variant="danger">
+            <ActionButton onClick={() => dispatchAction({ type: ActionType.DECLINE })} variant="danger" className="col-span-1">
                 {t('actionBar.no_quiero')}
             </ActionButton>
 
-            {gamePhase === 'truco_called' && <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_RETRUCO })} className="col-span-2 md:col-span-1">{t('actionBar.retruco')}</ActionButton>}
-            {gamePhase === 'retruco_called' && <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_VALE_CUATRO })} className="col-span-2 md:col-span-1">{t('actionBar.vale_cuatro')}</ActionButton>}
+            {gamePhase === 'truco_called' && <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_RETRUCO })} className="col-span-2">{t('actionBar.retruco')}</ActionButton>}
+            {gamePhase === 'retruco_called' && <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_VALE_CUATRO })} className="col-span-2">{t('actionBar.vale_cuatro')}</ActionButton>}
             
             {/* Envido Escalation - Grouped for cleaner mobile layout */}
             {gamePhase === 'envido_called' && (
                 <>
-                     {envidoPointsOnOffer === 2 && !hasFaltaEnvidoBeenCalledThisSequence && <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_ENVIDO })} variant="secondary">{t('actionBar.envido')}</ActionButton>}
-                     {!hasRealEnvidoBeenCalledThisSequence && !hasFaltaEnvidoBeenCalledThisSequence && <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_REAL_ENVIDO })} variant="secondary">{t('actionBar.real_envido')}</ActionButton>}
-                     {!hasFaltaEnvidoBeenCalledThisSequence && <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_FALTA_ENVIDO })} variant="secondary" className="col-span-2 md:col-span-1">{t('actionBar.falta_envido')}</ActionButton>}
+                     {envidoPointsOnOffer === 2 && !hasFaltaEnvidoBeenCalledThisSequence && <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_ENVIDO })} variant="secondary" className="col-span-1">{t('actionBar.envido')}</ActionButton>}
+                     {!hasRealEnvidoBeenCalledThisSequence && !hasFaltaEnvidoBeenCalledThisSequence && <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_REAL_ENVIDO })} variant="secondary" className="col-span-1">{t('actionBar.real_envido')}</ActionButton>}
+                     {!hasFaltaEnvidoBeenCalledThisSequence && <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_FALTA_ENVIDO })} variant="secondary" className="col-span-1">{t('actionBar.falta_envido')}</ActionButton>}
                 </>
             )}
           </ActionGrid>
@@ -156,26 +161,26 @@ const ActionBar: React.FC<ActionBarProps> = ({ dispatch, gameState, onPlayerActi
         return (
             <ActionGrid>
                 {canCallFlor && (
-                    <ActionButton onClick={() => dispatchAction({ type: ActionType.DECLARE_FLOR })} variant="special" className="col-span-2 md:w-auto">
+                    <ActionButton onClick={() => dispatchAction({ type: ActionType.DECLARE_FLOR })} variant="special" className="col-span-2">
                         {t('actionBar.flor')}
                     </ActionButton>
                 )}
                 
                 {/* Truco Actions */}
-                { canCallTruco && <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_TRUCO })} className={canCallFlor || canCallEnvido ? "col-span-2 md:col-span-1" : "col-span-2 md:w-auto"}>{t('actionBar.truco')}</ActionButton> }
-                { lastCaller === 'ai' && canEscalateToRetruco && <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_RETRUCO })} className="col-span-2 md:w-auto">{t('actionBar.retruco')}</ActionButton> }
-                { lastCaller === 'ai' && canEscalateToValeCuatro && <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_VALE_CUATRO })} className="col-span-2 md:w-auto">{t('actionBar.vale_cuatro')}</ActionButton> }
+                { canCallTruco && <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_TRUCO })} className={canCallFlor || canCallEnvido ? "col-span-1" : "col-span-2"}>{t('actionBar.truco')}</ActionButton> }
+                { lastCaller === 'ai' && canEscalateToRetruco && <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_RETRUCO })} className="col-span-2">{t('actionBar.retruco')}</ActionButton> }
+                { lastCaller === 'ai' && canEscalateToValeCuatro && <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_VALE_CUATRO })} className="col-span-2">{t('actionBar.vale_cuatro')}</ActionButton> }
                 
                 {/* Envido Actions - Shown if possible */}
                 {canCallEnvido && (
                     <>
-                        <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_ENVIDO })} variant="secondary">
+                        <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_ENVIDO })} variant="secondary" className="col-span-1">
                             {t('actionBar.envido')}
                         </ActionButton>
-                        <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_REAL_ENVIDO })} variant="secondary">
+                        <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_REAL_ENVIDO })} variant="secondary" className="col-span-1">
                             {t('actionBar.real_envido')}
                         </ActionButton>
-                        <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_FALTA_ENVIDO })} variant="secondary" className="col-span-2 md:col-span-1">
+                        <ActionButton onClick={() => dispatchAction({ type: ActionType.CALL_FALTA_ENVIDO })} variant="secondary" className="col-span-1">
                             {t('actionBar.falta_envido')}
                         </ActionButton>
                     </>

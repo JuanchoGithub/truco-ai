@@ -1,3 +1,4 @@
+
 import React, { useState, useReducer, useEffect, useRef, useMemo } from 'react';
 import { useGameReducer, initialState } from '../hooks/useGameReducer';
 import { getLocalAIMove } from '../services/localAiService';
@@ -47,9 +48,7 @@ const renderReasoning = (reasoningArray: (string | MessageObject)[], t: (key: st
 
 // Helper to describe an action, now with customizable player names
 const getActionDescription = (action: Action, state: Partial<GameState>, t: (key: string, options?: any) => string, playerNames: {ai: string, opponent: string}): string => {
-    // A trick: We use 'player' as the opponent in the game state, so the payload player is correct
     const playerInPayload = (action as any)?.payload?.player;
-    // But for calls without a payload, the actor is the current turn
     const actor = playerInPayload || state.currentTurn;
     
     const playerName = actor === 'ai' ? playerNames.ai : playerNames.opponent;
@@ -82,9 +81,8 @@ const getActionDescription = (action: Action, state: Partial<GameState>, t: (key
 
 // A simple card row display
 const HandDisplay: React.FC<{ cards: (CardType | null)[], title: string, onCardClick?: (index: number) => void }> = ({ cards, title, onCardClick }) => (
-    <div>
-        <h3 className="text-lg font-bold text-yellow-200 mb-2">{title}</h3>
-        {/* Fix: Corrected Tailwind CSS syntax for negative arbitrary value and made style conditional. */}
+    <div className="bg-black/20 p-3 rounded-lg border border-white/5">
+        <h3 className="text-xs font-bold text-amber-500 uppercase tracking-widest mb-2">{title}</h3>
         <div className={`flex justify-center min-h-[124px] items-center ${onCardClick ? 'space-x-[-53px]' : 'gap-2'}`}>
             {cards.map((card, index) => (
                 <button key={index} onClick={() => onCardClick && onCardClick(index)} disabled={!onCardClick} className={`disabled:cursor-default ${onCardClick ? 'transition-transform duration-200 ease-out hover:-translate-y-4 hover:z-20' : ''}`}>
@@ -99,13 +97,15 @@ const HandDisplay: React.FC<{ cards: (CardType | null)[], title: string, onCardC
 const Tab: React.FC<{ title: string; isActive: boolean; onClick: () => void }> = ({ title, isActive, onClick }) => (
     <button
         onClick={onClick}
-        className={`px-4 py-2 font-bold text-base whitespace-nowrap rounded-t-lg transition-colors ${
-            isActive
-                ? 'bg-black/40 border-l-2 border-t-2 border-r-2 border-cyan-800/50 text-cyan-200 border-b-black/40 -mb-[2px]' // Match content bg, pull down
-                : 'border-transparent text-gray-400 hover:bg-gray-800/60 hover:text-gray-200' // Inactive tabs are 'flat'
-        }`}
+        className={`px-5 py-3 font-bold text-sm uppercase tracking-wider transition-all relative
+            ${isActive 
+                ? 'text-cyan-300 bg-stone-800 border-t-2 border-l-2 border-r-2 border-cyan-700/50 rounded-t-lg z-10' 
+                : 'text-stone-500 hover:text-stone-300 hover:bg-stone-800/50 border-b-2 border-cyan-700/50'
+            }
+        `}
     >
         {title}
+        {isActive && <div className="absolute bottom-[-2px] left-0 right-0 h-[2px] bg-stone-800"></div>}
     </button>
 );
 
@@ -116,16 +116,16 @@ const CardPickerModal: React.FC<{
 }> = ({ availableCards, onSelect, onExit }) => {
     const { t } = useLocalization();
     return (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4">
-            <div className="bg-stone-800/95 border-4 border-amber-700/50 rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
-                <div className="p-4 border-b-2 border-amber-700/30 flex justify-between items-center">
-                    <h3 className="text-xl font-bold text-amber-300">{t('card_picker.title')}</h3>
-                    <button onClick={onExit} className="text-amber-200 text-2xl font-bold">&times;</button>
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4 backdrop-blur-sm">
+            <div className="bg-stone-900 border-2 border-amber-600/50 rounded-xl shadow-2xl w-full max-w-3xl max-h-[80vh] flex flex-col">
+                <div className="p-4 border-b border-amber-600/30 flex justify-between items-center bg-stone-950">
+                    <h3 className="text-lg font-bold text-amber-400 font-cinzel">{t('card_picker.title')}</h3>
+                    <button onClick={onExit} className="text-stone-400 hover:text-white transition-colors">&times;</button>
                 </div>
-                <div className="p-4 flex-grow overflow-y-auto">
-                    <div className="flex flex-wrap gap-2 justify-center">
+                <div className="p-6 flex-grow overflow-y-auto">
+                    <div className="flex flex-wrap gap-3 justify-center">
                         {availableCards.map(card => (
-                            <button key={`${card.rank}-${card.suit}`} onClick={() => onSelect(card)} className="transform transition-transform hover:scale-110">
+                            <button key={`${card.rank}-${card.suit}`} onClick={() => onSelect(card)} className="transform transition-transform hover:scale-110 hover:z-10">
                                 <CardComponent card={card} size="small" />
                             </button>
                         ))}
@@ -139,17 +139,17 @@ const CardPickerModal: React.FC<{
 const ManualLogModal: React.FC<{ log: string[], onClose: () => void }> = ({ log, onClose }) => {
     const { t } = useLocalization();
     return (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4">
-            <div className="bg-stone-800/95 border-4 border-amber-700/50 rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
-                <div className="p-4 border-b-2 border-amber-700/30 flex justify-between items-center">
-                    <h3 className="text-xl font-bold text-amber-300">{t('simulation.manual.log_title')}</h3>
-                    <button onClick={onClose} className="text-amber-200 text-2xl font-bold">&times;</button>
+        <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-[60] p-4 backdrop-blur-sm">
+            <div className="bg-stone-900 border-2 border-cyan-600/50 rounded-xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col">
+                <div className="p-4 border-b border-cyan-600/30 flex justify-between items-center bg-stone-950">
+                    <h3 className="text-lg font-bold text-cyan-400 font-cinzel">{t('simulation.manual.log_title')}</h3>
+                    <button onClick={onClose} className="text-stone-400 hover:text-white transition-colors">&times;</button>
                 </div>
-                <div className="p-4 flex-grow overflow-y-auto font-mono text-sm space-y-2">
+                <div className="p-4 flex-grow overflow-y-auto font-vt323 text-lg space-y-1 bg-black/50 rounded-b-xl">
                     {log.map((entry, index) => {
                          if (entry.startsWith('---')) return <p key={index} className="text-yellow-400 font-bold mt-2 pt-2 border-t border-yellow-400/20">{entry}</p>
-                         if (entry.startsWith('🤖')) return <pre key={index} className="whitespace-pre-wrap p-2 rounded bg-blue-900/40 text-blue-200">{entry}</pre>
-                         return <pre key={index} className="whitespace-pre-wrap text-gray-300">{`> ${entry}`}</pre>
+                         if (entry.startsWith('🤖')) return <pre key={index} className="whitespace-pre-wrap p-2 rounded bg-blue-900/20 text-blue-200 font-sans text-sm border-l-2 border-blue-500">{entry}</pre>
+                         return <p key={index} className="text-stone-300 flex gap-2"><span className="text-stone-600">&gt;</span> {entry}</p>
                     })}
                 </div>
             </div>
@@ -389,39 +389,46 @@ const AutoSimulator: React.FC = () => {
     };
 
     return (
-        <div className="w-full h-full flex flex-col gap-4">
-            <div className="flex-shrink-0 flex gap-4">
-                <button onClick={handleNextRound} disabled={isRoundInProgress} className="px-4 py-2 rounded-lg font-bold text-white bg-green-600 border-b-4 border-green-800 hover:bg-green-500 disabled:bg-gray-500 disabled:border-gray-700 transition-colors">
+        <div className="w-full h-full flex flex-col gap-4 animate-fade-in-scale">
+            <div className="flex-shrink-0 flex gap-4 bg-stone-900/50 p-4 rounded-lg border border-cyan-800/30">
+                <button onClick={handleNextRound} disabled={isRoundInProgress} className="px-6 py-2 rounded-lg font-bold text-white bg-gradient-to-b from-green-600 to-green-700 border-b-4 border-green-900 hover:from-green-500 hover:to-green-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg transition-all">
                     {isRoundInProgress ? t('simulation.button_simulating') : (state.winner ? t('simulation.button_restart') : t('simulation.button_simulate_round'))}
                 </button>
-                <button onClick={handleCopy} className="px-4 py-2 rounded-lg font-bold text-white bg-blue-600 border-b-4 border-blue-800 hover:bg-blue-500 disabled:bg-gray-500 disabled:border-gray-700 transition-colors">
+                <button onClick={handleCopy} className="px-6 py-2 rounded-lg font-bold text-white bg-gradient-to-b from-cyan-600 to-cyan-700 border-b-4 border-cyan-900 hover:from-cyan-500 hover:to-cyan-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg transition-all">
                     {copyButtonText}
                 </button>
             </div>
-            <div className="flex-grow bg-black/40 p-4 rounded-lg border-2 border-cyan-800/50 grid grid-cols-3 gap-4 overflow-hidden">
+            <div className="flex-grow grid grid-cols-1 lg:grid-cols-3 gap-4 overflow-hidden">
                 <div className="col-span-1 flex flex-col gap-4 overflow-y-auto pr-2">
-                    <div className="bg-black/30 p-3 rounded-md">
-                        <h2 className="text-xl font-bold text-cyan-200 mb-2">{t('simulation.scoreboard_title')}</h2>
-                        <p>{t('common.ai')}: <span className="font-mono text-lg">{state.aiScore}</span></p>
-                        <p>{t('common.randomizer')}: <span className="font-mono text-lg">{state.playerScore}</span></p>
+                    <div className="bg-stone-900/80 p-4 rounded-lg border border-cyan-800/30">
+                        <h2 className="text-sm font-bold text-cyan-400 uppercase tracking-widest mb-3 border-b border-cyan-800/50 pb-1">{t('simulation.scoreboard_title')}</h2>
+                        <div className="flex justify-between items-center mb-1">
+                            <span className="text-stone-300">{t('common.ai')}</span>
+                            <span className="font-mono text-2xl text-amber-400">{state.aiScore}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                            <span className="text-stone-300">{t('common.randomizer')}</span>
+                            <span className="font-mono text-2xl text-stone-400">{state.playerScore}</span>
+                        </div>
                     </div>
-                    <div className="bg-black/30 p-3 rounded-md">
-                         <h2 className="text-xl font-bold text-cyan-200 mb-2">{t('simulation.round_status_title', { round: state.round })}</h2>
-                         <p>{t('simulation.phase')}: <span className="font-mono text-sm">{state.gamePhase}</span></p>
-                         <p>{t('simulation.turn')}: <span className="font-mono text-sm">{state.currentTurn?.toUpperCase() ?? t('common.na')}</span></p>
-                         <p>{t('simulation.mano')}: <span className="font-mono text-sm">{state.mano.toUpperCase()}</span></p>
+                    <div className="bg-stone-900/80 p-4 rounded-lg border border-cyan-800/30">
+                         <h2 className="text-sm font-bold text-cyan-400 uppercase tracking-widest mb-3 border-b border-cyan-800/50 pb-1">{t('simulation.round_status_title', { round: state.round })}</h2>
+                         <div className="grid grid-cols-2 gap-2 text-xs">
+                            <p className="text-stone-400">{t('simulation.phase')}</p> <p className="text-right text-stone-200">{state.gamePhase}</p>
+                            <p className="text-stone-400">{t('simulation.turn')}</p> <p className="text-right text-stone-200">{state.currentTurn?.toUpperCase() ?? t('common.na')}</p>
+                            <p className="text-stone-400">{t('simulation.mano')}</p> <p className="text-right text-stone-200">{state.mano.toUpperCase()}</p>
+                         </div>
                     </div>
-                     <div className="bg-black/30 p-3 rounded-md">
+                     <div className="bg-stone-900/80 p-4 rounded-lg border border-cyan-800/30 space-y-4">
                         <HandDisplay cards={state.initialAiHand} title={t('simulation.initial_hand_ai')} />
-                        <hr className="my-4 border-cyan-700/50"/>
                         <HandDisplay cards={state.initialPlayerHand} title={t('simulation.initial_hand_randomizer')} />
                     </div>
                 </div>
-                <div ref={eventLogRef} className="col-span-2 bg-black/50 p-4 rounded-md overflow-y-auto font-mono text-sm border border-cyan-700/50">
+                <div ref={eventLogRef} className="col-span-2 bg-black/80 p-4 rounded-lg overflow-y-auto font-vt323 text-lg border-2 border-cyan-900/50 shadow-inner">
                     {eventLog.map((log, index) => {
-                        if (log.startsWith('---')) return <p key={index} className="whitespace-pre-wrap text-yellow-300 my-2 font-bold">{log}</p>;
-                        if (log.startsWith('[Lógica') || log.startsWith('[AI Logic')) return <p key={index} className="whitespace-pre-wrap text-gray-400 mt-1 mb-3 pl-2 border-l-2 border-gray-600">{log}</p>;
-                        return <p key={index} className="whitespace-pre-wrap text-cyan-200">{log}</p>;
+                        if (log.startsWith('---')) return <p key={index} className="text-yellow-400 font-bold mt-2 pt-2 border-t border-yellow-400/20">{log}</p>;
+                        if (log.startsWith('[Lógica') || log.startsWith('[AI Logic')) return <pre key={index} className="whitespace-pre-wrap text-cyan-300 bg-cyan-900/10 p-2 rounded mt-1 mb-3 border-l-2 border-cyan-600 font-sans text-sm">{log}</pre>;
+                        return <p key={index} className="whitespace-pre-wrap text-stone-300 flex gap-2"><span className="text-stone-600">&gt;</span> {log}</p>;
                     })}
                 </div>
             </div>
@@ -435,7 +442,6 @@ const ManualSimulator: React.FC = () => {
     const [simPhase, setSimPhase] = useState<'setup' | 'play'>('setup');
     const [pickerState, setPickerState] = useState<{ open: boolean, hand: 'ai' | 'player', index: number }>({ open: false, hand: 'ai', index: 0 });
     const [aiSuggestion, setAiSuggestion] = useState<AiMove | null>(null);
-    const [expandedResult, setExpandedResult] = useState<string | null>(null);
     const [manualEventLog, setManualEventLog] = useState<string[]>([]);
     const [isLogModalOpen, setIsLogModalOpen] = useState(false);
     
@@ -449,6 +455,7 @@ const ManualSimulator: React.FC = () => {
     const [isSimulating, setIsSimulating] = useState(false);
     const [simulationProgress, setSimulationProgress] = useState(0);
     const simulationCancelled = useRef(false);
+    const [expandedResult, setExpandedResult] = useState<string | null>(null);
 
     const [setupState, setSetupState] = useState({
         aiScore: 0,
@@ -660,7 +667,7 @@ const ManualSimulator: React.FC = () => {
         if (!simulationResults) return null;
         return Object.entries(simulationResults).sort((a, b) => Number(b[1]) - Number(a[1]));
     }, [simulationResults]);
-    // FIX: Add explicit Number casting to reduce function to prevent type errors. This resolves the error on line 314.
+    
     const totalSimsRun = sortedSimulationResults ? sortedSimulationResults.reduce((sum, [, count]) => sum + Number(count), 0) : 0;
 
     const resetToSetup = () => {
@@ -672,19 +679,21 @@ const ManualSimulator: React.FC = () => {
 
     if (simPhase === 'setup') {
         return (
-            <div className="w-full h-full flex flex-col items-center justify-center gap-6 p-4">
-                <h2 className="text-2xl font-bold text-cyan-200">{t('simulation.manual.setup_title')}</h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-4xl">
-                    <div className="bg-black/30 p-4 rounded-md space-y-4">
-                        <h3 className="font-bold text-lg">{t('simulation.manual.scores_mano')}</h3>
-                        <div><label className="block text-sm text-gray-300">{t('simulation.manual.ai_score')}</label><input type="number" value={setupState.aiScore} onChange={e => setSetupState(s => ({...s, aiScore: parseInt(e.target.value)}))} className="w-full p-1 bg-gray-800 border border-gray-600 rounded-md"/></div>
-                        <div><label className="block text-sm text-gray-300">{t('simulation.manual.opponent_score')}</label><input type="number" value={setupState.playerScore} onChange={e => setSetupState(s => ({...s, playerScore: parseInt(e.target.value)}))} className="w-full p-1 bg-gray-800 border border-gray-600 rounded-md"/></div>
-                        <div><label className="block text-sm text-gray-300">{t('simulation.manual.mano')}</label><select value={setupState.mano} onChange={e => setSetupState(s => ({...s, mano: e.target.value as Player}))} className="w-full p-1 bg-gray-800 border border-gray-600 rounded-md"><option value="player">{t('common.opponent')}</option><option value="ai">{t('common.ai')}</option></select></div>
+            <div className="w-full h-full flex flex-col items-center justify-center gap-8 p-4 animate-fade-in-scale">
+                <h2 className="text-3xl font-bold text-cyan-300 font-cinzel tracking-widest drop-shadow-lg">{t('simulation.manual.setup_title')}</h2>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 w-full max-w-5xl">
+                    <div className="bg-stone-900/80 border border-amber-700/30 p-6 rounded-xl shadow-lg">
+                        <h3 className="font-bold text-xl text-amber-500 mb-4 border-b border-amber-700/30 pb-2">{t('simulation.manual.scores_mano')}</h3>
+                        <div className="space-y-4">
+                            <div><label className="block text-xs uppercase tracking-wider text-gray-400 mb-1">{t('simulation.manual.ai_score')}</label><input type="number" value={setupState.aiScore} onChange={e => setSetupState(s => ({...s, aiScore: parseInt(e.target.value)}))} className="w-full p-3 bg-black/30 border border-stone-600 rounded-lg text-white focus:border-amber-500 outline-none transition-colors"/></div>
+                            <div><label className="block text-xs uppercase tracking-wider text-gray-400 mb-1">{t('simulation.manual.opponent_score')}</label><input type="number" value={setupState.playerScore} onChange={e => setSetupState(s => ({...s, playerScore: parseInt(e.target.value)}))} className="w-full p-3 bg-black/30 border border-stone-600 rounded-lg text-white focus:border-amber-500 outline-none transition-colors"/></div>
+                            <div><label className="block text-xs uppercase tracking-wider text-gray-400 mb-1">{t('simulation.manual.mano')}</label><select value={setupState.mano} onChange={e => setSetupState(s => ({...s, mano: e.target.value as Player}))} className="w-full p-3 bg-black/30 border border-stone-600 rounded-lg text-white focus:border-amber-500 outline-none transition-colors"><option value="player">{t('common.opponent')}</option><option value="ai">{t('common.ai')}</option></select></div>
+                        </div>
                     </div>
-                     <div className="bg-black/30 p-4 rounded-md space-y-2"><HandDisplay title={t('simulation.manual.ai_hand')} cards={setupState.aiHand} onCardClick={(i) => handleOpenPicker('ai', i)} /></div>
-                     <div className="bg-black/30 p-4 rounded-md space-y-2"><HandDisplay title={t('simulation.manual.opponent_hand')} cards={setupState.playerHand} onCardClick={(i) => handleOpenPicker('player', i)} /></div>
+                     <div className="bg-stone-900/80 border border-amber-700/30 p-6 rounded-xl shadow-lg flex flex-col justify-center"><HandDisplay title={t('simulation.manual.ai_hand')} cards={setupState.aiHand} onCardClick={(i) => handleOpenPicker('ai', i)} /></div>
+                     <div className="bg-stone-900/80 border border-amber-700/30 p-6 rounded-xl shadow-lg flex flex-col justify-center"><HandDisplay title={t('simulation.manual.opponent_hand')} cards={setupState.playerHand} onCardClick={(i) => handleOpenPicker('player', i)} /></div>
                 </div>
-                <button onClick={handleStartRound} disabled={!isSetupComplete} className="px-6 py-3 rounded-lg font-bold text-white bg-green-600 border-b-4 border-green-800 hover:bg-green-500 disabled:bg-gray-500 disabled:border-gray-700 transition-colors text-lg">{t('simulation.manual.start_round')}</button>
+                <button onClick={handleStartRound} disabled={!isSetupComplete} className="px-8 py-4 rounded-lg font-bold text-white bg-gradient-to-b from-green-600 to-green-700 border-b-4 border-green-900 hover:from-green-500 hover:to-green-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-xl transition-all text-xl uppercase tracking-wider">{t('simulation.manual.start_round')}</button>
                 {pickerState.open && <CardPickerModal availableCards={availableCards} onSelect={handleCardSelect} onExit={() => setPickerState({ ...pickerState, open: false })} />}
             </div>
         );
@@ -695,56 +704,55 @@ const ManualSimulator: React.FC = () => {
     const reasoningDesc = aiSuggestion ? renderReasoning(aiSuggestion.reasoning, t) : "";
 
     return (
-        <div className="w-full h-full flex flex-col gap-4 relative">
+        <div className="w-full h-full flex flex-col gap-4 relative animate-fade-in-scale">
             <CentralMessage message={localMessage} isVisible={isMessageVisible} onDismiss={handleDismissMessage} />
             {isLogModalOpen && <ManualLogModal log={manualEventLog} onClose={() => setIsLogModalOpen(false)} />}
-            <div className="flex-grow grid grid-cols-1 lg:grid-cols-3 gap-4 overflow-hidden">
+            <div className="flex-grow grid grid-cols-1 lg:grid-cols-3 gap-6 overflow-hidden">
                 {/* Left Panel: Actions & AI Suggestion */}
-                <div className="col-span-1 lg:col-span-1 flex flex-col gap-4 overflow-y-auto pr-2">
-                    <div className="bg-black/30 p-3 rounded-md">
-                        <h2 className="text-xl font-bold text-cyan-200 mb-2">{t('simulation.manual.valid_actions_for')} {(state.currentTurn ?? '').toUpperCase()}</h2>
+                <div className="col-span-1 lg:col-span-1 flex flex-col gap-6 overflow-y-auto pr-2">
+                    <div className="bg-stone-900/80 p-4 rounded-lg border border-cyan-800/30">
+                        <h2 className="text-sm font-bold text-cyan-400 uppercase tracking-widest mb-3 border-b border-cyan-800/50 pb-1">{t('simulation.manual.valid_actions_for')} {(state.currentTurn ?? '').toUpperCase()}</h2>
                         <div className="space-y-2 max-h-64 overflow-y-auto">
                             {validActions.map((action, i) => (
-                                <button key={i} onClick={() => handleActionClick(action)} className="w-full text-left p-2 bg-cyan-900/50 hover:bg-cyan-800/70 rounded-md text-cyan-100 transition-colors">
+                                <button key={i} onClick={() => handleActionClick(action)} className="w-full text-left px-4 py-3 bg-cyan-900/20 border border-cyan-700/30 hover:bg-cyan-800/40 hover:border-cyan-500 rounded-md text-cyan-100 transition-all text-sm font-medium">
                                     {getActionDescription(action, state, t, {ai: t('common.ai'), opponent: t('common.opponent')})}
                                 </button>
                             ))}
                         </div>
                     </div>
-                     <div className="bg-black/30 p-3 rounded-md flex-grow flex flex-col">
+                     <div className="bg-stone-900/80 p-4 rounded-lg border border-purple-800/30 flex-grow flex flex-col">
                         <div className="flex-shrink-0">
-                            <h2 className="text-xl font-bold text-cyan-200 mb-2">{t('simulation.manual.ai_suggestion')}</h2>
-                            <div className="flex gap-2 mb-2">
-                                <button onClick={handleAskAi} disabled={isSimulating} className="flex-1 px-3 py-1 text-sm rounded-lg font-bold text-white bg-blue-600 border-b-2 border-blue-800 hover:bg-blue-500 disabled:bg-gray-500 transition-colors">{t('simulation.manual.ask_ai')}</button>
+                            <h2 className="text-sm font-bold text-purple-400 uppercase tracking-widest mb-3 border-b border-purple-800/50 pb-1">{t('simulation.manual.ai_suggestion')}</h2>
+                            <div className="flex gap-2 mb-3">
+                                <button onClick={handleAskAi} disabled={isSimulating} className="flex-1 px-3 py-2 text-sm rounded-md font-bold text-white bg-blue-600 hover:bg-blue-500 disabled:bg-gray-600 transition-colors shadow-md">{t('simulation.manual.ask_ai')}</button>
                                 {!isSimulating ? (
-                                    <button onClick={handleRunSimulations} className="flex-1 px-3 py-1 text-sm rounded-lg font-bold text-white bg-purple-600 border-b-2 border-purple-800 hover:bg-purple-500 transition-colors">{t('scenario_tester.run_simulations')}</button>
+                                    <button onClick={handleRunSimulations} className="flex-1 px-3 py-2 text-sm rounded-md font-bold text-white bg-purple-600 hover:bg-purple-500 transition-colors shadow-md">{t('scenario_tester.run_simulations')}</button>
                                 ) : (
-                                    <button onClick={handleCancelSimulation} className="flex-1 px-3 py-1 text-sm rounded-lg font-bold text-white bg-red-600 border-b-2 border-red-800 hover:bg-red-500 transition-colors">{t('scenario_tester.cancel')}</button>
+                                    <button onClick={handleCancelSimulation} className="flex-1 px-3 py-2 text-sm rounded-md font-bold text-white bg-red-600 hover:bg-red-500 transition-colors shadow-md">{t('scenario_tester.cancel')}</button>
                                 )}
                             </div>
                             {isSimulating && (
-                                <div className="w-full bg-gray-700 rounded-full h-4 relative overflow-hidden my-2">
-                                    <div className="bg-purple-500 h-4 rounded-full" style={{ width: `${simulationProgress}%`, transition: 'width 0.1s' }}></div>
-                                    <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-white">{t('scenario_tester.simulating', { progress: simulationProgress })}</span>
+                                <div className="w-full bg-gray-800 rounded-full h-2 relative overflow-hidden my-2">
+                                    <div className="bg-purple-500 h-2 rounded-full" style={{ width: `${simulationProgress}%`, transition: 'width 0.1s' }}></div>
                                 </div>
                             )}
                         </div>
                         <div className="flex-grow overflow-y-auto">
                             {aiSuggestion ? (
-                                <div className="space-y-2">
-                                    <p className="p-2 bg-black/50 rounded-md font-mono text-base text-yellow-300">{actionDesc}</p>
-                                    <details>
-                                        <summary className="cursor-pointer font-semibold text-gray-300 text-sm">{t('scenario_tester.reasoning')}</summary>
-                                        <pre className="mt-1 p-2 bg-black/50 rounded-md text-xs text-cyan-200 whitespace-pre-wrap font-mono max-h-40 overflow-y-auto">{reasoningDesc}</pre>
+                                <div className="space-y-3 bg-black/30 p-3 rounded-md border border-white/5">
+                                    <p className="font-mono text-lg text-yellow-300">{actionDesc}</p>
+                                    <details className="text-xs">
+                                        <summary className="cursor-pointer font-semibold text-gray-400 hover:text-white transition-colors">{t('scenario_tester.reasoning')}</summary>
+                                        <pre className="mt-2 p-2 bg-black/50 rounded border border-white/10 text-cyan-200 whitespace-pre-wrap font-mono max-h-40 overflow-y-auto">{reasoningDesc}</pre>
                                     </details>
                                 </div>
-                            ) : !simulationResults && !isSimulating && <p className="text-sm text-gray-400">{t('simulation.manual.ask_ai_prompt')}</p>}
+                            ) : !simulationResults && !isSimulating && <p className="text-sm text-gray-500 italic text-center py-4">{t('simulation.manual.ask_ai_prompt')}</p>}
 
                             {sortedSimulationResults && (
                                 <div className="flex flex-col flex-grow overflow-hidden mt-2">
                                     <div className="flex justify-between items-center mb-2 flex-shrink-0">
-                                        <h3 className="text-lg font-bold text-indigo-200">{t('scenario_tester.simulation_results', { count: totalSimsRun })}</h3>
-                                        <button onClick={() => setSimulationResults(null)} className="text-xs text-red-400">{t('scenario_tester.clear_results')}</button>
+                                        <h3 className="text-xs font-bold text-purple-300 uppercase tracking-wider">{t('scenario_tester.simulation_results', { count: totalSimsRun })}</h3>
+                                        <button onClick={() => setSimulationResults(null)} className="text-[10px] uppercase font-bold text-red-400 hover:text-red-300">{t('scenario_tester.clear_results')}</button>
                                     </div>
                                     <div className="flex-grow overflow-y-auto space-y-1 pr-2">
                                         {sortedSimulationResults.map(([reason, count]) => {
@@ -753,16 +761,18 @@ const ManualSimulator: React.FC = () => {
                                             const isExpanded = expandedResult === reason;
                                             return (
                                                 <div key={reason}>
-                                                    <button onClick={() => setExpandedResult(isExpanded ? null : reason)} className="w-full grid grid-cols-[1fr_auto] items-center gap-2 text-sm p-2 rounded-md hover:bg-indigo-900/50 transition-colors" aria-expanded={isExpanded}>
-                                                        <span className="truncate text-gray-300 text-left" title={reasonText}>{reasonText}</span>
-                                                        <span className="font-mono text-white text-right">{count} ({percentage.toFixed(1)}%)</span>
-                                                        <div className="col-span-2 w-full bg-gray-700 rounded-full h-2 mt-1">
-                                                            <div className="bg-indigo-500 h-2 rounded-full" style={{ width: `${percentage}%` }} />
+                                                    <button onClick={() => setExpandedResult(isExpanded ? null : reason)} className="w-full flex items-center gap-2 text-xs p-2 rounded hover:bg-purple-900/30 transition-colors group">
+                                                        <div className="flex-grow relative h-6 bg-black/40 rounded overflow-hidden">
+                                                            <div className="absolute top-0 left-0 h-full bg-purple-600/40 group-hover:bg-purple-600/60 transition-colors" style={{ width: `${percentage}%` }}></div>
+                                                            <div className="absolute inset-0 flex items-center justify-between px-2">
+                                                                <span className="truncate text-gray-200 z-10">{reasonText}</span>
+                                                                <span className="font-mono text-white z-10">{percentage.toFixed(1)}%</span>
+                                                            </div>
                                                         </div>
                                                     </button>
                                                     {isExpanded && (
-                                                        <div className="p-3 mt-1 bg-black/40 rounded-md border border-indigo-400/30 animate-fade-in-scale">
-                                                            <pre className="text-xs text-gray-200 whitespace-pre-wrap font-sans">{t(`scenario_tester.explanations.${reason}`, { defaultValue: "No explanation available." })}</pre>
+                                                        <div className="p-3 mt-1 bg-black/40 rounded border-l-2 border-purple-500 animate-fade-in-scale">
+                                                            <p className="text-xs text-gray-300 font-sans">{t(`scenario_tester.explanations.${reason}`, { defaultValue: "No explanation available." })}</p>
                                                         </div>
                                                     )}
                                                 </div>
@@ -776,27 +786,35 @@ const ManualSimulator: React.FC = () => {
                 </div>
 
                 {/* Right Panel: Game State */}
-                 <div className="col-span-1 lg:col-span-2 flex flex-col gap-4 overflow-y-auto pr-2">
-                     <div className="flex justify-between items-start">
-                        <div className="bg-black/30 p-3 rounded-md">
-                            <h2 className="text-xl font-bold text-cyan-200 mb-2">{t('simulation.scoreboard_title')}</h2>
-                            <p>{t('common.ai')}: <span className="font-mono text-lg">{state.aiScore}</span></p>
-                            <p>{t('common.opponent')}: <span className="font-mono text-lg">{state.playerScore}</span></p>
+                 <div className="col-span-1 lg:col-span-2 flex flex-col gap-6 overflow-y-auto pr-2">
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-stone-900/80 p-4 rounded-lg border border-cyan-800/30">
+                            <h2 className="text-sm font-bold text-cyan-400 uppercase tracking-widest mb-3 border-b border-cyan-800/50 pb-1">{t('simulation.scoreboard_title')}</h2>
+                            <div className="flex justify-between items-center mb-1">
+                                <span className="text-stone-300">{t('common.ai')}</span>
+                                <span className="font-mono text-2xl text-amber-400">{state.aiScore}</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <span className="text-stone-300">{t('common.opponent')}</span>
+                                <span className="font-mono text-2xl text-stone-400">{state.playerScore}</span>
+                            </div>
                         </div>
-                         <div className="bg-black/30 p-3 rounded-md">
-                             <h2 className="text-xl font-bold text-cyan-200 mb-2">{t('simulation.round_status_title', { round: state.round })}</h2>
-                             <p>{t('simulation.phase')}: <span className="font-mono text-sm">{state.gamePhase}</span></p>
-                             <p>{t('simulation.turn')}: <span className="font-mono text-sm">{state.currentTurn?.toUpperCase() ?? t('common.na')}</span></p>
-                             <p>{t('simulation.mano')}: <span className="font-mono text-sm">{state.mano.toUpperCase()}</span></p>
-                        </div>
-                        <div className="flex gap-2">
-                             <button onClick={() => setIsLogModalOpen(true)} className="px-4 py-2 rounded-lg font-bold text-white bg-gray-600 border-b-4 border-gray-800 hover:bg-gray-500 transition-colors">{t('simulation.manual.view_log')}</button>
-                             <button onClick={resetToSetup} className="px-4 py-2 rounded-lg font-bold text-white bg-yellow-600 border-b-4 border-yellow-800 hover:bg-yellow-500 transition-colors">{t('simulation.manual.reset')}</button>
+                         <div className="bg-stone-900/80 p-4 rounded-lg border border-cyan-800/30 relative">
+                             <div className="absolute top-4 right-4 flex gap-2">
+                                 <button onClick={() => setIsLogModalOpen(true)} className="text-xs font-bold uppercase text-cyan-400 hover:text-cyan-200 border border-cyan-400/50 px-2 py-1 rounded hover:bg-cyan-900/20 transition-colors">{t('simulation.manual.view_log')}</button>
+                                 <button onClick={resetToSetup} className="text-xs font-bold uppercase text-yellow-400 hover:text-yellow-200 border border-yellow-400/50 px-2 py-1 rounded hover:bg-yellow-900/20 transition-colors">{t('simulation.manual.reset')}</button>
+                            </div>
+                             <h2 className="text-sm font-bold text-cyan-400 uppercase tracking-widest mb-3 border-b border-cyan-800/50 pb-1">{t('simulation.round_status_title', { round: state.round })}</h2>
+                             <div className="grid grid-cols-2 gap-2 text-xs">
+                                <p className="text-stone-400">{t('simulation.phase')}</p> <p className="text-right text-stone-200">{state.gamePhase}</p>
+                                <p className="text-stone-400">{t('simulation.turn')}</p> <p className="text-right text-stone-200">{state.currentTurn?.toUpperCase() ?? t('common.na')}</p>
+                                <p className="text-stone-400">{t('simulation.mano')}</p> <p className="text-right text-stone-200">{state.mano.toUpperCase()}</p>
+                             </div>
                         </div>
                      </div>
-                    <div className="space-y-4">
+                    <div className="space-y-4 bg-stone-900/50 p-4 rounded-xl border border-white/5">
                         <HandDisplay title={t('simulation.manual.ai_hand')} cards={[...state.aiHand, null, null, null].slice(0,3)} />
-                        <div className="grid grid-cols-2 gap-4 items-center px-4">
+                        <div className="grid grid-cols-2 gap-4 items-center px-2">
                             <HandDisplay title={t('simulation.manual.ai_tricks')} cards={state.aiTricks} />
                             <HandDisplay title={t('simulation.manual.opponent_tricks')} cards={state.playerTricks} />
                         </div>
@@ -816,15 +834,26 @@ const Simulation: React.FC<{ onExit: () => void }> = ({ onExit }) => {
     const [activeTab, setActiveTab] = useState<SimTab>('auto');
 
     return (
-        <div className="h-screen bg-gray-900 text-white font-sans flex flex-col items-center p-4 gap-4" style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/felt.png')"}}>
-            <div className="w-full max-w-7xl flex justify-between items-center flex-shrink-0">
-                <h1 className="text-3xl font-cinzel text-cyan-300">{t('simulation.title')}</h1>
-                <button onClick={onExit} className="px-4 py-2 rounded-lg font-bold text-white bg-red-700 border-b-4 border-red-900 hover:bg-red-600">{t('simulation.button_exit')}</button>
+        <div className="h-screen bg-stone-950 text-white font-sans flex flex-col items-center relative overflow-hidden">
+             {/* Background Texture */}
+            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-30 z-0"></div>
+            <div className="absolute inset-0 bg-gradient-to-b from-stone-900/80 via-stone-900/50 to-stone-950 z-0"></div>
+
+            <div className="w-full max-w-[1600px] flex justify-between items-center p-4 z-10 border-b border-cyan-900/30 bg-stone-900/80 backdrop-blur-sm">
+                <div className="flex items-center gap-3">
+                    <span className="text-3xl">🧪</span>
+                    <h1 className="text-2xl font-cinzel font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-500 tracking-widest shadow-cyan-500/50 drop-shadow-sm">
+                        {t('simulation.title')}
+                    </h1>
+                </div>
+                <button onClick={onExit} className="px-4 py-2 rounded text-sm font-bold uppercase tracking-wider text-stone-400 hover:text-white border border-stone-700 hover:border-stone-500 hover:bg-stone-800 transition-all">
+                    {t('simulation.button_exit')}
+                </button>
             </div>
             
-            <div className="w-full max-w-7xl flex-grow flex flex-col min-h-0">
+            <div className="w-full max-w-[1600px] flex-grow flex flex-col min-h-0 z-10 p-4">
                 {/* Tab Bar */}
-                <div className="flex-shrink-0 flex items-end gap-2 px-2 border-b-2 border-cyan-800/50">
+                <div className="flex-shrink-0 flex gap-1 overflow-x-auto custom-scrollbar pb-0 mb-[-2px]">
                     <Tab title={t('simulation.tab_auto_hand')} isActive={activeTab === 'auto'} onClick={() => setActiveTab('auto')} />
                     <Tab title={t('simulation.tab_gemini')} isActive={activeTab === 'gemini'} onClick={() => setActiveTab('gemini')} />
                     <Tab title={t('simulation.tab_manual_hand')} isActive={activeTab === 'manual'} onClick={() => setActiveTab('manual')} />
@@ -834,13 +863,16 @@ const Simulation: React.FC<{ onExit: () => void }> = ({ onExit }) => {
                 </div>
 
                 {/* Content Area */}
-                <div className="w-full flex-grow bg-black/40 p-4 rounded-b-lg rounded-tr-lg border-l-2 border-r-2 border-b-2 border-cyan-800/50 overflow-y-auto">
-                    {activeTab === 'auto' && <AutoSimulator />}
-                    {activeTab === 'gemini' && <GeminiSimulator />}
-                    {activeTab === 'manual' && <ManualSimulator />}
-                    {activeTab === 'tester' && <ScenarioTester />}
-                    {activeTab === 'analyzer' && <BatchAnalyzer />}
-                    {activeTab === 'runner' && <ScenarioRunner />}
+                <div className="w-full flex-grow bg-stone-800 border-2 border-cyan-700/50 rounded-b-xl rounded-tr-xl shadow-2xl overflow-hidden relative">
+                     <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/felt.png')] opacity-10 pointer-events-none"></div>
+                     <div className="absolute inset-0 p-6 overflow-y-auto">
+                        {activeTab === 'auto' && <AutoSimulator />}
+                        {activeTab === 'gemini' && <GeminiSimulator />}
+                        {activeTab === 'manual' && <ManualSimulator />}
+                        {activeTab === 'tester' && <ScenarioTester />}
+                        {activeTab === 'analyzer' && <BatchAnalyzer />}
+                        {activeTab === 'runner' && <ScenarioRunner />}
+                     </div>
                 </div>
             </div>
         </div>

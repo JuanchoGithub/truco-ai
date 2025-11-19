@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Card, GameState, AiMove, Player, GamePhase, MessageObject, Action, ActionType, AiArchetype } from '../types';
 import { hasFlor } from '../services/trucoLogic';
@@ -31,13 +32,13 @@ const StatusIcon: React.FC<{ status: ValidationStatus }> = ({ status }) => {
         pending: <path strokeLinecap="round" strokeLinejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
     };
     const colorMap = {
-        ok: 'text-green-500',
-        warn: 'text-yellow-500',
-        fail: 'text-red-500',
-        pending: 'text-gray-500'
+        ok: 'text-green-400',
+        warn: 'text-yellow-400',
+        fail: 'text-red-400',
+        pending: 'text-stone-600'
     };
     return (
-        <svg xmlns="http://www.w3.org/2000/svg" className={`h-6 w-6 ${colorMap[status]}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${colorMap[status]}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             {iconMap[status]}
         </svg>
     );
@@ -95,45 +96,42 @@ const ScenarioResultRow: React.FC<{
     }, [isCompleted, result, expected, deviation]);
 
     const statusMap: Record<ValidationStatus, { color: string; labelKey: string }> = {
-        ok: { color: 'bg-green-900/40 border-green-700/50', labelKey: 'scenario_runner.status_ok' },
-        warn: { color: 'bg-yellow-900/40 border-yellow-700/50', labelKey: 'scenario_runner.status_warn' },
-        fail: { color: 'bg-red-900/40 border-red-700/50', labelKey: 'scenario_runner.status_fail' },
-        pending: { color: 'bg-gray-800/40 border-gray-700/50', labelKey: 'scenario_runner.status_pending' },
+        ok: { color: 'bg-green-900/10 border-green-700/30 hover:bg-green-900/20', labelKey: 'scenario_runner.status_ok' },
+        warn: { color: 'bg-yellow-900/10 border-yellow-700/30 hover:bg-yellow-900/20', labelKey: 'scenario_runner.status_warn' },
+        fail: { color: 'bg-red-900/10 border-red-700/30 hover:bg-red-900/20', labelKey: 'scenario_runner.status_fail' },
+        pending: { color: 'bg-stone-800/50 border-stone-700/30 hover:bg-stone-800', labelKey: 'scenario_runner.status_pending' },
     };
 
     const topActionFreq = result.totalRuns > 0 && validation.actualTopAction ? ((Number(result.results[validation.actualTopAction]) / result.totalRuns) * 100).toFixed(1) + '%' : '0%';
-    const expectedTopActionFreq = expected && validation.expectedTopAction ? ((Number(expected.actionDistribution[validation.expectedTopAction]) / expected.totalRuns) * 100).toFixed(1) + '%' : 'N/A';
     
     const allActions = new Set([...Object.keys(result.results), ...(expected ? Object.keys(expected.actionDistribution) : [])]);
-    // FIX: Add explicit Number casting to sort function to prevent type errors. This resolves errors on line 308.
     const sortedActions = Array.from(allActions).sort((a, b) => Number(result.results[b] || 0) - Number(result.results[a] || 0));
 
     return (
-        <details onToggle={(e) => setIsExpanded((e.target as HTMLDetailsElement).open)} className={`rounded-lg overflow-hidden border ${statusMap[validation.status].color} transition-colors`}>
-            <summary className="grid grid-cols-[auto_1fr_1fr_auto] items-center p-2 cursor-pointer hover:bg-white/10">
+        <details onToggle={(e) => setIsExpanded((e.target as HTMLDetailsElement).open)} className={`rounded-lg overflow-hidden border transition-colors mb-2 ${statusMap[validation.status].color}`}>
+            <summary className="grid grid-cols-[auto_1fr_1fr_auto] items-center p-3 cursor-pointer outline-none select-none">
                 <div className="px-2"><StatusIcon status={validation.status} /></div>
-                <div className="font-semibold text-white">{t(result.nameKey)}</div>
-                <div className="text-sm">
+                <div className="font-semibold text-stone-200 text-sm">{t(result.nameKey)}</div>
+                <div className="text-xs text-stone-400">
                     {validation.actualTopAction && (
-                        <span>{t(`ai_reason_keys.${validation.actualTopAction}`, { defaultValue: validation.actualTopAction })} <span className="font-mono text-gray-300">({topActionFreq})</span></span>
+                        <span>{t(`ai_reason_keys.${validation.actualTopAction}`, { defaultValue: validation.actualTopAction })} <span className="font-mono text-stone-500 ml-1">({topActionFreq})</span></span>
                     )}
                 </div>
                 <div className="px-2 text-green-400 group relative">
                     {isCompleted && <CheckCircleIcon />}
-                    {isCompleted && <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">{t('scenario_runner.completed_tooltip')}</div>}
                 </div>
             </summary>
-            <div className="bg-black/30 p-4">
+            <div className="bg-black/40 p-4 border-t border-white/5">
                 <table className="w-full text-xs">
-                    <thead className="text-cyan-200">
+                    <thead className="text-cyan-500 uppercase font-bold border-b border-white/10">
                         <tr>
-                            <th className="py-1 text-left">{t('scenario_runner.table_header_action')}</th>
-                            <th className="py-1 text-right">{t('scenario_runner.table_header_expected')}</th>
-                            <th className="py-1 text-right">{t('scenario_runner.table_header_frequency')}</th>
-                            <th className="py-1 text-right">{t('scenario_runner.table_header_deviation')}</th>
+                            <th className="py-2 text-left">{t('scenario_runner.table_header_action')}</th>
+                            <th className="py-2 text-right">{t('scenario_runner.table_header_expected')}</th>
+                            <th className="py-2 text-right">{t('scenario_runner.table_header_frequency')}</th>
+                            <th className="py-2 text-right">{t('scenario_runner.table_header_deviation')}</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody className="divide-y divide-white/5">
                     {sortedActions.map(key => {
                         const actualCount = result.results[key] || 0;
                         const actualFreq = result.totalRuns > 0 ? actualCount / result.totalRuns : 0;
@@ -143,14 +141,14 @@ const ScenarioResultRow: React.FC<{
                         const absoluteDeviation = (actualFreq - expectedFreq) * 100;
                         const isOutlier = Math.abs(absoluteDeviation) > deviation;
 
-                        const deviationColor = isOutlier ? 'text-red-400' : 'text-gray-400';
+                        const deviationColor = isOutlier ? 'text-red-400 font-bold' : 'text-stone-500';
 
                         return (
-                            <tr key={key} className="border-t border-cyan-900/50">
-                                <td className="py-1 text-gray-300">{t(`ai_reason_keys.${key}`, { defaultValue: key })}</td>
-                                <td className="py-1 text-right font-mono">{(expectedFreq * 100).toFixed(1)}%</td>
-                                <td className={`py-1 text-right font-mono ${isOutlier ? 'font-bold' : ''}`}>{(actualFreq * 100).toFixed(1)}%</td>
-                                <td className={`py-1 text-right font-mono ${deviationColor}`}>
+                            <tr key={key} className="hover:bg-white/5">
+                                <td className="py-2 text-stone-300">{t(`ai_reason_keys.${key}`, { defaultValue: key })}</td>
+                                <td className="py-2 text-right font-mono text-stone-500">{(expectedFreq * 100).toFixed(1)}%</td>
+                                <td className={`py-2 text-right font-mono ${isOutlier ? 'text-yellow-200' : 'text-stone-300'}`}>{(actualFreq * 100).toFixed(1)}%</td>
+                                <td className={`py-2 text-right font-mono ${deviationColor}`}>
                                     {absoluteDeviation > 0 ? '+' : ''}
                                     {absoluteDeviation.toFixed(1)}%
                                 </td>
@@ -160,8 +158,8 @@ const ScenarioResultRow: React.FC<{
                     </tbody>
                 </table>
                 
-                <h4 className="text-base font-bold text-cyan-200 mt-4 mb-2 pt-2 border-t border-cyan-800/50">{t('scenario_runner.results_by_archetype_title')}</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <h4 className="text-xs font-bold text-cyan-600 uppercase tracking-widest mt-4 mb-2">{t('scenario_runner.results_by_archetype_title')}</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {Object.entries(result.byArchetype).map(([archetype, archResults]) => {
                         const totalForArch = Object.values(archResults).reduce((s, c) => s + c, 0);
                         if (totalForArch === 0) return null;
@@ -169,15 +167,15 @@ const ScenarioResultRow: React.FC<{
                         const sortedArchResults = Object.entries(archResults).sort((a, b) => b[1] - a[1]);
 
                         return (
-                            <div key={archetype} className="bg-gray-900/50 p-3 rounded-lg border border-gray-700">
-                                <h5 className="font-semibold text-cyan-300 mb-2">{t(`ai_logic.archetypes.${archetype}`)}</h5>
-                                <ul className="text-xs space-y-1">
+                            <div key={archetype} className="bg-stone-900/50 p-2 rounded border border-white/5">
+                                <h5 className="font-semibold text-stone-400 text-xs mb-1">{t(`ai_logic.archetypes.${archetype}`)}</h5>
+                                <ul className="text-[10px] space-y-1">
                                     {sortedArchResults.map(([reason, count]) => {
                                         const freq = (count / totalForArch) * 100;
                                         return (
-                                            <li key={reason} className="flex justify-between items-center gap-2">
-                                                <span className="truncate text-gray-300" title={t(`ai_reason_keys.${reason}`, { defaultValue: reason })}>{t(`ai_reason_keys.${reason}`, { defaultValue: reason })}</span>
-                                                <div className="flex-shrink-0 font-mono text-gray-100">{freq.toFixed(1)}% <span className="text-gray-400">({count})</span></div>
+                                            <li key={reason} className="flex justify-between items-center">
+                                                <span className="truncate text-stone-300 pr-2" title={t(`ai_reason_keys.${reason}`, { defaultValue: reason })}>{t(`ai_reason_keys.${reason}`, { defaultValue: reason })}</span>
+                                                <div className="flex-shrink-0 font-mono text-cyan-200">{freq.toFixed(1)}%</div>
                                             </li>
                                         );
                                     })}
@@ -359,48 +357,51 @@ const ScenarioRunner: React.FC = () => {
         document.body.removeChild(link);
     };
 
-    const sortedResults = useMemo(() => {
-        if (!results) return null;
-        return Object.entries(results).sort((a, b) => Number(b[1]) - Number(a[1]));
-    }, [results]);
-    const totalSimsRun = sortedResults ? sortedResults.reduce((sum, [, count]) => sum + Number(count), 0) : 0;
-
     return (
-        <div className="w-full h-full flex flex-col gap-4 text-white">
-            <div className="flex-shrink-0 bg-black/30 p-4 rounded-lg border border-cyan-700/50 space-y-3">
-                <h2 className="text-xl font-bold text-cyan-200">{t('scenario_runner.title')}</h2>
-                <p className="text-sm text-gray-300 max-w-3xl">{t('scenario_runner.description')}</p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="flex items-end gap-4 flex-wrap">
-                        <div>
-                            <label htmlFor="deviation" className="block text-sm font-medium text-gray-300">{t('scenario_runner.deviation_label')}</label>
-                            <input type="number" id="deviation" value={deviation} onChange={e => setDeviation(Math.max(0, parseInt(e.target.value) || 10))} disabled={isRunning} className="w-24 p-1 bg-gray-800 border border-gray-600 rounded-md" step="1" min="0" max="100"/>
+        <div className="w-full h-full flex flex-col gap-6 text-white animate-fade-in-scale">
+            <div className="bg-stone-900/80 p-6 rounded-lg border border-cyan-800/30 shadow-lg">
+                <h2 className="text-xl font-bold text-cyan-300 font-cinzel tracking-widest border-b border-cyan-800/50 pb-2 mb-4">{t('scenario_runner.title')}</h2>
+                <p className="text-sm text-stone-400 mb-6 max-w-3xl">{t('scenario_runner.description')}</p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                        <div className="flex items-end gap-4">
+                            <div>
+                                <label htmlFor="deviation" className="block text-xs font-bold text-stone-500 uppercase mb-1">{t('scenario_runner.deviation_label')}</label>
+                                <input type="number" id="deviation" value={deviation} onChange={e => setDeviation(Math.max(0, parseInt(e.target.value) || 10))} disabled={isRunning} className="w-24 p-2 bg-black/30 border border-stone-600 rounded-md text-white focus:border-cyan-500 transition-colors" step="1" min="0" max="100"/>
+                            </div>
+                            <div>
+                                <label htmlFor="iterations" className="block text-xs font-bold text-stone-500 uppercase mb-1">{t('scenario_runner.iterations_label')}</label>
+                                <input type="number" id="iterations" value={iterations} onChange={e => setIterations(Math.max(1, parseInt(e.target.value) || 1000))} disabled={isRunning} className="w-32 p-2 bg-black/30 border border-stone-600 rounded-md text-white focus:border-cyan-500 transition-colors" step="100"/>
+                            </div>
                         </div>
-                        <div>
-                            <label htmlFor="iterations" className="block text-sm font-medium text-gray-300">{t('scenario_runner.iterations_label')}</label>
-                            <input type="number" id="iterations" value={iterations} onChange={e => setIterations(Math.max(1, parseInt(e.target.value) || 1000))} disabled={isRunning} className="w-28 p-1 bg-gray-800 border border-gray-600 rounded-md" step="100"/>
+                        <div className="flex items-center gap-3 pt-2">
+                            {!isRunning ? (
+                                <button onClick={handleRun} className="px-6 py-2 rounded-lg font-bold text-white bg-gradient-to-b from-green-600 to-green-700 border-b-4 border-green-900 hover:from-green-500 hover:to-green-600 transition-all shadow-md">{t('scenario_runner.run_button')}</button>
+                            ) : (
+                                <button onClick={handleCancel} className="px-6 py-2 rounded-lg font-bold text-white bg-red-700 border-b-4 border-red-900 hover:bg-red-600 transition-colors shadow-md animate-pulse">{t('scenario_runner.cancel_button')}</button>
+                            )}
+                            
+                            <div className="h-8 w-[1px] bg-white/10 mx-2"></div>
+
+                            <input type="file" ref={fileInputRef} onChange={handleFileChange} accept=".json" className="hidden" />
+                            <button onClick={handleImportClick} disabled={isRunning} className="px-4 py-2 rounded bg-stone-800 text-stone-400 hover:text-white text-xs font-bold uppercase tracking-wider transition-colors disabled:opacity-50">{t('scenario_runner.import_button')}</button>
+                            <button onClick={handleExport} disabled={!results || isRunning} className="px-4 py-2 rounded bg-stone-800 text-stone-400 hover:text-white text-xs font-bold uppercase tracking-wider transition-colors disabled:opacity-50">{t('scenario_runner.export_button')}</button>
                         </div>
-                        {!isRunning ? (
-                            <button onClick={handleRun} className="px-6 py-2 rounded-lg font-bold text-white bg-green-600 border-b-4 border-green-800 hover:bg-green-500 transition-colors">{t('scenario_runner.run_button')}</button>
-                        ) : (
-                            <button onClick={handleCancel} className="px-6 py-2 rounded-lg font-bold text-white bg-red-600 border-b-4 border-red-800 hover:bg-red-500 transition-colors">{t('scenario_runner.cancel_button')}</button>
-                        )}
-                        <input type="file" ref={fileInputRef} onChange={handleFileChange} accept=".json" className="hidden" />
-                        <button onClick={handleImportClick} disabled={isRunning} className="px-6 py-2 rounded-lg font-bold text-white bg-blue-600 border-b-4 border-blue-800 hover:bg-blue-500 transition-colors disabled:bg-gray-500">{t('scenario_runner.import_button')}</button>
-                        <button onClick={handleExport} disabled={!results || isRunning} className="px-6 py-2 rounded-lg font-bold text-white bg-yellow-600 border-b-4 border-yellow-800 hover:bg-yellow-500 transition-colors disabled:bg-gray-500">{t('scenario_runner.export_button')}</button>
-                        {importStatus && <span className={`text-sm ${importStatus.includes('Error') ? 'text-red-400' : 'text-green-400'}`}>{importStatus}</span>}
+                        {importStatus && <div className={`text-xs font-bold ${importStatus.includes('Error') ? 'text-red-400' : 'text-green-400'}`}>{importStatus}</div>}
                     </div>
-                     <div>
-                        <h4 className="text-sm font-medium text-gray-300 mb-2">{t('scenario_runner.archetypes_title')}</h4>
-                        <div className="flex flex-wrap gap-x-4 gap-y-1">
+                    
+                     <div className="bg-black/20 p-3 rounded border border-white/5">
+                        <h4 className="text-xs font-bold text-stone-500 uppercase mb-2">{t('scenario_runner.archetypes_title')}</h4>
+                        <div className="grid grid-cols-2 gap-2">
                             {(Object.keys(archetypesToInclude) as AiArchetype[]).map(arch => (
-                                <label key={arch} className="flex items-center gap-2 text-sm">
+                                <label key={arch} className="flex items-center gap-2 text-sm text-stone-300 cursor-pointer hover:text-white">
                                     <input
                                         type="checkbox"
                                         checked={archetypesToInclude[arch]}
                                         onChange={e => setArchetypesToInclude(prev => ({ ...prev, [arch]: e.target.checked }))}
                                         disabled={isRunning}
-                                        className="h-4 w-4 rounded bg-gray-700 border-gray-600 text-cyan-500 focus:ring-cyan-600"
+                                        className="rounded bg-stone-700 border-stone-600 text-cyan-500 focus:ring-cyan-600/50 focus:ring-offset-0"
                                     />
                                     {t(`ai_logic.archetypes.${arch}`)}
                                 </label>
@@ -411,32 +412,37 @@ const ScenarioRunner: React.FC = () => {
             </div>
 
             {isRunning && (
-                 <div className="flex-shrink-0 bg-black/30 p-4 rounded-lg border border-cyan-700/50">
-                    <p className="text-sm text-cyan-200 mb-1">{t('scenario_runner.running_scenario', { current: progress.currentScenario, total: progress.totalScenarios, name: progress.scenarioName })}</p>
-                    <div className="w-full bg-gray-700 rounded-full h-4 relative overflow-hidden">
-                        <div className="bg-cyan-500 h-4 rounded-full" style={{ width: `${progress.overallProgress}%`, transition: 'width 0.2s' }} />
-                        <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-white">{t('scenario_runner.running_progress', { progress: Math.floor(progress.overallProgress) })}</span>
+                 <div className="bg-black/40 p-4 rounded-lg border border-cyan-500/30 relative overflow-hidden">
+                     <div className="absolute top-0 left-0 h-1 bg-cyan-500 transition-all duration-300" style={{ width: `${progress.overallProgress}%` }}></div>
+                    <div className="flex justify-between items-center text-sm text-cyan-100">
+                        <span>{t('scenario_runner.running_scenario', { current: progress.currentScenario, total: progress.totalScenarios, name: progress.scenarioName })}</span>
+                        <span className="font-mono">{Math.floor(progress.overallProgress)}%</span>
                     </div>
                 </div>
             )}
             
-            <div className="flex-grow bg-black/40 p-4 rounded-lg border border-cyan-700/50 overflow-y-auto">
-                <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-xl font-bold text-cyan-200">{t('scenario_runner.results_title')}</h3>
-                </div>
+            <div className="flex-grow bg-stone-900/60 p-2 rounded-lg border border-white/5 overflow-y-auto custom-scrollbar">
                 {!results ? (
-                    <div className="flex items-center justify-center h-full text-gray-400">{t('scenario_runner.no_results')}</div>
+                    <div className="flex flex-col items-center justify-center h-full text-stone-600">
+                         <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mb-4 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
+                        <p>{t('scenario_runner.no_results')}</p>
+                    </div>
                 ) : (
-                    <div className="space-y-2">
-                        {results.map((result) => (
-                            <ScenarioResultRow 
-                                key={result.nameKey} 
-                                result={result} 
-                                expected={expectedResults.find(e => e.scenario === result.nameKey)}
-                                deviation={deviation}
-                                isCompleted={result.totalRuns > 0}
-                            />
-                        ))}
+                    <div>
+                        <div className="flex justify-between items-center px-4 py-2 mb-2">
+                            <h3 className="text-sm font-bold text-stone-400 uppercase tracking-wider">{t('scenario_runner.results_title')}</h3>
+                        </div>
+                        <div className="space-y-1">
+                            {results.map((result) => (
+                                <ScenarioResultRow 
+                                    key={result.nameKey} 
+                                    result={result} 
+                                    expected={expectedResults.find(e => e.scenario === result.nameKey)}
+                                    deviation={deviation}
+                                    isCompleted={result.totalRuns > 0}
+                                />
+                            ))}
+                        </div>
                     </div>
                 )}
             </div>

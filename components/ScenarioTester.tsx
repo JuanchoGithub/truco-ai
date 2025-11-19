@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Card, GameState, AiMove, Player, GamePhase, MessageObject, Action, ActionType, AiArchetype } from '../types';
 import { createDeck, getCardName, decodeCardFromCode, getEnvidoValue, hasFlor } from '../services/trucoLogic';
@@ -74,16 +75,16 @@ const CardPickerModal: React.FC<{
 }> = ({ availableCards, onSelect, onExit }) => {
     const { t } = useLocalization();
     return (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-            <div className="bg-stone-800/95 border-4 border-amber-700/50 rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
-                <div className="p-4 border-b-2 border-amber-700/30 flex justify-between items-center">
-                    <h3 className="text-xl font-bold text-amber-300">{t('card_picker.title')}</h3>
-                    <button onClick={onExit} className="text-amber-200 text-2xl font-bold">&times;</button>
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+            <div className="bg-stone-900 border-2 border-amber-600/50 rounded-xl shadow-2xl w-full max-w-3xl max-h-[80vh] flex flex-col">
+                <div className="p-4 border-b border-amber-600/30 flex justify-between items-center bg-stone-950">
+                    <h3 className="text-lg font-bold text-amber-400 font-cinzel">{t('card_picker.title')}</h3>
+                    <button onClick={onExit} className="text-stone-400 hover:text-white transition-colors">&times;</button>
                 </div>
-                <div className="p-4 flex-grow overflow-y-auto">
-                    <div className="flex flex-wrap gap-2 justify-center">
+                <div className="p-6 flex-grow overflow-y-auto">
+                    <div className="flex flex-wrap gap-3 justify-center">
                         {availableCards.map(card => (
-                            <button key={`${card.rank}-${card.suit}`} onClick={() => onSelect(card)} className="transform transition-transform hover:scale-110">
+                            <button key={`${card.rank}-${card.suit}`} onClick={() => onSelect(card)} className="transform transition-transform hover:scale-110 hover:z-10">
                                 <CardComponent card={card} size="small" />
                             </button>
                         ))}
@@ -97,9 +98,9 @@ const CardPickerModal: React.FC<{
 const ScenarioDescriptionsModal: React.FC<{ onExit: () => void }> = ({ onExit }) => {
     const { t } = useLocalization();
     return (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4">
-            <div className="bg-stone-800/95 border-4 border-indigo-700/50 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
-                <div className="p-4 border-b-2 border-indigo-700/30 flex justify-between items-center">
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4 backdrop-blur-sm">
+            <div className="bg-stone-900 border-2 border-indigo-700/50 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+                <div className="p-4 border-b border-indigo-700/30 flex justify-between items-center bg-stone-950">
                     <h2 className="text-xl font-bold text-indigo-300 font-cinzel">{t('scenario_tester.descriptions.title')}</h2>
                     <button onClick={onExit} className="text-indigo-200 text-2xl font-bold">&times;</button>
                 </div>
@@ -419,65 +420,42 @@ const ScenarioTester: React.FC = () => {
     }, [simulationResults]);
     
     return (
-        <div className="bg-stone-800/95 border-4 border-indigo-700/50 rounded-xl shadow-2xl w-full h-full flex flex-col">
-            <div className="p-4 border-b-2 border-indigo-700/30 flex justify-between items-center">
-                <h2 className="text-xl lg:text-2xl font-bold text-indigo-300 font-cinzel tracking-widest">{t('scenario_tester.title')}</h2>
+        <div className="w-full h-full flex flex-col animate-fade-in-scale">
+            <div className="p-4 bg-stone-900/80 border border-indigo-700/30 rounded-lg shadow-lg flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-indigo-300 font-cinzel tracking-widest">{t('scenario_tester.title')}</h2>
             </div>
-            <div className={`flex-grow p-4 lg:p-6 gap-6 overflow-y-auto ${isWideLayout ? 'grid grid-cols-[1fr_2fr]' : 'flex flex-col'}`}>
+            <div className={`flex-grow gap-6 overflow-hidden ${isWideLayout ? 'grid grid-cols-[1fr_2fr]' : 'flex flex-col'}`}>
+                
                 {/* Setup Panel */}
-                <div className="space-y-4 flex flex-col">
-                     <div className="flex items-center gap-2">
-                        <h3 className="text-lg font-bold text-indigo-200">{t('scenario_tester.setup')}</h3>
+                <div className="space-y-4 flex flex-col overflow-y-auto custom-scrollbar pr-2">
+                     <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-bold text-indigo-400 uppercase tracking-wider">{t('scenario_tester.setup')}</h3>
                          <button 
                             onClick={() => setIsDescriptionVisible(true)}
-                            className="px-3 py-1 text-xs rounded-md font-semibold text-indigo-200 bg-black/40 border border-indigo-500/80 hover:bg-indigo-900/60 transition-colors"
-                            aria-label={t('scenario_tester.describe_button_aria')}
+                            className="px-2 py-1 text-[10px] uppercase font-bold text-indigo-300 border border-indigo-500/50 rounded hover:bg-indigo-900/30 transition-colors"
                         >
                             {t('scenario_tester.describe_button')}
                         </button>
                     </div>
-                    <select onChange={handleLoadScenario} value={selectedScenario ? selectedScenario.nameKey : ''} className="w-full p-2 bg-gray-900 border border-gray-600 rounded-md text-white">
+                    
+                    <select onChange={handleLoadScenario} value={selectedScenario ? selectedScenario.nameKey : ''} className="w-full p-3 bg-black/30 border border-stone-600 rounded-lg text-white text-sm focus:border-indigo-500 outline-none">
                         <option value="">{t('scenario_tester.select_scenario')}</option>
                         {predefinedScenarios.map(s => <option key={s.nameKey} value={s.nameKey}>{t(s.nameKey)}</option>)}
                     </select>
+
                     {selectedScenario && (
-                        <div className="p-3 bg-black/30 border border-indigo-400/20 rounded-md text-sm">
-                            <h4 className="font-bold text-indigo-300 mb-1">{t(selectedScenario.nameKey)}</h4>
-                            <p className="text-gray-300 text-xs">
+                        <div className="p-3 bg-indigo-900/20 border border-indigo-500/30 rounded-lg text-xs">
+                            <p className="text-indigo-200 leading-relaxed">
                                 {t(`scenario_tester.descriptions.${selectedScenario.nameKey.split('.').pop()}.description`)}
                             </p>
                         </div>
                     )}
-                    {!selectedScenario && <p className="text-center text-gray-400 text-sm">{t('scenario_tester.or_create_custom')}</p>}
                     
-                    <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-                        <div className="space-y-2">
-                            <div><label className="block text-sm font-medium text-gray-300">{t('scenario_tester.ai_score')}</label><input type="number" value={aiScore} onChange={e => {setAiScore(parseInt(e.target.value)); setSelectedScenario(null);}} className="w-full p-1 bg-gray-800 border border-gray-600 rounded-md"/></div>
-                            <div><label className="block text-sm font-medium text-gray-300">{t('scenario_tester.opponent_score')}</label><input type="number" value={opponentScore} onChange={e => {setOpponentScore(parseInt(e.target.value)); setSelectedScenario(null);}} className="w-full p-1 bg-gray-800 border border-gray-600 rounded-md"/></div>
-                            <div>
-                                <label htmlFor="tester-iterations" className="block text-sm font-medium text-gray-300">{t('scenario_runner.iterations_label')}</label>
-                                <input type="number" id="tester-iterations" value={iterations} onChange={e => setIterations(Math.max(1, parseInt(e.target.value) || 1000))} disabled={isSimulating} className="w-full p-1 bg-gray-800 border border-gray-600 rounded-md" step="100"/>
-                            </div>
-                        </div>
-                        <div className="space-y-2">
-                            <div><label className="block text-sm font-medium text-gray-300">{t('scenario_tester.mano')}</label><select value={mano} onChange={e => {setMano(e.target.value as Player); setSelectedScenario(null);}} className="w-full p-1 bg-gray-800 border border-gray-600 rounded-md"><option value="ai">{t('common.ai')}</option><option value="player">{t('common.opponent')}</option></select></div>
-                            <div><label className="block text-sm font-medium text-gray-300">{t('scenario_tester.turn')}</label><select value={currentTurn} onChange={e => {setCurrentTurn(e.target.value as Player); setSelectedScenario(null);}} className="w-full p-1 bg-gray-800 border border-gray-600 rounded-md"><option value="ai">{t('common.ai')}</option><option value="player">{t('common.opponent')}</option></select></div>
-                             <div>
-                                <label className="block text-sm font-medium text-gray-300">{t('scenario_tester.archetype_label')}</label>
-                                <select value={archetype} onChange={e => setArchetype(e.target.value as AiArchetype | 'Dynamic' | 'All')} className="w-full p-1 bg-gray-800 border border-gray-600 rounded-md">
-                                    <option value="Dynamic">{t('scenario_tester.archetype_dynamic')}</option>
-                                    <option value="All">{t('scenario_tester.archetype_all')}</option>
-                                    <option value="Balanced">{t('ai_logic.archetypes.Balanced')}</option>
-                                    <option value="Aggressive">{t('ai_logic.archetypes.Aggressive')}</option>
-                                    <option value="Cautious">{t('ai_logic.archetypes.Cautious')}</option>
-                                    <option value="Deceptive">{t('ai_logic.archetypes.Deceptive')}</option>
-                                </select>
-                            </div>
-                        </div>
-                         <div className="space-y-2">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-300">{t('scenario_tester.phase')}</label>
-                                <select value={gamePhase} onChange={e => {setGamePhase(e.target.value as GamePhase); setSelectedScenario(null);}} className="w-full p-1 bg-gray-800 border border-gray-600 rounded-md">
+                    <div className="grid grid-cols-2 gap-4 bg-stone-900/50 p-4 rounded-lg border border-white/5">
+                         <div className="space-y-3">
+                            <div><label className="block text-xs text-stone-500 uppercase font-bold mb-1">{t('scenario_tester.ai_score')}</label><input type="number" value={aiScore} onChange={e => {setAiScore(parseInt(e.target.value)); setSelectedScenario(null);}} className="w-full p-2 bg-black/40 border border-stone-600 rounded text-white text-sm"/></div>
+                            <div><label className="block text-xs text-stone-500 uppercase font-bold mb-1">{t('scenario_tester.mano')}</label><select value={mano} onChange={e => {setMano(e.target.value as Player); setSelectedScenario(null);}} className="w-full p-2 bg-black/40 border border-stone-600 rounded text-white text-sm"><option value="ai">{t('common.ai')}</option><option value="player">{t('common.opponent')}</option></select></div>
+                            <div><label className="block text-xs text-stone-500 uppercase font-bold mb-1">{t('scenario_tester.phase')}</label><select value={gamePhase} onChange={e => {setGamePhase(e.target.value as GamePhase); setSelectedScenario(null);}} className="w-full p-2 bg-black/40 border border-stone-600 rounded text-white text-sm">
                                     <option value="trick_1">{t('scenario_tester.phases.trick_1')}</option>
                                     <option value="trick_2">{t('scenario_tester.phases.trick_2')}</option>
                                     <option value="trick_3">{t('scenario_tester.phases.trick_3')}</option>
@@ -487,161 +465,177 @@ const ScenarioTester: React.FC = () => {
                                     <option value="flor_called">{t('scenario_tester.phases.flor_called')}</option>
                                 </select>
                             </div>
-                             <div>
-                                <label className="block text-sm font-medium text-gray-300">{t('scenario_tester.truco_level')}</label>
-                                <select value={trucoLevel} onChange={e => {setTrucoLevel(parseInt(e.target.value) as 0|1|2|3); setSelectedScenario(null);}} className="w-full p-1 bg-gray-800 border border-gray-600 rounded-md">
+                        </div>
+                         <div className="space-y-3">
+                            <div><label className="block text-xs text-stone-500 uppercase font-bold mb-1">{t('scenario_tester.opponent_score')}</label><input type="number" value={opponentScore} onChange={e => {setOpponentScore(parseInt(e.target.value)); setSelectedScenario(null);}} className="w-full p-2 bg-black/40 border border-stone-600 rounded text-white text-sm"/></div>
+                            <div><label className="block text-xs text-stone-500 uppercase font-bold mb-1">{t('scenario_tester.turn')}</label><select value={currentTurn} onChange={e => {setCurrentTurn(e.target.value as Player); setSelectedScenario(null);}} className="w-full p-2 bg-black/40 border border-stone-600 rounded text-white text-sm"><option value="ai">{t('common.ai')}</option><option value="player">{t('common.opponent')}</option></select></div>
+                             <div><label className="block text-xs text-stone-500 uppercase font-bold mb-1">{t('scenario_tester.truco_level')}</label><select value={trucoLevel} onChange={e => {setTrucoLevel(parseInt(e.target.value) as 0|1|2|3); setSelectedScenario(null);}} className="w-full p-2 bg-black/40 border border-stone-600 rounded text-white text-sm">
                                     <option value={0}>0 (None)</option>
                                     <option value={1}>1 (Truco)</option>
                                     <option value={2}>2 (Retruco)</option>
                                     <option value={3}>3 (Vale Cuatro)</option>
                                 </select>
                             </div>
-                             <div>
-                                <label className="block text-sm font-medium text-gray-300">{t('scenario_tester.last_caller')}</label>
-                                <select value={lastCaller || ''} onChange={e => {setLastCaller(e.target.value as Player); setSelectedScenario(null);}} disabled={trucoLevel === 0 && !gamePhase.includes('envido')} className="w-full p-1 bg-gray-800 border border-gray-600 rounded-md disabled:opacity-50">
-                                    <option value="" disabled>{t('common.na')}</option>
-                                    <option value="ai">{t('common.ai')}</option>
-                                    <option value="player">{t('common.opponent')}</option>
-                                </select>
-                            </div>
                         </div>
-                    </div>
-
-                     <div className="bg-black/20 p-2 rounded-md space-y-2">
-                      <div className="flex items-center gap-2">
-                        <input type="checkbox" id="envido-called" checked={hasEnvidoBeenCalled} onChange={e => {setHasEnvidoBeenCalled(e.target.checked); setSelectedScenario(null);}} />
-                        <label htmlFor="envido-called" className="text-sm font-medium text-gray-300">{t('scenario_tester.envido_called')}</label>
-                      </div>
-                      {hasEnvidoBeenCalled && (
-                        <div className="grid grid-cols-2 gap-2 animate-fade-in-scale">
-                          <div><label className="block text-xs text-gray-400">{t('scenario_tester.ai_envido_score')}</label><input type="number" value={aiEnvidoValue} onChange={e => {setAiEnvidoValue(parseInt(e.target.value)); setSelectedScenario(null);}} className="w-full p-1 bg-gray-800 border border-gray-600 rounded-md text-sm"/></div>
-                          <div><label className="block text-xs text-gray-400">{t('scenario_tester.opponent_envido_score')}</label><input type="number" value={opponentEnvidoValue} onChange={e => {setOpponentEnvidoValue(parseInt(e.target.value)); setSelectedScenario(null);}} className="w-full p-1 bg-gray-800 border border-gray-600 rounded-md text-sm"/></div>
-                        </div>
-                      )}
                     </div>
                     
-                     <div className="flex items-center gap-2 mt-2">
-                        <button onClick={handleRunTest} disabled={isSimulating} className="flex-1 px-4 py-2 rounded-lg font-bold text-white bg-green-600 border-b-4 border-green-800 hover:bg-green-500 disabled:bg-gray-500 disabled:border-gray-700 transition-colors">{t('scenario_tester.run_test')}</button>
-                        <div className="relative group flex-1">
-                            <button onClick={() => selectedScenario && regenerateAndApplyHands(selectedScenario)} disabled={!selectedScenario || isSimulating} className="w-full px-4 py-2 rounded-lg font-bold text-white bg-blue-600 border-b-4 border-blue-800 hover:bg-blue-500 disabled:bg-gray-500 disabled:border-gray-700 transition-colors">{t('scenario_tester.regenerate_hands')}</button>
-                            {!selectedScenario && (
-                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 w-max max-w-xs bg-gray-900 text-white text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
-                                    {t('scenario_tester.regenerate_hands_tooltip')}
-                                </div>
-                            )}
+                    <div className="space-y-3 bg-stone-900/50 p-4 rounded-lg border border-white/5">
+                        <div>
+                            <label className="block text-xs text-stone-500 uppercase font-bold mb-1">{t('scenario_tester.archetype_label')}</label>
+                            <select value={archetype} onChange={e => setArchetype(e.target.value as AiArchetype | 'Dynamic' | 'All')} className="w-full p-2 bg-black/40 border border-stone-600 rounded text-white text-sm focus:border-indigo-500">
+                                <option value="Dynamic">{t('scenario_tester.archetype_dynamic')}</option>
+                                <option value="All">{t('scenario_tester.archetype_all')}</option>
+                                <option value="Balanced">{t('ai_logic.archetypes.Balanced')}</option>
+                                <option value="Aggressive">{t('ai_logic.archetypes.Aggressive')}</option>
+                                <option value="Cautious">{t('ai_logic.archetypes.Cautious')}</option>
+                                <option value="Deceptive">{t('ai_logic.archetypes.Deceptive')}</option>
+                            </select>
                         </div>
-                    </div>
-                     <div className="flex items-center gap-2 mt-2">
-                        {!isSimulating ? (
-                            <button onClick={handleRunSimulations} disabled={!selectedScenario} className="w-full px-4 py-2 rounded-lg font-bold text-white bg-purple-600 border-b-4 border-purple-800 hover:bg-purple-500 disabled:bg-gray-500 disabled:border-gray-700 transition-colors">{t('scenario_tester.run_simulations', { count: iterations })}</button>
-                        ) : (
-                            <div className="w-full flex items-center gap-2">
-                                <div className="flex-grow bg-gray-700 rounded-full h-4 relative overflow-hidden">
-                                    <div className="bg-purple-500 h-4 rounded-full" style={{ width: `${simulationProgress}%`, transition: 'width 0.1s' }}></div>
-                                    <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-white">{t('scenario_tester.simulating', { progress: simulationProgress })}</span>
-                                </div>
-                                <button onClick={handleCancelSimulation} className="px-4 py-2 rounded-lg font-bold text-white bg-red-600 border-b-4 border-red-800 hover:bg-red-500 transition-colors">{t('scenario_tester.cancel')}</button>
+                         <div className="flex items-center gap-2">
+                            <input type="checkbox" id="envido-called" checked={hasEnvidoBeenCalled} onChange={e => {setHasEnvidoBeenCalled(e.target.checked); setSelectedScenario(null);}} className="rounded bg-stone-700 border-stone-600 text-indigo-500 focus:ring-indigo-500/50"/>
+                            <label htmlFor="envido-called" className="text-sm text-stone-300">{t('scenario_tester.envido_called')}</label>
+                          </div>
+                          {hasEnvidoBeenCalled && (
+                            <div className="grid grid-cols-2 gap-2 animate-fade-in-scale">
+                              <input type="number" value={aiEnvidoValue} onChange={e => {setAiEnvidoValue(parseInt(e.target.value)); setSelectedScenario(null);}} className="w-full p-2 bg-black/40 border border-stone-600 rounded text-white text-sm" placeholder="AI Envido"/>
+                              <input type="number" value={opponentEnvidoValue} onChange={e => {setOpponentEnvidoValue(parseInt(e.target.value)); setSelectedScenario(null);}} className="w-full p-2 bg-black/40 border border-stone-600 rounded text-white text-sm" placeholder="Opp Envido"/>
                             </div>
-                        )}
-                     </div>
-
-                    <div className="flex flex-row gap-6 items-start justify-around mt-4">
-                        <div className="w-full">
-                            <div className="flex justify-between items-center mb-1"><label className="font-semibold">{t('scenario_tester.ai_hand')}</label><button onClick={() => handleClearHand('ai')} className="text-xs text-red-400">{t('scenario_tester.clear')}</button></div>
+                          )}
+                    </div>
+                    
+                    <div className="space-y-4">
+                         <div className="bg-stone-900/50 p-3 rounded-lg border border-white/5 relative">
+                            <button onClick={() => handleClearHand('ai')} className="absolute top-2 right-2 text-[10px] text-red-400 hover:text-red-300 uppercase font-bold">Clear</button>
+                            <h4 className="text-xs font-bold text-stone-500 uppercase mb-2">{t('scenario_tester.ai_hand')}</h4>
                             <div className="flex justify-center space-x-[-53px] min-h-[124px] items-center">
                               {aiHand.map((c, i) => <button key={i} onClick={() => handleOpenPicker('ai', i)} className="transition-transform duration-200 ease-out hover:-translate-y-4 hover:z-20"><CardComponent card={c || undefined} size="small" /></button>)}
                             </div>
                         </div>
-                        <div className="w-full">
-                            <div className="flex justify-between items-center mb-1"><label className="font-semibold">{t('scenario_tester.opponent_hand')}</label><button onClick={() => handleClearHand('opponent')} className="text-xs text-red-400">{t('scenario_tester.clear')}</button></div>
+                        <div className="bg-stone-900/50 p-3 rounded-lg border border-white/5 relative">
+                             <button onClick={() => handleClearHand('opponent')} className="absolute top-2 right-2 text-[10px] text-red-400 hover:text-red-300 uppercase font-bold">Clear</button>
+                            <h4 className="text-xs font-bold text-stone-500 uppercase mb-2">{t('scenario_tester.opponent_hand')}</h4>
                             <div className="flex justify-center space-x-[-53px] min-h-[124px] items-center">
                               {opponentHand.map((c, i) => <button key={i} onClick={() => handleOpenPicker('opponent', i)} className="transition-transform duration-200 ease-out hover:-translate-y-4 hover:z-20"><CardComponent card={c || undefined} size="small" /></button>)}
                             </div>
                         </div>
                     </div>
+
+                    {/* Action Buttons */}
+                     <div className="grid grid-cols-1 gap-3 pt-2">
+                        <div className="flex gap-2">
+                             <button onClick={handleRunTest} disabled={isSimulating} className="flex-1 px-4 py-3 rounded-lg font-bold text-white bg-gradient-to-b from-green-600 to-green-700 border-b-4 border-green-900 hover:from-green-500 hover:to-green-600 transition-all shadow-lg disabled:opacity-50">{t('scenario_tester.run_test')}</button>
+                             <button onClick={() => selectedScenario && regenerateAndApplyHands(selectedScenario)} disabled={!selectedScenario || isSimulating} className="flex-1 px-4 py-3 rounded-lg font-bold text-white bg-stone-700 border-b-4 border-stone-900 hover:bg-stone-600 transition-all shadow-lg disabled:opacity-50 text-sm">{t('scenario_tester.regenerate_hands')}</button>
+                        </div>
+                        
+                        <div className="pt-4 border-t border-white/10">
+                             <div className="flex items-center gap-2 mb-2">
+                                <label className="text-xs font-bold text-stone-500 uppercase">{t('scenario_runner.iterations_label')}</label>
+                                <input type="number" value={iterations} onChange={e => setIterations(Math.max(1, parseInt(e.target.value) || 1000))} disabled={isSimulating} className="w-20 p-1 bg-black/40 border border-stone-600 rounded text-white text-xs"/>
+                             </div>
+                            {!isSimulating ? (
+                                <button onClick={handleRunSimulations} disabled={!selectedScenario} className="w-full px-4 py-3 rounded-lg font-bold text-white bg-gradient-to-b from-purple-600 to-purple-700 border-b-4 border-purple-900 hover:from-purple-500 hover:to-purple-600 disabled:opacity-50 transition-all shadow-lg">{t('scenario_tester.run_simulations', { count: iterations })}</button>
+                            ) : (
+                                <div className="w-full flex flex-col gap-2">
+                                    <div className="w-full bg-stone-800 rounded-full h-4 relative overflow-hidden border border-stone-600">
+                                        <div className="bg-purple-500 h-4 rounded-full" style={{ width: `${simulationProgress}%`, transition: 'width 0.1s' }}></div>
+                                        <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-white shadow-sm">{t('scenario_tester.simulating', { progress: simulationProgress })}</span>
+                                    </div>
+                                    <button onClick={handleCancelSimulation} className="w-full px-4 py-2 rounded-lg font-bold text-white bg-red-700 border-b-4 border-red-900 hover:bg-red-600 transition-colors shadow-lg text-xs uppercase tracking-wider">{t('scenario_tester.cancel')}</button>
+                                </div>
+                            )}
+                        </div>
+                     </div>
                 </div>
 
                 {/* Result Panel */}
-                <div className="bg-black/40 p-4 rounded-lg border border-indigo-500/50 flex flex-col min-h-[300px] overflow-hidden gap-4">
-                    <div className="flex-shrink-0">
-                        <h3 className="text-lg font-bold text-indigo-200 mb-2">{t('scenario_tester.result')}</h3>
-                        {testResult ? (
-                            <div className="space-y-2">
-                                <div>
-                                    <h4 className="font-semibold text-gray-300">{t('scenario_tester.chosen_action')}</h4>
-                                    <p className="p-2 bg-black/50 rounded-md font-mono text-lg text-yellow-300">{getActionDescription(testResult.action, { currentTurn, aiHand: finalAiHand, playerHand: finalOpponentHand }, t)}</p>
+                <div className="bg-stone-900/40 p-6 rounded-xl border border-indigo-500/30 flex flex-col overflow-hidden relative shadow-inner">
+                     <div className="absolute inset-0 bg-black/20 pointer-events-none"></div>
+                     <div className="relative z-10 flex flex-col h-full">
+                        <h3 className="text-lg font-bold text-indigo-300 mb-4 flex items-center gap-2">
+                            <span className="text-2xl">📊</span> {t('scenario_tester.result')}
+                        </h3>
+                        
+                        <div className="flex-grow overflow-y-auto custom-scrollbar pr-2">
+                            {testResult ? (
+                                <div className="space-y-4 animate-fade-in-scale">
+                                    <div className="bg-black/40 p-4 rounded-lg border border-yellow-500/30">
+                                        <h4 className="text-xs font-bold text-stone-500 uppercase mb-2">{t('scenario_tester.chosen_action')}</h4>
+                                        <p className="font-cinzel text-xl text-yellow-400">{getActionDescription(testResult.action, { currentTurn, aiHand: finalAiHand, playerHand: finalOpponentHand }, t)}</p>
+                                    </div>
+                                    <div className="bg-black/40 p-4 rounded-lg border border-cyan-500/30">
+                                        <h4 className="text-xs font-bold text-stone-500 uppercase mb-2">{t('scenario_tester.reasoning')}</h4>
+                                        <pre className="whitespace-pre-wrap font-mono text-sm text-cyan-200 leading-relaxed">{renderReasoning(testResult.reasoning, t)}</pre>
+                                    </div>
                                 </div>
-                                <details>
-                                    <summary className="cursor-pointer font-semibold text-gray-300">{t('scenario_tester.reasoning')}</summary>
-                                    <pre className="mt-1 p-2 bg-black/50 rounded-md text-xs text-cyan-200 whitespace-pre-wrap font-mono max-h-40 overflow-y-auto">{renderReasoning(testResult.reasoning, t)}</pre>
-                                </details>
-                            </div>
-                        ) : multiArchetypeResults ? (
-                            <div className="space-y-2">
-                                {multiArchetypeResults.map(({ archetype, result }) => (
-                                    <details key={archetype} className="bg-black/20 p-2 rounded-md">
-                                        <summary className="cursor-pointer font-semibold text-gray-200 flex justify-between items-center">
-                                            <span>{t(`ai_logic.archetypes.${archetype}`)}: <span className="font-mono text-base text-yellow-300 ml-2">{getActionDescription(result.action, { currentTurn, aiHand: finalAiHand, playerHand: finalOpponentHand }, t)}</span></span>
-                                            <span className="text-xs text-gray-400">Details</span>
-                                        </summary>
-                                        <pre className="mt-2 p-2 bg-black/50 rounded-md text-xs text-cyan-200 whitespace-pre-wrap font-mono max-h-40 overflow-y-auto">{renderReasoning(result.reasoning, t)}</pre>
-                                    </details>
-                                ))}
-                            </div>
-                        ) : !simulationResults && (
-                            <div className="flex items-center justify-center h-full text-gray-400">{t('scenario_tester.no_result')}</div>
-                        )}
-                    </div>
-                     {simulationResults && (
-                        <div className="flex flex-col flex-grow overflow-hidden">
-                            <div className="flex justify-between items-center mb-2 flex-shrink-0">
-                                <h3 className="text-lg font-bold text-indigo-200">{t('scenario_tester.simulation_results', { count: totalSimsRun })}</h3>
-                                <button onClick={() => setSimulationResults(null)} className="text-xs text-red-400">{t('scenario_tester.clear_results')}</button>
-                            </div>
-                            <div className="flex-grow overflow-y-auto space-y-4 pr-2">
-                                {Object.entries(simulationResults).map(([arch, results]) => {
-                                    const sorted = Object.entries(results).sort((a, b) => b[1] - a[1]);
-                                    const totalForArch = sorted.reduce((sum, [, count]) => sum + count, 0);
-                                    if (totalForArch === 0) return null;
-
-                                    return (
-                                        <div key={arch} className="bg-black/20 p-2 rounded-md">
-                                            <h4 className="font-bold text-indigo-300 text-base mb-2">{t(`ai_logic.archetypes.${arch}`, { defaultValue: arch })} ({totalForArch} runs)</h4>
-                                            <div className="space-y-1">
-                                                {sorted.map(([reason, count]) => {
-                                                    const percentage = totalForArch > 0 ? (count / totalForArch) * 100 : 0;
-                                                    const reasonText = t(`ai_reason_keys.${reason}`, { defaultValue: reason });
-                                                    const isExpanded = expandedResult === `${arch}-${reason}`;
-                                                    return (
-                                                        <div key={reason}>
-                                                            <button 
-                                                                onClick={() => setExpandedResult(isExpanded ? null : `${arch}-${reason}`)}
-                                                                className="w-full grid grid-cols-[1fr_auto] lg:grid-cols-[1fr_2fr_auto] items-center gap-2 text-sm p-2 rounded-md hover:bg-indigo-900/50 transition-colors"
-                                                                aria-expanded={isExpanded}
-                                                            >
-                                                                <span className="truncate text-gray-300 text-left" title={reasonText}>{reasonText}</span>
-                                                                <div className="w-full bg-gray-700 rounded-full h-4 hidden lg:block">
-                                                                    <div className="bg-indigo-500 h-4 rounded-full text-right" style={{ width: `${percentage}%` }} />
-                                                                </div>
-                                                                <span className="font-mono text-white text-right">{count} ({percentage.toFixed(1)}%)</span>
-                                                            </button>
-                                                            {isExpanded && (
-                                                                <div className="p-3 mt-1 bg-black/40 rounded-md border border-indigo-400/30 animate-fade-in-scale">
-                                                                    <pre className="text-xs text-gray-200 whitespace-pre-wrap font-sans">
-                                                                        {t(`scenario_tester.explanations.${reason}`, { defaultValue: "No explanation available." })}
-                                                                    </pre>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    );
-                                                })}
+                            ) : multiArchetypeResults ? (
+                                <div className="space-y-3 animate-fade-in-scale">
+                                    {multiArchetypeResults.map(({ archetype, result }) => (
+                                        <details key={archetype} className="bg-black/30 rounded-lg border border-white/5 group">
+                                            <summary className="cursor-pointer p-3 flex justify-between items-center select-none hover:bg-white/5 transition-colors rounded-lg">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-stone-400 text-sm font-bold uppercase">{t(`ai_logic.archetypes.${archetype}`)}</span>
+                                                </div>
+                                                <span className="font-cinzel text-yellow-300 text-sm">{getActionDescription(result.action, { currentTurn, aiHand: finalAiHand, playerHand: finalOpponentHand }, t)}</span>
+                                            </summary>
+                                            <div className="p-3 border-t border-white/10 bg-black/20">
+                                                <pre className="whitespace-pre-wrap font-mono text-xs text-cyan-200/80">{renderReasoning(result.reasoning, t)}</pre>
                                             </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
+                                        </details>
+                                    ))}
+                                </div>
+                            ) : simulationResults ? (
+                                <div className="space-y-4 animate-fade-in-scale">
+                                    <div className="flex justify-between items-center pb-2 border-b border-white/10">
+                                        <h3 className="text-sm font-bold text-purple-300 uppercase tracking-wider">{t('scenario_tester.simulation_results', { count: totalSimsRun })}</h3>
+                                        <button onClick={() => setSimulationResults(null)} className="text-[10px] uppercase font-bold text-red-400 hover:text-red-300 transition-colors">{t('scenario_tester.clear_results')}</button>
+                                    </div>
+                                    {Object.entries(simulationResults).map(([arch, results]) => {
+                                        const sorted = Object.entries(results).sort((a, b) => b[1] - a[1]);
+                                        const totalForArch = sorted.reduce((sum, [, count]) => sum + count, 0);
+                                        if (totalForArch === 0) return null;
+
+                                        return (
+                                            <div key={arch} className="bg-black/30 p-3 rounded-lg border border-white/5">
+                                                <h4 className="font-bold text-stone-300 text-xs uppercase mb-2 border-b border-white/5 pb-1">{t(`ai_logic.archetypes.${arch}`, { defaultValue: arch })}</h4>
+                                                <div className="space-y-1">
+                                                    {sorted.map(([reason, count]) => {
+                                                        const percentage = totalForArch > 0 ? (count / totalForArch) * 100 : 0;
+                                                        const reasonText = t(`ai_reason_keys.${reason}`, { defaultValue: reason });
+                                                        const isExpanded = expandedResult === `${arch}-${reason}`;
+                                                        return (
+                                                            <div key={reason}>
+                                                                <button 
+                                                                    onClick={() => setExpandedResult(isExpanded ? null : `${arch}-${reason}`)}
+                                                                    className="w-full grid grid-cols-[1fr_auto] lg:grid-cols-[1fr_50px_auto] items-center gap-3 text-xs p-2 rounded hover:bg-indigo-900/30 transition-colors text-left"
+                                                                    aria-expanded={isExpanded}
+                                                                >
+                                                                    <span className="truncate text-gray-300" title={reasonText}>{reasonText}</span>
+                                                                    <div className="w-full bg-stone-800 rounded-full h-1.5 hidden lg:block">
+                                                                        <div className="bg-indigo-500 h-1.5 rounded-full" style={{ width: `${percentage}%` }} />
+                                                                    </div>
+                                                                    <span className="font-mono text-white text-right w-12">{percentage.toFixed(1)}%</span>
+                                                                </button>
+                                                                {isExpanded && (
+                                                                    <div className="p-2 mt-1 ml-2 pl-3 border-l-2 border-indigo-500/50 text-xs text-stone-400 italic bg-black/20 rounded-r">
+                                                                        {t(`scenario_tester.explanations.${reason}`, { defaultValue: "No explanation available." })}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            ) : (
+                                <div className="flex flex-col items-center justify-center h-full text-stone-600 opacity-50">
+                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg>
+                                    <p>{t('scenario_tester.no_result')}</p>
+                                </div>
+                            )}
                         </div>
-                    )}
+                     </div>
                 </div>
             </div>
 

@@ -1,3 +1,4 @@
+
 import React, { useState, useReducer, useEffect, useRef, useCallback } from 'react';
 import { useGameReducer, initialState } from '../hooks/useGameReducer';
 import { getLocalAIMove } from '../services/localAiService';
@@ -8,8 +9,8 @@ import { getCardName } from '../services/trucoLogic';
 import { useLocalization } from '../context/LocalizationContext';
 
 const HandDisplay: React.FC<{ cards: CardType[], title: string, isVisible: boolean }> = ({ cards, title, isVisible }) => (
-    <div>
-        <h3 className="text-lg font-bold text-yellow-200 mb-2">{title}</h3>
+    <div className="bg-black/20 p-3 rounded-lg border border-white/5">
+        <h3 className="text-xs font-bold text-amber-500 uppercase tracking-widest mb-2">{title}</h3>
         <div className="flex justify-center min-h-[124px] items-center gap-2">
             {cards.map((card, index) => (
                 <CardComponent key={index} card={card} size="small" isFaceDown={!isVisible} />
@@ -250,22 +251,22 @@ const GeminiSimulator: React.FC = () => {
     }, [isSimulating, simMode, state.gamePhase, state.winner, state.round, state.lastRoundWinner, state.aiScore, state.playerScore, addToLog, t]);
     
     const LogModal = () => (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4">
-            <div className="bg-stone-800/95 border-4 border-amber-700/50 rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
-                <div className="p-4 border-b-2 border-amber-700/30 flex justify-between items-center">
-                    <h3 className="text-xl font-bold text-amber-300">{t('simulation.manual.log_title')}</h3>
-                    <button onClick={() => setIsLogModalOpen(false)} className="text-amber-200 text-2xl font-bold">&times;</button>
+        <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-[60] p-4 backdrop-blur-sm">
+            <div className="bg-stone-900 border-2 border-amber-600/50 rounded-xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col">
+                <div className="p-4 border-b border-amber-600/30 flex justify-between items-center bg-stone-950">
+                    <h3 className="text-lg font-bold text-amber-400 font-cinzel">{t('simulation.manual.log_title')}</h3>
+                    <button onClick={() => setIsLogModalOpen(false)} className="text-stone-400 hover:text-white transition-colors">&times;</button>
                 </div>
-                <div className="p-4 flex-grow overflow-y-auto font-mono text-sm space-y-2">
+                <div className="p-4 flex-grow overflow-y-auto font-vt323 text-lg space-y-1 bg-black/50 rounded-b-xl">
                     {eventLog.map((entry, index) => {
                         let style = 'text-cyan-100';
                         let prefix = '> ';
                         if (entry.type === 'info') { style = 'text-yellow-400 font-bold mt-2 pt-2 border-t border-yellow-400/20'; prefix = ''; }
-                        else if (entry.type === 'prompt') { style = 'text-purple-300'; prefix = '[MOVE PROMPT SENT TO GEMINI]\n---\n'; }
-                        else if (entry.type === 'response') { style = 'text-green-300'; prefix = '[RAW MOVE RESPONSE FROM GEMINI]\n---\n'; }
-                        else if (entry.type === 'analysis_prompt') { style = 'text-indigo-300'; prefix = '[ANALYSIS PROMPT SENT TO GEMINI]\n---\n'; }
-                        else if (entry.type === 'analysis_response') { style = 'text-teal-300'; prefix = '[ANALYSIS RESPONSE FROM GEMINI]\n---\n'; }
-                        return <pre key={index} className={`whitespace-pre-wrap ${style}`}>{prefix}{entry.content}</pre>
+                        else if (entry.type === 'prompt') { style = 'text-purple-300'; prefix = '[PROMPT]\n'; }
+                        else if (entry.type === 'response') { style = 'text-green-300'; prefix = '[RESPONSE]\n'; }
+                        else if (entry.type === 'analysis_prompt') { style = 'text-indigo-300'; prefix = '[ANALYSIS PROMPT]\n'; }
+                        else if (entry.type === 'analysis_response') { style = 'text-teal-300'; prefix = '[ANALYSIS]\n'; }
+                        return <pre key={index} className={`whitespace-pre-wrap ${style} font-sans text-sm`}>{prefix}{entry.content}</pre>
                     })}
                 </div>
             </div>
@@ -273,70 +274,87 @@ const GeminiSimulator: React.FC = () => {
     );
     
     return (
-        <div className="w-full h-full flex flex-col gap-4 text-white overflow-y-auto">
+        <div className="w-full h-full flex flex-col gap-4 text-white overflow-y-auto animate-fade-in-scale">
             {isLogModalOpen && <LogModal />}
-            <div className="flex-shrink-0 bg-black/30 p-4 rounded-lg border border-cyan-700/50 space-y-3">
-                <h2 className="text-xl font-bold text-cyan-200">{t('simulation.gemini.title')}</h2>
-                <p className="text-sm text-gray-300 max-w-3xl">{t('simulation.gemini.description')}</p>
-                <div className="flex items-center gap-4">
+            <div className="flex-shrink-0 bg-stone-900/80 p-4 rounded-lg border border-cyan-800/30 shadow-lg">
+                <h2 className="text-xl font-bold text-cyan-300 font-cinzel tracking-widest mb-2">{t('simulation.gemini.title')}</h2>
+                <p className="text-sm text-stone-400 max-w-3xl mb-4">{t('simulation.gemini.description')}</p>
+                <div className="flex flex-wrap items-center gap-4">
                     {!isSimulating ? (
                         <>
-                            <button onClick={() => handleStart('round')} className="px-4 py-2 rounded-lg font-bold text-white bg-green-600 border-b-4 border-green-800 hover:bg-green-500 transition-colors">{t('simulation.gemini.start_round_sim')}</button>
-                            <button onClick={() => handleStart('match')} className="px-4 py-2 rounded-lg font-bold text-white bg-blue-600 border-b-4 border-blue-800 hover:bg-blue-500 transition-colors">{t('simulation.gemini.start_match_sim')}</button>
+                            <button onClick={() => handleStart('round')} className="px-4 py-2 rounded-lg font-bold text-white bg-gradient-to-b from-green-600 to-green-700 border-b-4 border-green-900 hover:from-green-500 hover:to-green-600 transition-all shadow-md">{t('simulation.gemini.start_round_sim')}</button>
+                            <button onClick={() => handleStart('match')} className="px-4 py-2 rounded-lg font-bold text-white bg-gradient-to-b from-blue-600 to-blue-700 border-b-4 border-blue-900 hover:from-blue-500 hover:to-blue-600 transition-all shadow-md">{t('simulation.gemini.start_match_sim')}</button>
                         </>
                     ) : (
-                        <button onClick={handleStop} className="px-4 py-2 rounded-lg font-bold text-white bg-red-600 border-b-4 border-red-800 hover:bg-red-500 transition-colors">{t('simulation.gemini.stop_sim')}</button>
+                        <button onClick={handleStop} className="px-4 py-2 rounded-lg font-bold text-white bg-red-700 border-b-4 border-red-900 hover:bg-red-600 transition-colors shadow-md animate-pulse">{t('simulation.gemini.stop_sim')}</button>
                     )}
                     {showRetryButton && (
                         <button onClick={handleManualRetry} className="px-4 py-2 rounded-lg font-bold text-white bg-yellow-600 border-b-4 border-yellow-800 hover:bg-yellow-500 transition-colors animate-pulse">
                             {t('simulation.gemini.retry_button')}
                         </button>
                     )}
-                     <button onClick={() => setIsLogModalOpen(true)} className="px-4 py-2 rounded-lg font-bold text-white bg-gray-600 border-b-4 border-gray-800 hover:bg-gray-500 transition-colors">{t('simulation.manual.view_log')}</button>
+                     <button onClick={() => setIsLogModalOpen(true)} className="px-4 py-2 rounded-lg font-bold text-white bg-stone-700 border-b-4 border-stone-900 hover:bg-stone-600 transition-all shadow-md">{t('simulation.manual.view_log')}</button>
                 </div>
             </div>
 
-            <div className="flex-grow grid grid-cols-1 lg:grid-cols-3 gap-4 overflow-hidden">
+            <div className="flex-grow grid grid-cols-1 lg:grid-cols-3 gap-6 overflow-hidden">
                 {/* Left Panel: Game State */}
-                <div className="flex flex-col gap-4">
-                    <div className="bg-black/30 p-3 rounded-md">
-                        <h2 className="text-xl font-bold text-cyan-200 mb-2">{t('simulation.scoreboard_title')}</h2>
-                        <p>{t('common.ai')}: <span className="font-mono text-lg">{state.aiScore}</span></p>
-                        <p>{t('common.gemini')}: <span className="font-mono text-lg">{state.playerScore}</span></p>
+                <div className="flex flex-col gap-6">
+                    <div className="bg-stone-900/80 p-4 rounded-lg border border-cyan-800/30">
+                        <h2 className="text-sm font-bold text-cyan-400 uppercase tracking-widest mb-3 border-b border-cyan-800/50 pb-1">{t('simulation.scoreboard_title')}</h2>
+                        <div className="flex justify-between items-center mb-1">
+                            <span className="text-stone-300">{t('common.ai')}</span>
+                            <span className="font-mono text-2xl text-amber-400">{state.aiScore}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                            <span className="text-stone-300">{t('common.gemini')}</span>
+                            <span className="font-mono text-2xl text-stone-400">{state.playerScore}</span>
+                        </div>
                     </div>
-                     <div className="bg-black/30 p-3 rounded-md">
+                     <div className="bg-stone-900/80 p-4 rounded-lg border border-cyan-800/30 space-y-4">
                         <HandDisplay cards={state.initialAiHand} title={t('simulation.gemini.local_ai_hand')} isVisible={true} />
-                        <hr className="my-4 border-cyan-700/50"/>
                         <HandDisplay cards={state.initialPlayerHand} title={t('simulation.gemini.gemini_hand')} isVisible={isSimulating} />
                     </div>
                 </div>
 
                 {/* Middle Panel: Log & Gemini Thoughts */}
                 <div className="flex flex-col gap-4 overflow-hidden">
-                    <div ref={eventLogRef} className="flex-grow bg-black/50 p-4 rounded-md overflow-y-auto font-mono text-sm border border-cyan-700/50">
-                        <h3 className="text-lg font-bold text-cyan-200 mb-2 sticky top-0 bg-black/50 backdrop-blur-sm">{t('simulation.gemini.game_log')}</h3>
+                    <div ref={eventLogRef} className="flex-grow bg-black/60 p-4 rounded-lg overflow-y-auto font-vt323 text-lg border-2 border-cyan-900/50 shadow-inner">
+                        <h3 className="text-sm font-bold text-cyan-500 uppercase tracking-widest mb-2 sticky top-0 bg-black/80 backdrop-blur-sm p-1 rounded">{t('simulation.gemini.game_log')}</h3>
                         {eventLog.filter(e => e.type === 'event' || e.type === 'info').map((log, index) => (
                             <p key={index} className={`whitespace-pre-wrap ${log.type === 'info' ? 'text-yellow-300 my-2 font-bold' : 'text-cyan-100'}`}>
                                 {log.content}
                             </p>
                         ))}
                     </div>
-                     <div className="flex-shrink-0 h-48 bg-black/50 p-4 rounded-md overflow-y-auto font-mono text-sm border border-purple-700/50">
-                        <h3 className="text-lg font-bold text-purple-200 mb-2 sticky top-0 bg-black/50 backdrop-blur-sm">{t('simulation.gemini.gemini_thoughts')}</h3>
-                        {isLoading === 'gemini_move' ? <p className="animate-pulse">{t('simulation.gemini.waiting_for_gemini')}</p> : <pre className="whitespace-pre-wrap text-purple-100">{geminiThoughts}</pre>}
+                     <div className="flex-shrink-0 h-48 bg-stone-900/80 p-4 rounded-lg overflow-y-auto font-mono text-xs border border-purple-800/30 shadow-lg">
+                        <h3 className="text-xs font-bold text-purple-400 uppercase tracking-widest mb-2 sticky top-0 bg-stone-900/90 p-1">{t('simulation.gemini.gemini_thoughts')}</h3>
+                        {isLoading === 'gemini_move' ? <p className="animate-pulse text-purple-300">{t('simulation.gemini.waiting_for_gemini')}</p> : <pre className="whitespace-pre-wrap text-purple-200/80">{geminiThoughts}</pre>}
                     </div>
                 </div>
 
                 {/* Right Panel: Analysis */}
-                <div className="bg-black/50 p-4 rounded-md overflow-y-auto border border-green-700/50 flex flex-col">
-                    <div className="flex justify-between items-center mb-2 flex-shrink-0">
-                        <h3 className="text-lg font-bold text-green-200">{t('simulation.gemini.gemini_analysis')}</h3>
+                <div className="bg-stone-900/80 p-4 rounded-lg border border-green-800/30 flex flex-col shadow-lg">
+                    <div className="flex justify-between items-center mb-3 flex-shrink-0 border-b border-green-800/30 pb-2">
+                        <h3 className="text-sm font-bold text-green-400 uppercase tracking-widest">{t('simulation.gemini.gemini_analysis')}</h3>
                         {((!isSimulating && simMode === 'round' && (state.gamePhase === 'round_end' || state.winner)) || (!isSimulating && state.winner)) && !analysis && (
-                            <button onClick={handleGetAnalysis} disabled={isLoading === 'analysis'} className="px-3 py-1 text-sm rounded-lg font-bold text-white bg-green-600 border-b-2 border-green-800 hover:bg-green-500 disabled:bg-gray-500">{t('simulation.gemini.get_analysis')}</button>
+                            <button onClick={handleGetAnalysis} disabled={isLoading === 'analysis'} className="px-3 py-1 text-xs font-bold uppercase rounded bg-green-700 hover:bg-green-600 text-white transition-colors disabled:opacity-50">{t('simulation.gemini.get_analysis')}</button>
                         )}
                     </div>
-                    <div className="flex-grow overflow-y-auto prose prose-invert prose-sm max-w-none prose-p:text-gray-300 prose-headings:text-green-300 prose-strong:text-white prose-pre:bg-black/30">
-                        {isLoading === 'analysis' ? <p className="animate-pulse">{t('simulation.gemini.analyzing')}</p> : (analysis ? <pre className="whitespace-pre-wrap">{analysis}</pre> : <p className="text-gray-400">{t('simulation.gemini.analysis_prompt')}</p>)}
+                    <div className="flex-grow overflow-y-auto custom-scrollbar pr-2">
+                        {isLoading === 'analysis' ? (
+                            <div className="flex items-center justify-center h-full">
+                                <p className="animate-pulse text-green-300 font-mono">{t('simulation.gemini.analyzing')}</p>
+                            </div>
+                        ) : (analysis ? (
+                            <div className="prose prose-invert prose-sm max-w-none prose-p:text-stone-300 prose-headings:text-green-300 prose-strong:text-white prose-pre:bg-black/30 prose-code:text-amber-200">
+                                <pre className="whitespace-pre-wrap font-sans text-sm">{analysis}</pre>
+                            </div>
+                        ) : (
+                            <div className="flex items-center justify-center h-full text-stone-500 text-center italic text-sm p-4">
+                                {t('simulation.gemini.analysis_prompt')}
+                            </div>
+                        ))}
                     </div>
                 </div>
             </div>
