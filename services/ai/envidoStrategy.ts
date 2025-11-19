@@ -1,3 +1,4 @@
+
 import { GameState, AiMove, ActionType, MessageObject } from '../../types';
 import { getEnvidoDetails, getFlorValue } from '../trucoLogic';
 import { getRandomPhrase, PHRASE_KEYS } from './phrases';
@@ -23,8 +24,14 @@ export const getEnvidoResponseOptions = (state: GameState, gamePressure: number,
     // Escalation options
     const faltaPoints = 15 - Math.max(aiScore, playerScore);
     
+    // FALTA ENVIDO LOGIC
     if (!hasFaltaEnvidoBeenCalledThisSequence) {
-        moves.push({ action: { type: ActionType.CALL_FALTA_ENVIDO, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.FALTA_ENVIDO) } }, reasoning: [{key: 'ai_logic.decision_falta_win'}], reasonKey: 'CALL_FALTA_ENVIDO' });
+        // Prevent Falta Envido in early game if points are not "the nuts"
+        const isEarlyGame = aiScore < 10 && playerScore < 10;
+        // Only suggest Falta if game is advanced OR hand is elite (32+)
+        if (!isEarlyGame || myEnvido >= 32) {
+             moves.push({ action: { type: ActionType.CALL_FALTA_ENVIDO, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.FALTA_ENVIDO) } }, reasoning: [{key: 'ai_logic.decision_falta_win'}], reasonKey: 'CALL_FALTA_ENVIDO' });
+        }
     }
     
     if (!hasRealEnvidoBeenCalledThisSequence) {

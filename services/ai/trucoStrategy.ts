@@ -264,7 +264,7 @@ export const calculateTrucoStrength = (state: GameState): TrucoStrengthResult =>
 // Fix: Updated function signature to accept (string | MessageObject)[].
 export const getTrucoResponse = (state: GameState, gamePressure: number, reasoning: (string | MessageObject)[] = []): AiMove | null => {
   const { t } = i18nService;
-  const { trucoLevel, aiScore, playerScore, playerCalledHighEnvido, opponentModel, currentTrick, trickWinners, aiHand, playerHand, playerTricks, aiTricks, mano } = state;
+  const { trucoLevel, aiScore, playerScore, playerCalledHighEnvido, opponentModel, currentTrick, trickWinners, aiHand, playerHand, playerTricks, aiTricks, mano, aiArchetype } = state;
   if (trucoLevel === 0) return null;
 
   // --- NEW: Do-or-Die Endgame Logic ---
@@ -289,7 +289,7 @@ export const getTrucoResponse = (state: GameState, gamePressure: number, reasoni
   let myStrength: number;
   let strengthReasoning: (string | MessageObject)[];
 
-  // --- NEW: Special case for end-of-round bluff analysis ---
+  // --- Special case for end-of-round bluff analysis ---
   if (aiHand.length === 0 && playerHand.length > 0 && playerTricks[currentTrick] === null) {
       reasoning.push({ key: 'ai_logic.bluff_analysis.title' });
       const myLastCard = aiTricks[currentTrick];
@@ -329,8 +329,18 @@ export const getTrucoResponse = (state: GameState, gamePressure: number, reasoni
       reasoning.push({ key: 'ai_logic.strength_evaluation' });
       reasoning.push(...strengthReasoning);
   }
+
+  // --- IMPROVED: Smooth Call Trap for Deceptive Archetype ---
+  // If we have the "Nuts" (unbeatable hand), Deceptive players should smooth call (Accept)
+  // instead of escalating, to trap the opponent for more points later (by winning the current wager instead of folding them out).
+  if (aiArchetype === 'Deceptive' && myStrength > 0.92 && trucoLevel < 3) {
+     reasoning.push(t('ai_logic.trap_check_title'));
+     reasoning.push(t('ai_logic.trap_check_body', { strength: myStrength.toFixed(2) }));
+     const decisionReason = t('ai_logic.decision_accept_trap');
+     return { action: { type: ActionType.ACCEPT, payload: { blurbText: getRandomPhrase(PHRASE_KEYS.QUIERO) } }, reasoning: [...reasoning, decisionReason], reasonKey: 'accept_truco_trap', strategyCategory: 'deceptive' };
+  }
   
-  // --- NEW: Certain Loss Logic ---
+  // --- Certain Loss Logic ---
   if (myStrength < 0.05) { // Threshold for "almost certain loss"
       reasoning.push(t('ai_logic.defeat_analysis', { winProb: (myStrength * 100).toFixed(0) }));
 
@@ -435,7 +445,7 @@ export const getTrucoResponse = (state: GameState, gamePressure: number, reasoni
       }
   }
 
-  // NEW: Strategic escalation on a strong last card
+  // Strategic escalation on a strong last card
   if (aiHand.length === 1 && playerHand.length === 1 && trucoLevel < 3) {
       const myLastCard = aiHand[0];
       const myCardHierarchy = getCardHierarchy(myLastCard);
@@ -535,7 +545,7 @@ export const getTrucoResponse = (state: GameState, gamePressure: number, reasoni
     const blurbText = getRandomPhrase(phrases);
     const trucoContext: AiTrucoContext = { strength: myStrength, isBluff: equity < 0 };
 
-    // --- NEW: Lookahead Pre-Commitment Logic (only for Retruco) ---
+    // --- Lookahead Pre-Commitment Logic (only for Retruco) ---
     if (trucoLevel === 1) {
         reasoning.push(t('ai_logic.pre_commitment_title'));
         reasoning.push(t('ai_logic.pre_commitment_simulate_q', {
@@ -556,8 +566,7 @@ export const getTrucoResponse = (state: GameState, gamePressure: number, reasoni
             reasoning.push(t('ai_logic.pre_commitment_result_accept'));
         }
     }
-    // --- END NEW LOGIC ---
-
+    
     const decisionReason = t('ai_logic.decision_escalate_high_equity', { equity: equity.toFixed(2), call: escalateType.replace('CALL_', '') });
     // Fix: Changed reasoning from a joined string to an array.
     return { action: { type: escalateType, payload: { blurbText, trucoContext } }, reasoning: [...reasoning, decisionReason], reasonKey: 'escalate_truco_high_equity', strategyCategory: 'aggressive' };

@@ -1,3 +1,4 @@
+
 import { GameState, ActionType, AiMove, Action, MessageObject, Card, AiArchetype } from '../../types';
 import { findBestCardToPlay, findBaitCard } from './playCardStrategy';
 import { getEnvidoResponseOptions, getFlorResponse } from './envidoStrategy';
@@ -48,6 +49,8 @@ const archetypeModifiers: Record<AiArchetype, Partial<Record<string, number>>> =
         parda_y_canto: 1.8,
         probe_low_value: 1.5,
         secure_hand: 0.8,
+        accept_truco_trap: 5.0, // Huge bonus for smooth calling with the nuts
+        escalate_truco_dominant_card: 0.2, // Reduce aggressive escalation to favor trap
     },
     Balanced: {
         CALL_ENVIDO: 1.8,
@@ -120,6 +123,21 @@ function calculateBaseEV(move: AiMove, state: GameState, reasoningLog: MessageOb
                 case ActionType.CALL_FALTA_ENVIDO:
                     pointsOnWin = 15 - Math.max(state.aiScore, state.playerScore);
                     penaltyMultiplier = 2.0;
+
+                    // --- SAFETY CHECK FOR FALTA ENVIDO ---
+                    // Prevent suicide calls in early game with mediocre hands
+                    const isEarlyGame = state.aiScore < 10 && state.playerScore < 10;
+                    const opponentCanWinWithEnvido = state.playerScore + pointsOnWin >= 15;
+                    
+                    // If it's early game, or the opponent isn't threatening to win, we should be very strict.
+                    // Only call Falta if we have the "nuts" (32+) or if we are desperate.
+                    if (!opponentCanWinWithEnvido || isEarlyGame) {
+                        if (myEnvido < 32) {
+                            // Severe penalty for calling Falta with < 32 points unless defensive necessity
+                            reasoningLog.push({ key: 'ai_logic.falta_suicide_prevention', options: { points: myEnvido } });
+                            return -10.0; // Effectively bans the move
+                        }
+                    }
                     break;
                 default: // CALL_ENVIDO
                     pointsOnWin = (state.envidoPointsOnOffer > 0 ? state.envidoPointsOnOffer : 0) + 2;
@@ -151,13 +169,23 @@ function calculateBaseEV(move: AiMove, state: GameState, reasoningLog: MessageOb
                 }
             }
             
-            const weightedEv = (acceptanceChance * ev_if_accepted) + ((1 - acceptanceChance) * pointsOnDecline);
+            let weightedEv = (acceptanceChance * ev_if_accepted) + ((1 - acceptanceChance) * pointsOnDecline);
+            
+             // Boost for round 1 aggressive/deceptive opening (Loose Table Image)
+            if (state.round === 1 && (archetype === 'Aggressive' || archetype === 'Deceptive') && action.type === ActionType.CALL_ENVIDO) {
+                 const bonus = 0.6;
+                 weightedEv += bonus;
+                 reasoningLog.push({ key: 'ai_logic.table_image_bonus', options: { bonus: bonus.toFixed(1) } });
+            }
 
             return weightedEv - trucoRiskPenalty;
         }
 
         case ActionType.ACCEPT: {
             if (state.gamePhase.includes('truco')) {
+                if (reasonKey === 'accept_truco_trap') {
+                    return 3.0; // Very high EV for trapping with the nuts
+                }
                 const { strength } = calculateTrucoStrength(state);
                 const pointsOnLine = state.trucoLevel === 0 ? 1 : state.trucoLevel;
                 const pointsOnWin = pointsOnLine + 1;
