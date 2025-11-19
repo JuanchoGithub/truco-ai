@@ -121,10 +121,16 @@ export const findBestCardToPlay = (state: GameState): AiMove => {
 
                     const sortedHand = [...aiHand].sort((a, b) => getCardHierarchy(b) - getCardHierarchy(a));
                     
-                    // --- Monster Hand Bait Check (Two strong cards) ---
-                    // Detects if we have at least 2 cards with hierarchy >= 11 (Sietes or better)
-                    if (trucoLevel === 0 && sortedHand.length === 3 && getCardHierarchy(sortedHand[1]) >= 11) {
-                        // With such a strong hand (e.g., 2 Bravas), standard GTO strategy is to check (play a card) 
+                    // --- Monster Hand Bait Check ---
+                    // Conditions:
+                    // 1. Have at least 2 cards with hierarchy >= 11 (Two 7s/Aces)
+                    // OR
+                    // 2. Have an Ace (13+) and a decent 2nd card (3s or better, hierarchy >= 10)
+                    const hasTwoBravas = sortedHand.length === 3 && getCardHierarchy(sortedHand[1]) >= 11;
+                    const hasAceAndThree = sortedHand.length === 3 && getCardHierarchy(sortedHand[0]) >= 13 && getCardHierarchy(sortedHand[1]) >= 10;
+
+                    if (trucoLevel === 0 && (hasTwoBravas || hasAceAndThree)) {
+                        // With such a strong hand (e.g., 2 Bravas, or Ace+3), standard GTO strategy is to check (play a card) 
                         // to induce a bluff or get value later, rather than betting immediately.
                         // We set a very high bait chance for all archetypes.
                         let baitChance = 0.95; 

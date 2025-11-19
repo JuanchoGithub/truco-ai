@@ -72,7 +72,7 @@ const CardPickerModal: React.FC<{ availableCards: Card[]; onSelect: (card: Card)
     );
 };
 
-type MultiArchetypeResult = { archetype: AiArchetype; result: AiMove };
+type MultiArchetypeResult = { archetype: AiArchetype; result: AiMove; stateUsed: GameState };
 
 const ScenarioTester: React.FC = () => {
     const { t } = useLocalization();
@@ -90,7 +90,7 @@ const ScenarioTester: React.FC = () => {
     const [opponentEnvidoValue, setOpponentEnvidoValue] = useState<number>(0);
     const [archetype, setArchetype] = useState<AiArchetype | 'Dynamic' | 'All'>('Dynamic');
     const [pickerState, setPickerState] = useState<{ open: boolean, hand: 'ai' | 'opponent', index: number }>({ open: false, hand: 'ai', index: 0 });
-    const [testResult, setTestResult] = useState<AiMove | null>(null);
+    const [testResult, setTestResult] = useState<{result: AiMove, state: GameState} | null>(null);
     const [multiArchetypeResults, setMultiArchetypeResults] = useState<MultiArchetypeResult[] | null>(null);
     const [selectedScenario, setSelectedScenario] = useState<PredefinedScenario | null>(null);
     const [iterations, setIterations] = useState(1000);
@@ -167,13 +167,13 @@ const ScenarioTester: React.FC = () => {
             for (const arch of archetypes) {
                 const scenarioState = createScenarioState(arch);
                 if (!scenarioState) continue;
-                results.push({ archetype: arch, result: getLocalAIMove(scenarioState) });
+                results.push({ archetype: arch, result: getLocalAIMove(scenarioState), stateUsed: scenarioState });
             }
             setMultiArchetypeResults(results);
         } else {
             setMultiArchetypeResults(null);
             const scenarioState = createScenarioState();
-            if (scenarioState) setTestResult(getLocalAIMove(scenarioState));
+            if (scenarioState) setTestResult({ result: getLocalAIMove(scenarioState), state: scenarioState });
         }
     };
 
@@ -287,22 +287,22 @@ const ScenarioTester: React.FC = () => {
                              <div className="p-6 space-y-6">
                                 <div>
                                     <span className="text-xs font-bold text-stone-500 uppercase block mb-2">Recommended Action</span>
-                                    <div className="text-2xl font-cinzel text-yellow-400">{getActionDescription(testResult.action, {}, t)}</div>
+                                    <div className="text-2xl font-cinzel text-yellow-400">{getActionDescription(testResult.result.action, testResult.state, t)}</div>
                                 </div>
                                 <div>
                                      <span className="text-xs font-bold text-stone-500 uppercase block mb-2">Reasoning Engine</span>
                                      <div className="bg-black/30 p-4 rounded-lg border border-stone-800 font-mono text-xs text-cyan-200/80 leading-relaxed whitespace-pre-wrap">
-                                         {renderReasoning(testResult.reasoning, t)}
+                                         {renderReasoning(testResult.result.reasoning, t)}
                                      </div>
                                 </div>
                              </div>
                         </div>
                     ) : multiArchetypeResults ? (
                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
-                             {multiArchetypeResults.map(({ archetype, result }) => (
+                             {multiArchetypeResults.map(({ archetype, result, stateUsed }) => (
                                  <div key={archetype} className="bg-stone-950 border border-stone-800 rounded-lg p-4 shadow-lg">
                                      <h4 className="text-xs font-bold text-stone-400 uppercase mb-2 border-b border-stone-800 pb-1">{t(`ai_logic.archetypes.${archetype}`)}</h4>
-                                     <div className="font-cinzel text-yellow-400 text-sm mb-2">{getActionDescription(result.action, {}, t)}</div>
+                                     <div className="font-cinzel text-yellow-400 text-sm mb-2">{getActionDescription(result.action, stateUsed, t)}</div>
                                      <pre className="text-[10px] text-stone-500 font-mono whitespace-pre-wrap line-clamp-4 hover:line-clamp-none transition-all">{renderReasoning(result.reasoning, t)}</pre>
                                  </div>
                              ))}
